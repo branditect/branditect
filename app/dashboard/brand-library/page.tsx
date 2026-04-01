@@ -213,6 +213,8 @@ export default function BrandLibraryPage() {
   // Strategy fork
   const [strategyPath, setStrategyPath] = useState<"have" | "create">("have");
   const [strategyText, setStrategyText] = useState("");
+  const [strategySaving, setStrategySaving] = useState(false);
+  const [strategySaved, setStrategySaved] = useState(false);
 
   /* ---- Upload helpers ---- */
 
@@ -276,6 +278,25 @@ export default function BrandLibraryPage() {
     },
     [uploadGuideline],
   );
+
+  const handleSaveStrategy = useCallback(async () => {
+    if (!strategyText.trim()) return;
+    setStrategySaving(true);
+    setStrategySaved(false);
+
+    const file = new Blob([strategyText], { type: "text/plain" });
+    const path = `strategy/brand-strategy-${Date.now()}.txt`;
+
+    const { error } = await supabase.storage
+      .from("brand-assets")
+      .upload(path, file, { upsert: true });
+
+    setStrategySaving(false);
+    if (!error) {
+      setStrategySaved(true);
+      setTimeout(() => setStrategySaved(false), 3000);
+    }
+  }, [strategyText]);
 
   /* ---------------------------------------------------------------- */
 
@@ -463,10 +484,11 @@ export default function BrandLibraryPage() {
               />
               <div className="flex justify-end mt-3">
                 <button
-                  disabled={!strategyText.trim()}
+                  onClick={handleSaveStrategy}
+                  disabled={!strategyText.trim() || strategySaving}
                   className="px-5 py-2 rounded-lg bg-brand-orange text-white font-mono text-[0.65rem] uppercase tracking-wide hover:bg-brand-orange-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
-                  Save Strategy
+                  {strategySaving ? "Saving..." : strategySaved ? "Saved ✓" : "Save Strategy"}
                 </button>
               </div>
             </div>

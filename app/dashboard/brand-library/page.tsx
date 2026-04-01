@@ -4,6 +4,16 @@ import { useState, useRef, useCallback, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
+/*  Brand Color type                                                   */
+/* ------------------------------------------------------------------ */
+
+interface BrandColor {
+  hex: string;
+  name: string;
+  usage: string;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -24,12 +34,12 @@ interface UploadedFile {
 
 const tabs = ["Visual", "Strategy", "Assets", "Voice & Tone", "Products", "Team"];
 
-const colors = [
-  { name: "Black", hex: "#0A0A0F", bg: "#0A0A0F" },
-  { name: "Lime", hex: "#C8F135", bg: "#C8F135" },
-  { name: "Purple", hex: "#7B5EA7", bg: "#7B5EA7" },
-  { name: "Off White", hex: "#F2F0FA", bg: "#F2F0FA", border: true },
-  { name: "Red", hex: "#FF4D6D", bg: "#FF4D6D" },
+const defaultColors: BrandColor[] = [
+  { hex: "#0A0A0F", name: "Black", usage: "Primary background" },
+  { hex: "#C8F135", name: "Lime", usage: "Accent highlight" },
+  { hex: "#7B5EA7", name: "Purple", usage: "Secondary accent" },
+  { hex: "#F2F0FA", name: "Off White", usage: "Light background" },
+  { hex: "#FF4D6D", name: "Red", usage: "Alert / emphasis" },
 ];
 
 const fonts = [
@@ -73,6 +83,14 @@ function isValidLogoFile(file: File) {
 
 function isValidGuidelineFile(file: File) {
   return fileExtension(file.name) === "pdf";
+}
+
+function isLightColor(hex: string): boolean {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 200;
 }
 
 /* ------------------------------------------------------------------ */
@@ -216,6 +234,18 @@ export default function BrandLibraryPage() {
   const [strategySaving, setStrategySaving] = useState(false);
   const [strategySaved, setStrategySaved] = useState(false);
 
+  // Brand colors
+  const [brandColors, setBrandColors] = useState<BrandColor[]>(defaultColors);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
+  const [copiedHex, setCopiedHex] = useState<string | null>(null);
+  const [editingColor, setEditingColor] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<BrandColor>({ hex: "", name: "", usage: "" });
+  const [showAddColor, setShowAddColor] = useState(false);
+  const [newColor, setNewColor] = useState<BrandColor>({ hex: "#000000", name: "", usage: "" });
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
+  const [screenshotDragOver, setScreenshotDragOver] = useState(false);
+
   /* ---- Upload helpers ---- */
 
   const uploadLogo = useCallback(async (slotKey: string, file: File) => {
@@ -260,23 +290,55 @@ export default function BrandLibraryPage() {
     setGuidelineUploading(false);
   }, []);
 
+  // Extract colors from a file (PDF or image)
+  const extractColors = useCallback(async (file: File, type: "pdf" | "image") => {
+    setExtracting(true);
+    setExtractError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+
+      const res = await fetch("/api/extract-colors", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Extraction failed");
+      if (data.colors?.length > 0) {
+        setBrandColors(data.colors);
+      } else {
+        setExtractError("No colors found in this file.");
+      }
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : "Extraction failed");
+    } finally {
+      setExtracting(false);
+    }
+  }, []);
+
+  // Auto-extract when guidelines PDF is uploaded
+  const uploadGuidelineWithExtract = useCallback(async (file: File) => {
+    await uploadGuideline(file);
+    await extractColors(file, "pdf");
+  }, [uploadGuideline, extractColors]);
+
   const handleGuidelineDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       setGuidelineDragOver(false);
       const file = e.dataTransfer.files?.[0];
-      if (file && isValidGuidelineFile(file)) uploadGuideline(file);
+      if (file && isValidGuidelineFile(file)) uploadGuidelineWithExtract(file);
     },
-    [uploadGuideline],
+    [uploadGuidelineWithExtract],
   );
 
   const handleGuidelineChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file && isValidGuidelineFile(file)) uploadGuideline(file);
+      if (file && isValidGuidelineFile(file)) uploadGuidelineWithExtract(file);
       e.target.value = "";
     },
-    [uploadGuideline],
+    [uploadGuidelineWithExtract],
   );
 
   const handleSaveStrategy = useCallback(async () => {
@@ -297,6 +359,61 @@ export default function BrandLibraryPage() {
       setTimeout(() => setStrategySaved(false), 3000);
     }
   }, [strategyText]);
+
+  // Screenshot upload for color extraction
+  const handleScreenshotFile = useCallback(async (file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!["png", "jpg", "jpeg", "webp"].includes(ext)) return;
+    await extractColors(file, "image");
+  }, [extractColors]);
+
+  const handleScreenshotDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setScreenshotDragOver(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleScreenshotFile(file);
+    },
+    [handleScreenshotFile],
+  );
+
+  const handleScreenshotChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleScreenshotFile(file);
+      e.target.value = "";
+    },
+    [handleScreenshotFile],
+  );
+
+  const copyHex = useCallback((hex: string) => {
+    navigator.clipboard.writeText(hex);
+    setCopiedHex(hex);
+    setTimeout(() => setCopiedHex(null), 1500);
+  }, []);
+
+  const startEdit = useCallback((index: number) => {
+    setEditingColor(index);
+    setEditForm({ ...brandColors[index] });
+  }, [brandColors]);
+
+  const saveEdit = useCallback(() => {
+    if (editingColor === null) return;
+    setBrandColors((prev) => prev.map((c, i) => (i === editingColor ? { ...editForm } : c)));
+    setEditingColor(null);
+  }, [editingColor, editForm]);
+
+  const deleteColor = useCallback((index: number) => {
+    setBrandColors((prev) => prev.filter((_, i) => i !== index));
+    setEditingColor(null);
+  }, []);
+
+  const addColor = useCallback(() => {
+    if (!newColor.hex || !newColor.name) return;
+    setBrandColors((prev) => [...prev, { ...newColor }]);
+    setNewColor({ hex: "#000000", name: "", usage: "" });
+    setShowAddColor(false);
+  }, [newColor]);
 
   /* ---------------------------------------------------------------- */
 
@@ -531,25 +648,170 @@ export default function BrandLibraryPage() {
         {/*  EXISTING SECTIONS — Colors, Typography, Assets             */}
         {/* ========================================================= */}
 
-        {/* Colors */}
+        {/* Color Palette */}
         <div className="mb-9">
-          <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-3.5">
-            Color Palette
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted">
+              Color Palette
+            </div>
+            {extracting && (
+              <div className="flex items-center gap-2">
+                <div className="h-3.5 w-3.5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
+                <span className="font-mono text-[0.58rem] text-brand-orange">Extracting colors...</span>
+              </div>
+            )}
           </div>
-          <div className="flex gap-3.5 flex-wrap">
-            {colors.map((c) => (
-              <div key={c.hex} className="flex flex-col gap-[5px] cursor-pointer group">
-                <div
-                  className="w-[52px] h-[52px] rounded-[7px] group-hover:scale-105 transition-transform"
-                  style={{
-                    background: c.bg,
-                    border: c.border ? "1px solid #E5E5E5" : "1px solid transparent",
-                  }}
-                />
-                <div className="font-mono text-[0.55rem] text-muted">{c.name}</div>
-                <div className="font-mono text-[0.58rem] text-ink font-medium">{c.hex}</div>
+
+          {extractError && (
+            <div className="mb-3 px-3 py-2 rounded-md bg-red-50 border border-red-200 text-[0.75rem] text-red-600">
+              {extractError}
+            </div>
+          )}
+
+          {/* Screenshot upload for color extraction */}
+          <div className="mb-4">
+            <p className="text-[0.75rem] text-mid mb-2">
+              Upload a screenshot of your brand colors page to auto-extract, or add colors manually.
+            </p>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setScreenshotDragOver(true); }}
+              onDragLeave={() => setScreenshotDragOver(false)}
+              onDrop={handleScreenshotDrop}
+              onClick={() => screenshotInputRef.current?.click()}
+              className={`flex items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all h-[80px] ${
+                screenshotDragOver
+                  ? "border-brand-orange bg-brand-orange-pale"
+                  : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"
+              }`}
+            >
+              <input
+                ref={screenshotInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg,.webp"
+                className="hidden"
+                onChange={handleScreenshotChange}
+              />
+              <div className="flex items-center gap-3">
+                <svg className="h-5 w-5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                </svg>
+                <span className="font-mono text-[0.62rem] tracking-wide uppercase text-muted">
+                  Drop screenshot to extract colors
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Color swatches */}
+          <div className="flex gap-4 flex-wrap">
+            {brandColors.map((c, i) => (
+              <div key={`${c.hex}-${i}`} className="group relative">
+                {editingColor === i ? (
+                  /* Edit mode */
+                  <div className="bg-white border border-brand-orange rounded-lg p-3 w-[180px] shadow-lg">
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="color"
+                        value={editForm.hex}
+                        onChange={(e) => setEditForm({ ...editForm, hex: e.target.value })}
+                        className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                      />
+                      <input
+                        value={editForm.hex}
+                        onChange={(e) => setEditForm({ ...editForm, hex: e.target.value })}
+                        className="flex-1 font-mono text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
+                      />
+                    </div>
+                    <input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="Color name"
+                      className="w-full text-[0.72rem] border border-light rounded px-2 py-1 mb-1.5 text-ink"
+                    />
+                    <input
+                      value={editForm.usage}
+                      onChange={(e) => setEditForm({ ...editForm, usage: e.target.value })}
+                      placeholder="Usage"
+                      className="w-full text-[0.72rem] border border-light rounded px-2 py-1 mb-2 text-muted"
+                    />
+                    <div className="flex gap-1.5">
+                      <button onClick={saveEdit} className="flex-1 py-1 rounded bg-brand-orange text-white font-mono text-[0.55rem] uppercase">Save</button>
+                      <button onClick={() => deleteColor(i)} className="py-1 px-2 rounded bg-red-50 text-red-500 font-mono text-[0.55rem] uppercase border border-red-200">Delete</button>
+                      <button onClick={() => setEditingColor(null)} className="py-1 px-2 rounded bg-pale text-muted font-mono text-[0.55rem] uppercase border border-light">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Display mode */
+                  <div className="flex flex-col gap-[5px] cursor-pointer">
+                    <div
+                      onClick={() => copyHex(c.hex)}
+                      className="w-[52px] h-[52px] rounded-[7px] group-hover:scale-105 transition-transform relative"
+                      style={{
+                        background: c.hex,
+                        border: isLightColor(c.hex) ? "1px solid #E5E5E5" : "1px solid transparent",
+                      }}
+                    >
+                      {copiedHex === c.hex && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[7px]">
+                          <span className="text-white text-[0.55rem] font-mono">Copied</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="font-mono text-[0.55rem] text-muted">{c.name}</div>
+                    <div className="font-mono text-[0.58rem] text-ink font-medium">{c.hex}</div>
+                    {c.usage && <div className="font-mono text-[0.5rem] text-muted/70 max-w-[80px] leading-tight">{c.usage}</div>}
+                    <button
+                      onClick={() => startEdit(i)}
+                      className="opacity-0 group-hover:opacity-100 font-mono text-[0.5rem] text-brand-orange hover:underline transition-opacity text-left"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
+
+            {/* Add color button */}
+            {showAddColor ? (
+              <div className="bg-white border border-brand-orange rounded-lg p-3 w-[180px] shadow-lg">
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="color"
+                    value={newColor.hex}
+                    onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                  />
+                  <input
+                    value={newColor.hex}
+                    onChange={(e) => setNewColor({ ...newColor, hex: e.target.value })}
+                    className="flex-1 font-mono text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
+                  />
+                </div>
+                <input
+                  value={newColor.name}
+                  onChange={(e) => setNewColor({ ...newColor, name: e.target.value })}
+                  placeholder="Color name"
+                  className="w-full text-[0.72rem] border border-light rounded px-2 py-1 mb-1.5 text-ink"
+                />
+                <input
+                  value={newColor.usage}
+                  onChange={(e) => setNewColor({ ...newColor, usage: e.target.value })}
+                  placeholder="Usage (optional)"
+                  className="w-full text-[0.72rem] border border-light rounded px-2 py-1 mb-2 text-muted"
+                />
+                <div className="flex gap-1.5">
+                  <button onClick={addColor} disabled={!newColor.name} className="flex-1 py-1 rounded bg-brand-orange text-white font-mono text-[0.55rem] uppercase disabled:opacity-40">Add</button>
+                  <button onClick={() => setShowAddColor(false)} className="py-1 px-2 rounded bg-pale text-muted font-mono text-[0.55rem] uppercase border border-light">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => setShowAddColor(true)}
+                className="flex flex-col items-center justify-center w-[52px] min-h-[52px] rounded-[7px] border-2 border-dashed border-light hover:border-brand-orange cursor-pointer transition-all group/add"
+              >
+                <span className="text-lg text-muted group-hover/add:text-brand-orange transition-colors">+</span>
+              </div>
+            )}
           </div>
         </div>
 

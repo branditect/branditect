@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, DragEvent, ChangeEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
@@ -42,10 +42,17 @@ const defaultColors: BrandColor[] = [
   { hex: "#FF4D6D", name: "Red", usage: "Alert / emphasis" },
 ];
 
-const fonts = [
-  { sample: "Aa", sampleClass: "font-display italic", name: "Syne \u2014 Display", use: "Headings, hero text \u00B7 Weight 700\u2013800" },
-  { sample: "Aa", sampleClass: "font-sans font-light", name: "DM Sans \u2014 Body", use: "Body copy, UI text \u00B7 Weight 300\u2013500" },
-  { sample: "Aa", sampleClass: "font-mono", name: "DM Mono \u2014 Labels", use: "Tags, metadata, labels \u00B7 Weight 300\u2013500" },
+interface BrandFont {
+  name: string;
+  use: string;
+  source: "google" | "upload";
+  url?: string; // Google Fonts CSS URL or uploaded file URL
+}
+
+const defaultFonts: BrandFont[] = [
+  { name: "Syne", use: "Headings, hero text", source: "google" },
+  { name: "DM Sans", use: "Body copy, UI text", source: "google" },
+  { name: "DM Mono", use: "Tags, metadata, labels", source: "google" },
 ];
 
 const assets = [
@@ -102,11 +109,13 @@ function LogoDropZone({
   uploaded,
   uploading,
   onFile,
+  localPreview,
 }: {
   slot: LogoSlot;
   uploaded: UploadedFile | null;
   uploading: boolean;
   onFile: (file: File) => void;
+  localPreview: string | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -130,83 +139,56 @@ function LogoDropZone({
     [onFile],
   );
 
-  const borderColor = dragOver
-    ? "border-brand-orange"
-    : uploaded
-    ? "border-brand-orange-mid"
-    : "border-light";
-
-  const bgColor = dragOver
-    ? "bg-brand-orange-pale"
-    : uploaded
-    ? "bg-white"
-    : "bg-pale/40";
+  const isDark = slot.key === "dark-bg-version";
 
   return (
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragOver(true);
-      }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
-      className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed ${borderColor} ${bgColor} cursor-pointer transition-all hover:border-brand-orange hover:bg-brand-orange-pale/40 min-h-[160px]`}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED_LOGO_TYPES}
-        className="hidden"
-        onChange={handleChange}
-      />
+    <div className="flex flex-col">
+      {/* Label */}
+      <div className="font-mono text-[0.55rem] tracking-wider uppercase text-muted mb-1.5">{slot.label}</div>
 
-      {uploading ? (
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
-          <span className="font-mono text-[0.6rem] text-muted">Uploading...</span>
-        </div>
-      ) : uploaded ? (
-        <div className="flex flex-col items-center gap-2 px-4">
-          {uploaded.url && /\.(png|svg)$/i.test(uploaded.name) ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={uploaded.url}
-              alt={slot.label}
-              className="max-h-[80px] max-w-full object-contain"
-            />
-          ) : (
-            <div className="h-[60px] w-[60px] rounded-md bg-brand-orange-pale flex items-center justify-center">
-              <span className="text-brand-orange text-lg font-bold font-mono">PDF</span>
-            </div>
-          )}
-          <span className="font-mono text-[0.58rem] text-muted truncate max-w-full">
-            {uploaded.name}
-          </span>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-2 px-4 text-center">
-          <svg
-            className="h-7 w-7 text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.595H6.75z"
-            />
-          </svg>
-          <span className="font-mono text-[0.62rem] tracking-wide uppercase text-muted">
-            {slot.label}
-          </span>
-          <span className="font-mono text-[0.52rem] text-muted/70">
-            PNG, SVG, or PDF
-          </span>
-        </div>
-      )}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+        className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all min-h-[140px] ${
+          dragOver
+            ? "border-brand-orange bg-brand-orange-pale"
+            : uploaded
+            ? `border-transparent ${isDark ? "bg-[#1A1A1A]" : "bg-[#F8F8F8]"}`
+            : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"
+        }`}
+      >
+        <input ref={inputRef} type="file" accept={ACCEPTED_LOGO_TYPES} className="hidden" onChange={handleChange} />
+
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
+            <span className="font-mono text-[0.6rem] text-muted">Uploading...</span>
+          </div>
+        ) : uploaded ? (
+          <div className="flex flex-col items-center gap-2 px-6 py-4 w-full">
+            {uploaded.url && /\.(png|svg)$/i.test(uploaded.name) ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={uploaded.url} alt={slot.label} className="max-h-[90px] max-w-full object-contain" />
+            ) : (
+              <div className="h-[60px] w-[60px] rounded-md bg-brand-orange-pale flex items-center justify-center">
+                <span className="text-brand-orange text-lg font-bold font-mono">PDF</span>
+              </div>
+            )}
+            <span className={`font-mono text-[0.52rem] ${isDark ? "text-white/40" : "text-muted"} truncate max-w-full`}>
+              Click to replace
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 px-4 text-center">
+            <svg className="h-6 w-6 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.595H6.75z" />
+            </svg>
+            <span className="font-mono text-[0.52rem] text-muted/70">PNG, SVG, or PDF</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -245,6 +227,16 @@ export default function BrandLibraryPage() {
   const [newColor, setNewColor] = useState<BrandColor>({ hex: "#000000", name: "", usage: "" });
   const screenshotInputRef = useRef<HTMLInputElement>(null);
   const [screenshotDragOver, setScreenshotDragOver] = useState(false);
+
+  // Fonts
+  const [brandFonts, setBrandFonts] = useState<BrandFont[]>(defaultFonts);
+  const [showFontPicker, setShowFontPicker] = useState(false);
+  const [fontSearch, setFontSearch] = useState("");
+  const [fontResults, setFontResults] = useState<string[]>([]);
+  const [fontSearching, setFontSearching] = useState(false);
+  const [newFontUse, setNewFontUse] = useState("");
+  const fontUploadRef = useRef<HTMLInputElement>(null);
+  const [loadedGoogleFonts, setLoadedGoogleFonts] = useState<Set<string>>(new Set());
 
   /* ---- Upload helpers ---- */
 
@@ -414,6 +406,68 @@ export default function BrandLibraryPage() {
     setNewColor({ hex: "#000000", name: "", usage: "" });
     setShowAddColor(false);
   }, [newColor]);
+
+  // Load a Google Font dynamically
+  const loadGoogleFont = useCallback((fontName: string) => {
+    if (loadedGoogleFonts.has(fontName)) return;
+    const link = document.createElement("link");
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@300;400;500;600;700&display=swap`;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    setLoadedGoogleFonts((prev) => new Set(prev).add(fontName));
+  }, [loadedGoogleFonts]);
+
+  // Search Google Fonts
+  const searchFonts = useCallback(async (query: string) => {
+    setFontSearch(query);
+    if (!query.trim()) { setFontResults([]); return; }
+    setFontSearching(true);
+    try {
+      const res = await fetch(`/api/google-fonts?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setFontResults(data.fonts || []);
+      // Preload results
+      (data.fonts || []).forEach((f: string) => loadGoogleFont(f));
+    } catch { setFontResults([]); }
+    setFontSearching(false);
+  }, [loadGoogleFont]);
+
+  const addGoogleFont = useCallback((fontName: string) => {
+    loadGoogleFont(fontName);
+    setBrandFonts((prev) => [...prev, { name: fontName, use: newFontUse || "Not specified", source: "google" }]);
+    setShowFontPicker(false);
+    setFontSearch("");
+    setFontResults([]);
+    setNewFontUse("");
+  }, [loadGoogleFont, newFontUse]);
+
+  const uploadFont = useCallback(async (file: File) => {
+    const path = `fonts/${file.name}`;
+    const { error } = await supabase.storage.from("brand-assets").upload(path, file, { upsert: true });
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(path);
+      // Create @font-face rule
+      const fontName = file.name.replace(/\.[^.]+$/, "");
+      const style = document.createElement("style");
+      style.textContent = `@font-face { font-family: '${fontName}'; src: url('${urlData.publicUrl}'); }`;
+      document.head.appendChild(style);
+      setBrandFonts((prev) => [...prev, { name: fontName, use: "Custom upload", source: "upload", url: urlData.publicUrl }]);
+    }
+  }, []);
+
+  const removeFont = useCallback((index: number) => {
+    setBrandFonts((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // Load all Google Fonts on mount
+  useEffect(() => {
+    defaultFonts.filter((f) => f.source === "google").forEach((f) => {
+      const link = document.createElement("link");
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f.name)}:wght@300;400;500;600;700&display=swap`;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    });
+  }, []);
 
   /* ---------------------------------------------------------------- */
 
@@ -817,20 +871,121 @@ export default function BrandLibraryPage() {
 
         {/* Typography */}
         <div className="mb-9">
-          <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-3.5">
-            Typography
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted">
+              Typography
+            </div>
           </div>
-          {fonts.map((f) => (
-            <div key={f.name} className="bg-white border border-light rounded-[7px] p-5 mb-2.5 flex items-center gap-6">
-              <div className={`text-[2.2rem] leading-none text-ink min-w-[80px] ${f.sampleClass}`}>
-                {f.sample}
+
+          {brandFonts.map((f, i) => (
+            <div key={`${f.name}-${i}`} className="bg-white border border-light rounded-[7px] p-5 mb-2.5 flex items-center gap-6 group">
+              <div
+                className="text-[2.2rem] leading-none text-ink min-w-[80px]"
+                style={{ fontFamily: `'${f.name}', sans-serif` }}
+              >
+                Aa
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="font-medium text-[0.82rem] text-ink mb-[2px]">{f.name}</div>
-                <div className="font-mono text-[0.6rem] text-muted">{f.use}</div>
+                <div className="font-mono text-[0.6rem] text-muted">
+                  {f.use} · {f.source === "google" ? "Google Fonts" : "Custom upload"}
+                </div>
               </div>
+              {/* Preview sentence */}
+              <div
+                className="hidden lg:block text-[0.8rem] text-mid max-w-[200px] truncate"
+                style={{ fontFamily: `'${f.name}', sans-serif` }}
+              >
+                The quick brown fox jumps over the lazy dog
+              </div>
+              <button
+                onClick={() => removeFont(i)}
+                className="opacity-0 group-hover:opacity-100 text-[0.6rem] text-red-400 hover:text-red-600 font-mono transition-opacity shrink-0"
+              >
+                Remove
+              </button>
             </div>
           ))}
+
+          {/* Add font */}
+          {showFontPicker ? (
+            <div className="bg-white border border-brand-orange rounded-lg p-4 mt-2 shadow-lg">
+              <div className="font-mono text-[0.58rem] tracking-wider uppercase text-muted mb-3">Add a font</div>
+
+              {/* Google Fonts search */}
+              <div className="mb-3">
+                <label className="font-mono text-[0.55rem] text-muted uppercase tracking-wide block mb-1">Search Google Fonts</label>
+                <input
+                  value={fontSearch}
+                  onChange={(e) => searchFonts(e.target.value)}
+                  placeholder="Type a font name..."
+                  className="w-full border border-light rounded px-3 py-2 text-[0.8rem] text-ink outline-none focus:border-brand-orange"
+                />
+                {fontSearching && <div className="font-mono text-[0.55rem] text-muted mt-1">Searching...</div>}
+                {fontResults.length > 0 && (
+                  <div className="mt-2 border border-light rounded-md max-h-[200px] overflow-y-auto">
+                    {fontResults.map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => addGoogleFont(name)}
+                        className="w-full text-left px-3 py-2 hover:bg-brand-orange-pale transition-colors border-b border-light last:border-0 flex items-center justify-between"
+                      >
+                        <span style={{ fontFamily: `'${name}', sans-serif` }} className="text-[0.85rem] text-ink">{name}</span>
+                        <span className="font-mono text-[0.5rem] text-brand-orange">+ Add</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Usage field */}
+              <div className="mb-3">
+                <label className="font-mono text-[0.55rem] text-muted uppercase tracking-wide block mb-1">Usage</label>
+                <input
+                  value={newFontUse}
+                  onChange={(e) => setNewFontUse(e.target.value)}
+                  placeholder="e.g. Headings, body copy..."
+                  className="w-full border border-light rounded px-3 py-2 text-[0.8rem] text-ink outline-none focus:border-brand-orange"
+                />
+              </div>
+
+              {/* Upload custom font */}
+              <div className="flex items-center gap-3 pt-2 border-t border-light">
+                <button
+                  onClick={() => fontUploadRef.current?.click()}
+                  className="px-4 py-1.5 rounded border border-light text-[0.72rem] text-mid hover:border-brand-orange hover:text-brand-orange transition-all"
+                >
+                  Upload custom font file
+                </button>
+                <span className="font-mono text-[0.5rem] text-muted">.woff, .woff2, .ttf, .otf</span>
+                <input
+                  ref={fontUploadRef}
+                  type="file"
+                  accept=".woff,.woff2,.ttf,.otf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadFont(file);
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  onClick={() => { setShowFontPicker(false); setFontSearch(""); setFontResults([]); }}
+                  className="ml-auto font-mono text-[0.55rem] text-muted hover:text-ink"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowFontPicker(true)}
+              className="mt-2 flex items-center gap-2 px-4 py-2.5 rounded-[7px] border-2 border-dashed border-light hover:border-brand-orange text-muted hover:text-brand-orange transition-all"
+            >
+              <span className="text-lg">+</span>
+              <span className="font-mono text-[0.62rem] tracking-wide uppercase">Add font</span>
+            </button>
+          )}
         </div>
 
         {/* Assets */}

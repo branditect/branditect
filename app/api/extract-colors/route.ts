@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || "REMOVED_KEY",
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const COLOR_PROMPT = `Analyze this document/image and extract ALL brand colors you can find. For each color return:

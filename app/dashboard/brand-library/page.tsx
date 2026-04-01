@@ -166,11 +166,11 @@ function LogoDropZone({
             <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
             <span className="font-mono text-[0.6rem] text-muted">Uploading...</span>
           </div>
-        ) : uploaded ? (
+        ) : (uploaded || localPreview) ? (
           <div className="flex flex-col items-center gap-2 px-6 py-4 w-full">
-            {uploaded.url && /\.(png|svg)$/i.test(uploaded.name) ? (
+            {(localPreview || (uploaded?.url && /\.(png|svg)$/i.test(uploaded.name))) ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={uploaded.url} alt={slot.label} className="max-h-[90px] max-w-full object-contain" />
+              <img src={localPreview || uploaded?.url || ""} alt={slot.label} className="max-h-[90px] max-w-full object-contain" />
             ) : (
               <div className="h-[60px] w-[60px] rounded-md bg-brand-orange-pale flex items-center justify-center">
                 <span className="text-brand-orange text-lg font-bold font-mono">PDF</span>
@@ -203,6 +203,7 @@ export default function BrandLibraryPage() {
   // Logo uploads: keyed by slot key
   const [logoFiles, setLogoFiles] = useState<Record<string, UploadedFile>>({});
   const [logoUploading, setLogoUploading] = useState<Record<string, boolean>>({});
+  const [logoPreviews, setLogoPreviews] = useState<Record<string, string>>({});
 
   // Guidelines upload
   const [guidelineFile, setGuidelineFile] = useState<UploadedFile | null>(null);
@@ -241,6 +242,15 @@ export default function BrandLibraryPage() {
   /* ---- Upload helpers ---- */
 
   const uploadLogo = useCallback(async (slotKey: string, file: File) => {
+    // Create local preview immediately
+    if (/\.(png|jpg|jpeg|svg|webp)$/i.test(file.name)) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreviews((prev) => ({ ...prev, [slotKey]: e.target?.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+
     setLogoUploading((prev) => ({ ...prev, [slotKey]: true }));
     const ext = fileExtension(file.name);
     const path = `logos/${slotKey}-${Date.now()}.${ext}`;
@@ -259,6 +269,7 @@ export default function BrandLibraryPage() {
         [slotKey]: { name: file.name, url: urlData.publicUrl, path },
       }));
     }
+    // Even if Supabase upload fails, the local preview stays
 
     setLogoUploading((prev) => ({ ...prev, [slotKey]: false }));
   }, []);
@@ -521,6 +532,7 @@ export default function BrandLibraryPage() {
                 uploaded={logoFiles[slot.key] ?? null}
                 uploading={!!logoUploading[slot.key]}
                 onFile={(file) => uploadLogo(slot.key, file)}
+                localPreview={logoPreviews[slot.key] ?? null}
               />
             ))}
           </div>

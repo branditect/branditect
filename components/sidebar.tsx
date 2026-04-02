@@ -25,6 +25,7 @@ const libraryItems: NavItem[] = [
 ];
 
 const toolItems: NavItem[] = [
+  { icon: "📊", label: "Business Tools", href: "/dashboard/tools" },
   { icon: "↗", label: "Growth Expert", href: "/dashboard/growth" },
   { icon: "⚑", label: "Brand Monitor", href: "/dashboard/monitor", badge: "2" },
   { icon: "$", label: "Finance Rules", href: "/dashboard/finance" },

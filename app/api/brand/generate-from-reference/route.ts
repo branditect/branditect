@@ -22,10 +22,9 @@ function mapAspectRatio(format: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { images, brief, dna } = (await req.json()) as {
+    const { images, brief } = (await req.json()) as {
       images: string[];
       brief: Brief;
-      dna: { headline?: string; datapoints?: { label: string; value: string }[] } | null;
     };
 
     if (!images?.length || !brief?.subject) {

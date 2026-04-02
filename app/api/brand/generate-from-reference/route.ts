@@ -33,29 +33,28 @@ export async function POST(req: NextRequest) {
 
     const aspectRatio = mapAspectRatio(brief.format);
 
-    const parts_list: string[] = [];
-    parts_list.push(`A high-quality lifestyle photograph of ${brief.subject}.`);
-    if (brief.colour) parts_list.push(`Wearing ${brief.colour}.`);
-    if (brief.other) parts_list.push(brief.other + ".");
-    parts_list.push(`See the reference image(s) for image style, composition, lighting and overall feel — match them closely.`);
-    parts_list.push(`Natural, warm cinematic lighting, shallow depth of field, 35mm lens feel, authentic and energetic atmosphere.`);
-    parts_list.push(`Photorealistic professional photography, aspect ratio ${aspectRatio}. No text, logos or watermarks.`);
+    // Build a clean, simple prompt
+    let prompt = `Generate a new photograph inspired by the visual style of the attached reference image. `;
+    prompt += `The new image should show: ${brief.subject}. `;
+    if (brief.colour) prompt += `They are wearing ${brief.colour}. `;
+    if (brief.other) prompt += `${brief.other}. `;
+    prompt += `Match the lighting style, color palette, and overall mood of the reference. `;
+    prompt += `Professional photography, sharp focus, natural skin tones. `;
+    prompt += `Aspect ratio ${aspectRatio}.`;
 
-    const internalPrompt = parts_list.join(" ");
-
-    // Build parts: reference images first, then text
+    // Build parts: text FIRST, then only 1 reference image
     const parts: Record<string, unknown>[] = [];
 
-    for (const base64 of images.slice(0, 2)) {
-      parts.push({
-        inline_data: {
-          mime_type: "image/jpeg",
-          data: base64,
-        },
-      });
-    }
+    // Text instruction first
+    parts.push({ text: prompt });
 
-    parts.push({ text: internalPrompt });
+    // Only send the first reference image
+    parts.push({
+      inline_data: {
+        mime_type: "image/jpeg",
+        data: images[0],
+      },
+    });
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
@@ -65,7 +64,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         contents: [{ parts }],
         generationConfig: {
-          responseModalities: ["IMAGE"],
+          responseModalities: ["IMAGE", "TEXT"],
         },
       }),
     });
@@ -79,19 +78,27 @@ export async function POST(req: NextRequest) {
     const data = await response.json();
 
     // Check for safety blocks
-    if (data.candidates?.[0]?.finishReason === "SAFETY") {
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === "SAFETY" || finishReason === "BLOCKED") {
       return NextResponse.json({
         error: "safety_block",
-        message: "Gemini flagged this request. Try adjusting your subject description or changing the reference image.",
+        message: "Gemini flagged this request. Try a simpler subject description or a different reference image.",
       }, { status: 400 });
     }
 
     // Find the generated image in parts
     const candidateParts = data.candidates?.[0]?.content?.parts || [];
-    const imagePart = candidateParts.find((p: { inline_data?: { data: string; mime_type: string } }) => p.inline_data);
+    const imagePart = candidateParts.find(
+      (p: { inlineData?: { data: string; mimeType: string }; inline_data?: { data: string; mime_type: string } }) =>
+        p.inlineData || p.inline_data
+    );
 
-    if (!imagePart?.inline_data?.data) {
-      const debugInfo = JSON.stringify(data).slice(0, 300);
+    // Gemini sometimes uses camelCase (inlineData) instead of snake_case (inline_data)
+    const imageData = imagePart?.inlineData?.data || imagePart?.inline_data?.data;
+    const mimeType = imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || "image/png";
+
+    if (!imageData) {
+      const debugInfo = JSON.stringify(data).slice(0, 400);
       console.error("Gemini response (no image):", debugInfo);
       return NextResponse.json({
         error: "no_image",
@@ -100,8 +107,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      imageBase64: imagePart.inline_data.data,
-      mimeType: imagePart.inline_data.mime_type || "image/jpeg",
+      imageBase64: imageData,
+      mimeType,
     });
   } catch (error) {
     console.error("generate-from-reference error:", error);

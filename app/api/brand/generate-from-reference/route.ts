@@ -84,7 +84,7 @@ Technical requirements:
       body: JSON.stringify({
         contents: [{ parts }],
         generationConfig: {
-          responseModalities: ["IMAGE", "TEXT"],
+          responseModalities: ["IMAGE"],
         },
       }),
     });
@@ -110,6 +110,7 @@ Technical requirements:
     const imagePart = candidateParts.find((p: { inline_data?: { data: string; mime_type: string } }) => p.inline_data);
 
     if (!imagePart?.inline_data?.data) {
+      console.error("Gemini response (no image):", JSON.stringify(data).slice(0, 500));
       return NextResponse.json({
         error: "no_image",
         message: "Gemini did not return an image. Try simplifying your request or using different reference images.",

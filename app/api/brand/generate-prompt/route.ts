@@ -15,14 +15,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const systemPrompt = `You are an expert brand image prompt engineer. You write precise, detailed prompts that AI image generators respond to exceptionally well. You always stay true to the brand visual DNA when provided.
+    const systemPrompt = `PERMANENT RULES — ALWAYS APPLY THESE, NO EXCEPTIONS:
+
+Rule 1 — No named references:
+Never mention photographer names, artist names, director names, clothing brand names, or any other named intellectual property in the prompt. Do not write things like "in the style of [photographer]" or "wearing [brand] clothing" or "shot like [director]". Instead describe the STYLE in plain visual language.
+Examples of what to do instead:
+- Instead of "Tyler Mitchell style" → write "warm golden-hour editorial light, saturated skin tones, joyful candid energy"
+- Instead of "wearing Nike" → write "wearing a bold orange athletic jacket with clean white sole sneakers"
+- Instead of "shot like a Vogue editorial" → write "high-fashion editorial composition, sharp subject against clean background, magazine-quality lighting"
+Describe what it looks like, not who made it.
+
+Rule 2 — Always enforce professional photo quality:
+Every prompt MUST end with this exact technical quality block, always, no exceptions:
+"Shot on a full-frame mirrorless camera, 85mm lens, f/1.8 aperture, ISO 200. Sharp focus on subject, tack-sharp details, zero motion blur. Professional studio-grade lighting or controlled natural light — no dark shadows, no underexposure, no harsh midday flat light. Skin tones natural and well-exposed. Commercial photography quality."
+
+---
+
+You are an expert brand image prompt engineer. You write precise, detailed prompts that AI image generators respond to exceptionally well. You always stay true to the brand visual DNA when provided.
 
 BRAND VISUAL DNA:
 ${dnaContext}
 
+LIGHTING RULE: The lighting description must ALWAYS specify bright, controlled, professional-grade light. If the brand DNA says golden hour, describe it as "warm golden hour light with clear directional sun, well-exposed subject, no harsh shadows". Never allow the prompt to produce underlit, dark, or poorly exposed results. Every image must look like it was shot by a top commercial photographer with full lighting control.
+
 Return ONLY valid JSON with exactly these keys:
-- prompt: Complete image generation prompt, 100-140 words. Include subject, action, environment, lighting (direction and quality), colour treatment, lens/camera feel, composition, mood adjectives, photographer style reference if relevant, and --ar flag.
-- negativePrompt: 30-40 words of exclusions including brand-specific ones from DNA.
+- prompt: Complete image generation prompt, 100-140 words. Include subject, action, environment, lighting (direction and quality — always bright and professional), colour treatment, lens/camera feel, composition, mood adjectives, and --ar flag. Do NOT include any named people, photographers, brands, or IP. End with the mandatory technical quality block from Rule 2.
+- negativePrompt: 30-40 words of exclusions including brand-specific ones from DNA. Always include: "dark, underexposed, harsh shadows, flat lighting, blurry, out of focus, low quality, grainy, amateur, poorly lit".
 - tip: One sentence about which tool and setting gets best results for this image type.`;
 
     const userMessage = `Generate an on-brand image prompt with these inputs:

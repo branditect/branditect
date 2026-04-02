@@ -34,38 +34,18 @@ export async function POST(req: NextRequest) {
 
     const aspectRatio = mapAspectRatio(brief.format);
 
-    const internalPrompt = `
-You are generating a professional brand photograph.
+    const parts_list: string[] = [`Generate a photo of: ${brief.subject}.`];
+    parts_list.push(`Match the style, lighting, and colors of the reference images.`);
+    if (brief.colour) parts_list.push(`Wearing: ${brief.colour}.`);
+    if (brief.other) parts_list.push(brief.other);
+    parts_list.push(`Photorealistic, professional photography. Aspect ratio ${aspectRatio}. No text or watermarks.`);
 
-Study the reference image(s) provided and create a NEW image of: ${brief.subject}
-
-Match the reference image(s) exactly for:
-- Lighting quality, direction, and temperature
-- Background treatment and depth of field
-- Colour rendering and restraint — do not boost saturation beyond the reference
-- Skin tone treatment
-- Overall mood and photographic energy
-
-${brief.colour ? `Wardrobe / colour: ${brief.colour}` : ""}
-${brief.other ? `Additional: ${brief.other}` : ""}
-
-${dna?.headline ? `Brand visual rules: ${dna.headline}` : ""}
-
-Aspect ratio: ${aspectRatio}
-
-Technical requirements:
-- Full-frame camera quality, 85mm equivalent lens
-- Sharp focus on subject, professional exposure
-- Natural skin tones, no artificial saturation
-- Photorealistic — looks like a real photograph, not illustrated or CGI
-- Colour grade: natural and restrained, slight lifted shadows, no blown highlights, film-like tonal range
-- Do not add text, logos, or watermarks
-`;
+    const internalPrompt = parts_list.join(" ");
 
     // Build parts: reference images first, then text
     const parts: Record<string, unknown>[] = [];
 
-    for (const base64 of images.slice(0, 3)) {
+    for (const base64 of images.slice(0, 2)) {
       parts.push({
         inline_data: {
           mime_type: "image/jpeg",

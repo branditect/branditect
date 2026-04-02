@@ -85,7 +85,6 @@ Technical requirements:
         contents: [{ parts }],
         generationConfig: {
           responseModalities: ["IMAGE", "TEXT"],
-          responseMimeType: "image/jpeg",
         },
       }),
     });

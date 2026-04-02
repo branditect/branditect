@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import ImageLibrary from "@/components/image-library";
 
 /* ------------------------------------------------------------------ */
 /*  Brand Color type                                                   */
@@ -55,15 +56,6 @@ const defaultFonts: BrandFont[] = [
   { name: "DM Mono", use: "Tags, metadata, labels", source: "google" },
 ];
 
-const assets = [
-  { icon: "\uD83C\uDFA8", name: "Logo \u2014 Primary", type: "SVG \u00B7 PNG" },
-  { icon: "\u25FB", name: "Logo \u2014 White", type: "SVG \u00B7 PNG" },
-  { icon: "\u2709", name: "Newsletter Master", type: "HTML" },
-  { icon: "\u25C8", name: "Pitch Deck Master", type: "PPTX" },
-  { icon: "\uD83D\uDDBC", name: "Brand Images", type: "12 images" },
-  { icon: "\u2726", name: "AI Image Prompts", type: "8 prompts" },
-  { icon: "\u2A21", name: "Social Templates", type: "IG \u00B7 LinkedIn" },
-];
 
 const logoSlots: LogoSlot[] = [
   { key: "primary-logo", label: "Primary Logo" },
@@ -513,6 +505,12 @@ export default function BrandLibraryPage() {
 
       {/* Body — scrollable */}
       <div className="flex-1 overflow-y-auto px-8 py-7">
+
+        {/* Assets tab — Image Library */}
+        {activeTab === "Assets" && <ImageLibrary />}
+
+        {/* Visual tab — all existing content */}
+        {activeTab === "Visual" && (<>
         {/* ========================================================= */}
         {/*  SECTION 1 — Logo Upload                                   */}
         {/* ========================================================= */}
@@ -1000,36 +998,21 @@ export default function BrandLibraryPage() {
           )}
         </div>
 
-        {/* Assets */}
-        <div className="mb-9">
-          <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-3.5">
-            Asset Library
+        </>)}
+
+        {/* Strategy tab */}
+        {activeTab === "Strategy" && (
+          <div className="text-center py-12">
+            <p className="text-[0.78rem] text-muted">Strategy content coming soon.</p>
           </div>
-          <div className="grid grid-cols-4 gap-2.5">
-            {assets.map((a) => (
-              <div
-                key={a.name}
-                className="bg-white border border-light rounded-[7px] overflow-hidden cursor-pointer hover:border-brand-orange hover:shadow-[0_1px_8px_rgba(232,86,42,0.08)] transition-all"
-              >
-                <div className="h-[72px] bg-pale border-b border-light flex items-center justify-center text-2xl">
-                  {a.icon}
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[0.73rem] text-ink mb-[2px] truncate">{a.name}</div>
-                  <div className="font-mono text-[0.56rem] text-muted">{a.type}</div>
-                </div>
-              </div>
-            ))}
-            {/* Upload card */}
-            <div className="border border-dashed border-light rounded-[7px] overflow-hidden opacity-50 cursor-pointer">
-              <div className="h-[72px] flex items-center justify-center text-xl text-muted">+</div>
-              <div className="p-2.5">
-                <div className="text-[0.73rem] text-muted mb-[2px]">Upload asset</div>
-                <div className="font-mono text-[0.56rem] text-muted">Any format</div>
-              </div>
-            </div>
+        )}
+
+        {/* Other tabs — placeholder */}
+        {!["Visual", "Assets", "Strategy"].includes(activeTab) && (
+          <div className="text-center py-12">
+            <p className="text-[0.78rem] text-muted">{activeTab} content coming soon.</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

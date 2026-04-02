@@ -33,7 +33,7 @@ interface UploadedFile {
 /*  Static data (kept from original page)                              */
 /* ------------------------------------------------------------------ */
 
-const tabs = ["Visual", "Strategy", "Assets", "Voice & Tone", "Products", "Team"];
+const tabs = ["Visual", "Strategy", "Assets", "Voice & Tone", "Image Architect", "Products", "Team"];
 
 const defaultColors: BrandColor[] = [
   { hex: "#0A0A0F", name: "Black", usage: "Primary background" },
@@ -508,6 +508,23 @@ export default function BrandLibraryPage() {
 
         {/* Assets tab — Image Library */}
         {activeTab === "Assets" && <ImageLibrary />}
+
+        {/* Image Architect tab — redirect to sub-page */}
+        {activeTab === "Image Architect" && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-brand-orange-pale rounded-full flex items-center justify-center text-2xl mb-4">🎨</div>
+            <h3 className="font-display text-xl text-ink mb-2">Brand Image Architect</h3>
+            <p className="text-[0.78rem] text-muted max-w-md text-center mb-6">
+              Upload reference images to extract your 30-point visual DNA, then generate perfectly on-brand image prompts.
+            </p>
+            <a
+              href="/dashboard/brand-library/image-architect"
+              className="px-8 py-3 rounded-lg bg-brand-orange text-white font-medium text-[0.88rem] hover:bg-brand-orange-hover transition-all"
+            >
+              Open Image Architect →
+            </a>
+          </div>
+        )}
 
         {/* Visual tab — all existing content */}
         {activeTab === "Visual" && (<>

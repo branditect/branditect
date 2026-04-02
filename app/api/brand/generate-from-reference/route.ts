@@ -34,11 +34,13 @@ export async function POST(req: NextRequest) {
 
     const aspectRatio = mapAspectRatio(brief.format);
 
-    const parts_list: string[] = [`Generate a photo of: ${brief.subject}.`];
-    parts_list.push(`Match the style, lighting, and colors of the reference images.`);
-    if (brief.colour) parts_list.push(`Wearing: ${brief.colour}.`);
-    if (brief.other) parts_list.push(brief.other);
-    parts_list.push(`Photorealistic, professional photography. Aspect ratio ${aspectRatio}. No text or watermarks.`);
+    const parts_list: string[] = [];
+    parts_list.push(`A high-quality lifestyle photograph of ${brief.subject}.`);
+    if (brief.colour) parts_list.push(`Wearing ${brief.colour}.`);
+    if (brief.other) parts_list.push(brief.other + ".");
+    parts_list.push(`See the reference image(s) for image style, composition, lighting and overall feel — match them closely.`);
+    parts_list.push(`Natural, warm cinematic lighting, shallow depth of field, 35mm lens feel, authentic and energetic atmosphere.`);
+    parts_list.push(`Photorealistic professional photography, aspect ratio ${aspectRatio}. No text, logos or watermarks.`);
 
     const internalPrompt = parts_list.join(" ");
 

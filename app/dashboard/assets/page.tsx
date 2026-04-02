@@ -8,6 +8,7 @@ const assetTypes = [
   { key: "videos", label: "Videos", icon: "🎬", desc: "Brand videos, reels, ads" },
   { key: "sounds", label: "Sounds", icon: "🎵", desc: "Audio logos, jingles, podcasts" },
   { key: "graphics", label: "Graphics", icon: "✦", desc: "Logos, icons, illustrations, vectors" },
+  { key: "web", label: "Website / App", icon: "🌐", desc: "Screenshots, wireframes, UI components" },
 ];
 
 export default function AssetsPage() {
@@ -27,7 +28,7 @@ export default function AssetsPage() {
 
       {/* Asset type cards */}
       <div className="px-8 py-5 border-b border-light">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-3">
           {assetTypes.map((type) => (
             <button
               key={type.key}
@@ -82,6 +83,16 @@ export default function AssetsPage() {
             <h3 className="font-display text-lg text-ink mb-1">Graphics</h3>
             <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
               Manage logos, icons, illustrations, and vector assets. Coming soon.
+            </p>
+          </div>
+        )}
+
+        {activeType === "web" && (
+          <div className="text-center py-16">
+            <span className="text-4xl block mb-3">🌐</span>
+            <h3 className="font-display text-lg text-ink mb-1">Website / App</h3>
+            <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
+              Store website screenshots, app UI screenshots, wireframes, and UI component references. Coming soon.
             </p>
           </div>
         )}

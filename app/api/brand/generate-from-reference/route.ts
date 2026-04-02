@@ -34,11 +34,12 @@ export async function POST(req: NextRequest) {
     const aspectRatio = mapAspectRatio(brief.format);
 
     // Build a clean, simple prompt
-    let prompt = `Generate a new photograph inspired by the visual style of the attached reference image. `;
+    let prompt = `Generate a new photograph that closely matches the visual style of the attached reference image. `;
     prompt += `The new image should show: ${brief.subject}. `;
     if (brief.colour) prompt += `They are wearing ${brief.colour}. `;
     if (brief.other) prompt += `${brief.other}. `;
-    prompt += `Match the lighting style, color palette, and overall mood of the reference. `;
+    prompt += `IMPORTANT: Match the reference image exactly for light direction, light temperature, light intensity, shadow softness, color saturation level, color grading tone, contrast level, and overall color palette. `;
+    prompt += `The generated image should feel like it was taken in the same photoshoot as the reference — same camera, same lighting setup, same color grade applied in post. `;
     prompt += `Professional photography, sharp focus, natural skin tones. `;
     prompt += `Aspect ratio ${aspectRatio}.`;
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ImageLibrary from "@/components/image-library";
+import FileLibrary from "@/components/file-library";
 
 const assetTypes = [
   { key: "images", label: "Images", icon: "🖼", desc: "Photos, screenshots, brand imagery" },
@@ -18,12 +19,8 @@ export default function AssetsPage() {
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light">
-        <h1 className="font-display text-[1.75rem] text-ink tracking-tight mb-1">
-          Brand Assets
-        </h1>
-        <p className="text-[0.78rem] text-muted">
-          Access and manage all of Vetra&apos;s brand assets in one place.
-        </p>
+        <h1 className="font-display text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
+        <p className="text-[0.78rem] text-muted">Access and manage all of Vetra&apos;s brand assets in one place.</p>
       </div>
 
       {/* Asset type cards */}
@@ -40,14 +37,10 @@ export default function AssetsPage() {
               }`}
             >
               <span className="text-xl block mb-2">{type.icon}</span>
-              <div className={`font-medium text-[0.82rem] mb-0.5 ${
-                activeType === type.key ? "text-brand-orange" : "text-ink"
-              }`}>
+              <div className={`font-medium text-[0.82rem] mb-0.5 ${activeType === type.key ? "text-brand-orange" : "text-ink"}`}>
                 {type.label}
               </div>
-              <div className="font-mono text-[0.55rem] text-muted leading-relaxed">
-                {type.desc}
-              </div>
+              <div className="font-mono text-[0.55rem] text-muted leading-relaxed">{type.desc}</div>
             </button>
           ))}
         </div>
@@ -58,43 +51,51 @@ export default function AssetsPage() {
         {activeType === "images" && <ImageLibrary />}
 
         {activeType === "videos" && (
-          <div className="text-center py-16">
-            <span className="text-4xl block mb-3">🎬</span>
-            <h3 className="font-display text-lg text-ink mb-1">Videos</h3>
-            <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
-              Upload and manage brand videos, social reels, and ad content. Coming soon.
-            </p>
-          </div>
+          <FileLibrary
+            category="video"
+            accept=".mp4,.mov,.webm,.avi"
+            acceptLabel="MP4, MOV, WEBM, AVI"
+            maxSize={100}
+            icon="🎬"
+            emptyMessage="No videos uploaded yet. Drop video files above to get started."
+            previewType="video"
+          />
         )}
 
         {activeType === "sounds" && (
-          <div className="text-center py-16">
-            <span className="text-4xl block mb-3">🎵</span>
-            <h3 className="font-display text-lg text-ink mb-1">Sounds</h3>
-            <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
-              Store audio logos, jingles, podcast intros, and sound assets. Coming soon.
-            </p>
-          </div>
+          <FileLibrary
+            category="audio"
+            accept=".mp3,.wav,.aac,.ogg,.m4a"
+            acceptLabel="MP3, WAV, AAC, OGG, M4A"
+            maxSize={50}
+            icon="🎵"
+            emptyMessage="No audio files yet. Upload audio logos, jingles, or podcast clips."
+            previewType="audio"
+          />
         )}
 
         {activeType === "graphics" && (
-          <div className="text-center py-16">
-            <span className="text-4xl block mb-3">✦</span>
-            <h3 className="font-display text-lg text-ink mb-1">Graphics</h3>
-            <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
-              Manage logos, icons, illustrations, and vector assets. Coming soon.
-            </p>
-          </div>
+          <FileLibrary
+            category="graphic"
+            accept=".svg,.png,.ai,.eps,.pdf,.psd"
+            acceptLabel="SVG, PNG, AI, EPS, PDF, PSD"
+            maxSize={50}
+            icon="✦"
+            emptyMessage="No graphics yet. Upload logos, icons, illustrations, and vectors."
+            previewType="image"
+          />
         )}
 
         {activeType === "web" && (
-          <div className="text-center py-16">
-            <span className="text-4xl block mb-3">🌐</span>
-            <h3 className="font-display text-lg text-ink mb-1">Website / App</h3>
-            <p className="text-[0.78rem] text-muted max-w-sm mx-auto">
-              Store website screenshots, app UI screenshots, wireframes, and UI component references. Coming soon.
-            </p>
-          </div>
+          <FileLibrary
+            category="web"
+            accept=".png,.jpg,.jpeg,.webp,.svg,.pdf,.fig"
+            acceptLabel="PNG, JPG, WEBP, SVG, PDF, FIG"
+            maxSize={20}
+            icon="🌐"
+            emptyMessage="No website or app assets yet. Upload screenshots, wireframes, and UI references."
+            previewType="image"
+          />
         )}
       </div>
     </div>

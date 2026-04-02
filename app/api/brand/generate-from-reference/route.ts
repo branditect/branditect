@@ -69,13 +69,20 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const err = await response.text();
-      console.error("Gemini error:", err);
-      return NextResponse.json({ error: "api_error", message: `Gemini API error: ${err.slice(0, 200)}` }, { status: 500 });
+      console.error("Gemini error:", responseText.slice(0, 300));
+      return NextResponse.json({ error: "api_error", message: `Gemini API error: ${responseText.slice(0, 200)}` }, { status: 500 });
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error("Gemini non-JSON response:", responseText.slice(0, 300));
+      return NextResponse.json({ error: "api_error", message: `Gemini returned invalid response: ${responseText.slice(0, 150)}` }, { status: 500 });
+    }
 
     // Check for safety blocks
     const finishReason = data.candidates?.[0]?.finishReason;

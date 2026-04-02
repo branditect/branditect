@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, DragEvent, ChangeEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -9,6 +9,21 @@ import Link from "next/link";
 /* ------------------------------------------------------------------ */
 
 interface GeneratedImage { imageBase64: string; mimeType: string; }
+
+interface RefImage {
+  preview: string;
+  source: "upload" | "library";
+  file?: File;
+  url?: string;
+}
+
+interface LibraryImage {
+  id: string;
+  file_url: string;
+  file_name: string;
+  tags: string[];
+  category: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -61,11 +76,16 @@ function getAspectClass(format: string): string {
 /* ================================================================== */
 
 export default function ImageArchitectPage() {
-  /* ---- Reference images ---- */
-  const [refFiles, setRefFiles] = useState<File[]>([]);
-  const [refPreviews, setRefPreviews] = useState<string[]>([]);
+  /* ---- Reference images (unified) ---- */
+  const [refs, setRefs] = useState<RefImage[]>([]);
   const refInputRef = useRef<HTMLInputElement>(null);
   const [refDragOver, setRefDragOver] = useState(false);
+
+  /* ---- Library picker ---- */
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryImages, setLibraryImages] = useState<LibraryImage[]>([]);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [libraryLoading, setLibraryLoading] = useState(false);
 
   /* ---- Brief form ---- */
   const [mode, setMode] = useState("studio");
@@ -87,19 +107,22 @@ export default function ImageArchitectPage() {
       const ext = f.name.split(".").pop()?.toLowerCase();
       return ["jpg", "jpeg", "png", "webp"].includes(ext || "") && f.size <= 8 * 1024 * 1024;
     });
-    setRefFiles((prev) => {
-      const combined = [...prev, ...valid].slice(0, 3);
-      setRefPreviews(combined.map((f) => URL.createObjectURL(f)));
-      return combined;
+    setRefs((prev) => {
+      const newRefs: RefImage[] = valid.map((f) => ({ preview: URL.createObjectURL(f), source: "upload", file: f }));
+      return [...prev, ...newRefs].slice(0, 3);
     });
   }, []);
 
-  const removeRefFile = useCallback((index: number) => {
-    setRefFiles((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      setRefPreviews(next.map((f) => URL.createObjectURL(f)));
-      return next;
+  const addLibraryRef = useCallback((img: LibraryImage) => {
+    setRefs((prev) => {
+      if (prev.length >= 3) return prev;
+      if (prev.some((r) => r.url === img.file_url)) return prev;
+      return [...prev, { preview: img.file_url, source: "library", url: img.file_url }];
     });
+  }, []);
+
+  const removeRef = useCallback((index: number) => {
+    setRefs((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const handleRefDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -112,19 +135,65 @@ export default function ImageArchitectPage() {
     e.target.value = "";
   }, [addRefFiles]);
 
+  /* ---- Library fetching ---- */
+
+  const fetchLibrary = useCallback(async () => {
+    setLibraryLoading(true);
+    const { data } = await supabase
+      .from("brand_images")
+      .select("id, file_url, file_name, tags, category")
+      .eq("brand_id", "vetra")
+      .order("uploaded_at", { ascending: false });
+    setLibraryImages(data || []);
+    setLibraryLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (showLibrary && libraryImages.length === 0) fetchLibrary();
+  }, [showLibrary, libraryImages.length, fetchLibrary]);
+
+  const filteredLibrary = librarySearch
+    ? libraryImages.filter((img) => {
+        const s = librarySearch.toLowerCase();
+        return img.file_name.toLowerCase().includes(s) ||
+          img.tags.some((t) => t.toLowerCase().includes(s)) ||
+          img.category.toLowerCase().includes(s);
+      })
+    : libraryImages;
+
   /* ---- Generate image ---- */
 
+  const urlToBase64 = useCallback(async (url: string): Promise<string> => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.readAsDataURL(blob);
+    });
+  }, []);
+
   const generateImage = useCallback(async () => {
-    if (!subject.trim() || refFiles.length === 0) return;
+    if (!subject.trim() || refs.length === 0) return;
     setGenerating(true); setGenError(null); setGenResult(null); setSavedToLib(false);
 
     try {
-      const base64Refs = await Promise.all(refFiles.map((f) => resizeImageToBase64(f, 600)));
+      const base64Refs = await Promise.all(
+        refs.map(async (ref) => {
+          if (ref.source === "upload" && ref.file) {
+            return resizeImageToBase64(ref.file, 600);
+          } else if (ref.url) {
+            return urlToBase64(ref.url);
+          }
+          return "";
+        })
+      );
+
       const res = await fetch("/api/brand/generate-from-reference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          images: base64Refs,
+          images: base64Refs.filter(Boolean),
           brief: { subject, format, colour, mode, other },
           dna: null,
         }),
@@ -140,7 +209,7 @@ export default function ImageArchitectPage() {
     } finally {
       setGenerating(false);
     }
-  }, [subject, refFiles, format, colour, mode, other]);
+  }, [subject, refs, format, colour, mode, other, urlToBase64]);
 
   /* ---- Actions ---- */
 
@@ -211,32 +280,104 @@ export default function ImageArchitectPage() {
             <>
               {/* Reference images */}
               <FieldSection label="Reference Images">
-                <p className="text-[0.72rem] text-muted mb-3">Upload 1-3 reference images for Gemini to match the style of.</p>
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setRefDragOver(true); }}
-                  onDragLeave={() => setRefDragOver(false)}
-                  onDrop={handleRefDrop}
-                  onClick={() => refInputRef.current?.click()}
-                  className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all py-8 mb-3 ${refDragOver ? "border-brand-orange bg-brand-orange-pale" : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"}`}
-                >
-                  <input ref={refInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleRefFileChange} />
-                  <svg className="h-7 w-7 text-muted mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                  </svg>
-                  <span className="font-mono text-[0.62rem] tracking-wide uppercase text-muted">Drop reference images here · Max 3</span>
+                <p className="text-[0.72rem] text-muted mb-3">Upload or choose from your asset library. 1-3 images, Gemini will match the style.</p>
+
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {/* Upload zone */}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setRefDragOver(true); }}
+                    onDragLeave={() => setRefDragOver(false)}
+                    onDrop={handleRefDrop}
+                    onClick={() => refInputRef.current?.click()}
+                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all py-6 ${refDragOver ? "border-brand-orange bg-brand-orange-pale" : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"}`}
+                  >
+                    <input ref={refInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleRefFileChange} />
+                    <svg className="h-6 w-6 text-muted mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.595H6.75z" />
+                    </svg>
+                    <span className="font-mono text-[0.58rem] tracking-wide uppercase text-muted">Upload images</span>
+                  </div>
+
+                  {/* Library picker button */}
+                  <button
+                    onClick={() => setShowLibrary(!showLibrary)}
+                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all py-6 ${showLibrary ? "border-brand-orange bg-brand-orange-pale" : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"}`}
+                  >
+                    <svg className="h-6 w-6 text-muted mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                    </svg>
+                    <span className="font-mono text-[0.58rem] tracking-wide uppercase text-muted">Choose from library</span>
+                  </button>
                 </div>
-                {refPreviews.length > 0 && (
+
+                {/* Library picker panel */}
+                {showLibrary && (
+                  <div className="mb-3 border border-light rounded-lg bg-white overflow-hidden">
+                    <div className="px-3 py-2 border-b border-light bg-pale">
+                      <input
+                        value={librarySearch}
+                        onChange={(e) => setLibrarySearch(e.target.value)}
+                        placeholder="Search by tag, name, or category…"
+                        className="w-full bg-white border border-light rounded-md px-3 py-1.5 text-[0.72rem] text-ink outline-none focus:border-brand-orange placeholder:text-muted/50"
+                      />
+                    </div>
+                    <div className="max-h-[240px] overflow-y-auto p-2">
+                      {libraryLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
+                        </div>
+                      ) : filteredLibrary.length === 0 ? (
+                        <p className="text-center text-[0.72rem] text-muted py-6">
+                          {librarySearch ? "No images match your search" : "No images in your library yet"}
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {filteredLibrary.map((img) => {
+                            const isSelected = refs.some((r) => r.url === img.file_url);
+                            return (
+                              <button
+                                key={img.id}
+                                onClick={() => addLibraryRef(img)}
+                                disabled={isSelected || refs.length >= 3}
+                                className={`relative aspect-square rounded-md overflow-hidden transition-all ${isSelected ? "ring-2 ring-brand-orange opacity-60" : refs.length >= 3 ? "opacity-30 cursor-not-allowed" : "hover:ring-2 hover:ring-brand-orange/50"}`}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={img.file_url} alt={img.file_name} className="w-full h-full object-cover" />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-brand-orange/20 flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">✓</span>
+                                  </div>
+                                )}
+                                {img.tags.length > 0 && (
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
+                                    <span className="font-mono text-[0.4rem] text-white truncate block">{img.tags.join(", ")}</span>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected references */}
+                {refs.length > 0 && (
                   <div className="flex gap-2 mb-1">
-                    {refPreviews.map((src, i) => (
+                    {refs.map((ref, i) => (
                       <div key={i} className="relative w-20 h-20 rounded-md overflow-hidden bg-pale group">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={src} alt={`ref ${i + 1}`} className="w-full h-full object-cover" />
-                        <button onClick={() => removeRefFile(i)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white text-[0.5rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                        <img src={ref.preview} alt={`ref ${i + 1}`} className="w-full h-full object-cover" />
+                        <button onClick={() => removeRef(i)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white text-[0.5rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-center">
+                          <span className="font-mono text-[0.4rem] text-white">{ref.source === "library" ? "Library" : "Upload"}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-                <span className="font-mono text-[0.55rem] text-muted">{refFiles.length}/3 reference images</span>
+                <span className="font-mono text-[0.55rem] text-muted">{refs.length}/3 reference images</span>
               </FieldSection>
 
               {/* Brief form */}
@@ -278,7 +419,7 @@ export default function ImageArchitectPage() {
               {/* Generate button */}
               <button
                 onClick={generateImage}
-                disabled={!subject.trim() || refFiles.length === 0 || generating}
+                disabled={!subject.trim() || refs.length === 0 || generating}
                 className="w-full py-4 rounded-lg bg-brand-orange text-white font-medium text-[0.9rem] hover:bg-brand-orange-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {generating ? (

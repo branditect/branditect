@@ -91,10 +91,11 @@ export async function POST(req: NextRequest) {
     const imagePart = candidateParts.find((p: { inline_data?: { data: string; mime_type: string } }) => p.inline_data);
 
     if (!imagePart?.inline_data?.data) {
-      console.error("Gemini response (no image):", JSON.stringify(data).slice(0, 500));
+      const debugInfo = JSON.stringify(data).slice(0, 300);
+      console.error("Gemini response (no image):", debugInfo);
       return NextResponse.json({
         error: "no_image",
-        message: "Gemini did not return an image. Try simplifying your request or using different reference images.",
+        message: `No image returned. Debug: ${debugInfo}`,
       }, { status: 400 });
     }
 

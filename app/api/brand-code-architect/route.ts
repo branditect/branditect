@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const maxDuration = 60
+export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -93,9 +94,11 @@ Extract the design system and generate a complete, self-contained HTML file that
     })
   } catch (err) {
     console.error('[brand-code-architect] Error:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Unexpected error' },
-      { status: 500 }
-    )
+    const message = err instanceof Error ? err.message : 'Unexpected error'
+    // Check for common issues
+    if (message.includes('Request too large') || message.includes('413')) {
+      return NextResponse.json({ error: 'Images are too large. Please use smaller screenshots.' }, { status: 400 })
+    }
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

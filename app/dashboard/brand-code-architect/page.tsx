@@ -37,15 +37,22 @@ const LOADING_STEPS = [
 
 function fileToBase64(file: File): Promise<{ base64: string; mediaType: string; dataUrl: string }> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string
-      const [header, base64] = dataUrl.split(',')
-      const mediaType = header.match(/data:([^;]+)/)?.[1] ?? 'image/png'
-      resolve({ base64, mediaType, dataUrl })
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const MAX = 800
+      let w = img.width, h = img.height
+      if (w > h && w > MAX) { h = (h / w) * MAX; w = MAX }
+      else if (h > MAX) { w = (w / h) * MAX; h = MAX }
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      const base64 = dataUrl.split(',')[1]
+      resolve({ base64, mediaType: 'image/jpeg', dataUrl })
     }
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
+    img.onerror = () => reject(new Error('Failed to read file'))
+    img.src = URL.createObjectURL(file)
   })
 }
 

@@ -18,8 +18,10 @@ Return this exact structure:
     "typography": "Fonts used and text hierarchy",
     "styleNotes": "Spacing, border-radius, card treatment, shadows, overall character"
   },
-  "html": "COMPLETE self-contained HTML file with embedded <style>. Must: render the new feature with realistic placeholder content; include hover states and transitions; be mobile-friendly; contain no Lorem Ipsum. Use the exact design system extracted from the screenshots."
-}`
+  "html": "COMPLETE self-contained HTML file with embedded <style>. Must: render the new feature with realistic placeholder content; include hover states and transitions; be mobile-friendly; contain no Lorem Ipsum. Use the exact design system extracted from the screenshots. Keep CSS concise — use shorthand properties and avoid redundancy."
+}
+
+IMPORTANT: You MUST complete the entire JSON response including the closing braces. Do not stop mid-output. Keep the HTML under 400 lines to ensure you can finish.`
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,7 +56,7 @@ Extract the design system and generate a complete, self-contained HTML file that
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [
         {

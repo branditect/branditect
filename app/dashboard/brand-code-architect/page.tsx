@@ -40,14 +40,14 @@ function fileToBase64(file: File): Promise<{ base64: string; mediaType: string; 
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const MAX = 800
+      const MAX = 500
       let w = img.width, h = img.height
       if (w > h && w > MAX) { h = (h / w) * MAX; w = MAX }
       else if (h > MAX) { w = (w / h) * MAX; h = MAX }
       canvas.width = w
       canvas.height = h
       canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6)
       const base64 = dataUrl.split(',')[1]
       resolve({ base64, mediaType: 'image/jpeg', dataUrl })
     }
@@ -133,7 +133,13 @@ export default function BrandCodeArchitectPage() {
 
       clearTimers()
 
-      const data = await res.json()
+      const responseText = await res.text()
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch {
+        throw new Error(`Server error: ${responseText.slice(0, 100)}`)
+      }
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
 
       setResult(data)

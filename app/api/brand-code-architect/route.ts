@@ -72,17 +72,41 @@ Extract the design system and generate a complete, self-contained HTML file that
       .map((b) => (b as Anthropic.TextBlock).text)
       .join('')
 
-    const cleaned = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim()
+    // Try multiple parsing strategies
+    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
 
-    let parsed: { designSystem: unknown; html: string }
+    let parsed: { designSystem: unknown; html: string } | null = null
+
+    // Strategy 1: Direct JSON parse
     try {
       parsed = JSON.parse(cleaned)
     } catch {
-      // Try to extract HTML directly
-      const htmlMatch = cleaned.match(/<html[\s\S]*<\/html>/i) || cleaned.match(/<!DOCTYPE[\s\S]*<\/html>/i)
+      // Strategy 2: Find JSON object in text
+      const jsonMatch = cleaned.match(/\{[\s\S]*"html"\s*:\s*"[\s\S]*\}/)
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[0]) } catch { /* continue */ }
+      }
+    }
+
+    // Strategy 3: Extract HTML directly from response
+    if (!parsed) {
+      const htmlMatch = cleaned.match(/<!DOCTYPE[\s\S]*<\/html>/i) || cleaned.match(/<html[\s\S]*<\/html>/i)
       if (htmlMatch) {
         return NextResponse.json({ designSystem: null, html: htmlMatch[0], brandAssetsUsed: false })
       }
+    }
+
+    // Strategy 4: If "html" key exists but JSON is malformed, extract the HTML value
+    if (!parsed) {
+      const htmlValueMatch = cleaned.match(/"html"\s*:\s*"([\s\S]*?)"\s*[,}]/)
+      if (htmlValueMatch) {
+        const html = htmlValueMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+        return NextResponse.json({ designSystem: null, html, brandAssetsUsed: false })
+      }
+    }
+
+    if (!parsed) {
+      console.error('[brand-code-architect] Could not parse:', cleaned.slice(0, 300))
       return NextResponse.json({ error: 'Failed to parse AI response. Please try again.' }, { status: 500 })
     }
 

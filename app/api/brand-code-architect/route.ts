@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const maxDuration = 60
-export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

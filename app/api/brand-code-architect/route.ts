@@ -106,8 +106,8 @@ Extract the design system and generate a complete, self-contained HTML file that
     }
 
     if (!parsed) {
-      console.error('[brand-code-architect] Could not parse:', cleaned.slice(0, 300))
-      return NextResponse.json({ error: 'Failed to parse AI response. Please try again.' }, { status: 500 })
+      console.error('[brand-code-architect] Could not parse:', cleaned.slice(0, 500))
+      return NextResponse.json({ error: `Parse failed. Raw start: ${cleaned.slice(0, 200)}` }, { status: 500 })
     }
 
     return NextResponse.json({

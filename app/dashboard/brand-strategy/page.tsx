@@ -39,6 +39,76 @@ interface StrategyRecord {
   created_at: string;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface BrandStrategy {
+  brandName: string;
+  category: string;
+  stage: string;
+  target: string;
+  archetype: string;
+  passport: {
+    signature: string;
+    purpose: string;
+    promise: string;
+    philosophy: string;
+    values: string;
+    insight: string;
+    targetGroup: string;
+    onlyWeClaim: string;
+  };
+  pyramid: {
+    essence: string;
+    behavior: string;
+    whyChooseUs: string;
+    audience: string;
+    market: string;
+    context: string;
+  };
+  problems: { title: string; text: string }[];
+  solution: string;
+  firstTo: { claim: string; explanation: string };
+  onlyOnesWho: { claim: string; explanation: string };
+  differentiators: { label: string; title: string; text: string }[];
+  personas: {
+    name: string;
+    role: string;
+    type: string;
+    emoji: string;
+    who: string;
+    wants: string;
+    frustrations: string;
+    channels: string[];
+    activeChannels: string[];
+    brandGives: string;
+  }[];
+  exclusions: string;
+  competitiveIntro: string;
+  competitors: {
+    name: string;
+    type: string;
+    doWell: string;
+    fail: string;
+    vsUs: string;
+    isUs: boolean;
+  }[];
+  messagingPillars: { title: string; text: string }[];
+  channelMessages: {
+    linkedin: { format: string; pillar: string; body: string }[];
+    email: { format: string; tone: string; body: string }[];
+    ads: { format: string; pillar: string; body: string }[];
+    website: { format: string; body: string }[];
+    sales: { format: string; persona: string; body: string }[];
+  };
+  voiceDescription: string;
+  voiceDoDont: { do: string; dont: string }[];
+  alwaysUse: string[];
+  neverUse: string[];
+  risks: { title: string; text: string }[];
+  opportunities: { title: string; text: string }[];
+  taglines: { text: string; rationale: string }[];
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 /* ------------------------------------------------------------------ */
 /*  Questions                                                          */
 /* ------------------------------------------------------------------ */
@@ -198,7 +268,7 @@ function parseMarkdown(md: string): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  View-screen markdown parser                                        */
+/*  View-screen markdown parser (legacy fallback)                      */
 /* ------------------------------------------------------------------ */
 
 function parseViewMarkdown(md: string): string {
@@ -259,7 +329,7 @@ function parseViewMarkdown(md: string): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Parse strategy into sections                                       */
+/*  Parse strategy into sections (legacy fallback)                     */
 /* ------------------------------------------------------------------ */
 
 function parseStrategySections(markdown: string): StrategySection[] {
@@ -287,16 +357,45 @@ function parseStrategySections(markdown: string): StrategySection[] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Rebuild full markdown from sections                                */
+/*  Rebuild full markdown from sections (legacy)                       */
 /* ------------------------------------------------------------------ */
 
 function rebuildMarkdown(sections: StrategySection[], originalMarkdown: string): string {
-  // Extract header (everything before the first ## )
   const firstH2 = originalMarkdown.indexOf("\n## ");
   const header = firstH2 >= 0 ? originalMarkdown.substring(0, firstH2 + 1) : "";
   const sectionStrings = sections.map((s) => `## ${s.title}\n${s.content}`);
   return header + sectionStrings.join("\n\n");
 }
+
+/* ------------------------------------------------------------------ */
+/*  Try parsing strategy as JSON                                       */
+/* ------------------------------------------------------------------ */
+
+function tryParseStrategyJSON(raw: string): BrandStrategy | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.brandName) {
+      return parsed as BrandStrategy;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Channel tab keys                                                   */
+/* ------------------------------------------------------------------ */
+
+const CHANNEL_TABS = [
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "email", label: "Email" },
+  { key: "ads", label: "Ads" },
+  { key: "website", label: "Website" },
+  { key: "sales", label: "Sales" },
+] as const;
+
+type ChannelKey = (typeof CHANNEL_TABS)[number]["key"];
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -325,6 +424,9 @@ export default function BrandStrategyPage() {
   const [editModalContent, setEditModalContent] = useState("");
   const [showRedoModal, setShowRedoModal] = useState(false);
   const [loadingStrategy, setLoadingStrategy] = useState(true);
+
+  // JSON view state
+  const [activeChannelTab, setActiveChannelTab] = useState<ChannelKey>("linkedin");
 
   // Load existing strategy on mount
   useEffect(() => {
@@ -548,6 +650,20 @@ export default function BrandStrategyPage() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadJSON = () => {
+    const parsed = tryParseStrategyJSON(generatedStrategy);
+    const content = parsed
+      ? JSON.stringify(parsed, null, 2)
+      : generatedStrategy;
+    const blob = new Blob([content], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${parsed?.brandName || "brand"}-strategy.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   /* ---- navigation ---- */
 
   const goToQuestionsBySection = (section: string) => {
@@ -578,6 +694,11 @@ export default function BrandStrategyPage() {
       </div>
     );
   }
+
+  // Try parsing JSON for the view screen
+  const strategyJSON: BrandStrategy | null = strategyRecord
+    ? tryParseStrategyJSON(strategyRecord.generated_strategy)
+    : null;
 
   return (
     <div className="flex flex-col h-full">
@@ -1065,133 +1186,567 @@ export default function BrandStrategyPage() {
       {/* ---- VIEW SCREEN ---- */}
       {screen === "view" && (
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-8 py-10">
-            {/* Header area */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Complete
-                </span>
-                {strategyRecord && (
-                  <span className="text-[0.75rem] text-muted">
-                    Last updated {formatDate(strategyRecord.created_at)}
+
+          {/* ============================================================ */}
+          {/*  JSON-based rich view                                         */}
+          {/* ============================================================ */}
+          {strategyJSON ? (
+            <div className="max-w-[960px] mx-auto px-8 py-10 space-y-10">
+
+              {/* ---------- Topbar ---------- */}
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    Complete
                   </span>
-                )}
-              </div>
+                  {strategyRecord && (
+                    <span className="text-[0.75rem] text-muted">
+                      Last updated {formatDate(strategyRecord.created_at)}
+                    </span>
+                  )}
+                </div>
 
-              <h1 className="text-3xl font-display text-ink mb-2">
-                Vetra &mdash; Brand Strategy
-              </h1>
+                <h1 className="text-[2.5rem] font-display text-ink mb-3 leading-tight">
+                  {strategyJSON.brandName} &mdash; Brand Strategy
+                </h1>
 
-              <p className="text-[0.82rem] text-muted leading-relaxed">
-                9 sections &middot; Generated from questionnaire &middot; All outputs reference this strategy automatically.
-              </p>
+                <p className="text-[0.88rem] text-[#6B6B6B] leading-relaxed max-w-[720px] mb-5">
+                  {strategyJSON.passport.purpose}
+                </p>
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-3 mt-5">
-                <button
-                  onClick={downloadMd}
-                  className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
-                >
-                  Export .md
-                </button>
-                <button
-                  onClick={() => setShowRedoModal(true)}
-                  className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
-                >
-                  Re-do brand strategy
-                </button>
-              </div>
-            </div>
-
-            {/* Section cards */}
-            <div className="space-y-3">
-              {strategySections.map((section, idx) => {
-                const isOpen = openSectionIdx === idx;
-                const sectionTitle = VIEW_SECTION_TITLES[idx] || section.title;
-
-                return (
-                  <div
-                    key={idx}
-                    className="bg-white border border-light rounded-xl overflow-hidden transition-colors hover:border-[#D4D4CE]"
-                  >
-                    {/* Card header */}
-                    <div
-                      className="flex items-center gap-3.5 px-5 py-4 cursor-pointer select-none"
-                      onClick={() => setOpenSectionIdx(isOpen ? null : idx)}
-                    >
-                      {/* Number badge */}
-                      <div
-                        className={`w-7 h-7 rounded-[7px] flex items-center justify-center font-mono text-[0.68rem] font-bold shrink-0 ${
-                          isOpen
-                            ? "bg-brand-orange-pale text-brand-orange"
-                            : "bg-pale text-muted"
-                        }`}
-                      >
-                        {idx + 1}
-                      </div>
-
-                      {/* Section title */}
-                      <span className="text-[0.88rem] font-semibold text-ink flex-1">
-                        {sectionTitle}
-                      </span>
-
-                      {/* Preview text (shown when collapsed) */}
-                      {!isOpen && (
-                        <span className="text-[0.78rem] text-muted flex-[2] truncate pr-4">
-                          {section.preview}
-                        </span>
-                      )}
-
-                      {/* Edit button (shown when expanded) */}
-                      {isOpen && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditModalContent(section.content);
-                            setEditModalIdx(idx);
-                          }}
-                          className="border border-light rounded-[7px] px-3 py-1.5 text-[0.72rem] font-medium text-muted hover:border-brand-orange hover:text-brand-orange transition-colors"
-                        >
-                          Edit section
-                        </button>
-                      )}
-
-                      {/* Chevron */}
-                      <svg
-                        className={`w-4 h-4 transition-transform ${
-                          isOpen
-                            ? "rotate-180 text-brand-orange"
-                            : "text-muted"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-
-                    {/* Section body */}
-                    {isOpen && (
-                      <div
-                        className="border-t border-light px-6 py-6"
-                        style={{ animation: "fadeIn 0.2s ease-out" }}
-                      >
-                        <div
-                          dangerouslySetInnerHTML={{
-                            __html: parseViewMarkdown(section.content),
-                          }}
-                        />
-                      </div>
-                    )}
+                {/* Meta row */}
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-[0.75rem]">
+                  <div>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Category</span>
+                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.category}</div>
                   </div>
-                );
-              })}
+                  <div>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Stage</span>
+                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.stage}</div>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Target</span>
+                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.target}</div>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Archetype</span>
+                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.archetype}</div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-3 mt-6">
+                  <button
+                    onClick={downloadJSON}
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E8562A] hover:text-[#E8562A] transition-colors"
+                  >
+                    Export
+                  </button>
+                  <button
+                    onClick={() => setShowRedoModal(true)}
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E8562A] hover:text-[#E8562A] transition-colors"
+                  >
+                    Re-do brand strategy
+                  </button>
+                </div>
+              </div>
+
+              {/* ---------- Brand Passport ---------- */}
+              <section>
+                <div className="bg-[#0F0F0F] rounded-2xl p-8 text-white">
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A]">Brand Passport</span>
+                    <span className="text-[0.82rem] font-display text-white/80">{strategyJSON.brandName}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 mb-6">
+                    {([
+                      ["Signature", strategyJSON.passport.signature],
+                      ["Purpose", strategyJSON.passport.purpose],
+                      ["Promise", strategyJSON.passport.promise],
+                      ["Philosophy", strategyJSON.passport.philosophy],
+                      ["Values", strategyJSON.passport.values],
+                      ["Insight", strategyJSON.passport.insight],
+                    ] as const).map(([label, value]) => (
+                      <div key={label}>
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">{label}</div>
+                        <div className="text-[0.82rem] text-white/90 leading-relaxed">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-white/10 pt-5 space-y-4">
+                    <div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Target Group</div>
+                      <div className="text-[0.82rem] text-white/90 leading-relaxed">{strategyJSON.passport.targetGroup}</div>
+                    </div>
+                    <div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-1">Only-We Claim</div>
+                      <div className="text-[0.88rem] text-[#E8562A] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ---------- Brand Pyramid ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
+                <div className="bg-[#1A1A1A] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
+                  {([
+                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E8562A", text: "white" },
+                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#C44A24", text: "white" },
+                    { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#3D3D3D", text: "white" },
+                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#2D2D2D", text: "#E5E5E5" },
+                    { label: "Market", value: strategyJSON.pyramid.market, maxW: "760px", bg: "#252525", text: "#9A9A9A" },
+                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#1F1F1F", text: "#9A9A9A" },
+                  ] as const).map((tier) => (
+                    <div
+                      key={tier.label}
+                      className="w-full rounded-xl px-5 py-4 text-center"
+                      style={{ maxWidth: tier.maxW, backgroundColor: tier.bg, color: tier.text }}
+                    >
+                      <div className="font-mono text-[0.58rem] uppercase tracking-wider opacity-70 mb-1">{tier.label}</div>
+                      <div className="text-[0.8rem] leading-relaxed">{tier.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ---------- Problems & Solution ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Problems We Solve</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                  {strategyJSON.problems.map((p, i) => (
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
+                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{p.title}</div>
+                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-6">
+                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">Our Solution</div>
+                  <div className="text-[0.85rem] text-[#1A1A1A] leading-relaxed">{strategyJSON.solution}</div>
+                </div>
+              </section>
+
+              {/* ---------- What Makes Us Different ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">What Makes Us Different</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                  <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">First To</div>
+                    <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.firstTo.claim}</div>
+                    <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.firstTo.explanation}</div>
+                  </div>
+                  <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">Only Ones Who</div>
+                    <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.onlyOnesWho.claim}</div>
+                    <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.onlyOnesWho.explanation}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {strategyJSON.differentiators.map((d, i) => (
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">{d.label}</div>
+                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{d.title}</div>
+                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{d.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ---------- Target Audience ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Target Audience</div>
+                <div className="space-y-4 mb-5">
+                  {strategyJSON.personas.map((p, i) => (
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-6">
+                      {/* Persona header */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center text-xl">{p.emoji}</div>
+                        <div>
+                          <div className="text-[0.88rem] font-semibold text-[#1A1A1A]">{p.name}</div>
+                          <div className="text-[0.75rem] text-[#6B6B6B]">{p.role}</div>
+                        </div>
+                        <span className={`ml-auto text-[0.65rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                          p.type === "primary"
+                            ? "bg-[#FFF2EE] text-[#E8562A]"
+                            : "bg-[#F5F5F5] text-[#6B6B6B]"
+                        }`}>{p.type}</span>
+                      </div>
+                      {/* Persona body — 2-column grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        <div>
+                          <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Who</div>
+                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.who}</div>
+                        </div>
+                        <div>
+                          <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Wants</div>
+                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.wants}</div>
+                        </div>
+                        <div>
+                          <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Frustrations</div>
+                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.frustrations}</div>
+                        </div>
+                        <div>
+                          <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Channels</div>
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {p.channels.map((ch, ci) => (
+                              <span key={ci} className={`text-[0.68rem] px-2 py-0.5 rounded-full ${
+                                p.activeChannels.includes(ch)
+                                  ? "bg-[#FFF2EE] text-[#E8562A] font-semibold"
+                                  : "bg-[#F5F5F5] text-[#6B6B6B]"
+                              }`}>{ch}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="md:col-span-2">
+                          <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Brand Gives</div>
+                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.brandGives}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Exclusions */}
+                <div className="border-2 border-dashed border-[#E5E5E5] rounded-xl p-5">
+                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Who We Are NOT For</div>
+                  <div className="text-[0.82rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.exclusions}</div>
+                </div>
+              </section>
+
+              {/* ---------- Competitive Landscape ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Competitive Landscape</div>
+                <p className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5">{strategyJSON.competitiveIntro}</p>
+                <div className="overflow-x-auto rounded-xl border border-[#E5E5E5]">
+                  <table className="w-full text-[0.78rem]">
+                    <thead>
+                      <tr className="bg-[#F5F5F5] text-left">
+                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Competitor</th>
+                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Type</th>
+                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Strengths</th>
+                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Weaknesses</th>
+                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">vs Us</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {strategyJSON.competitors.map((c, i) => (
+                        <tr key={i} className={`border-t border-[#E5E5E5] ${c.isUs ? "bg-[#FFF2EE]" : "bg-white"}`}>
+                          <td className="px-4 py-3 font-medium text-[#1A1A1A]">
+                            {c.name}
+                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#E8562A] uppercase">(Us)</span>}
+                          </td>
+                          <td className="px-4 py-3 text-[#6B6B6B]">{c.type}</td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">{c.doWell}</td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">{c.fail}</td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">{c.vsUs}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* ---------- Messaging Architecture ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Messaging Architecture</div>
+                {/* Pillars */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {strategyJSON.messagingPillars.map((p, i) => (
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#E8562A]">
+                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{p.title}</div>
+                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Channel tabs */}
+                <div className="border border-[#E5E5E5] rounded-xl overflow-hidden">
+                  <div className="flex border-b border-[#E5E5E5] bg-[#F5F5F5]">
+                    {CHANNEL_TABS.map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActiveChannelTab(tab.key)}
+                        className={`px-5 py-3 text-[0.78rem] font-medium transition-colors ${
+                          activeChannelTab === tab.key
+                            ? "bg-white text-[#E8562A] border-b-2 border-b-[#E8562A] -mb-px"
+                            : "text-[#6B6B6B] hover:text-[#1A1A1A]"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="p-5 space-y-4">
+                    {activeChannelTab === "linkedin" && strategyJSON.channelMessages.linkedin?.map((m, i) => (
+                      <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
+                          <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>
+                        </div>
+                        <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
+                      </div>
+                    ))}
+                    {activeChannelTab === "email" && strategyJSON.channelMessages.email?.map((m, i) => (
+                      <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
+                          <span className="text-[0.6rem] text-[#6B6B6B]">{m.tone}</span>
+                        </div>
+                        <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
+                      </div>
+                    ))}
+                    {activeChannelTab === "ads" && strategyJSON.channelMessages.ads?.map((m, i) => (
+                      <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
+                          <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>
+                        </div>
+                        <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
+                      </div>
+                    ))}
+                    {activeChannelTab === "website" && strategyJSON.channelMessages.website?.map((m, i) => (
+                      <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
+                        <div className="mb-2">
+                          <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
+                        </div>
+                        <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
+                      </div>
+                    ))}
+                    {activeChannelTab === "sales" && strategyJSON.channelMessages.sales?.map((m, i) => (
+                      <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
+                          <span className="text-[0.6rem] text-[#6B6B6B]">{m.persona}</span>
+                        </div>
+                        <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* ---------- Brand Voice ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Voice</div>
+                <p className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5">{strategyJSON.voiceDescription}</p>
+
+                {/* Do / Don't pairs */}
+                <div className="space-y-3 mb-6">
+                  {strategyJSON.voiceDoDont.map((pair, i) => (
+                    <div key={i} className="grid grid-cols-2 gap-3">
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-green-700 mb-1">Do</div>
+                        <div className="text-[0.78rem] text-green-900 leading-relaxed">{pair.do}</div>
+                      </div>
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-red-700 mb-1">Don&apos;t</div>
+                        <div className="text-[0.78rem] text-red-900 leading-relaxed">{pair.dont}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Always / Never use */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Always Use</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {strategyJSON.alwaysUse.map((w, i) => (
+                        <span key={i} className="bg-green-50 text-green-800 text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Never Use</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {strategyJSON.neverUse.map((w, i) => (
+                        <span key={i} className="bg-red-50 text-red-800 text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ---------- Risks & Opportunities ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Risks & Opportunities</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Risks */}
+                  <div className="space-y-3">
+                    {strategyJSON.risks.map((r, i) => (
+                      <div key={i} className="bg-red-50 border border-red-200 rounded-xl p-5">
+                        <div className="text-[0.82rem] font-semibold text-red-900 mb-1">{r.title}</div>
+                        <div className="text-[0.78rem] text-red-800 leading-relaxed">{r.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Opportunities */}
+                  <div className="space-y-3">
+                    {strategyJSON.opportunities.map((o, i) => (
+                      <div key={i} className="bg-green-50 border border-green-200 rounded-xl p-5">
+                        <div className="text-[0.82rem] font-semibold text-green-900 mb-1">{o.title}</div>
+                        <div className="text-[0.78rem] text-green-800 leading-relaxed">{o.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* ---------- Taglines ---------- */}
+              <section>
+                <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Tagline Options</div>
+                <div className="space-y-3">
+                  {strategyJSON.taglines.map((t, i) => (
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#E8562A] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
+                      <div>
+                        <div className="text-[1rem] font-display text-[#1A1A1A] mb-1">&ldquo;{t.text}&rdquo;</div>
+                        <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{t.rationale}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ---------- Footer ---------- */}
+              <div className="text-center pt-6 pb-4 border-t border-[#E5E5E5]">
+                <p className="text-[0.72rem] text-[#9A9A9A]">
+                  Generated by Branditect{strategyRecord ? ` on ${formatDate(strategyRecord.created_at)}` : ""}
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* ============================================================ */
+            /*  Legacy markdown-based view (fallback)                        */
+            /* ============================================================ */
+            <div className="max-w-3xl mx-auto px-8 py-10">
+              {/* Header area */}
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    Complete
+                  </span>
+                  {strategyRecord && (
+                    <span className="text-[0.75rem] text-muted">
+                      Last updated {formatDate(strategyRecord.created_at)}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-3xl font-display text-ink mb-2">
+                  Vetra &mdash; Brand Strategy
+                </h1>
+
+                <p className="text-[0.82rem] text-muted leading-relaxed">
+                  9 sections &middot; Generated from questionnaire &middot; All outputs reference this strategy automatically.
+                </p>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-3 mt-5">
+                  <button
+                    onClick={downloadMd}
+                    className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
+                  >
+                    Export .md
+                  </button>
+                  <button
+                    onClick={() => setShowRedoModal(true)}
+                    className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
+                  >
+                    Re-do brand strategy
+                  </button>
+                </div>
+              </div>
+
+              {/* Section cards */}
+              <div className="space-y-3">
+                {strategySections.map((section, idx) => {
+                  const isOpen = openSectionIdx === idx;
+                  const sectionTitle = VIEW_SECTION_TITLES[idx] || section.title;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white border border-light rounded-xl overflow-hidden transition-colors hover:border-[#D4D4CE]"
+                    >
+                      {/* Card header */}
+                      <div
+                        className="flex items-center gap-3.5 px-5 py-4 cursor-pointer select-none"
+                        onClick={() => setOpenSectionIdx(isOpen ? null : idx)}
+                      >
+                        {/* Number badge */}
+                        <div
+                          className={`w-7 h-7 rounded-[7px] flex items-center justify-center font-mono text-[0.68rem] font-bold shrink-0 ${
+                            isOpen
+                              ? "bg-brand-orange-pale text-brand-orange"
+                              : "bg-pale text-muted"
+                          }`}
+                        >
+                          {idx + 1}
+                        </div>
+
+                        {/* Section title */}
+                        <span className="text-[0.88rem] font-semibold text-ink flex-1">
+                          {sectionTitle}
+                        </span>
+
+                        {/* Preview text (shown when collapsed) */}
+                        {!isOpen && (
+                          <span className="text-[0.78rem] text-muted flex-[2] truncate pr-4">
+                            {section.preview}
+                          </span>
+                        )}
+
+                        {/* Edit button (shown when expanded) */}
+                        {isOpen && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditModalContent(section.content);
+                              setEditModalIdx(idx);
+                            }}
+                            className="border border-light rounded-[7px] px-3 py-1.5 text-[0.72rem] font-medium text-muted hover:border-brand-orange hover:text-brand-orange transition-colors"
+                          >
+                            Edit section
+                          </button>
+                        )}
+
+                        {/* Chevron */}
+                        <svg
+                          className={`w-4 h-4 transition-transform ${
+                            isOpen
+                              ? "rotate-180 text-brand-orange"
+                              : "text-muted"
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+
+                      {/* Section body */}
+                      {isOpen && (
+                        <div
+                          className="border-t border-light px-6 py-6"
+                          style={{ animation: "fadeIn 0.2s ease-out" }}
+                        >
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: parseViewMarkdown(section.content),
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ---- EDIT MODAL ---- */}
           {editModalIdx !== null && (

@@ -518,6 +518,7 @@ export default function BrandStrategyPage() {
     setIsGenerating(true);
     setGenerationStage(0);
     setError("");
+    setScreen("questions"); // show generating overlay on the questions screen
 
     const interval = setInterval(() => {
       setGenerationStage((prev) => {

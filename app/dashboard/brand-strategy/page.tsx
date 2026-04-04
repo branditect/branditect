@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type Screen = "entry" | "category" | "questions" | "output";
+type Screen = "entry" | "category" | "questions" | "output" | "view";
 type Category = "products" | "services";
 
 interface QuestionDef {
@@ -21,6 +21,22 @@ interface AttachedImage {
   base64: string;
   type: string;
   name: string;
+}
+
+interface StrategySection {
+  title: string;
+  content: string;
+  preview: string;
+}
+
+interface StrategyRecord {
+  id: string;
+  brand_id: string;
+  user_id: string | null;
+  category: string | null;
+  answers: Record<string, string>;
+  generated_strategy: string;
+  created_at: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -91,21 +107,30 @@ const GENERATION_STAGES = [
   "Risks & opportunities",
 ];
 
+const VIEW_SECTION_TITLES = [
+  "Brand Positioning",
+  "Target Audience",
+  "Competitive Landscape",
+  "Brand Identity System",
+  "Messaging Architecture",
+  "Brand Voice & Tone",
+  "Brand Architecture",
+  "Risks & Opportunities",
+  "Brand Governance",
+];
+
 /* ------------------------------------------------------------------ */
-/*  Markdown parser                                                    */
+/*  Markdown parser (original — used for output screen)                */
 /* ------------------------------------------------------------------ */
 
 function parseMarkdown(md: string): string {
   let html = md
-    // Escape HTML entities first
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Horizontal rules
   html = html.replace(/^---$/gm, '<hr class="my-6 border-t border-light" />');
 
-  // Headings
   html = html.replace(
     /^#### (.+)$/gm,
     '<h4 class="text-base font-semibold text-dark mt-4 mb-2 font-sans">$1</h4>'
@@ -123,11 +148,9 @@ function parseMarkdown(md: string): string {
     '<h1 class="text-3xl font-display text-ink mb-6 pb-3 border-b-2 border-brand-orange">$1</h1>'
   );
 
-  // Bold and italic
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-  // Process lists and paragraphs line by line
   const lines = html.split("\n");
   const processed: string[] = [];
   let inUl = false;
@@ -161,7 +184,6 @@ function parseMarkdown(md: string): string {
         processed.push("</ol>");
         inOl = false;
       }
-      // Wrap plain text lines in paragraphs (skip empty lines and already-tagged lines)
       if (line.trim() && !line.trim().startsWith("<")) {
         processed.push(`<p class="my-2 text-dark leading-relaxed">${line}</p>`);
       } else if (line.trim().startsWith("<")) {
@@ -173,6 +195,107 @@ function parseMarkdown(md: string): string {
   if (inOl) processed.push("</ol>");
 
   return processed.join("\n");
+}
+
+/* ------------------------------------------------------------------ */
+/*  View-screen markdown parser                                        */
+/* ------------------------------------------------------------------ */
+
+function parseViewMarkdown(md: string): string {
+  let html = md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Horizontal rules
+  html = html.replace(/^---$/gm, '<hr class="my-6 border-t border-light" />');
+
+  // ### Heading -> styled label
+  html = html.replace(
+    /^### (.+)$/gm,
+    '<div class="font-mono text-[0.6rem] tracking-wider uppercase text-brand-orange mb-2">$1</div>'
+  );
+
+  // Bold and italic
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  const lines = html.split("\n");
+  const processed: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const bulletMatch = line.match(/^[\-\*] (.+)$/);
+    const numberMatch = line.match(/^\d+\. (.+)$/);
+
+    if (bulletMatch) {
+      if (!inUl) {
+        processed.push('<ul class="list-disc pl-5 space-y-1.5 my-3 text-[0.82rem] text-dark leading-[1.8]">');
+        inUl = true;
+      }
+      processed.push(`<li>${bulletMatch[1]}</li>`);
+    } else if (numberMatch) {
+      if (!inOl) {
+        processed.push('<ol class="list-decimal pl-5 space-y-1.5 my-3 text-[0.82rem] text-dark leading-[1.8]">');
+        inOl = true;
+      }
+      processed.push(`<li>${numberMatch[1]}</li>`);
+    } else {
+      if (inUl) { processed.push("</ul>"); inUl = false; }
+      if (inOl) { processed.push("</ol>"); inOl = false; }
+      if (line.trim() && !line.trim().startsWith("<")) {
+        processed.push(`<p class="text-[0.82rem] text-dark leading-[1.8] mb-4">${line}</p>`);
+      } else if (line.trim().startsWith("<")) {
+        processed.push(line);
+      }
+    }
+  }
+  if (inUl) processed.push("</ul>");
+  if (inOl) processed.push("</ol>");
+
+  return processed.join("\n");
+}
+
+/* ------------------------------------------------------------------ */
+/*  Parse strategy into sections                                       */
+/* ------------------------------------------------------------------ */
+
+function parseStrategySections(markdown: string): StrategySection[] {
+  const parts = markdown.split(/^## /m);
+  const sections: StrategySection[] = [];
+
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    const newlineIdx = part.indexOf("\n");
+    const title = newlineIdx >= 0 ? part.substring(0, newlineIdx).trim() : part.trim();
+    const content = newlineIdx >= 0 ? part.substring(newlineIdx + 1).trim() : "";
+    const preview = content
+      .replace(/^###.+$/gm, "")
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/^[\-\*] /gm, "")
+      .replace(/^\d+\. /gm, "")
+      .replace(/\n+/g, " ")
+      .trim()
+      .substring(0, 120);
+    sections.push({ title, content, preview: preview + (preview.length >= 120 ? "..." : "") });
+  }
+
+  return sections;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rebuild full markdown from sections                                */
+/* ------------------------------------------------------------------ */
+
+function rebuildMarkdown(sections: StrategySection[], originalMarkdown: string): string {
+  // Extract header (everything before the first ## )
+  const firstH2 = originalMarkdown.indexOf("\n## ");
+  const header = firstH2 >= 0 ? originalMarkdown.substring(0, firstH2 + 1) : "";
+  const sectionStrings = sections.map((s) => `## ${s.title}\n${s.content}`);
+  return header + sectionStrings.join("\n\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -193,6 +316,43 @@ export default function BrandStrategyPage() {
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // View screen state
+  const [strategyRecord, setStrategyRecord] = useState<StrategyRecord | null>(null);
+  const [strategySections, setStrategySections] = useState<StrategySection[]>([]);
+  const [openSectionIdx, setOpenSectionIdx] = useState<number | null>(null);
+  const [editModalIdx, setEditModalIdx] = useState<number | null>(null);
+  const [editModalContent, setEditModalContent] = useState("");
+  const [showRedoModal, setShowRedoModal] = useState(false);
+  const [loadingStrategy, setLoadingStrategy] = useState(true);
+
+  // Load existing strategy on mount
+  useEffect(() => {
+    const loadStrategy = async () => {
+      try {
+        const { data } = await supabase
+          .from("brand_strategies")
+          .select("*")
+          .eq("brand_id", "vetra")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          const record = data[0] as StrategyRecord;
+          setStrategyRecord(record);
+          const sections = parseStrategySections(record.generated_strategy);
+          setStrategySections(sections);
+          setGeneratedStrategy(record.generated_strategy);
+          setScreen("view");
+        }
+      } catch {
+        // No existing strategy, stay on entry screen
+      } finally {
+        setLoadingStrategy(false);
+      }
+    };
+    loadStrategy();
+  }, []);
 
   // Focus textarea on question change
   useEffect(() => {
@@ -257,7 +417,6 @@ export default function BrandStrategyPage() {
     setGenerationStage(0);
     setError("");
 
-    // Simulate stage progression
     const interval = setInterval(() => {
       setGenerationStage((prev) => {
         if (prev < GENERATION_STAGES.length - 1) return prev + 1;
@@ -311,19 +470,67 @@ export default function BrandStrategyPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      await supabase.from("brand_strategies").insert({
+      const { data } = await supabase.from("brand_strategies").insert({
         brand_id: "vetra",
         user_id: user?.id || null,
         category,
         answers,
         generated_strategy: generatedStrategy,
-      });
+      }).select();
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+
+      // After saving, switch to view screen
+      if (data && data.length > 0) {
+        const record = data[0] as StrategyRecord;
+        setStrategyRecord(record);
+        const sections = parseStrategySections(record.generated_strategy);
+        setStrategySections(sections);
+        setScreen("view");
+      }
     } catch {
       setError("Failed to save. Please try again.");
     }
   };
+
+  /* ---- save section edit ---- */
+
+  const saveSectionEdit = useCallback(async () => {
+    if (editModalIdx === null || !strategyRecord) return;
+
+    const updatedSections = [...strategySections];
+    const updatedContent = editModalContent;
+    const preview = updatedContent
+      .replace(/^###.+$/gm, "")
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/^[\-\*] /gm, "")
+      .replace(/^\d+\. /gm, "")
+      .replace(/\n+/g, " ")
+      .trim()
+      .substring(0, 120);
+    updatedSections[editModalIdx] = {
+      ...updatedSections[editModalIdx],
+      content: updatedContent,
+      preview: preview + (preview.length >= 120 ? "..." : ""),
+    };
+
+    const newMarkdown = rebuildMarkdown(updatedSections, generatedStrategy);
+
+    try {
+      await supabase
+        .from("brand_strategies")
+        .update({ generated_strategy: newMarkdown })
+        .eq("id", strategyRecord.id);
+
+      setStrategySections(updatedSections);
+      setGeneratedStrategy(newMarkdown);
+      setStrategyRecord({ ...strategyRecord, generated_strategy: newMarkdown });
+      setEditModalIdx(null);
+    } catch {
+      setError("Failed to save changes. Please try again.");
+    }
+  }, [editModalIdx, editModalContent, strategySections, strategyRecord, generatedStrategy]);
 
   /* ---- copy & download ---- */
 
@@ -348,21 +555,43 @@ export default function BrandStrategyPage() {
     if (idx >= 0) setCurrentIndex(idx);
   };
 
+  /* ---- format date ---- */
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   /* ================================================================ */
   /*  RENDER                                                           */
   /* ================================================================ */
 
+  // Loading state
+  if (loadingStrategy) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <div className="w-6 h-6 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Back link */}
-      <div className="px-8 pt-6 pb-2">
-        <Link
-          href="/dashboard"
-          className="text-sm text-muted hover:text-brand-orange transition-colors"
-        >
-          &larr; Back to Dashboard
-        </Link>
-      </div>
+      {screen !== "view" && (
+        <div className="px-8 pt-6 pb-2">
+          <Link
+            href="/dashboard"
+            className="text-sm text-muted hover:text-brand-orange transition-colors"
+          >
+            &larr; Back to Dashboard
+          </Link>
+        </div>
+      )}
 
       {/* Hidden file input */}
       <input
@@ -533,7 +762,6 @@ export default function BrandStrategyPage() {
                         {answered}/{total}
                       </span>
                     </div>
-                    {/* Progress bar */}
                     <div className="mt-1.5 h-1 rounded-full bg-light overflow-hidden">
                       <div
                         className="h-full rounded-full bg-brand-orange transition-all duration-300"
@@ -564,7 +792,6 @@ export default function BrandStrategyPage() {
           {/* Main question area */}
           <div className="flex-1 flex flex-col p-8 overflow-y-auto">
             <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
-              {/* Section & progress */}
               <div className="mb-2">
                 <span className="text-xs font-mono text-brand-orange uppercase tracking-wider">
                   {currentSection}
@@ -574,7 +801,6 @@ export default function BrandStrategyPage() {
                 </span>
               </div>
 
-              {/* Overall progress bar */}
               <div className="h-1 rounded-full bg-light mb-8 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-brand-orange transition-all duration-300"
@@ -584,12 +810,10 @@ export default function BrandStrategyPage() {
                 />
               </div>
 
-              {/* Question */}
               <h2 className="text-2xl font-display text-ink mb-6 leading-snug">
                 {currentQuestion.question}
               </h2>
 
-              {/* Answer textarea */}
               <textarea
                 ref={textareaRef}
                 value={answers[questionKey(currentQuestion)] || ""}
@@ -604,7 +828,6 @@ export default function BrandStrategyPage() {
                 className="w-full rounded-xl border border-light bg-white px-5 py-4 text-base text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-none font-sans leading-relaxed"
               />
 
-              {/* Image attachments */}
               <div className="mt-4 flex items-center gap-3 flex-wrap">
                 <button
                   onClick={handleImageAttach}
@@ -642,14 +865,12 @@ export default function BrandStrategyPage() {
                 ))}
               </div>
 
-              {/* Error display */}
               {error && (
                 <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm font-sans">
                   {error}
                 </div>
               )}
 
-              {/* Navigation */}
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-light">
                 <button
                   onClick={() => {
@@ -711,7 +932,6 @@ export default function BrandStrategyPage() {
               </p>
             </div>
 
-            {/* Progress stages */}
             <div className="space-y-3 text-left">
               {GENERATION_STAGES.map((stage, idx) => (
                 <div key={stage} className="flex items-center gap-3">
@@ -753,7 +973,6 @@ export default function BrandStrategyPage() {
               ))}
             </div>
 
-            {/* Progress bar */}
             <div className="h-2 rounded-full bg-light overflow-hidden">
               <div
                 className="h-full rounded-full bg-brand-orange transition-all duration-1000 ease-out"
@@ -784,7 +1003,6 @@ export default function BrandStrategyPage() {
       {/* ---- OUTPUT SCREEN ---- */}
       {screen === "output" && (
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Sticky top bar */}
           <div className="sticky top-0 z-10 bg-white border-b border-light px-8 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <button
@@ -831,7 +1049,6 @@ export default function BrandStrategyPage() {
             </div>
           </div>
 
-          {/* Strategy content */}
           <div className="flex-1 overflow-y-auto px-8 py-10">
             <div className="max-w-3xl mx-auto">
               <div
@@ -842,6 +1059,228 @@ export default function BrandStrategyPage() {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ---- VIEW SCREEN ---- */}
+      {screen === "view" && (
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-10">
+            {/* Header area */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Complete
+                </span>
+                {strategyRecord && (
+                  <span className="text-[0.75rem] text-muted">
+                    Last updated {formatDate(strategyRecord.created_at)}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-3xl font-display text-ink mb-2">
+                Vetra &mdash; Brand Strategy
+              </h1>
+
+              <p className="text-[0.82rem] text-muted leading-relaxed">
+                9 sections &middot; Generated from questionnaire &middot; All outputs reference this strategy automatically.
+              </p>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-3 mt-5">
+                <button
+                  onClick={downloadMd}
+                  className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
+                >
+                  Export .md
+                </button>
+                <button
+                  onClick={() => setShowRedoModal(true)}
+                  className="border border-light rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
+                >
+                  Re-do brand strategy
+                </button>
+              </div>
+            </div>
+
+            {/* Section cards */}
+            <div className="space-y-3">
+              {strategySections.map((section, idx) => {
+                const isOpen = openSectionIdx === idx;
+                const sectionTitle = VIEW_SECTION_TITLES[idx] || section.title;
+
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white border border-light rounded-xl overflow-hidden transition-colors hover:border-[#D4D4CE]"
+                  >
+                    {/* Card header */}
+                    <div
+                      className="flex items-center gap-3.5 px-5 py-4 cursor-pointer select-none"
+                      onClick={() => setOpenSectionIdx(isOpen ? null : idx)}
+                    >
+                      {/* Number badge */}
+                      <div
+                        className={`w-7 h-7 rounded-[7px] flex items-center justify-center font-mono text-[0.68rem] font-bold shrink-0 ${
+                          isOpen
+                            ? "bg-brand-orange-pale text-brand-orange"
+                            : "bg-pale text-muted"
+                        }`}
+                      >
+                        {idx + 1}
+                      </div>
+
+                      {/* Section title */}
+                      <span className="text-[0.88rem] font-semibold text-ink flex-1">
+                        {sectionTitle}
+                      </span>
+
+                      {/* Preview text (shown when collapsed) */}
+                      {!isOpen && (
+                        <span className="text-[0.78rem] text-muted flex-[2] truncate pr-4">
+                          {section.preview}
+                        </span>
+                      )}
+
+                      {/* Edit button (shown when expanded) */}
+                      {isOpen && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditModalContent(section.content);
+                            setEditModalIdx(idx);
+                          }}
+                          className="border border-light rounded-[7px] px-3 py-1.5 text-[0.72rem] font-medium text-muted hover:border-brand-orange hover:text-brand-orange transition-colors"
+                        >
+                          Edit section
+                        </button>
+                      )}
+
+                      {/* Chevron */}
+                      <svg
+                        className={`w-4 h-4 transition-transform ${
+                          isOpen
+                            ? "rotate-180 text-brand-orange"
+                            : "text-muted"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+
+                    {/* Section body */}
+                    {isOpen && (
+                      <div
+                        className="border-t border-light px-6 py-6"
+                        style={{ animation: "fadeIn 0.2s ease-out" }}
+                      >
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: parseViewMarkdown(section.content),
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ---- EDIT MODAL ---- */}
+          {editModalIdx !== null && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-[4px] z-50 flex items-center justify-center">
+              <div className="bg-white rounded-2xl w-[580px] max-h-[80vh] overflow-y-auto p-8 shadow-2xl">
+                <h2 className="text-lg font-semibold text-ink mb-1">
+                  Edit &mdash; {VIEW_SECTION_TITLES[editModalIdx] || strategySections[editModalIdx]?.title}
+                </h2>
+                <p className="text-[0.78rem] text-muted mb-5">
+                  Changes update your Brand Intelligence Library and apply to all future outputs.
+                </p>
+
+                <textarea
+                  value={editModalContent}
+                  onChange={(e) => setEditModalContent(e.target.value)}
+                  rows={16}
+                  className="w-full rounded-xl border border-light bg-white px-4 py-3 text-sm text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-none font-mono leading-relaxed"
+                />
+
+                <div className="flex items-center justify-end gap-3 mt-5">
+                  <button
+                    onClick={() => setEditModalIdx(null)}
+                    className="px-4 py-2 rounded-lg border border-light text-sm font-medium text-dark hover:bg-pale transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveSectionEdit}
+                    className="px-5 py-2 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover transition-colors"
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ---- RE-DO MODAL ---- */}
+          {showRedoModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-[4px] z-50 flex items-center justify-center">
+              <div className="bg-white rounded-2xl w-[580px] max-h-[80vh] overflow-y-auto p-8 shadow-2xl">
+                <h2 className="text-lg font-semibold text-ink mb-2">
+                  Re-do brand strategy
+                </h2>
+                <p className="text-[0.82rem] text-dark leading-relaxed mb-4">
+                  This will restart the full strategy questionnaire. Your current strategy will be archived &mdash; not deleted.
+                </p>
+
+                <div className="bg-amber-50 border-l-[3px] border-amber-500 rounded-r-[10px] px-4 py-3.5 mb-6">
+                  <p className="text-[0.78rem] text-amber-800 leading-relaxed">
+                    All outputs generated from your current strategy will continue to work. Only new outputs will reference the updated strategy.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowRedoModal(false)}
+                    className="px-4 py-2 rounded-lg border border-light text-sm font-medium text-dark hover:bg-pale transition-colors"
+                  >
+                    Keep current strategy
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowRedoModal(false);
+                      setStrategyRecord(null);
+                      setStrategySections([]);
+                      setOpenSectionIdx(null);
+                      setGeneratedStrategy("");
+                      setAnswers({});
+                      setCategory(null);
+                      setCurrentIndex(0);
+                      setScreen("entry");
+                    }}
+                    className="px-5 py-2 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover transition-colors"
+                  >
+                    Start over &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* fadeIn animation */}
+          <style jsx>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(-4px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </div>
       )}
     </div>

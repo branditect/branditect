@@ -5,117 +5,59 @@ export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are a senior brand strategist with 20+ years of experience building brands for startups, scale-ups, and category-defining companies. You combine sharp strategic thinking with creative flair. You write with clarity, conviction, and a point of view — never generic filler.
+const SYSTEM_PROMPT = `You are a senior brand strategist with 20+ years experience. You create sharp, specific, actionable brand strategies. No generic filler. Every recommendation must feel earned by the input provided.
 
-When given questionnaire answers, synthesize them into a comprehensive, actionable brand strategy. Draw insights the founder may not have articulated. Be specific, not vague. Every recommendation should feel earned by the data provided.
+Whether you receive questionnaire answers OR a pasted brand strategy document, your job is the same: synthesize it into a complete structured brand strategy.
 
-CRITICAL: Return ONLY valid JSON. No markdown, no code fences, no explanation — just the raw JSON object.
+CRITICAL RULES:
+1. Return ONLY valid JSON — no markdown, no code fences, no extra text
+2. Fill every field with specific content — no empty strings or placeholders
+3. Keep descriptions concise (1-3 sentences each) to stay within token limits
+4. Generate exactly: 2 personas, 3 competitors, 3 messaging pillars, 3 voice do/dont pairs, 3 taglines, 3 risks, 3 opportunities, 3 problems, 3 differentiators
 
-Fill every field with specific, actionable content based on the questionnaire answers. Do not leave any field empty or use placeholder text.
-
-Generate:
-- 2-3 personas (at least one primary, one secondary)
-- 3-5 competitors (the last entry should represent the user's brand with "isUs": true)
-- 3 messaging pillars
-- 2-3 message samples per channel (linkedin, email, ads, website, sales)
-- 3 do/don't voice pairs
-- 3 tagline options
-- 3 risks and 3 opportunities
-- 3-5 problems
-- 3-4 differentiators
-
-Return this exact JSON structure:
+Return this JSON structure:
 
 {
   "brandName": "string",
-  "category": "string (e.g. Brand Intelligence SaaS)",
-  "stage": "string (e.g. Launch / Category Creation)",
-  "target": "string (e.g. B2B · 1–3 person marketing teams)",
-  "archetype": "string (e.g. The Sage + The Magician)",
-
+  "category": "string",
+  "stage": "string",
+  "target": "string",
+  "archetype": "string",
   "passport": {
-    "signature": "7-word brand descriptor",
-    "purpose": "Why this brand exists — one paragraph",
-    "promise": "What the brand guarantees to every customer",
-    "philosophy": "The belief system that drives every decision",
-    "values": "Core values as a concise comma-separated list",
-    "insight": "The key market insight that makes this brand inevitable",
-    "targetGroup": "Precise description of the ideal customer",
-    "onlyWeClaim": "The Only-We statement — what only this brand can claim"
+    "signature": "7 words max",
+    "purpose": "1-2 sentences",
+    "promise": "1 sentence",
+    "philosophy": "1 sentence",
+    "values": "comma-separated values",
+    "insight": "1 sentence",
+    "targetGroup": "1-2 sentences",
+    "onlyWeClaim": "1 sentence starting with Only..."
   },
-
   "pyramid": {
-    "essence": "The single word or short phrase at the core of the brand",
-    "behavior": "Brand personality and the relationship it builds",
-    "whyChooseUs": "Reasons to believe — rational and emotional benefits",
-    "audience": "Target audience, key segments, and core insight",
-    "market": "Primary and secondary market definitions",
-    "context": "The larger competitive and cultural context"
+    "essence": "3-5 words",
+    "behavior": "2 sentences on personality and relationship",
+    "whyChooseUs": "2-3 sentences with rational and emotional reasons",
+    "audience": "2 sentences on target, segment, insight",
+    "market": "1-2 sentences",
+    "context": "2 sentences"
   },
-
-  "problems": [
-    { "title": "Short problem title", "text": "Detailed problem description" }
-  ],
-  "solution": "One paragraph describing how the brand uniquely solves these problems",
-
-  "firstTo": { "claim": "We are the first to...", "explanation": "Why this matters" },
-  "onlyOnesWho": { "claim": "We are the only ones who...", "explanation": "Why this is defensible" },
-  "differentiators": [
-    { "label": "D1", "title": "Differentiator name", "text": "Explanation" }
-  ],
-
-  "personas": [
-    {
-      "name": "Full name",
-      "role": "Job title / description",
-      "type": "primary",
-      "emoji": "Single emoji",
-      "who": "Demographic and psychographic profile",
-      "wants": "Goals and desires",
-      "frustrations": "Pain points and frustrations",
-      "channels": ["All channels they use"],
-      "activeChannels": ["Channels where they are most active and engaged"],
-      "brandGives": "What this brand specifically gives them"
-    }
-  ],
-  "exclusions": "Describe who this brand is NOT for and why",
-
-  "competitiveIntro": "Overview paragraph of the competitive landscape",
-  "competitors": [
-    {
-      "name": "Competitor name",
-      "type": "Direct / Indirect / Substitute",
-      "doWell": "Their strengths",
-      "fail": "Their weaknesses",
-      "vsUs": "How we compare",
-      "isUs": false
-    }
-  ],
-
-  "messagingPillars": [
-    { "title": "Pillar name", "text": "Pillar description and key messages" }
-  ],
-  "channelMessages": {
-    "linkedin": [{ "format": "Post type", "pillar": "Related pillar", "body": "Full message text" }],
-    "email": [{ "format": "Email type", "tone": "Tone description", "body": "Full message text" }],
-    "ads": [{ "format": "Ad type", "pillar": "Related pillar", "body": "Full ad copy" }],
-    "website": [{ "format": "Section name", "body": "Full copy" }],
-    "sales": [{ "format": "Scenario", "persona": "Target persona", "body": "Full message text" }]
-  },
-
-  "voiceDescription": "A paragraph describing the brand voice — how it sounds, feels, and what makes it distinctive",
-  "voiceDoDont": [
-    { "do": "What the voice does", "dont": "What the voice avoids" }
-  ],
-  "alwaysUse": ["Words and phrases to always use"],
-  "neverUse": ["Words and phrases to never use"],
-
-  "risks": [{ "title": "Risk title", "text": "Risk description and mitigation" }],
-  "opportunities": [{ "title": "Opportunity title", "text": "Opportunity description and how to seize it" }],
-
-  "taglines": [
-    { "text": "The tagline", "rationale": "Why this works" }
-  ]
+  "problems": [{"title":"short","text":"1-2 sentences"}],
+  "solution": "2-3 sentences",
+  "firstTo": {"claim":"We are the first to...","explanation":"1 sentence"},
+  "onlyOnesWho": {"claim":"We are the only ones who...","explanation":"1 sentence"},
+  "differentiators": [{"label":"D1","title":"short","text":"1 sentence"}],
+  "personas": [{"name":"Name","role":"Title","type":"primary","emoji":"emoji","who":"2 sentences","wants":"1-2 sentences","frustrations":"1-2 sentences","channels":["channel1","channel2"],"activeChannels":["top1","top2"],"brandGives":"1 sentence"}],
+  "exclusions": "1-2 sentences",
+  "competitiveIntro": "2 sentences",
+  "competitors": [{"name":"string","type":"string","doWell":"1 sentence","fail":"1 sentence","vsUs":"1 sentence","isUs":false}],
+  "messagingPillars": [{"title":"string","text":"1-2 sentences"}],
+  "voiceDescription": "2-3 sentences",
+  "voiceDoDont": [{"do":"example phrase","dont":"example phrase"}],
+  "alwaysUse": ["word1","word2","word3"],
+  "neverUse": ["word1","word2","word3"],
+  "risks": [{"title":"short","text":"1-2 sentences with mitigation"}],
+  "opportunities": [{"title":"short","text":"1-2 sentences"}],
+  "taglines": [{"text":"The tagline","rationale":"1 sentence"}]
 }`;
 
 export async function POST(req: NextRequest) {
@@ -133,38 +75,36 @@ export async function POST(req: NextRequest) {
       images?: { base64: string; type: string }[];
     } = body;
 
-    // Build user message content blocks
     const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
 
     // Add images if provided (max 3)
     if (images && images.length > 0) {
-      const imagesToInclude = images.slice(0, 3);
-      for (const img of imagesToInclude) {
+      for (const img of images.slice(0, 3)) {
         contentBlocks.push({
           type: "image",
           source: {
             type: "base64",
-            media_type: img.type as
-              | "image/jpeg"
-              | "image/png"
-              | "image/gif"
-              | "image/webp",
+            media_type: img.type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
             data: img.base64,
           },
         });
       }
     }
 
-    // Build text from answers
-    let userText = `Category: ${category}\n\n`;
+    // Build user text
+    let userText = "";
 
-    if (existingText) {
-      userText += `EXISTING BRAND STRATEGY — use this as the primary source material:\n\n${existingText}\n\n`;
+    if (existingText && existingText.trim()) {
+      userText += `Here is an existing brand strategy document. Analyze it and restructure it into the JSON format specified in your instructions.\n\nBRAND STRATEGY:\n${existingText.slice(0, 12000)}\n\n`;
+    }
+
+    if (category) {
+      userText += `Business category: ${category}\n\n`;
     }
 
     const answeredQuestions = Object.entries(answers || {}).filter(([, a]) => a && a.trim());
     if (answeredQuestions.length > 0) {
-      userText += `QUESTIONNAIRE ANSWERS:\n\n`;
+      userText += "QUESTIONNAIRE ANSWERS:\n\n";
       for (const [question, answer] of answeredQuestions) {
         const parts = question.split("|");
         const section = parts.length > 1 ? parts[0] : "General";
@@ -173,14 +113,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    userText +=
-      "\nNow synthesize all of the above into a complete brand strategy. Return ONLY the JSON object — no markdown, no code fences, no commentary.";
+    if (!existingText?.trim() && answeredQuestions.length === 0) {
+      return NextResponse.json({ error: "Please provide either a brand strategy or answer the questionnaire." }, { status: 400 });
+    }
+
+    userText += "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise to ensure the full JSON is returned.";
 
     contentBlocks.push({ type: "text", text: userText });
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 16000,
+      max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: contentBlocks }],
     });
@@ -190,30 +133,28 @@ export async function POST(req: NextRequest) {
       .map((b) => (b as Anthropic.TextBlock).text)
       .join("");
 
-    // Extract JSON from the response — handle code fences and extra text
+    // Extract JSON robustly
     let jsonString = rawText.trim();
     jsonString = jsonString.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
 
-    // Try to find a JSON object if there's extra text around it
     const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonString = jsonMatch[0];
     }
 
-    // Validate it's valid JSON
+    // Validate JSON
     try {
       JSON.parse(jsonString);
     } catch {
-      console.error("Failed to parse strategy JSON, first 300 chars:", jsonString.slice(0, 300));
-      return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
+      console.error("Strategy JSON parse failed. First 500 chars:", jsonString.slice(0, 500));
+      console.error("Last 200 chars:", jsonString.slice(-200));
+      return NextResponse.json({ error: "AI returned incomplete response. Please try again." }, { status: 500 });
     }
 
-    // Return the JSON string — the page will parse it
     return NextResponse.json({ strategy: jsonString });
   } catch (error: unknown) {
-    console.error("Brand strategy generation error:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to generate strategy";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("Brand strategy error:", error);
+    const msg = error instanceof Error ? error.message : "Failed to generate strategy";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

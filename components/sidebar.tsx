@@ -12,34 +12,38 @@ interface NavItem {
   badge?: string;
 }
 
-const homeItems: NavItem[] = [
+const dashboardItems: NavItem[] = [
   { icon: "⌂", label: "Dashboard", href: "/dashboard" },
-  { icon: "✦", label: "Create", href: "/dashboard/create" },
-  { icon: "◫", label: "Brand Library", href: "/dashboard/brand-library" },
-  { icon: "◎", label: "Asset Library", href: "/dashboard/assets", badge: "18" },
+];
+
+const createItems: NavItem[] = [
+  { icon: "🖼", label: "Image Architect", href: "/dashboard/brand-library/image-architect" },
+  { icon: "✦", label: "Text Architect", href: "/dashboard/create" },
+  { icon: "⟨⟩", label: "Code Architect", href: "/dashboard/brand-code-architect" },
 ];
 
 const libraryItems: NavItem[] = [
-  { icon: "◉", label: "Brand Bases", href: "/dashboard/brand-bases" },
   { icon: "☰", label: "Brand Strategy", href: "/dashboard/brand-strategy" },
-  { icon: "◷", label: "Voice Guidelines", href: "/dashboard/voice" },
-  { icon: "◈", label: "Visual Identity", href: "/dashboard/visual" },
+  { icon: "◷", label: "Tone of Voice", href: "/dashboard/voice" },
+  { icon: "◈", label: "Visual Identity", href: "/dashboard/brand-library" },
+  { icon: "◎", label: "Asset Library", href: "/dashboard/assets" },
 ];
 
 const toolItems: NavItem[] = [
-  { icon: "⟨⟩", label: "Brand Code Architect", href: "/dashboard/brand-code-architect" },
-  { icon: "📊", label: "Business Tools", href: "/dashboard/tools" },
-  { icon: "↗", label: "Growth Expert", href: "/dashboard/growth" },
-  { icon: "⚑", label: "Brand Monitor", href: "/dashboard/monitor", badge: "2" },
+  { icon: "📊", label: "Calculators", href: "/dashboard/tools" },
+  { icon: "⚡", label: "Productivity", href: "/dashboard/tools" },
+  { icon: "↗", label: "Growth", href: "/dashboard/growth" },
   { icon: "$", label: "Finance Rules", href: "/dashboard/finance" },
 ];
 
 function NavSection({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
   return (
     <div className="px-2.5 pt-4 pb-1">
-      <div className="font-mono text-[0.56rem] tracking-[0.14em] uppercase text-muted px-2 mb-1.5">
-        {label}
-      </div>
+      {label && (
+        <div className="font-mono text-[0.56rem] tracking-[0.14em] uppercase text-muted px-2 mb-1.5">
+          {label}
+        </div>
+      )}
       {items.map((item) => {
         const isActive = pathname === item.href;
         return (
@@ -106,15 +110,19 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <NavSection label="Home" items={homeItems} pathname={pathname} />
+      <NavSection label="" items={dashboardItems} pathname={pathname} />
 
       <div className="h-px bg-light mx-3" />
 
-      <NavSection label="My Brand Library" items={libraryItems} pathname={pathname} />
+      <NavSection label="Create" items={createItems} pathname={pathname} />
 
       <div className="h-px bg-light mx-3" />
 
-      <NavSection label="Tools" items={toolItems} pathname={pathname} />
+      <NavSection label="Brand Library" items={libraryItems} pathname={pathname} />
+
+      <div className="h-px bg-light mx-3" />
+
+      <NavSection label="Brand Tools" items={toolItems} pathname={pathname} />
 
       {/* User */}
       <div className="mt-auto p-3 border-t border-light">

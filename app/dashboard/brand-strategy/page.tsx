@@ -555,7 +555,31 @@ export default function BrandStrategyPage() {
       }
 
       setGeneratedStrategy(data.strategy);
-      setScreen("output");
+
+      // Auto-save to Supabase and go straight to view
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: saved } = await supabase.from("brand_strategies").insert({
+          brand_id: "vetra",
+          user_id: user?.id || null,
+          category: category || "general",
+          answers,
+          generated_strategy: data.strategy,
+        }).select();
+
+        if (saved && saved.length > 0) {
+          const record = saved[0] as StrategyRecord;
+          setStrategyRecord(record);
+          const sections = parseStrategySections(record.generated_strategy);
+          setStrategySections(sections);
+          setScreen("view");
+        } else {
+          setScreen("output");
+        }
+      } catch {
+        // Save failed, fall back to output screen
+        setScreen("output");
+      }
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";

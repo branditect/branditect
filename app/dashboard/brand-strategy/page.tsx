@@ -533,7 +533,8 @@ export default function BrandStrategyPage() {
         category: category || "general",
       };
       if (fromExisting && existingText.trim()) {
-        payload.existingText = existingText;
+        // Truncate to ~15000 chars to stay within API limits
+        payload.existingText = existingText.slice(0, 15000);
       }
       if (images.length > 0) {
         payload.images = images.map((img) => ({
@@ -548,7 +549,13 @@ export default function BrandStrategyPage() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(`Server error: ${responseText.slice(0, 150)}`);
+      }
 
       if (!res.ok) {
         throw new Error(data.error || "Generation failed");

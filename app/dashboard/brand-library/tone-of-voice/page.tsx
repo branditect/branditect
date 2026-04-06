@@ -128,14 +128,18 @@ export default function ToneOfVoicePage() {
   const saveTone = async (fields: Partial<ToneData>) => {
     setSaving(true);
     try {
-      await fetch("/api/tone", {
+      const res = await fetch("/api/tone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand_id: brandId, ...fields }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Save failed" }));
+        console.error("Tone save failed:", err);
+      }
       setToneData((prev) => (prev ? { ...prev, ...fields } : { ...EMPTY_TONE, ...fields }));
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("Tone save error:", err);
     } finally {
       setSaving(false);
       setEditing(null);
@@ -184,8 +188,9 @@ export default function ToneOfVoicePage() {
             if (payload.done && payload.error) {
               throw new Error(payload.error);
             }
-          } catch {
-            // parse errors in stream are non-fatal
+          } catch (e) {
+            // Re-throw real errors, ignore JSON parse errors from partial chunks
+            if (e instanceof Error && e.message && !e.message.includes("JSON")) throw e;
           }
         }
       }

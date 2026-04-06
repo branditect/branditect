@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     const { brand_id, ...fields } = body;
     const id = brand_id || "default";
 
+    // Remove brand_id from fields if it leaked through
+    delete (fields as Record<string, unknown>).brand_id;
+
     // Check if row exists
     const { data: existing } = await supabase
       .from("brand_tone")

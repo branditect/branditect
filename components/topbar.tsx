@@ -27,7 +27,7 @@ export default function Topbar() {
   return (
     <header className="h-topbar bg-white border-b border-light flex items-center px-6 shrink-0 z-50">
       {/* Branditect wordmark */}
-      <span className="font-display text-[1.15rem] text-brand-orange tracking-tight shrink-0">
+      <span className="font-semibold text-[1.15rem] text-brand-orange tracking-tight shrink-0">
         Branditect
       </span>
 
@@ -37,12 +37,12 @@ export default function Topbar() {
           <span className="text-[0.72rem] text-muted font-light px-2 shrink-0">
             for
           </span>
-          <div className="flex items-center gap-[5px] bg-ink rounded px-2.5 py-[3px] shrink-0">
+          <div className="flex items-center gap-[5px] bg-pale border border-light rounded px-2.5 py-[3px] shrink-0">
             {brand?.logo_url && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={brand.logo_url} alt="" className="w-4 h-4 object-contain" />
             )}
-            <span className="font-mono text-[0.68rem] font-medium tracking-wider text-white uppercase">
+            <span className="font-mono text-[0.68rem] font-medium tracking-wider text-ink uppercase">
               {brandName}
             </span>
           </div>
@@ -86,7 +86,7 @@ export default function Topbar() {
         >
           + Create
         </Link>
-        <div className="w-7 h-7 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-display text-[0.75rem] text-brand-orange cursor-pointer ml-0.5">
+        <div className="w-7 h-7 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-semibold text-[0.75rem] text-brand-orange cursor-pointer ml-0.5">
           SM
         </div>
       </div>

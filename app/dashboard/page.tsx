@@ -76,7 +76,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="px-8 pt-8 pb-6 border-b border-light flex items-end justify-between">
         <div>
-          <h1 className="font-display text-[clamp(1.5rem,3vw,2rem)] text-ink tracking-tight leading-tight mb-1">
+          <h1 className="font-semibold text-[clamp(1.5rem,3vw,2rem)] text-ink tracking-tight leading-tight mb-1">
             Good morning, <em className="text-brand-orange">Saara.</em>
           </h1>
           <p className="font-mono text-[0.62rem] text-muted tracking-wider">
@@ -86,8 +86,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Create Bar */}
-      <div className="mx-8 mt-6 bg-ink rounded-lg p-5">
-        <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-white/40 mb-3">
+      <div className="mx-8 mt-6 bg-pale border border-light rounded-lg p-5">
+        <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-3">
           Quick Create — {brandName}
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3.5">
@@ -95,7 +95,7 @@ export default function DashboardPage() {
             <button
               key={chip}
               onClick={() => handleQuickCreate(chip)}
-              className="px-3 py-[5px] bg-white/[0.07] border border-white/10 rounded-full text-[0.75rem] text-white/60 hover:bg-brand-orange/20 hover:border-brand-orange/40 hover:text-white transition-all"
+              className="px-3 py-[5px] bg-white border border-light rounded-full text-[0.75rem] text-mid hover:bg-brand-orange-pale hover:border-brand-orange-mid hover:text-brand-orange transition-all"
             >
               {chip}
             </button>
@@ -106,7 +106,7 @@ export default function DashboardPage() {
             id="quickInput"
             type="text"
             placeholder={`What does ${brandName} need today?`}
-            className="flex-1 bg-white/[0.07] border border-white/[0.12] rounded-[5px] py-[9px] px-3.5 text-white font-light text-[0.84rem] outline-none focus:border-brand-orange/50 placeholder:text-white/30"
+            className="flex-1 bg-white border border-light rounded-[5px] py-[9px] px-3.5 text-ink font-light text-[0.84rem] outline-none focus:border-brand-orange placeholder:text-muted"
           />
           <button
             onClick={() => {
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                     {card.label}
                   </span>
                   <span className="text-[1.1rem] block mb-2">{card.icon}</span>
-                  <div className="font-display text-[0.95rem] text-ink mb-[3px] leading-tight">{card.title}</div>
+                  <div className="font-semibold text-[0.95rem] text-ink mb-[3px] leading-tight">{card.title}</div>
                   <div className="text-[0.72rem] text-muted leading-relaxed">{card.desc}</div>
                 </Link>
               ))}
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           {/* Business Pulse */}
           <div className="fade-in bg-white border border-light rounded-lg overflow-hidden">
             <div className="px-4 py-3.5 border-b border-light flex items-center justify-between">
-              <span className="font-display text-[0.88rem] text-ink">Business Pulse</span>
+              <span className="font-semibold text-[0.88rem] text-ink">Business Pulse</span>
               <span className="font-mono text-[0.58rem] text-brand-orange bg-brand-orange-pale border border-brand-orange-mid px-[7px] py-[2px] rounded-[3px]">
                 3 Active
               </span>
@@ -219,8 +219,8 @@ export default function DashboardPage() {
           {/* Brand Coherence */}
           <div className="fade-in bg-white border border-light rounded-lg overflow-hidden">
             <div className="px-4 py-3.5 border-b border-light flex items-center justify-between">
-              <span className="font-display text-[0.88rem] text-ink">Brand Coherence</span>
-              <span className="font-display text-[1.25rem] text-brand-orange">91%</span>
+              <span className="font-semibold text-[0.88rem] text-ink">Brand Coherence</span>
+              <span className="font-semibold text-[1.25rem] text-brand-orange">91%</span>
             </div>
             <div className="p-4">
               {coherenceRows.map((row) => (

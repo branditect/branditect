@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --text-on-white: #4A4A4A;
+  --text-on-grey: #1A1A1A;
+  --text-heading: #111111;
+  --text-muted: #6B6B6B;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,6 +20,24 @@ body {
   color: #1a1a1a;
   font-weight: 300;
   font-size: 14px;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+
+input, textarea, select {
+  background-color: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  color: #1A1A1A;
+  border-radius: 6px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #E8562A;
+  box-shadow: 0 0 0 2px rgba(232, 86, 42, 0.15);
 }
 
 /* Scrollbar */

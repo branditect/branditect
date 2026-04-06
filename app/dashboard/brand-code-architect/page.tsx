@@ -179,7 +179,7 @@ export default function BrandCodeArchitectPage() {
         <Link href="/dashboard" className="text-muted hover:text-ink text-[0.75rem]">← Dashboard</Link>
         <div className="flex items-center justify-between mt-1">
           <div>
-            <h1 className="font-display text-[1.5rem] text-ink tracking-tight mb-1">Brand Code Architect</h1>
+            <h1 className="font-semibold text-[1.5rem] text-ink tracking-tight mb-1">Brand Code Architect</h1>
             <p className="text-[0.78rem] text-muted">
               Upload screenshots, describe a feature — get production-ready, on-brand HTML code.
             </p>
@@ -332,7 +332,7 @@ export default function BrandCodeArchitectPage() {
             <div>
               <div className="flex items-center justify-between mb-5 pb-4 border-b border-light">
                 <div>
-                  <h2 className="font-display text-lg text-ink">Generated Component</h2>
+                  <h2 className="font-semibold text-lg text-ink">Generated Component</h2>
                 </div>
                 <button
                   onClick={handleReset}

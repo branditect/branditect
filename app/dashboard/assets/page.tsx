@@ -21,7 +21,7 @@ export default function AssetsPage() {
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light">
-        <h1 className="font-display text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
+        <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
         <p className="text-[0.78rem] text-muted">Access and manage all of {brandName}&apos;s brand assets in one place.</p>
       </div>
 

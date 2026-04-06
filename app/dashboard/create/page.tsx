@@ -108,7 +108,7 @@ function CreatePageInner() {
       {/* Left — Editor */}
       <div className="border-r border-light flex flex-col overflow-hidden">
         <div className="px-7 pt-7 pb-4 border-b border-light shrink-0">
-          <h1 className="font-display text-2xl text-ink tracking-tight mb-1">Create for {brandName}</h1>
+          <h1 className="font-semibold text-2xl text-ink tracking-tight mb-1">Create for {brandName}</h1>
           <p className="text-[0.78rem] text-muted">
             Every output is checked against {brandName}&apos;s strategy, tone, visual guidelines, and financial rules.
           </p>

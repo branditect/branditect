@@ -37,7 +37,7 @@ export default function SignUpPage() {
           <h1 className="text-3xl font-bold tracking-tight text-brand-orange">
             Branditect
           </h1>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted">
             Create your account
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function SignUpPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-400">
+        <p className="mt-6 text-center text-xs text-muted">
           Already have an account?{" "}
           <a href="/login" className="text-brand-orange hover:underline">
             Sign in

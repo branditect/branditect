@@ -297,7 +297,7 @@ export default function ToneOfVoicePage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4">
           {entryMode === "menu" ? (
             <>
-              <h2 className="font-display text-2xl text-ink mb-2">
+              <h2 className="font-semibold text-2xl text-ink mb-2">
                 Set up your brand tone of voice
               </h2>
               <p className="text-muted text-sm mb-6">
@@ -356,7 +356,7 @@ export default function ToneOfVoicePage() {
               >
                 &larr; Back
               </button>
-              <h2 className="font-display text-2xl text-ink mb-2">
+              <h2 className="font-semibold text-2xl text-ink mb-2">
                 Paste writing samples
               </h2>
               <p className="text-muted text-sm mb-4">
@@ -410,25 +410,25 @@ export default function ToneOfVoicePage() {
           >
             &larr; Brand Library
           </Link>
-          <h1 className="font-display text-[1.5rem] text-ink mt-3">Brand Tone of Voice</h1>
+          <h1 className="font-semibold text-[1.5rem] text-ink mt-3">Brand Tone of Voice</h1>
           <p className="text-muted text-sm mt-1">{brandName}</p>
         </div>
 
         {/* Section 1: Expression */}
-        <section className="relative bg-ink text-white rounded-2xl p-8 mb-8">
+        <section className="relative bg-pale border border-light rounded-2xl p-8 mb-8">
           <p className="font-mono text-brand-orange text-[0.65rem] tracking-widest uppercase mb-3">
             YOUR BRAND EXPRESSION
           </p>
           {td.expression_label ? (
             <>
-              <h2 className="font-display italic text-3xl mb-3">{td.expression_label}</h2>
-              <p className="text-white/80 text-sm leading-relaxed max-w-xl">
+              <h2 className="font-semibold italic text-3xl mb-3 text-heading">{td.expression_label}</h2>
+              <p className="text-on-white text-sm leading-relaxed max-w-xl">
                 {td.expression_text}
               </p>
             </>
           ) : (
             <>
-              <h2 className="font-display italic text-3xl mb-3 text-white/30">
+              <h2 className="font-semibold italic text-3xl mb-3 text-muted">
                 Your expression here
               </h2>
               {placeholder("Not defined yet — click edit to add")}
@@ -436,7 +436,7 @@ export default function ToneOfVoicePage() {
           )}
           <button
             onClick={() => openEdit("expression")}
-            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white text-xs font-mono px-3 py-1.5 rounded-lg transition-colors"
+            className="absolute top-4 right-4 bg-white border border-light hover:border-brand-orange-mid text-mid text-xs font-mono px-3 py-1.5 rounded-lg transition-colors"
           >
             Edit
           </button>
@@ -644,7 +644,7 @@ export default function ToneOfVoicePage() {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
-            <h2 className="font-display text-xl text-ink mb-5">
+            <h2 className="font-semibold text-xl text-ink mb-5">
               Edit &mdash;{" "}
               {editing === "expression" && "Brand Expression"}
               {editing === "pillars" && "Tone Pillars"}

@@ -587,7 +587,7 @@ export default function BrandLibraryPage() {
       <div className="px-8 pt-7 pb-4 border-b border-light shrink-0">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-display text-2xl text-ink tracking-tight mb-1">
+            <h1 className="font-semibold text-2xl text-ink tracking-tight mb-1">
               {brandName} Brand Library
             </h1>
             <p className="text-[0.78rem] text-muted">
@@ -638,7 +638,7 @@ export default function BrandLibraryPage() {
         {activeTab === "Image Architect" && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 bg-brand-orange-pale rounded-full flex items-center justify-center text-2xl mb-4">🎨</div>
-            <h3 className="font-display text-xl text-ink mb-2">Brand Image Architect</h3>
+            <h3 className="font-semibold text-xl text-ink mb-2">Brand Image Architect</h3>
             <p className="text-[0.78rem] text-muted max-w-md text-center mb-6">
               Upload reference images to extract your 30-point visual DNA, then generate perfectly on-brand image prompts.
             </p>
@@ -837,7 +837,7 @@ export default function BrandLibraryPage() {
                   />
                 </svg>
               </div>
-              <h3 className="font-display text-lg text-ink mb-1.5">
+              <h3 className="font-semibold text-lg text-ink mb-1.5">
                 Build Your Brand Strategy
               </h3>
               <p className="text-[0.75rem] text-muted mb-5 max-w-md">

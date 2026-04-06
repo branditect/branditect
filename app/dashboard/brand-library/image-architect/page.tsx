@@ -271,7 +271,7 @@ export default function ImageArchitectPage() {
         <div className="flex items-center gap-2 mb-1">
           <Link href="/dashboard/brand-library" className="text-muted hover:text-ink text-[0.75rem]">← Brand Library</Link>
         </div>
-        <h1 className="font-display text-[1.5rem] text-ink tracking-tight mb-1">Create from Reference</h1>
+        <h1 className="font-semibold text-[1.5rem] text-ink tracking-tight mb-1">Create from Reference</h1>
         <p className="text-[0.78rem] text-muted">Upload reference images and describe what you need. Gemini generates a new image matched to your style.</p>
       </div>
 

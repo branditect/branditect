@@ -216,7 +216,7 @@ function parseMarkdown(md: string): string {
   );
   html = html.replace(
     /^# (.+)$/gm,
-    '<h1 class="text-3xl font-display text-ink mb-6 pb-3 border-b-2 border-brand-orange">$1</h1>'
+    '<h1 class="text-3xl font-semibold text-ink mb-6 pb-3 border-b-2 border-brand-orange">$1</h1>'
   );
 
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
@@ -812,7 +812,7 @@ export default function BrandStrategyPage() {
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="max-w-3xl w-full space-y-8">
             <div className="text-center">
-              <h1 className="text-4xl font-display text-ink mb-3">
+              <h1 className="text-4xl font-semibold text-ink mb-3">
                 Brand Strategy
               </h1>
               <p className="text-lg text-muted font-sans">
@@ -885,7 +885,7 @@ export default function BrandStrategyPage() {
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="max-w-xl w-full space-y-8 text-center">
             <div>
-              <h1 className="text-3xl font-display text-ink mb-3">
+              <h1 className="text-3xl font-semibold text-ink mb-3">
                 What does your brand offer?
               </h1>
               <p className="text-muted font-sans">
@@ -1020,7 +1020,7 @@ export default function BrandStrategyPage() {
                 />
               </div>
 
-              <h2 className="text-2xl font-display text-ink mb-6 leading-snug">
+              <h2 className="text-2xl font-semibold text-ink mb-6 leading-snug">
                 {currentQuestion.question}
               </h2>
 
@@ -1133,7 +1133,7 @@ export default function BrandStrategyPage() {
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="max-w-md w-full space-y-8 text-center">
             <div>
-              <h2 className="text-2xl font-display text-ink mb-2">
+              <h2 className="text-2xl font-semibold text-ink mb-2">
                 Crafting your brand strategy
               </h2>
               <p className="text-muted font-sans">
@@ -1296,7 +1296,7 @@ export default function BrandStrategyPage() {
                   )}
                 </div>
 
-                <h1 className="text-[2.5rem] font-display text-ink mb-3 leading-tight">
+                <h1 className="text-[2.5rem] font-semibold text-ink mb-3 leading-tight">
                   {strategyJSON.brandName} &mdash; Brand Strategy
                 </h1>
 
@@ -1346,7 +1346,7 @@ export default function BrandStrategyPage() {
                 <div className="bg-[#0F0F0F] rounded-2xl p-8 text-white">
                   <div className="flex items-center justify-between mb-6">
                     <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A]">Brand Passport</span>
-                    <span className="text-[0.82rem] font-display text-white/80">{strategyJSON.brandName}</span>
+                    <span className="text-[0.82rem] font-semibold text-white/80">{strategyJSON.brandName}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 mb-6">
                     {([
@@ -1689,7 +1689,7 @@ export default function BrandStrategyPage() {
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#E8562A] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
                       <div>
-                        <div className="text-[1rem] font-display text-[#1A1A1A] mb-1">&ldquo;{t.text}&rdquo;</div>
+                        <div className="text-[1rem] font-semibold text-[#1A1A1A] mb-1">&ldquo;{t.text}&rdquo;</div>
                         <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{t.rationale}</div>
                       </div>
                     </div>
@@ -1723,7 +1723,7 @@ export default function BrandStrategyPage() {
                   )}
                 </div>
 
-                <h1 className="text-3xl font-display text-ink mb-2">
+                <h1 className="text-3xl font-semibold text-ink mb-2">
                   {brandName} &mdash; Brand Strategy
                 </h1>
 

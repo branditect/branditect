@@ -226,7 +226,7 @@ export default function OnboardingPage() {
   function renderStep1() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-display text-2xl text-ink mb-1">Brand Basics</h2>
+        <h2 className="font-semibold text-2xl text-ink mb-1">Brand Basics</h2>
         <p className="text-muted text-sm mb-8">Tell us a little about your brand to get started.</p>
 
         {/* Brand name */}
@@ -283,7 +283,7 @@ export default function OnboardingPage() {
   function renderStep2() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-display text-2xl text-ink mb-1">Upload your brand logos</h2>
+        <h2 className="font-semibold text-2xl text-ink mb-1">Upload your brand logos</h2>
         <p className="text-muted text-sm mb-8">Add your logo variants. You can always add more later.</p>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -344,7 +344,7 @@ export default function OnboardingPage() {
   function renderStep3() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-display text-2xl text-ink mb-1">Brand Colors</h2>
+        <h2 className="font-semibold text-2xl text-ink mb-1">Brand Colors</h2>
         <p className="text-muted text-sm mb-8">Add your brand colors. You can always update these later.</p>
 
         {/* Color list */}
@@ -422,7 +422,7 @@ export default function OnboardingPage() {
   function renderStep4() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-display text-2xl text-ink mb-1">How would you like to set up your brand strategy?</h2>
+        <h2 className="font-semibold text-2xl text-ink mb-1">How would you like to set up your brand strategy?</h2>
         <p className="text-muted text-sm mb-8">Choose one option below. You can change this later.</p>
 
         <div className="flex flex-col gap-3 mb-8">
@@ -508,10 +508,10 @@ export default function OnboardingPage() {
         {/* Dark hero card */}
         <div className="bg-[#0F0F0F] rounded-2xl px-10 py-12 flex flex-col items-center text-center mb-10 w-full max-w-md">
           {/* Logo mark */}
-          <div className="w-12 h-12 rounded-lg bg-brand-orange flex items-center justify-center text-white font-display text-xl mb-6">
+          <div className="w-12 h-12 rounded-lg bg-brand-orange flex items-center justify-center text-white font-semibold text-xl mb-6">
             B
           </div>
-          <h2 className="font-display text-2xl text-white mb-2">
+          <h2 className="font-semibold text-2xl text-white mb-2">
             Branditect for {brandName} is ready.
           </h2>
           <p className="text-sm text-[#888]">Your brand workspace has been created.</p>
@@ -551,10 +551,10 @@ export default function OnboardingPage() {
       <aside className="w-72 bg-white border-r border-light flex flex-col shrink-0">
         <div className="px-6 pt-8 pb-6 border-b border-light">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-brand-orange flex items-center justify-center text-white font-display text-xs">
+            <div className="w-7 h-7 rounded-md bg-brand-orange flex items-center justify-center text-white font-semibold text-xs">
               B
             </div>
-            <span className="font-display text-lg text-ink tracking-tight">Branditect</span>
+            <span className="font-semibold text-lg text-ink tracking-tight">Branditect</span>
           </div>
         </div>
 

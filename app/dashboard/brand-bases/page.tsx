@@ -44,7 +44,7 @@ export default function BrandBasesPage() {
         ◉
       </div>
 
-      <h1 className="font-display text-[1.75rem] text-ink tracking-tight mb-2">
+      <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-2">
         Build Your Brand Foundation
       </h1>
       <p className="text-[0.84rem] text-muted max-w-[420px] leading-relaxed mb-10">
@@ -61,7 +61,7 @@ export default function BrandBasesPage() {
             <div className="w-8 h-8 bg-brand-orange-pale rounded-md flex items-center justify-center text-[0.9rem] mb-3">
               {base.icon}
             </div>
-            <div className="font-display text-[0.95rem] text-ink mb-1">{base.title}</div>
+            <div className="font-semibold text-[0.95rem] text-ink mb-1">{base.title}</div>
             <div className="text-[0.73rem] text-muted leading-relaxed mb-3.5">{base.desc}</div>
             <div className="flex items-center justify-between">
               <span className="font-mono text-[0.58rem] text-muted">Progress</span>

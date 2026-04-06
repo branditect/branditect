@@ -362,7 +362,7 @@ function Screen1({
 }) {
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-2">
+      <h1 className="font-semibold text-2xl text-ink mb-2">
         What type of business are you?
       </h1>
       <p className="text-mid text-sm mb-8">
@@ -855,7 +855,7 @@ function Screen2({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-2">
+      <h1 className="font-semibold text-2xl text-ink mb-2">
         Add your products and services
       </h1>
       <p className="text-mid text-sm mb-8">
@@ -960,7 +960,7 @@ function Screen3({
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-2">
+      <h1 className="font-semibold text-2xl text-ink mb-2">
         Financial rules &amp; enrichment
       </h1>
       <p className="text-mid text-sm mb-8">
@@ -1135,7 +1135,7 @@ function Screen4({
 }) {
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink mb-2">
+      <h1 className="font-semibold text-2xl text-ink mb-2">
         Review your catalog
       </h1>
       <p className="text-mid text-sm mb-8">

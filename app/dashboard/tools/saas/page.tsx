@@ -26,7 +26,7 @@ function MetricCard({ label, value, warn }: { label: string; value: string; warn
   return (
     <div className={`rounded-lg border p-4 ${warn ? "border-red-300 bg-red-50" : "border-light bg-white"}`}>
       <div className="font-mono text-[0.52rem] tracking-wider uppercase text-muted mb-1">{label}</div>
-      <div className={`font-display text-xl ${warn ? "text-red-600" : "text-ink"}`}>{value}</div>
+      <div className={`font-semibold text-xl ${warn ? "text-red-600" : "text-ink"}`}>{value}</div>
     </div>
   );
 }
@@ -170,7 +170,7 @@ export default function SaaSPage() {
     <div className="flex flex-col flex-1 h-full">
       <div className="px-8 pt-7 pb-4 border-b border-light shrink-0">
         <Link href="/dashboard/tools" className="text-muted hover:text-ink text-[0.75rem]">← Business Tools</Link>
-        <h1 className="font-display text-[1.5rem] text-ink tracking-tight mt-1 mb-1">SaaS Metrics</h1>
+        <h1 className="font-semibold text-[1.5rem] text-ink tracking-tight mt-1 mb-1">SaaS Metrics</h1>
         <p className="text-[0.78rem] text-muted">Model your subscription business — MRR, churn, break-even, and P&L.</p>
       </div>
 

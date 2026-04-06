@@ -119,7 +119,7 @@ export default function Sidebar() {
       {/* User */}
       <div className="mt-auto p-3 border-t border-light">
         <div className="flex items-center gap-2 p-2 rounded-[5px] hover:bg-pale transition-all cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-display text-[0.65rem] text-brand-orange shrink-0">
+          <div className="w-6 h-6 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-semibold text-[0.65rem] text-brand-orange shrink-0">
             S
           </div>
           <div>

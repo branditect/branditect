@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
 export const maxDuration = 60;
@@ -67,31 +67,14 @@ export async function POST(req: NextRequest) {
       answers,
       category,
       existingText,
-      images,
     }: {
       answers: Record<string, string>;
       category: string;
       existingText?: string;
-      images?: { base64: string; type: string }[];
     } = body;
 
     const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
 
-    // Add images if provided (max 3)
-    if (images && images.length > 0) {
-      for (const img of images.slice(0, 3)) {
-        contentBlocks.push({
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: img.type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-            data: img.base64,
-          },
-        });
-      }
-    }
-
-    // Build user text
     let userText = "";
 
     if (existingText && existingText.trim()) {
@@ -114,47 +97,75 @@ export async function POST(req: NextRequest) {
     }
 
     if (!existingText?.trim() && answeredQuestions.length === 0) {
-      return NextResponse.json({ error: "Please provide either a brand strategy or answer the questionnaire." }, { status: 400 });
+      return new Response(JSON.stringify({ error: "Please provide either a brand strategy or answer the questionnaire." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    userText += "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise to ensure the full JSON is returned.";
+    userText += "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
 
     contentBlocks.push({ type: "text", text: userText });
 
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4000,
+    // Use streaming to avoid Vercel timeout
+    const stream = await client.messages.stream({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: contentBlocks }],
     });
 
-    const rawText = message.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as Anthropic.TextBlock).text)
-      .join("");
+    // Create a readable stream that sends chunks to the client
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          let fullText = "";
 
-    // Extract JSON robustly
-    let jsonString = rawText.trim();
-    jsonString = jsonString.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+          for await (const event of stream) {
+            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+              fullText += event.delta.text;
+              // Send each chunk as a SSE-style message
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: event.delta.text })}\n\n`));
+            }
+          }
 
-    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonString = jsonMatch[0];
-    }
+          // Send the final complete message
+          // Extract JSON from full text
+          let jsonString = fullText.trim();
+          jsonString = jsonString.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+          const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+          if (jsonMatch) jsonString = jsonMatch[0];
 
-    // Validate JSON
-    try {
-      JSON.parse(jsonString);
-    } catch {
-      console.error("Strategy JSON parse failed. First 500 chars:", jsonString.slice(0, 500));
-      console.error("Last 200 chars:", jsonString.slice(-200));
-      return NextResponse.json({ error: "AI returned incomplete response. Please try again." }, { status: 500 });
-    }
+          try {
+            JSON.parse(jsonString); // validate
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, strategy: jsonString })}\n\n`));
+          } catch {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, error: "AI returned incomplete response. Please try again." })}\n\n`));
+          }
 
-    return NextResponse.json({ strategy: jsonString });
+          controller.close();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Stream error";
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, error: msg })}\n\n`));
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error: unknown) {
     console.error("Brand strategy error:", error);
     const msg = error instanceof Error ? error.message : "Failed to generate strategy";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

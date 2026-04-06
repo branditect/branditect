@@ -549,19 +549,52 @@ export default function BrandStrategyPage() {
         body: JSON.stringify(payload),
       });
 
-      const responseText = await res.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        throw new Error(`Server error: ${responseText.slice(0, 150)}`);
+      // Check for non-stream error responses
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Generation failed");
       }
 
-      if (!res.ok) {
-        throw new Error(data.error || "Generation failed");
+      if (!res.ok || !res.body) {
+        throw new Error("Generation failed — no response from server");
       }
 
-      setGeneratedStrategy(data.strategy);
+      // Read the stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let strategyJson = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = decoder.decode(value, { stream: true });
+        const lines = text.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.done && parsed.strategy) {
+              strategyJson = parsed.strategy;
+            } else if (parsed.done && parsed.error) {
+              throw new Error(parsed.error);
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message !== "Generation failed") {
+              // Ignore chunk parse errors, only throw real errors
+              if (e.message.includes("AI returned") || e.message.includes("incomplete")) throw e;
+            }
+          }
+        }
+      }
+
+      if (!strategyJson) {
+        throw new Error("No strategy received. Please try again.");
+      }
+
+      setGeneratedStrategy(strategyJson);
 
       // Auto-save to Supabase and go straight to view
       try {
@@ -571,7 +604,7 @@ export default function BrandStrategyPage() {
           user_id: user?.id || null,
           category: category || "general",
           answers,
-          generated_strategy: data.strategy,
+          generated_strategy: strategyJson,
         }).select();
 
         if (saved && saved.length > 0) {
@@ -584,7 +617,6 @@ export default function BrandStrategyPage() {
           setScreen("output");
         }
       } catch {
-        // Save failed, fall back to output screen
         setScreen("output");
       }
     } catch (err: unknown) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
-import { buildBrandContext, STRICT_GENERATION_RULE } from '@/lib/brandContext'
+import { buildBrandContext } from '@/lib/brandContext'
 
 export const maxDuration = 30
 
@@ -15,61 +15,49 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-interface ToneRow {
-  expression_label: string | null
-  expression_text: string | null
-  pillars: Array<{ name: string; description?: string }> | null
-  dos: string[] | null
-  donts: string[] | null
-  vocab_yes: string[] | null
-  vocab_no: string[] | null
-}
-
-async function getBrandContext(brandId: string): Promise<{ brandName: string; tone: ToneRow | null }> {
-  const [brandResult, toneResult] = await Promise.all([
-    supabase.from('brands').select('brand_name').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_tone').select('expression_label, expression_text, pillars, dos, donts, vocab_yes, vocab_no').eq('brand_id', brandId).maybeSingle(),
-  ])
-
-  const brandName = brandResult.data?.brand_name || 'Your Brand'
-  return { brandName, tone: toneResult.data as ToneRow | null }
+async function getBrandName(brandId: string): Promise<string> {
+  const { data } = await supabase
+    .from('brands')
+    .select('brand_name')
+    .eq('brand_id', brandId)
+    .maybeSingle()
+  return data?.brand_name || 'Your Brand'
 }
 
 function buildSystemPrompt(
   deliverable: string,
   brandName: string,
-  tone: ToneRow | null,
   fullBrandContext: string
 ): string {
-  const toneLines: string[] = []
-  if (tone?.expression_label) toneLines.push(`- Brand Voice: ${tone.expression_label}`)
-  if (tone?.expression_text) toneLines.push(`- Voice Description: ${tone.expression_text}`)
-  if (tone?.pillars?.length) toneLines.push(`- Tone Pillars: ${tone.pillars.map(p => p.name).join(', ')}`)
-  if (tone?.dos?.length) toneLines.push(`- DO: ${tone.dos.slice(0, 5).join('; ')}`)
-  if (tone?.donts?.length) toneLines.push(`- DON'T: ${tone.donts.slice(0, 5).join('; ')}`)
-  if (tone?.vocab_yes?.length) toneLines.push(`- Preferred vocabulary: ${tone.vocab_yes.slice(0, 10).join(', ')}`)
-  if (tone?.vocab_no?.length) toneLines.push(`- Words to avoid: ${tone.vocab_no.slice(0, 10).join(', ')}`)
+  return `You are the Copy Architect for ${brandName} — an expert brand copywriter who knows this brand inside out.
 
-  const toneSection = toneLines.length > 0
-    ? toneLines.join('\n')
-    : '- Write in a professional, on-brand voice consistent with the brand name.'
+Before writing anything, you have been given four sources of brand truth:
+- BRAND STRATEGY: the positioning, audience, mission, and messaging pillars
+- BRAND TONE OF VOICE: the personality, language style, and communication rules
+- PRODUCTS & SERVICES CATALOGUE: every product and service with real names, features, and pricing
+- BRAND KNOWLEDGE VAULT: additional documents, presentations, and company information
 
-  const brandDataSection = fullBrandContext
-    ? `\n## BRAND DATA\n${fullBrandContext}\n`
-    : `\n## BRAND CONTEXT\n- Brand: ${brandName}\n${toneSection}\n`
+STRICT RULES:
+1. Only use product names, features, prices, and facts that appear in the four sources below. Never invent or assume details.
+2. Write in the exact tone of voice described. Match the personality, sentence style, vocabulary, and energy of the brand — do not default to generic marketing language.
+3. When writing about a specific product, pull all available details from the Products & Services Catalogue and Knowledge Vault first. Use real feature names, real prices, and real positioning — not placeholders.
+4. If a user asks you to write about a product or topic that does not appear in any of the four sources, respond with: "I don't have enough information about this in the brand vault. Please upload a document with the product details and I will write from that."
+5. Never use placeholder text like [insert feature here] or [price]. If you don't have the information, say so.
 
-  return `${STRICT_GENERATION_RULE}
-${brandDataSection}
-You are a senior copywriter embedded in the brand team for ${brandName}.
+When writing a newsletter, email, social post, ad, or any other copy format:
+- Open by identifying the relevant product or topic in the catalogue
+- Apply the brand's tone of voice throughout — not just in the headline
+- Check the brand strategy for any relevant messaging pillars or audience notes
+- Check the knowledge vault for any supporting facts, stats, or context
+- Deliver complete, ready-to-use copy — not a draft or skeleton
 
-## ANTI-AI RULES
+ANTI-AI RULES:
 - Never sound like AI. No filler phrases like "In today's fast-paced world" or "Are you ready to".
-- No em-dash abuse. No list-of-three cliches. No "Whether you're X or Y" constructions.
+- No em-dash abuse. No list-of-three clichés. No "Whether you're X or Y" constructions.
 - Every sentence must earn its spot. If it sounds like it could be in any brand's copy, rewrite it.
 - Write like a human who knows this brand deeply, not a model producing "content".
 
-## OUTPUT FORMAT
-You MUST return valid JSON only. No markdown, no backticks, no prose outside the JSON.
+OUTPUT FORMAT — You MUST return valid JSON only. No markdown, no backticks, no prose outside the JSON.
 
 Return this exact structure:
 {
@@ -86,15 +74,18 @@ Return this exact structure:
       ]
     }
   ],
-  "qualityChecks": ["List of 3-4 checks confirming brand alignment, e.g. 'No banned words used', 'Tone matches brand voice'"],
+  "qualityChecks": ["List of 3-4 checks confirming brand alignment"],
   "placeholders": ["Any placeholder tokens used, e.g. '[LINK]', '[NAME]'"],
   "toneMatch": "One sentence confirming how the copy matches the brand tone"
 }
 
-## DELIVERABLE
-${deliverable}
+DELIVERABLE: ${deliverable}
 
-IMPORTANT: Complete the entire JSON response including all closing braces. Do not stop mid-output.`
+IMPORTANT: Complete the entire JSON response including all closing braces. Do not stop mid-output.
+
+--- BRAND CONTEXT BELOW ---
+
+${fullBrandContext || `Brand: ${brandName}\n(No additional brand data has been added to the vault yet.)`}`
 }
 
 export async function POST(req: NextRequest) {
@@ -130,10 +121,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 })
     }
 
-    // Fetch brand context (tone/name) and full vault context in parallel
-    const [{ brandName, tone }, fullBrandContext] = brand_id && brand_id !== 'default'
-      ? await Promise.all([getBrandContext(brand_id), buildBrandContext(brand_id)])
-      : [{ brandName: 'Your Brand', tone: null }, '']
+    // Fetch brand name and full vault context in parallel
+    const [brandName, fullBrandContext] = brand_id && brand_id !== 'default'
+      ? await Promise.all([getBrandName(brand_id), buildBrandContext(brand_id)])
+      : ['Your Brand', '']
 
     // Build user prompt from field values
     const fieldLines = subConfig.fields
@@ -150,7 +141,7 @@ Write the copy now. Return only the JSON.`
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: buildSystemPrompt(subConfig.deliverable, brandName, tone, fullBrandContext),
+      system: buildSystemPrompt(subConfig.deliverable, brandName, fullBrandContext),
       messages: [
         { role: 'user', content: userPrompt },
       ],

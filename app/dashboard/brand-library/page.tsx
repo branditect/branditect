@@ -191,13 +191,18 @@ function LogoDropZone({
 /* ------------------------------------------------------------------ */
 
 export default function BrandLibraryPage() {
-  const { brandName } = useBrand();
+  const { brandId, brandName } = useBrand();
   const [activeTab, setActiveTab] = useState("Visual");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   // Logo uploads: keyed by slot key
   const [logoFiles, setLogoFiles] = useState<Record<string, UploadedFile>>({});
   const [logoUploading, setLogoUploading] = useState<Record<string, boolean>>({});
   const [logoPreviews, setLogoPreviews] = useState<Record<string, string>>({});
+  // Track which logos are confirmed uploaded (used during load)
+  const [, setLogoUploaded] = useState<Record<string, boolean>>({});
 
   // Guidelines upload
   const [guidelineFile, setGuidelineFile] = useState<UploadedFile | null>(null);
@@ -465,6 +470,7 @@ export default function BrandLibraryPage() {
   }, []);
 
   // Load all Google Fonts on mount
+  // Load Google Fonts
   useEffect(() => {
     defaultFonts.filter((f) => f.source === "google").forEach((f) => {
       const link = document.createElement("link");
@@ -474,18 +480,105 @@ export default function BrandLibraryPage() {
     });
   }, []);
 
+  // Load saved visual data from Supabase
+  useEffect(() => {
+    if (brandId === "default" || loaded) return;
+    async function loadVisual() {
+      try {
+        const res = await fetch(`/api/visual?brand_id=${brandId}`);
+        const json = await res.json();
+        if (json.visual) {
+          if (json.visual.colors?.length > 0) setBrandColors(json.visual.colors);
+          if (json.visual.fonts?.length > 0) setBrandFonts(json.visual.fonts);
+          if (json.visual.logo_slots) {
+            // Restore logo previews from saved URLs
+            const slots = json.visual.logo_slots as Record<string, string>;
+            const previews: Record<string, string> = {};
+            const uploaded: Record<string, boolean> = {};
+            for (const [key, url] of Object.entries(slots)) {
+              if (url) { previews[key] = url; uploaded[key] = true; }
+            }
+            setLogoPreviews(previews);
+            setLogoUploaded(uploaded);
+          }
+          if (json.visual.guideline_url) {
+            setGuidelineFile({ name: "Brand guidelines", url: json.visual.guideline_url, path: "" });
+          }
+          if (json.visual.strategy_text) setStrategyText(json.visual.strategy_text);
+        }
+      } catch (err) {
+        console.error("Failed to load visual data:", err);
+      } finally {
+        setLoaded(true);
+      }
+    }
+    loadVisual();
+  }, [brandId, loaded]);
+
+  // Save visual data to Supabase
+  const saveVisual = useCallback(async () => {
+    if (brandId === "default") return;
+    setSaving(true);
+    setSaved(false);
+    try {
+      // Build logo slots from uploaded files
+      const logoSlots: Record<string, string> = {};
+      for (const [key, file] of Object.entries(logoFiles)) {
+        if (file?.url) logoSlots[key] = file.url;
+      }
+      // Also include preview URLs (from local uploads that went to Supabase)
+      for (const [key, preview] of Object.entries(logoPreviews)) {
+        if (!logoSlots[key] && preview && !preview.startsWith("data:")) {
+          logoSlots[key] = preview;
+        }
+      }
+
+      await fetch("/api/visual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand_id: brandId,
+          colors: brandColors,
+          fonts: brandFonts,
+          logo_slots: logoSlots,
+          guideline_url: guidelineFile?.url || null,
+          strategy_text: strategyText || null,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save visual data:", err);
+    } finally {
+      setSaving(false);
+    }
+  }, [brandId, brandColors, brandFonts, logoFiles, logoPreviews, guidelineFile, strategyText]);
+
   /* ---------------------------------------------------------------- */
 
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-7 pb-4 border-b border-light shrink-0">
-        <h1 className="font-display text-2xl text-ink tracking-tight mb-1">
-          {brandName} Brand Library
-        </h1>
-        <p className="text-[0.78rem] text-muted">
-          Upload your brand assets and define your strategy — everything {brandName} needs to work for you.
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-2xl text-ink tracking-tight mb-1">
+              {brandName} Brand Library
+            </h1>
+            <p className="text-[0.78rem] text-muted">
+              Upload your brand assets and define your strategy — everything {brandName} needs to work for you.
+            </p>
+          </div>
+          {activeTab === "Visual" && (
+            <button
+              onClick={saveVisual}
+              disabled={saving}
+              className="px-5 py-2 rounded-lg bg-brand-orange text-white text-[0.78rem] font-semibold hover:bg-brand-orange-hover transition-colors disabled:opacity-50 shrink-0"
+            >
+              {saving ? "Saving..." : saved ? "Saved ✓" : "Save changes"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

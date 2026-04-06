@@ -17,22 +17,22 @@ const dashboardItems: NavItem[] = [
 ];
 
 const createItems: NavItem[] = [
-  { icon: "🖼", label: "Image Architect", href: "/dashboard/brand-library/image-architect" },
-  { icon: "✦", label: "Text Architect", href: "/dashboard/create" },
-  { icon: "◈", label: "Graphic Architect", href: "/dashboard/graphic-architect" },
+  { icon: "◻", label: "Image Architect", href: "/dashboard/brand-library/image-architect" },
+  { icon: "¶", label: "Text Architect", href: "/dashboard/create" },
+  { icon: "△", label: "Graphic Architect", href: "/dashboard/graphic-architect" },
   { icon: "⟨⟩", label: "Code Architect", href: "/dashboard/brand-code-architect" },
 ];
 
 const libraryItems: NavItem[] = [
-  { icon: "☰", label: "Brand Strategy", href: "/dashboard/brand-strategy" },
+  { icon: "◇", label: "Brand Strategy", href: "/dashboard/brand-strategy" },
   { icon: "◷", label: "Tone of Voice", href: "/dashboard/voice" },
   { icon: "◈", label: "Visual Identity", href: "/dashboard/brand-library" },
   { icon: "◎", label: "Asset Library", href: "/dashboard/assets" },
 ];
 
 const toolItems: NavItem[] = [
-  { icon: "📊", label: "Calculators", href: "/dashboard/tools" },
-  { icon: "⚡", label: "Productivity", href: "/dashboard/tools" },
+  { icon: "▤", label: "Calculators", href: "/dashboard/tools" },
+  { icon: "◉", label: "Productivity", href: "/dashboard/tools" },
   { icon: "↗", label: "Growth", href: "/dashboard/growth" },
   { icon: "$", label: "Finance Rules", href: "/dashboard/finance" },
 ];

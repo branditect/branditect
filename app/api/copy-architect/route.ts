@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
+import { buildBrandContext, STRICT_GENERATION_RULE } from '@/lib/brandContext'
 
 export const maxDuration = 30
 
@@ -34,7 +35,12 @@ async function getBrandContext(brandId: string): Promise<{ brandName: string; to
   return { brandName, tone: toneResult.data as ToneRow | null }
 }
 
-function buildSystemPrompt(deliverable: string, brandName: string, tone: ToneRow | null): string {
+function buildSystemPrompt(
+  deliverable: string,
+  brandName: string,
+  tone: ToneRow | null,
+  fullBrandContext: string
+): string {
   const toneLines: string[] = []
   if (tone?.expression_label) toneLines.push(`- Brand Voice: ${tone.expression_label}`)
   if (tone?.expression_text) toneLines.push(`- Voice Description: ${tone.expression_text}`)
@@ -44,15 +50,17 @@ function buildSystemPrompt(deliverable: string, brandName: string, tone: ToneRow
   if (tone?.vocab_yes?.length) toneLines.push(`- Preferred vocabulary: ${tone.vocab_yes.slice(0, 10).join(', ')}`)
   if (tone?.vocab_no?.length) toneLines.push(`- Words to avoid: ${tone.vocab_no.slice(0, 10).join(', ')}`)
 
-  const brandContext = toneLines.length > 0
+  const toneSection = toneLines.length > 0
     ? toneLines.join('\n')
     : '- Write in a professional, on-brand voice consistent with the brand name.'
 
-  return `You are a senior copywriter embedded in the brand team for ${brandName}.
+  const brandDataSection = fullBrandContext
+    ? `\n## BRAND DATA\n${fullBrandContext}\n`
+    : `\n## BRAND CONTEXT\n- Brand: ${brandName}\n${toneSection}\n`
 
-## BRAND CONTEXT
-- Brand: ${brandName}
-${brandContext}
+  return `${STRICT_GENERATION_RULE}
+${brandDataSection}
+You are a senior copywriter embedded in the brand team for ${brandName}.
 
 ## ANTI-AI RULES
 - Never sound like AI. No filler phrases like "In today's fast-paced world" or "Are you ready to".
@@ -122,10 +130,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 })
     }
 
-    // Fetch brand context dynamically
-    const { brandName, tone } = brand_id && brand_id !== 'default'
-      ? await getBrandContext(brand_id)
-      : { brandName: 'Your Brand', tone: null }
+    // Fetch brand context (tone/name) and full vault context in parallel
+    const [{ brandName, tone }, fullBrandContext] = brand_id && brand_id !== 'default'
+      ? await Promise.all([getBrandContext(brand_id), buildBrandContext(brand_id)])
+      : [{ brandName: 'Your Brand', tone: null }, '']
 
     // Build user prompt from field values
     const fieldLines = subConfig.fields
@@ -142,7 +150,7 @@ Write the copy now. Return only the JSON.`
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: buildSystemPrompt(subConfig.deliverable, brandName, tone),
+      system: buildSystemPrompt(subConfig.deliverable, brandName, tone, fullBrandContext),
       messages: [
         { role: 'user', content: userPrompt },
       ],

@@ -92,12 +92,12 @@ interface BrandStrategy {
     isUs: boolean;
   }[];
   messagingPillars: { title: string; text: string }[];
-  channelMessages: {
-    linkedin: { format: string; pillar: string; body: string }[];
-    email: { format: string; tone: string; body: string }[];
-    ads: { format: string; pillar: string; body: string }[];
-    website: { format: string; body: string }[];
-    sales: { format: string; persona: string; body: string }[];
+  channelMessages?: {
+    linkedin?: { format: string; pillar?: string; body: string }[];
+    email?: { format: string; tone?: string; body: string }[];
+    ads?: { format: string; pillar?: string; body: string }[];
+    website?: { format: string; body: string }[];
+    sales?: { format: string; persona?: string; body: string }[];
   };
   voiceDescription: string;
   voiceDoDont: { do: string; dont: string }[];
@@ -432,23 +432,39 @@ export default function BrandStrategyPage() {
   useEffect(() => {
     const loadStrategy = async () => {
       try {
-        const { data } = await supabase
+        const { data, error: dbError } = await supabase
           .from("brand_strategies")
           .select("*")
           .eq("brand_id", "vetra")
           .order("created_at", { ascending: false })
           .limit(1);
 
+        if (dbError) {
+          console.error("Failed to load strategy:", dbError);
+          setLoadingStrategy(false);
+          return;
+        }
+
         if (data && data.length > 0) {
           const record = data[0] as StrategyRecord;
           setStrategyRecord(record);
-          const sections = parseStrategySections(record.generated_strategy);
-          setStrategySections(sections);
           setGeneratedStrategy(record.generated_strategy);
+
+          // Try parsing as JSON first (new format), fallback to markdown sections
+          try {
+            JSON.parse(record.generated_strategy);
+            // It's valid JSON — the view screen will handle it
+          } catch {
+            // It's markdown — parse into sections for legacy view
+            const sections = parseStrategySections(record.generated_strategy);
+            setStrategySections(sections);
+          }
+
           setScreen("view");
         }
-      } catch {
-        // No existing strategy, stay on entry screen
+      } catch (err) {
+        console.error("Strategy load error:", err);
+        // Stay on entry screen
       } finally {
         setLoadingStrategy(false);
       }
@@ -1530,8 +1546,8 @@ export default function BrandStrategyPage() {
                     </div>
                   ))}
                 </div>
-                {/* Channel tabs */}
-                <div className="border border-[#E5E5E5] rounded-xl overflow-hidden">
+                {/* Channel tabs — only show if channel messages exist */}
+                {strategyJSON.channelMessages && <div className="border border-[#E5E5E5] rounded-xl overflow-hidden">
                   <div className="flex border-b border-[#E5E5E5] bg-[#F5F5F5]">
                     {CHANNEL_TABS.map((tab) => (
                       <button
@@ -1548,34 +1564,34 @@ export default function BrandStrategyPage() {
                     ))}
                   </div>
                   <div className="p-5 space-y-4">
-                    {activeChannelTab === "linkedin" && strategyJSON.channelMessages.linkedin?.map((m, i) => (
+                    {activeChannelTab === "linkedin" && strategyJSON.channelMessages?.linkedin?.map((m, i) => (
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>
+                          {m.pillar && <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
                     ))}
-                    {activeChannelTab === "email" && strategyJSON.channelMessages.email?.map((m, i) => (
+                    {activeChannelTab === "email" && strategyJSON.channelMessages?.email?.map((m, i) => (
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          <span className="text-[0.6rem] text-[#6B6B6B]">{m.tone}</span>
+                          {m.tone && <span className="text-[0.6rem] text-[#6B6B6B]">{m.tone}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
                     ))}
-                    {activeChannelTab === "ads" && strategyJSON.channelMessages.ads?.map((m, i) => (
+                    {activeChannelTab === "ads" && strategyJSON.channelMessages?.ads?.map((m, i) => (
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>
+                          {m.pillar && <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
                     ))}
-                    {activeChannelTab === "website" && strategyJSON.channelMessages.website?.map((m, i) => (
+                    {activeChannelTab === "website" && strategyJSON.channelMessages?.website?.map((m, i) => (
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
@@ -1583,17 +1599,17 @@ export default function BrandStrategyPage() {
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
                     ))}
-                    {activeChannelTab === "sales" && strategyJSON.channelMessages.sales?.map((m, i) => (
+                    {activeChannelTab === "sales" && strategyJSON.channelMessages?.sales?.map((m, i) => (
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          <span className="text-[0.6rem] text-[#6B6B6B]">{m.persona}</span>
+                          {m.persona && <span className="text-[0.6rem] text-[#6B6B6B]">{m.persona}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
                     ))}
                   </div>
-                </div>
+                </div>}
               </section>
 
               {/* ---------- Brand Voice ---------- */}

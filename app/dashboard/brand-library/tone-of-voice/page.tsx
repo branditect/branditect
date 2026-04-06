@@ -128,10 +128,13 @@ export default function ToneOfVoicePage() {
   const saveTone = async (fields: Partial<ToneData>) => {
     setSaving(true);
     try {
+      // Destructure out brand_id so it can't override the correct brandId from useBrand
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { brand_id: _ignored, ...safeFields } = fields as ToneData;
       const res = await fetch("/api/tone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand_id: brandId, ...fields }),
+        body: JSON.stringify({ brand_id: brandId, ...safeFields }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Save failed" }));

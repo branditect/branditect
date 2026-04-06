@@ -560,32 +560,32 @@ export default function BrandStrategyPage() {
         throw new Error("Generation failed — no response from server");
       }
 
-      // Read the stream
+      // Read the full stream
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let strategyJson = "";
+      let fullResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        fullResponse += decoder.decode(value, { stream: true });
+      }
 
-        const text = decoder.decode(value, { stream: true });
-        const lines = text.split("\n");
+      // Find the final "done" message with the strategy
+      let strategyJson = "";
+      const dataLines = fullResponse.split("\n").filter(l => l.startsWith("data: "));
 
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          try {
-            const parsed = JSON.parse(line.slice(6));
-            if (parsed.done && parsed.strategy) {
-              strategyJson = parsed.strategy;
-            } else if (parsed.done && parsed.error) {
-              throw new Error(parsed.error);
-            }
-          } catch (e) {
-            if (e instanceof Error && e.message !== "Generation failed") {
-              // Ignore chunk parse errors, only throw real errors
-              if (e.message.includes("AI returned") || e.message.includes("incomplete")) throw e;
-            }
+      for (const line of dataLines) {
+        try {
+          const parsed = JSON.parse(line.slice(6));
+          if (parsed.done && parsed.strategy) {
+            strategyJson = parsed.strategy;
+          } else if (parsed.done && parsed.error) {
+            throw new Error(parsed.error);
+          }
+        } catch (e) {
+          if (e instanceof Error && (e.message.includes("AI returned") || e.message.includes("incomplete") || e.message.includes("try again"))) {
+            throw e;
           }
         }
       }

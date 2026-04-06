@@ -79,17 +79,23 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { brandName } = useBrand();
+  const { brand, brandName } = useBrand();
 
   const initials = brandName ? brandName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "B";
+  const logoUrl = brand?.logo_url;
 
   return (
     <aside className="w-sidebar bg-[#FAFAFA] border-r border-light flex flex-col shrink-0 overflow-y-auto">
       {/* Brand header */}
       <div className="p-4 pb-3 border-b border-light flex items-center gap-[9px]">
-        <div className="w-[30px] h-[30px] bg-ink rounded-md flex items-center justify-center shrink-0">
-          <span className="text-white text-[0.65rem] font-bold font-mono">{initials}</span>
-        </div>
+        {logoUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={logoUrl} alt={brandName} className="w-[30px] h-[30px] rounded-md object-contain shrink-0" />
+        ) : (
+          <div className="w-[30px] h-[30px] bg-ink rounded-md flex items-center justify-center shrink-0">
+            <span className="text-white text-[0.65rem] font-bold font-mono">{initials}</span>
+          </div>
+        )}
         <div>
           <div className="font-mono text-[0.75rem] font-medium tracking-wider text-ink uppercase">{brandName || "Workspace"}</div>
           <div className="text-[0.65rem] text-muted mt-px">Branditect Workspace</div>

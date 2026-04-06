@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     let userText = "";
 
     if (existingText && existingText.trim()) {
-      userText += `Here is an existing brand strategy document. Analyze it and restructure it into the JSON format specified in your instructions.\n\nBRAND STRATEGY:\n${existingText.slice(0, 12000)}\n\n`;
+      userText += `Here is an existing brand strategy document. Analyze it and restructure it into the JSON format specified.\n\nBRAND STRATEGY:\n${existingText.slice(0, 6000)}\n\n`;
     }
 
     if (category) {
@@ -122,8 +122,8 @@ export async function POST(req: NextRequest) {
     contentBlocks.push({ type: "text", text: userText });
 
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: contentBlocks }],
     });

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
-import { useBrand } from "@/lib/useBrand";
+import { useBrand, updateBrandLogo } from "@/lib/useBrand";
 import ImageLibrary from "@/components/image-library";
 
 /* ------------------------------------------------------------------ */
@@ -559,6 +559,13 @@ export default function BrandLibraryPage() {
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error || `Save failed (${res.status})`);
+      }
+
+      // Sync primary logo to brands.logo_url so the sidebar updates immediately
+      const primaryUrl = logoSlots["primary-logo"] || null;
+      if (primaryUrl) {
+        await supabase.from("brands").update({ logo_url: primaryUrl }).eq("brand_id", brandId);
+        updateBrandLogo(primaryUrl);
       }
 
       setSaved(true);

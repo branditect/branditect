@@ -21,10 +21,29 @@ interface UseBrandReturn {
 }
 
 let cachedBrand: Brand | null = null;
+const logoListeners = new Set<(url: string | null) => void>();
+
+// Call this after updating the primary logo in Brand Library.
+// Updates the in-memory cache and re-renders all useBrand consumers (e.g. sidebar).
+export function updateBrandLogo(url: string | null) {
+  if (cachedBrand) {
+    cachedBrand = { ...cachedBrand, logo_url: url };
+    logoListeners.forEach(fn => fn(url));
+  }
+}
 
 export function useBrand(): UseBrandReturn {
   const [brand, setBrand] = useState<Brand | null>(cachedBrand);
   const [loading, setLoading] = useState(!cachedBrand);
+
+  // Subscribe to logo updates pushed from other parts of the app
+  useEffect(() => {
+    const listener = (url: string | null) => {
+      setBrand(prev => prev ? { ...prev, logo_url: url } : prev);
+    };
+    logoListeners.add(listener);
+    return () => { logoListeners.delete(listener); };
+  }, []);
 
   useEffect(() => {
     if (cachedBrand) {

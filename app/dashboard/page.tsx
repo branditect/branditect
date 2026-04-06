@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 const quickChips = [
   "Weekly newsletter",
@@ -41,6 +43,27 @@ const coherenceRows = [
 
 export default function DashboardPage() {
   const router = useRouter();
+
+  // Check if user has completed onboarding
+  useEffect(() => {
+    async function checkOnboarding() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/login'); return; }
+
+      const { data: brands } = await supabase
+        .from('brands')
+        .select('brand_id')
+        .eq('user_id', user.id)
+        .eq('onboarding_completed', true)
+        .limit(1);
+
+      if (!brands || brands.length === 0) {
+        router.push('/onboarding');
+        return;
+      }
+    }
+    checkOnboarding();
+  }, [router]);
 
   function handleQuickCreate(text: string) {
     router.push(`/dashboard/create?brief=${encodeURIComponent(text)}`);

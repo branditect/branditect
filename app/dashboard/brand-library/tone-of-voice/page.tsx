@@ -76,7 +76,7 @@ const EMPTY_TONE: ToneData = {
 /* ------------------------------------------------------------------ */
 
 export default function ToneOfVoicePage() {
-  const { brandId, brandName } = useBrand();
+  const { brandId, brandName, loading: brandLoading } = useBrand();
   const [loading, setLoading] = useState(true);
   const [toneData, setToneData] = useState<ToneData | null>(null);
   const [showEntry, setShowEntry] = useState(false);
@@ -118,8 +118,8 @@ export default function ToneOfVoicePage() {
   }, [brandId]);
 
   useEffect(() => {
-    fetchTone();
-  }, [fetchTone]);
+    if (!brandLoading && brandId !== "default") fetchTone();
+  }, [fetchTone, brandLoading, brandId]);
 
   /* ---------------------------------------------------------------- */
   /*  Save helper                                                      */
@@ -276,7 +276,7 @@ export default function ToneOfVoicePage() {
   /*  LOADING                                                          */
   /* ---------------------------------------------------------------- */
 
-  if (loading) {
+  if (loading || brandLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin h-8 w-8 border-4 border-brand-orange border-t-transparent rounded-full" />

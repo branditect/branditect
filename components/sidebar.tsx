@@ -25,7 +25,7 @@ const createItems: NavItem[] = [
 
 const libraryItems: NavItem[] = [
   { icon: "◇", label: "Brand Strategy", href: "/dashboard/brand-strategy" },
-  { icon: "◷", label: "Tone of Voice", href: "/dashboard/voice" },
+  { icon: "◷", label: "Tone of Voice", href: "/dashboard/brand-library/tone-of-voice" },
   { icon: "◈", label: "Visual Identity", href: "/dashboard/brand-library" },
   { icon: "▣", label: "Products & Services", href: "/dashboard/catalog" },
   { icon: "◎", label: "Asset Library", href: "/dashboard/assets" },

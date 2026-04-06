@@ -196,6 +196,7 @@ export default function BrandLibraryPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   // Logo uploads: keyed by slot key
@@ -259,7 +260,11 @@ export default function BrandLibraryPage() {
       .from("brand-assets")
       .upload(path, file, { upsert: true });
 
-    if (!error) {
+    if (error) {
+      console.error("Logo upload failed:", error.message);
+      setUploadError(`Logo upload failed: ${error.message}. Make sure the brand-assets storage bucket exists in Supabase.`);
+    } else {
+      setUploadError(null);
       const { data: urlData } = supabase.storage
         .from("brand-assets")
         .getPublicUrl(path);
@@ -269,7 +274,6 @@ export default function BrandLibraryPage() {
         [slotKey]: { name: file.name, url: urlData.publicUrl, path },
       }));
     }
-    // Even if Supabase upload fails, the local preview stays
 
     setLogoUploading((prev) => ({ ...prev, [slotKey]: false }));
   }, []);
@@ -282,7 +286,11 @@ export default function BrandLibraryPage() {
       .from("brand-assets")
       .upload(path, file, { upsert: true });
 
-    if (!error) {
+    if (error) {
+      console.error("Guideline upload failed:", error.message);
+      setUploadError(`Guideline upload failed: ${error.message}. Make sure the brand-assets storage bucket exists in Supabase.`);
+    } else {
+      setUploadError(null);
       const { data: urlData } = supabase.storage
         .from("brand-assets")
         .getPublicUrl(path);
@@ -648,6 +656,11 @@ export default function BrandLibraryPage() {
           <p className="text-[0.75rem] text-mid mb-4">
             Upload your logo in four variants. Drag and drop files or click to browse.
           </p>
+          {uploadError && (
+            <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 font-mono text-[0.65rem]">
+              {uploadError}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             {logoSlots.map((slot) => (

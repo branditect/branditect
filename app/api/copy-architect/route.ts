@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 
 export const maxDuration = 30
@@ -8,31 +9,50 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-const VETRA_BRAND = {
-  name: "Vetra Mobile",
-  positioning: "The only phone carrier that turns your monthly bill into creator support.",
-  audience: "Gen Z and millennials aged 18-32. Twitch viewers. Anti-corporate. Creator-economy believers.",
-  tone: ["Direct", "Irreverent", "Insider", "Anti-corporate"],
-  toneDescription: "Sounds like the smartest person in the Discord. Confident, a little edgy, never corporate. Short sentences. No fluff.",
-  avoid: ["seamless", "powerful", "innovative", "cutting-edge", "game-changer", "excited to announce", "unlock your potential", "leverage", "dive into", "robust"],
-  businessPulse: "StreamerX partnership launching April 5. Plans from \u20AC9/month, no contracts.",
-  tagline: "Always on. Never behind."
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+)
+
+interface ToneRow {
+  expression_label: string | null
+  expression_text: string | null
+  pillars: Array<{ name: string; description?: string }> | null
+  dos: string[] | null
+  donts: string[] | null
+  vocab_yes: string[] | null
+  vocab_no: string[] | null
 }
 
-function buildSystemPrompt(deliverable: string): string {
-  return `You are a senior copywriter embedded in the brand team for ${VETRA_BRAND.name}.
+async function getBrandContext(brandId: string): Promise<{ brandName: string; tone: ToneRow | null }> {
+  const [brandResult, toneResult] = await Promise.all([
+    supabase.from('brands').select('brand_name').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_tone').select('expression_label, expression_text, pillars, dos, donts, vocab_yes, vocab_no').eq('brand_id', brandId).maybeSingle(),
+  ])
+
+  const brandName = brandResult.data?.brand_name || 'Your Brand'
+  return { brandName, tone: toneResult.data as ToneRow | null }
+}
+
+function buildSystemPrompt(deliverable: string, brandName: string, tone: ToneRow | null): string {
+  const toneLines: string[] = []
+  if (tone?.expression_label) toneLines.push(`- Brand Voice: ${tone.expression_label}`)
+  if (tone?.expression_text) toneLines.push(`- Voice Description: ${tone.expression_text}`)
+  if (tone?.pillars?.length) toneLines.push(`- Tone Pillars: ${tone.pillars.map(p => p.name).join(', ')}`)
+  if (tone?.dos?.length) toneLines.push(`- DO: ${tone.dos.slice(0, 5).join('; ')}`)
+  if (tone?.donts?.length) toneLines.push(`- DON'T: ${tone.donts.slice(0, 5).join('; ')}`)
+  if (tone?.vocab_yes?.length) toneLines.push(`- Preferred vocabulary: ${tone.vocab_yes.slice(0, 10).join(', ')}`)
+  if (tone?.vocab_no?.length) toneLines.push(`- Words to avoid: ${tone.vocab_no.slice(0, 10).join(', ')}`)
+
+  const brandContext = toneLines.length > 0
+    ? toneLines.join('\n')
+    : '- Write in a professional, on-brand voice consistent with the brand name.'
+
+  return `You are a senior copywriter embedded in the brand team for ${brandName}.
 
 ## BRAND CONTEXT
-- Brand: ${VETRA_BRAND.name}
-- Positioning: ${VETRA_BRAND.positioning}
-- Audience: ${VETRA_BRAND.audience}
-- Tone: ${VETRA_BRAND.tone.join(', ')}
-- Voice description: ${VETRA_BRAND.toneDescription}
-- Tagline: ${VETRA_BRAND.tagline}
-- Business pulse: ${VETRA_BRAND.businessPulse}
-
-## WORDS TO NEVER USE
-${VETRA_BRAND.avoid.map(w => `- "${w}"`).join('\n')}
+- Brand: ${brandName}
+${brandContext}
 
 ## ANTI-AI RULES
 - Never sound like AI. No filler phrases like "In today's fast-paced world" or "Are you ready to".
@@ -58,8 +78,8 @@ Return this exact structure:
       ]
     }
   ],
-  "qualityChecks": ["List of 3-4 checks confirming brand alignment, e.g. 'No banned words used', 'Tone matches irreverent + direct'"],
-  "placeholders": ["Any placeholder tokens used, e.g. '[LINK]', '[CREATOR_NAME]'"],
+  "qualityChecks": ["List of 3-4 checks confirming brand alignment, e.g. 'No banned words used', 'Tone matches brand voice'"],
+  "placeholders": ["Any placeholder tokens used, e.g. '[LINK]', '[NAME]'"],
   "toneMatch": "One sentence confirming how the copy matches the brand tone"
 }
 
@@ -72,10 +92,11 @@ IMPORTANT: Complete the entire JSON response including all closing braces. Do no
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { category, subType, fields } = body as {
+    const { category, subType, fields, brand_id } = body as {
       category: string
       subType: string
       fields: Record<string, string>
+      brand_id?: string
     }
 
     if (!category || !subType) {
@@ -101,6 +122,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 })
     }
 
+    // Fetch brand context dynamically
+    const { brandName, tone } = brand_id && brand_id !== 'default'
+      ? await getBrandContext(brand_id)
+      : { brandName: 'Your Brand', tone: null }
+
     // Build user prompt from field values
     const fieldLines = subConfig.fields
       .filter(f => fields[f.id]?.trim())
@@ -116,7 +142,7 @@ Write the copy now. Return only the JSON.`
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: buildSystemPrompt(subConfig.deliverable),
+      system: buildSystemPrompt(subConfig.deliverable, brandName, tone),
       messages: [
         { role: 'user', content: userPrompt },
       ],

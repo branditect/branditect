@@ -12,44 +12,26 @@ const formatOptions = ["HTML — ready to use", "Plain text", "Copy only"];
 const checkOptions = ["Brand + Financial + Pulse", "Brand rules only", "No checks"];
 
 const sampleOutputs: Record<string, string> = {
-  Newsletter: `Subject: Your phone bill just got a lot more interesting.
+  Newsletter: `Subject: [Your subject line will appear here]
 
 Hey [First Name],
 
-Big news from Vetra this month.
+[Your newsletter body copy will appear here, written in your brand's voice.]
 
-Starting April 5th, we're partnering with StreamerX — one of Twitch's fastest-growing creators. If you're on Vetra, your plan now includes a free monthly Twitch sub to StreamerX.
-
-No extra steps. No extra cost. Built in.
-
-This is exactly what Vetra is about. Your money goes somewhere every month. Now it goes somewhere that matters — directly to creators you actually watch.
-
-→ Already on Vetra? Your StreamerX sub activates April 5th.
-→ Not yet? There's no better time.
-
-[Switch to Vetra →]
-
-Always on. Never behind.
-— The Vetra Team
+[Call to action →]
 
 ---
-✦ Brand check passed · Voice on-brand · Pulse aligned (Apr 5) · No financial flags`,
+✦ Brand check passed · Voice on-brand · No financial flags`,
 
   "Social Posts": `POST 1 — Instagram
-Your phone plan backs corporations.
-Ours backs creators.
-Same cost. Different story.
+[Your first Instagram caption will appear here.]
 → Link in bio
 
 POST 2 — Instagram
-StreamerX + Vetra. April 5th.
-Your monthly plan includes a free Twitch sub. Built in. Zero extra.
-This is what phone service should feel like.
+[Your second Instagram caption will appear here.]
 
 POST 3 — Twitter
-We're not a phone carrier.
-We're the antidote to one.
-Vetra × StreamerX — April 5th.
+[Your Twitter post will appear here.]
 
 ---
 ✦ Brand check passed · All posts on-voice · No financial flags`,

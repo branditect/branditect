@@ -19,6 +19,7 @@ const dashboardItems: NavItem[] = [
 const createItems: NavItem[] = [
   { icon: "🖼", label: "Image Architect", href: "/dashboard/brand-library/image-architect" },
   { icon: "✦", label: "Text Architect", href: "/dashboard/create" },
+  { icon: "◈", label: "Graphic Architect", href: "/dashboard/graphic-architect" },
   { icon: "⟨⟩", label: "Code Architect", href: "/dashboard/brand-code-architect" },
 ];
 

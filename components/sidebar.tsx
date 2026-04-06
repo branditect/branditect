@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 interface NavItem {
   icon: string;
@@ -72,18 +74,34 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [brandName, setBrandName] = useState("");
+
+  useEffect(() => {
+    async function loadBrand() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("brands")
+        .select("brand_name")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (data?.brand_name) setBrandName(data.brand_name);
+    }
+    loadBrand();
+  }, []);
+
+  const initials = brandName ? brandName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "B";
 
   return (
     <aside className="w-sidebar bg-[#FAFAFA] border-r border-light flex flex-col shrink-0 overflow-y-auto">
       {/* Brand header */}
       <div className="p-4 pb-3 border-b border-light flex items-center gap-[9px]">
-        <div className="w-[30px] h-[30px] bg-vetra-black rounded-md flex items-center justify-center shrink-0">
-          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-            <path d="M2 2L8 10L14 2" stroke="#C8F135" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+        <div className="w-[30px] h-[30px] bg-ink rounded-md flex items-center justify-center shrink-0">
+          <span className="text-white text-[0.65rem] font-bold font-mono">{initials}</span>
         </div>
         <div>
-          <div className="font-mono text-[0.75rem] font-medium tracking-wider text-ink">VETRA MOBILE</div>
+          <div className="font-mono text-[0.75rem] font-medium tracking-wider text-ink uppercase">{brandName || "Workspace"}</div>
           <div className="text-[0.65rem] text-muted mt-px">Branditect Workspace</div>
         </div>
       </div>

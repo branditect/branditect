@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +16,22 @@ const tabs = [
 export default function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [brandName, setBrandName] = useState("");
+
+  useEffect(() => {
+    async function loadBrand() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("brands")
+        .select("brand_name")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (data?.brand_name) setBrandName(data.brand_name);
+    }
+    loadBrand();
+  }, []);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -28,20 +45,19 @@ export default function Topbar() {
         Branditect
       </span>
 
-      {/* "for" */}
-      <span className="text-[0.72rem] text-muted font-light px-2 shrink-0">
-        for
-      </span>
-
-      {/* Vetra co-brand pill */}
-      <div className="flex items-center gap-[5px] bg-vetra-black rounded px-2 py-[3px] shrink-0">
-        <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
-          <path d="M1 1L7 9L13 1" stroke="#C8F135" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="font-mono text-[0.68rem] font-medium tracking-wider text-vetra-lime">
-          VETRA
-        </span>
-      </div>
+      {/* "for" + brand name */}
+      {brandName && (
+        <>
+          <span className="text-[0.72rem] text-muted font-light px-2 shrink-0">
+            for
+          </span>
+          <div className="flex items-center gap-[5px] bg-ink rounded px-2.5 py-[3px] shrink-0">
+            <span className="font-mono text-[0.68rem] font-medium tracking-wider text-white uppercase">
+              {brandName}
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Divider */}
       <div className="w-px h-[18px] bg-light mx-5 shrink-0" />

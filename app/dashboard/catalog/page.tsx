@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useBrand } from "@/lib/useBrand";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -1305,26 +1306,124 @@ function Screen4({
 /*  Main Page                                                          */
 /* ------------------------------------------------------------------ */
 
+// Map a DB row back to the frontend Product type
+function dbToProduct(p: Record<string, unknown>): Product | null {
+  const dbType = p.type as string;
+  const id = (p.id as string) || uid();
+  if (dbType === "physical") {
+    return {
+      kind: "physical", id,
+      name: (p.name as string) || "",
+      category: (p.category as string) || "",
+      description: (p.description as string) || "",
+      rrp: p.price_rrp != null ? String(p.price_rrp) : "",
+      wholesalePrice: p.price_wholesale != null ? String(p.price_wholesale) : "",
+      cogs: p.price_cogs != null ? String(p.price_cogs) : "",
+      sku: (p.sku as string) || "",
+      deliveryTime: (p.delivery_time as string) || "",
+      capacityPerMonth: (p.capacity_per_month as string) || "",
+    };
+  }
+  if (dbType === "service") {
+    return {
+      kind: "services", id,
+      name: (p.name as string) || "",
+      category: (p.category as string) || "",
+      description: (p.description as string) || "",
+      price: p.price_rrp != null ? String(p.price_rrp) : "",
+      priceModel: (p.price_model as string) || "Per project",
+      deliveryTime: (p.delivery_time as string) || "",
+      capacityPerMonth: (p.capacity_per_month as string) || "",
+      idealClient: Array.isArray(p.ideal_client) ? (p.ideal_client as string[]).join(", ") : "",
+      inclusions: Array.isArray(p.inclusions) ? (p.inclusions as string[]).join(", ") : "",
+    };
+  }
+  if (dbType === "saas_tier") {
+    return {
+      kind: "saas", id,
+      name: (p.name as string) || "",
+      monthlyPrice: p.price_monthly != null ? String(p.price_monthly) : "",
+      description: (p.description as string) || "",
+      inclusions: Array.isArray(p.inclusions) ? (p.inclusions as string[]).join(", ") : "",
+      flagship: !!p.is_flagship,
+      hero: !!p.is_hero,
+    };
+  }
+  if (dbType === "digital") {
+    return {
+      kind: "digital", id,
+      name: (p.name as string) || "",
+      category: (p.category as string) || "",
+      description: (p.description as string) || "",
+      price: p.price_rrp != null ? String(p.price_rrp) : "",
+      deliveryFormat: (p.delivery_time as string) || "",
+    };
+  }
+  return null;
+}
+
+// Map a frontend Product to DB insert shape
+function productToDb(p: Product, brandId: string, sortOrder: number) {
+  const base = { brand_id: brandId, name: p.name, sort_order: sortOrder, is_active: true, is_hero: false, is_flagship: false, flag_margin: true };
+  const splitCSV = (s: string) => s.split(",").map(x => x.trim()).filter(Boolean);
+  switch (p.kind) {
+    case "physical": return { ...base, type: "physical", category: p.category || null, description: p.description || null, price_rrp: p.rrp ? parseFloat(p.rrp) : null, price_wholesale: p.wholesalePrice ? parseFloat(p.wholesalePrice) : null, price_cogs: p.cogs ? parseFloat(p.cogs) : null, sku: p.sku || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null };
+    case "services": return { ...base, type: "service", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseFloat(p.price) : null, price_model: p.priceModel || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null, ideal_client: splitCSV(p.idealClient), inclusions: splitCSV(p.inclusions) };
+    case "saas": return { ...base, type: "saas_tier", description: p.description || null, price_monthly: p.monthlyPrice ? parseFloat(p.monthlyPrice) : null, inclusions: splitCSV(p.inclusions), is_hero: p.hero, is_flagship: p.flagship };
+    case "digital": return { ...base, type: "digital", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseFloat(p.price) : null, delivery_time: p.deliveryFormat || null };
+  }
+}
+
 export default function CatalogPage() {
+  const { brandId, loading: brandLoading } = useBrand();
   const [step, setStep] = useState(1);
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [financialRules, setFinancialRules] = useState<FinancialRules>({
-    marginFloor: "",
-    maxDiscount: "",
-    cacCeiling: "",
-    currency: "EUR",
-    purchaseChannel: "",
-    purchaseFrequency: "",
-    crossSellNotes: "",
-    messagingAvoid: "",
-    messagingInclude: "",
-    billingCycles: "",
-    annualDiscount: "",
-    freeTrialDays: "",
+    marginFloor: "", maxDiscount: "", cacCeiling: "", currency: "EUR",
+    purchaseChannel: "", purchaseFrequency: "", crossSellNotes: "",
+    messagingAvoid: "", messagingInclude: "", billingCycles: "",
+    annualDiscount: "", freeTrialDays: "",
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Load existing catalog data on mount
+  useEffect(() => {
+    if (brandLoading || brandId === "default") return;
+    fetch(`/api/catalog?brand_id=${brandId}`)
+      .then(r => r.json())
+      .then(json => {
+        if (json.catalog?.business_types?.length) {
+          const types = json.catalog.business_types.map((t: string) =>
+            t === "service" ? "services" : t === "saas_tier" ? "saas" : t
+          ) as BusinessType[];
+          setBusinessTypes(types);
+          setStep(4); // jump to review if data exists
+        }
+        if (json.products?.length) {
+          setProducts(json.products.map(dbToProduct).filter(Boolean) as Product[]);
+        }
+        if (json.financialRules) {
+          const r = json.financialRules;
+          setFinancialRules({
+            marginFloor: r.margin_floor != null ? String(r.margin_floor) : "",
+            maxDiscount: r.max_discount != null ? String(r.max_discount) : "",
+            cacCeiling: r.cac_ceiling != null ? String(r.cac_ceiling) : "",
+            currency: r.currency || "EUR",
+            purchaseChannel: r.purchase_channel || "",
+            purchaseFrequency: r.purchase_frequency || "",
+            crossSellNotes: r.cross_sell_notes || "",
+            messagingAvoid: r.messaging_avoid || "",
+            messagingInclude: r.messaging_always || "",
+            billingCycles: r.billing_cycles || "",
+            annualDiscount: r.annual_discount != null ? String(r.annual_discount) : "",
+            freeTrialDays: r.free_trial_days != null ? String(r.free_trial_days) : "",
+          });
+        }
+      })
+      .catch(() => {});
+  }, [brandId, brandLoading]);
 
   function toggleBusinessType(t: BusinessType) {
     setBusinessTypes((prev) =>
@@ -1333,16 +1432,33 @@ export default function CatalogPage() {
   }
 
   async function handleSave() {
+    if (brandId === "default") return;
     setSaving(true);
     try {
-      await fetch("/api/catalog", {
+      const mappedProducts = products.map((p, i) => productToDb(p, brandId, i));
+      const mappedRules = {
+        margin_floor: financialRules.marginFloor ? parseFloat(financialRules.marginFloor) : null,
+        max_discount: financialRules.maxDiscount ? parseFloat(financialRules.maxDiscount) : null,
+        cac_ceiling: financialRules.cacCeiling ? parseFloat(financialRules.cacCeiling) : null,
+        currency: financialRules.currency,
+        purchase_channel: financialRules.purchaseChannel || null,
+        purchase_frequency: financialRules.purchaseFrequency || null,
+        cross_sell_notes: financialRules.crossSellNotes || null,
+        messaging_avoid: financialRules.messagingAvoid || null,
+        messaging_always: financialRules.messagingInclude || null,
+        billing_cycles: financialRules.billingCycles || null,
+        annual_discount: financialRules.annualDiscount ? parseFloat(financialRules.annualDiscount) : null,
+        free_trial_days: financialRules.freeTrialDays ? parseInt(financialRules.freeTrialDays) : null,
+      };
+      const res = await fetch("/api/catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessTypes, products, financialRules }),
+        body: JSON.stringify({ brand_id: brandId, businessTypes, products: mappedProducts, financialRules: mappedRules }),
       });
-      setSaved(true);
-    } catch {
-      // handle error silently for now
+      if (res.ok) setSaved(true);
+      else console.error("Catalog save failed:", await res.json());
+    } catch (err) {
+      console.error("Catalog save error:", err);
     } finally {
       setSaving(false);
     }

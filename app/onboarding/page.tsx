@@ -66,8 +66,9 @@ const MODULE_CARDS = [
 const STEPS = [
   { num: 1, title: "Brand Basics", subtitle: "Name, website & industry" },
   { num: 2, title: "Logo Upload", subtitle: "Your brand visuals" },
-  { num: 3, title: "Brand Strategy", subtitle: "How you position your brand" },
-  { num: 4, title: "All Done", subtitle: "Your workspace is ready" },
+  { num: 3, title: "Brand Colors", subtitle: "Your color palette" },
+  { num: 4, title: "Brand Strategy", subtitle: "How you position your brand" },
+  { num: 5, title: "All Done", subtitle: "Your workspace is ready" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -105,7 +106,12 @@ export default function OnboardingPage() {
   const [logoUploaded, setLogoUploaded] = useState<Record<string, boolean>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Step 3
+  // Step 3 (colors)
+  const [brandColors, setBrandColors] = useState<{ hex: string; name: string }[]>([]);
+  const [newColorHex, setNewColorHex] = useState("#E8562A");
+  const [newColorName, setNewColorName] = useState("");
+
+  // Step 4 (strategy)
   const [strategyMethod, setStrategyMethod] = useState("");
   const [strategyText, setStrategyText] = useState("");
   const [strategyFile, setStrategyFile] = useState<File | null>(null);
@@ -158,6 +164,13 @@ export default function OnboardingPage() {
 
       if (strategyFile) await uploadStrategyPdf(strategyFile);
 
+      // Get primary logo URL if uploaded
+      let logoUrl = null;
+      if (logoUploaded["primary"]) {
+        const { data: urlData } = supabase.storage.from("brand-logos").getPublicUrl(`${brandId}/primary.png`);
+        logoUrl = urlData?.publicUrl || null;
+      }
+
       await supabase.from("brands").insert({
         user_id: user?.id,
         brand_id: brandId,
@@ -166,10 +179,12 @@ export default function OnboardingPage() {
         industry: selectedIndustry,
         strategy_method: strategyMethod || "skip",
         strategy_text: strategyText || null,
+        logo_url: logoUrl,
+        colors: brandColors.length > 0 ? brandColors : null,
         onboarding_completed: true,
       });
 
-      setStep(4);
+      setStep(5);
     } catch (err) {
       console.error("Onboarding submit error:", err);
     } finally {
@@ -302,6 +317,84 @@ export default function OnboardingPage() {
   function renderStep3() {
     return (
       <div className="max-w-2xl">
+        <h2 className="font-display text-2xl text-ink mb-1">Brand Colors</h2>
+        <p className="text-muted text-sm mb-8">Add your brand colors. You can always update these later.</p>
+
+        {/* Color list */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {brandColors.map((c, i) => (
+            <div key={i} className="flex items-center gap-2 bg-white border border-light rounded-xl px-3 py-2">
+              <div className="w-8 h-8 rounded-lg border border-light" style={{ background: c.hex }} />
+              <div>
+                <div className="text-xs font-semibold text-ink">{c.name || "Unnamed"}</div>
+                <div className="font-mono text-[0.65rem] text-muted">{c.hex}</div>
+              </div>
+              <button onClick={() => setBrandColors(prev => prev.filter((_, idx) => idx !== i))} className="text-muted hover:text-red-500 text-sm ml-1">×</button>
+            </div>
+          ))}
+          {brandColors.length === 0 && (
+            <p className="text-sm text-muted">No colors added yet.</p>
+          )}
+        </div>
+
+        {/* Add color form */}
+        <div className="flex items-end gap-3 mb-8 bg-white border border-light rounded-xl p-4">
+          <div>
+            <label className="block text-xs font-medium text-dark mb-1">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={newColorHex}
+                onChange={(e) => setNewColorHex(e.target.value)}
+                className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
+              />
+              <input
+                type="text"
+                value={newColorHex}
+                onChange={(e) => setNewColorHex(e.target.value)}
+                className="w-24 rounded-lg border border-light px-3 py-2 text-sm font-mono text-ink outline-none focus:ring-2 focus:ring-brand-orange"
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-dark mb-1">Color name</label>
+            <input
+              type="text"
+              value={newColorName}
+              onChange={(e) => setNewColorName(e.target.value)}
+              placeholder="e.g. Primary Orange, Dark Navy"
+              className="w-full rounded-lg border border-light px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-brand-orange"
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (newColorHex) {
+                setBrandColors(prev => [...prev, { hex: newColorHex, name: newColorName || newColorHex }]);
+                setNewColorHex("#000000");
+                setNewColorName("");
+              }
+            }}
+            className="rounded-lg bg-brand-orange text-white px-4 py-2 text-sm font-semibold hover:bg-brand-orange-hover transition-colors shrink-0"
+          >
+            Add
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button onClick={() => setStep(4)} className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3 text-sm transition-colors">
+            Continue →
+          </button>
+          <button onClick={() => setStep(4)} className="text-sm text-muted hover:text-brand-orange transition-colors">
+            Skip for now →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderStep4() {
+    return (
+      <div className="max-w-2xl">
         <h2 className="font-display text-2xl text-ink mb-1">How would you like to set up your brand strategy?</h2>
         <p className="text-muted text-sm mb-8">Choose one option below. You can change this later.</p>
 
@@ -382,7 +475,7 @@ export default function OnboardingPage() {
     );
   }
 
-  function renderStep4() {
+  function renderStep5() {
     return (
       <div className="flex flex-col items-center justify-center flex-1">
         {/* Dark hero card */}
@@ -492,6 +585,7 @@ export default function OnboardingPage() {
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
         {step === 4 && renderStep4()}
+        {step === 5 && renderStep5()}
       </main>
     </div>
   );

@@ -127,6 +127,9 @@ export default function OnboardingPage() {
     return brandIdRef.current;
   }, [brandName]);
 
+  // Track uploaded logo public URLs
+  const logoUrlsRef = useRef<Record<string, string>>({});
+
   /* ---- logo handling ---- */
   function handleLogoSelect(slotKey: string, file: File) {
     const reader = new FileReader();
@@ -143,7 +146,11 @@ export default function OnboardingPage() {
       .from("brand-logos")
       .upload(path, file, { upsert: true })
       .then(({ error }) => {
-        if (!error) setLogoUploaded((prev) => ({ ...prev, [slotKey]: true }));
+        if (!error) {
+          setLogoUploaded((prev) => ({ ...prev, [slotKey]: true }));
+          const { data: urlData } = supabase.storage.from("brand-logos").getPublicUrl(path);
+          if (urlData?.publicUrl) logoUrlsRef.current[slotKey] = urlData.publicUrl;
+        }
       });
   }
 
@@ -158,35 +165,55 @@ export default function OnboardingPage() {
     setSubmitting(true);
     try {
       const brandId = getBrandId();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
+      // Upload strategy PDF if selected
       if (strategyFile) await uploadStrategyPdf(strategyFile);
 
-      // Get primary logo URL if uploaded
-      let logoUrl = null;
-      if (logoUploaded["primary"]) {
-        const { data: urlData } = supabase.storage.from("brand-logos").getPublicUrl(`${brandId}/primary.png`);
-        logoUrl = urlData?.publicUrl || null;
-      }
+      // Get logo URLs from uploads
+      const logoUrls = logoUrlsRef.current;
 
-      await supabase.from("brands").insert({
-        user_id: user?.id,
+      // 1. Save brand to brands table
+      const { error: brandError } = await supabase.from("brands").insert({
+        user_id: user.id,
         brand_id: brandId,
         brand_name: brandName,
         website: website || null,
         industry: selectedIndustry,
         strategy_method: strategyMethod || "skip",
         strategy_text: strategyText || null,
-        logo_url: logoUrl,
+        logo_url: logoUrls["primary"] || null,
         colors: brandColors.length > 0 ? brandColors : null,
         onboarding_completed: true,
       });
+      if (brandError) throw brandError;
 
+      // 2. Save visual identity (logos, colors, fonts)
+      await fetch("/api/visual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand_id: brandId,
+          colors: brandColors.map((c, i) => ({
+            hex: c.hex,
+            name: c.name,
+            usage: i === 0 ? "Primary" : i === 1 ? "Secondary" : "Accent",
+          })),
+          logo_slots: {
+            primary: logoUrls["primary"] || null,
+            "dark-bg": logoUrls["dark-bg"] || null,
+            "icon-mark": logoUrls["icon-mark"] || null,
+            white: logoUrls["white"] || null,
+          },
+        }),
+      });
+
+      // 3. Wait for saves to confirm, then advance
       setStep(5);
     } catch (err) {
       console.error("Onboarding submit error:", err);
+      alert("Something went wrong saving your brand. Please try again.");
     } finally {
       setSubmitting(false);
     }

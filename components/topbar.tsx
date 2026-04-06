@@ -16,7 +16,7 @@ const tabs = [
 export default function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { brandName } = useBrand();
+  const { brand, brandName } = useBrand();
 
   async function handleLogout() {
     clearBrandCache();
@@ -38,6 +38,10 @@ export default function Topbar() {
             for
           </span>
           <div className="flex items-center gap-[5px] bg-ink rounded px-2.5 py-[3px] shrink-0">
+            {brand?.logo_url && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={brand.logo_url} alt="" className="w-4 h-4 object-contain" />
+            )}
             <span className="font-mono text-[0.68rem] font-medium tracking-wider text-white uppercase">
               {brandName}
             </span>

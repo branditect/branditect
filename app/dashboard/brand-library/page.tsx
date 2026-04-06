@@ -195,6 +195,7 @@ export default function BrandLibraryPage() {
   const [activeTab, setActiveTab] = useState("Visual");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   // Logo uploads: keyed by slot key
@@ -520,6 +521,7 @@ export default function BrandLibraryPage() {
     if (brandId === "default") return;
     setSaving(true);
     setSaved(false);
+    setSaveError(null);
     try {
       // Build logo slots from uploaded files
       const logoSlots: Record<string, string> = {};
@@ -533,7 +535,7 @@ export default function BrandLibraryPage() {
         }
       }
 
-      await fetch("/api/visual", {
+      const res = await fetch("/api/visual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -545,9 +547,17 @@ export default function BrandLibraryPage() {
           strategy_text: strategyText || null,
         }),
       });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || `Save failed (${res.status})`);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setSaveError(msg);
       console.error("Failed to save visual data:", err);
     } finally {
       setSaving(false);
@@ -570,13 +580,18 @@ export default function BrandLibraryPage() {
             </p>
           </div>
           {activeTab === "Visual" && (
-            <button
-              onClick={saveVisual}
-              disabled={saving}
-              className="px-5 py-2 rounded-lg bg-brand-orange text-white text-[0.78rem] font-semibold hover:bg-brand-orange-hover transition-colors disabled:opacity-50 shrink-0"
-            >
-              {saving ? "Saving..." : saved ? "Saved ✓" : "Save changes"}
-            </button>
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={saveVisual}
+                disabled={saving}
+                className="px-5 py-2 rounded-lg bg-brand-orange text-white text-[0.78rem] font-semibold hover:bg-brand-orange-hover transition-colors disabled:opacity-50 shrink-0"
+              >
+                {saving ? "Saving..." : saved ? "Saved ✓" : "Save changes"}
+              </button>
+              {saveError && (
+                <span className="font-mono text-[0.6rem] text-red-500">{saveError}</span>
+              )}
+            </div>
           )}
         </div>
       </div>

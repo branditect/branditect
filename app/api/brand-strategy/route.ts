@@ -159,12 +159,13 @@ export async function POST(req: NextRequest) {
     let userText = `Category: ${category}\n\n`;
 
     if (existingText) {
-      userText += `EXISTING BRAND STRATEGY (refine and improve this):\n\n${existingText}\n\n---\n\nQUESTIONNAIRE ANSWERS:\n\n`;
+      userText += `EXISTING BRAND STRATEGY — use this as the primary source material:\n\n${existingText}\n\n`;
     }
 
-    for (const [question, answer] of Object.entries(answers)) {
-      if (answer && answer.trim()) {
-        // Extract section from the question key format "section|question"
+    const answeredQuestions = Object.entries(answers || {}).filter(([, a]) => a && a.trim());
+    if (answeredQuestions.length > 0) {
+      userText += `QUESTIONNAIRE ANSWERS:\n\n`;
+      for (const [question, answer] of answeredQuestions) {
         const parts = question.split("|");
         const section = parts.length > 1 ? parts[0] : "General";
         const questionText = parts.length > 1 ? parts[1] : question;
@@ -184,17 +185,28 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: contentBlocks }],
     });
 
-    const rawText =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const rawText = message.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as Anthropic.TextBlock).text)
+      .join("");
 
-    // Extract JSON from the response (handle potential code fences)
+    // Extract JSON from the response — handle code fences and extra text
     let jsonString = rawText.trim();
-    if (jsonString.startsWith("```")) {
-      jsonString = jsonString.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    jsonString = jsonString.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+
+    // Try to find a JSON object if there's extra text around it
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
     }
 
     // Validate it's valid JSON
-    JSON.parse(jsonString);
+    try {
+      JSON.parse(jsonString);
+    } catch {
+      console.error("Failed to parse strategy JSON, first 300 chars:", jsonString.slice(0, 300));
+      return NextResponse.json({ error: "AI returned invalid format. Please try again." }, { status: 500 });
+    }
 
     // Return the JSON string — the page will parse it
     return NextResponse.json({ strategy: jsonString });

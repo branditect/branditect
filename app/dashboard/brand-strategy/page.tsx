@@ -560,6 +560,7 @@ export default function BrandStrategyPage() {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
       setError(message);
+      setScreen("entry");
     } finally {
       clearInterval(interval);
       setIsGenerating(false);
@@ -737,6 +738,12 @@ export default function BrandStrategyPage() {
                 Build a comprehensive, AI-powered brand strategy document.
               </p>
             </div>
+
+            {error && (
+              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+                {error}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Option A: paste existing */}

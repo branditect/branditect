@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useBrand } from "@/lib/useBrand";
 
 const typeOptions = ["Newsletter", "Social Posts", "Campaign Page", "Presentation", "Ad Copy", "Product Copy", "Proposal"];
 
 const channelOptions = ["Email — Klaviyo", "Instagram", "Twitter / X", "LinkedIn", "Website"];
-const toneOptions = ["Vetra default", "More casual", "More formal", "Urgent", "Anti-corporate push"];
+const toneOptions = ["Brand default", "More casual", "More formal", "Urgent", "Anti-corporate push"];
 const formatOptions = ["HTML — ready to use", "Plain text", "Copy only"];
 const checkOptions = ["Brand + Financial + Pulse", "Brand rules only", "No checks"];
 
@@ -55,7 +56,7 @@ Vetra × StreamerX — April 5th.
 };
 
 const genSteps = [
-  "Loading Vetra brand context…",
+  "Loading brand context…",
   "Applying tone of voice…",
   "Checking Business Pulse…",
   "Checking financial rules…",
@@ -72,6 +73,7 @@ export default function CreatePage() {
 
 function CreatePageInner() {
   const searchParams = useSearchParams();
+  const { brandName } = useBrand();
   const [activeType, setActiveType] = useState("Newsletter");
   const [brief, setBrief] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -99,7 +101,7 @@ function CreatePageInner() {
         clearInterval(interval);
         setGenerating(false);
         const result = sampleOutputs[activeType] ||
-          `Your Vetra ${activeType.toLowerCase()} is ready.\n\nChecked against:\n— Brand strategy & tone\n— Business Pulse\n— Financial rules\n\n✦ Copy or download above.`;
+          `Your ${brandName} ${activeType.toLowerCase()} is ready.\n\nChecked against:\n— Brand strategy & tone\n— Business Pulse\n— Financial rules\n\n✦ Copy or download above.`;
         setOutput(result);
       }
     }, 680);
@@ -124,9 +126,9 @@ function CreatePageInner() {
       {/* Left — Editor */}
       <div className="border-r border-light flex flex-col overflow-hidden">
         <div className="px-7 pt-7 pb-4 border-b border-light shrink-0">
-          <h1 className="font-display text-2xl text-ink tracking-tight mb-1">Create for Vetra</h1>
+          <h1 className="font-display text-2xl text-ink tracking-tight mb-1">Create for {brandName}</h1>
           <p className="text-[0.78rem] text-muted">
-            Every output is checked against Vetra&apos;s strategy, tone, visual guidelines, and financial rules.
+            Every output is checked against {brandName}&apos;s strategy, tone, visual guidelines, and financial rules.
           </p>
         </div>
 
@@ -156,7 +158,7 @@ function CreatePageInner() {
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             rows={4}
-            placeholder={`What do you need? Branditect knows Vetra's brand, strategy, and goals — just describe the specific ask.\n\ne.g. Write this month's newsletter. Topic: StreamerX partnership launch April 5. Goal: drive signups. Lead with the anti-corporate angle.`}
+            placeholder={`What do you need? Branditect knows ${brandName}'s brand, strategy, and goals — just describe the specific ask.\n\ne.g. Write this month's newsletter. Topic: StreamerX partnership launch April 5. Goal: drive signups. Lead with the anti-corporate angle.`}
             className="w-full min-h-[96px] bg-pale border border-light rounded-md px-3.5 py-3 text-ink text-[0.84rem] font-light resize-none outline-none leading-relaxed focus:border-brand-orange focus:bg-white placeholder:text-muted mb-5 transition-colors"
           />
 
@@ -215,7 +217,7 @@ function CreatePageInner() {
                 ✦
               </div>
               <p className="text-[0.75rem] text-muted max-w-[180px] leading-relaxed">
-                Your Vetra output will appear here — on-brand, checked, ready to use.
+                Your {brandName} output will appear here — on-brand, checked, ready to use.
               </p>
             </div>
           )}

@@ -1,31 +1,42 @@
-const bases = [
+"use client";
+
+import { useBrand } from "@/lib/useBrand";
+
+const basesTemplate = [
   {
     icon: "☰",
     title: "Brand Strategy",
-    desc: "Define Vetra's purpose, positioning, values, and competitive landscape",
+    descTemplate: (name: string) => `Define ${name}'s purpose, positioning, values, and competitive landscape`,
     progress: 100,
   },
   {
     icon: "◷",
     title: "Tone of Voice",
-    desc: "Establish how Vetra communicates — the BrandTone™ Architect output",
+    descTemplate: (name: string) => `Establish how ${name} communicates — the BrandTone™ Architect output`,
     progress: 100,
   },
   {
     icon: "◈",
     title: "Visual Identity",
-    desc: "Upload Vetra's brand assets and visual guidelines",
+    descTemplate: (name: string) => `Upload ${name}'s brand assets and visual guidelines`,
     progress: 80,
   },
   {
     icon: "⚡",
     title: "Business Pulse",
-    desc: "Goals, upcoming launches, sensitivities, financial rules",
+    descTemplate: () => "Goals, upcoming launches, sensitivities, financial rules",
     progress: 60,
   },
 ];
 
 export default function BrandBasesPage() {
+  const { brandName } = useBrand();
+
+  const bases = basesTemplate.map((b) => ({
+    ...b,
+    desc: b.descTemplate(brandName),
+  }));
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 text-center">
       {/* Icon */}
@@ -37,7 +48,7 @@ export default function BrandBasesPage() {
         Build Your Brand Foundation
       </h1>
       <p className="text-[0.84rem] text-muted max-w-[420px] leading-relaxed mb-10">
-        Complete the following steps to set up Vetra&apos;s brand foundation. This powers all AI-assisted content creation tailored to Vetra&apos;s voice, strategy, and identity.
+        Complete the following steps to set up {brandName}&apos;s brand foundation. This powers all AI-assisted content creation tailored to {brandName}&apos;s voice, strategy, and identity.
       </p>
 
       {/* Cards */}

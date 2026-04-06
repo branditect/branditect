@@ -31,13 +31,15 @@ interface PendingUpload {
 const CATEGORIES = ["social", "event", "product", "campaign", "brand", "ai-generated"];
 const FORMATS = ["square", "story", "landscape", "portrait", "other"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const BRAND_ID = "vetra";
+// Brand ID is passed as prop or defaults
+const DEFAULT_BRAND_ID = "default";
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function ImageLibrary() {
+export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?: string }) {
+  const BRAND_ID = brandId;
   const [images, setImages] = useState<BrandImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);

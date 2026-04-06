@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 export async function GET(req: NextRequest) {
-  const brandId = req.nextUrl.searchParams.get("brand_id") || "vetra";
+  const brandId = req.nextUrl.searchParams.get("brand_id") || "default";
   const { data, error } = await supabase
     .from("brand_tone")
     .select("*")
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { brand_id, ...fields } = body;
-    const id = brand_id || "vetra";
+    const id = brand_id || "default";
 
     // Check if row exists
     const { data: existing } = await supabase

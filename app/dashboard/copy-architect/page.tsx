@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import type { SubTypeConfig } from '@/lib/copy-architect-config'
+import { useBrand } from '@/lib/useBrand'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,8 +28,7 @@ interface CopyResult {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BRAND = {
-  name: 'Vetra Mobile',
+const BRAND_DEFAULTS = {
   tone: ['Direct', 'Irreverent', 'Insider', 'Anti-corporate'],
   positioning: 'The only phone carrier that turns your monthly bill into creator support.',
   tagline: 'Always on. Never behind.',
@@ -52,6 +52,8 @@ const OPTION_LABELS = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CopyArchitectPage() {
+  const { brandId, brandName } = useBrand()
+  const BRAND = { name: brandName, ...BRAND_DEFAULTS }
   const [activeCat, setActiveCat] = useState(catKeys[0])
   const [activeSub, setActiveSub] = useState(Object.keys(COPY_CONFIG[catKeys[0]].subs)[0])
   const [formValues, setFormValues] = useState<Record<string, string>>({})
@@ -111,6 +113,7 @@ export default function CopyArchitectPage() {
           category: activeCat,
           subType: activeSub,
           fields: formValues,
+          brand_id: brandId,
         }),
       })
 

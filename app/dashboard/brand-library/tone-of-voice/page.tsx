@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useBrand } from "@/lib/useBrand";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -57,7 +58,7 @@ const DEFAULT_CHECKLIST = [
 ];
 
 const EMPTY_TONE: ToneData = {
-  brand_id: "vetra",
+  brand_id: "default",
   setup_complete: true,
   expression_label: "",
   expression_text: "",
@@ -75,6 +76,7 @@ const EMPTY_TONE: ToneData = {
 /* ------------------------------------------------------------------ */
 
 export default function ToneOfVoicePage() {
+  const { brandId, brandName } = useBrand();
   const [loading, setLoading] = useState(true);
   const [toneData, setToneData] = useState<ToneData | null>(null);
   const [showEntry, setShowEntry] = useState(false);
@@ -100,7 +102,7 @@ export default function ToneOfVoicePage() {
   const fetchTone = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/tone?brand_id=vetra");
+      const res = await fetch(`/api/tone?brand_id=${brandId}`);
       const json = await res.json();
       if (json.tone && json.tone.setup_complete) {
         setToneData(json.tone as ToneData);
@@ -113,7 +115,7 @@ export default function ToneOfVoicePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [brandId]);
 
   useEffect(() => {
     fetchTone();
@@ -129,7 +131,7 @@ export default function ToneOfVoicePage() {
       await fetch("/api/tone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand_id: "vetra", ...fields }),
+        body: JSON.stringify({ brand_id: brandId, ...fields }),
       });
       setToneData((prev) => (prev ? { ...prev, ...fields } : { ...EMPTY_TONE, ...fields }));
     } catch {
@@ -401,7 +403,7 @@ export default function ToneOfVoicePage() {
             &larr; Brand Library
           </Link>
           <h1 className="font-display text-[1.5rem] text-ink mt-3">Brand Tone of Voice</h1>
-          <p className="text-muted text-sm mt-1">Vetra</p>
+          <p className="text-muted text-sm mt-1">{brandName}</p>
         </div>
 
         {/* Section 1: Expression */}

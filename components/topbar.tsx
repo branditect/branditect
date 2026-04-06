@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useBrand, clearBrandCache } from "@/lib/useBrand";
 
 const tabs = [
   { label: "Dashboard", href: "/dashboard" },
@@ -16,24 +16,10 @@ const tabs = [
 export default function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [brandName, setBrandName] = useState("");
-
-  useEffect(() => {
-    async function loadBrand() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("brands")
-        .select("brand_name")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      if (data?.brand_name) setBrandName(data.brand_name);
-    }
-    loadBrand();
-  }, []);
+  const { brandName } = useBrand();
 
   async function handleLogout() {
+    clearBrandCache();
     await supabase.auth.signOut();
     router.push("/login");
   }

@@ -6,14 +6,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
 
-const BRAND_ID = "vetra";
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const brandId = req.nextUrl.searchParams.get("brand_id");
+    if (!brandId) {
+      return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
+    }
+
     const [catalogRes, productsRes, rulesRes] = await Promise.all([
-      supabase.from("brand_catalog").select("*").eq("brand_id", BRAND_ID).maybeSingle(),
-      supabase.from("catalog_products").select("*").eq("brand_id", BRAND_ID).order("sort_order"),
-      supabase.from("brand_financial_rules").select("*").eq("brand_id", BRAND_ID).maybeSingle(),
+      supabase.from("brand_catalog").select("*").eq("brand_id", brandId).maybeSingle(),
+      supabase.from("catalog_products").select("*").eq("brand_id", brandId).order("sort_order"),
+      supabase.from("brand_financial_rules").select("*").eq("brand_id", brandId).maybeSingle(),
     ]);
 
     return NextResponse.json({
@@ -30,21 +33,24 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { businessTypes, products, financialRules } = body;
+    const { businessTypes, products, financialRules, brand_id: brandId } = body;
+    if (!brandId) {
+      return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
+    }
 
     // Upsert brand catalog
     await supabase.from("brand_catalog").upsert({
-      brand_id: BRAND_ID,
+      brand_id: brandId,
       business_types: businessTypes,
       updated_at: new Date().toISOString(),
     }, { onConflict: "brand_id" });
 
     // Delete existing products and re-insert
-    await supabase.from("catalog_products").delete().eq("brand_id", BRAND_ID);
+    await supabase.from("catalog_products").delete().eq("brand_id", brandId);
 
     if (products && products.length > 0) {
       const rows = products.map((p: Record<string, unknown>, i: number) => ({
-        brand_id: BRAND_ID,
+        brand_id: brandId,
         type: p.type,
         name: p.name,
         category: p.category || null,
@@ -73,7 +79,7 @@ export async function POST(req: NextRequest) {
     // Upsert financial rules
     if (financialRules) {
       await supabase.from("brand_financial_rules").upsert({
-        brand_id: BRAND_ID,
+        brand_id: brandId,
         ...financialRules,
         updated_at: new Date().toISOString(),
       }, { onConflict: "brand_id" });

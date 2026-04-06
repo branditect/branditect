@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ImageLibrary from "@/components/image-library";
 import FileLibrary from "@/components/file-library";
+import { useBrand } from "@/lib/useBrand";
 
 const assetTypes = [
   { key: "images", label: "Images", icon: "🖼", desc: "Photos, screenshots, brand imagery" },
@@ -14,13 +15,14 @@ const assetTypes = [
 
 export default function AssetsPage() {
   const [activeType, setActiveType] = useState("images");
+  const { brandId, brandName } = useBrand();
 
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light">
         <h1 className="font-display text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
-        <p className="text-[0.78rem] text-muted">Access and manage all of Vetra&apos;s brand assets in one place.</p>
+        <p className="text-[0.78rem] text-muted">Access and manage all of {brandName}&apos;s brand assets in one place.</p>
       </div>
 
       {/* Asset type cards */}
@@ -48,10 +50,10 @@ export default function AssetsPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-6">
-        {activeType === "images" && <ImageLibrary />}
+        {activeType === "images" && <ImageLibrary brandId={brandId} />}
 
         {activeType === "videos" && (
-          <FileLibrary
+          <FileLibrary brandId={brandId}
             category="video"
             accept=".mp4,.mov,.webm,.avi"
             acceptLabel="MP4, MOV, WEBM, AVI"
@@ -63,7 +65,7 @@ export default function AssetsPage() {
         )}
 
         {activeType === "sounds" && (
-          <FileLibrary
+          <FileLibrary brandId={brandId}
             category="audio"
             accept=".mp3,.wav,.aac,.ogg,.m4a"
             acceptLabel="MP3, WAV, AAC, OGG, M4A"
@@ -75,7 +77,7 @@ export default function AssetsPage() {
         )}
 
         {activeType === "graphics" && (
-          <FileLibrary
+          <FileLibrary brandId={brandId}
             category="graphic"
             accept=".svg,.png,.ai,.eps,.pdf,.psd"
             acceptLabel="SVG, PNG, AI, EPS, PDF, PSD"
@@ -87,7 +89,7 @@ export default function AssetsPage() {
         )}
 
         {activeType === "web" && (
-          <FileLibrary
+          <FileLibrary brandId={brandId}
             category="web"
             accept=".png,.jpg,.jpeg,.webp,.svg,.pdf,.fig"
             acceptLabel="PNG, JPG, WEBP, SVG, PDF, FIG"

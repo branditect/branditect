@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
@@ -76,6 +77,7 @@ function getAspectClass(format: string): string {
 /* ================================================================== */
 
 export default function ImageArchitectPage() {
+  const { brandId } = useBrand();
   /* ---- Reference images (unified) ---- */
   const [refs, setRefs] = useState<RefImage[]>([]);
   const refInputRef = useRef<HTMLInputElement>(null);
@@ -142,11 +144,11 @@ export default function ImageArchitectPage() {
     const { data } = await supabase
       .from("brand_images")
       .select("id, file_url, file_name, tags, category")
-      .eq("brand_id", "vetra")
+      .eq("brand_id", brandId)
       .order("uploaded_at", { ascending: false });
     setLibraryImages(data || []);
     setLibraryLoading(false);
-  }, []);
+  }, [brandId]);
 
   useEffect(() => {
     if (showLibrary && libraryImages.length === 0) fetchLibrary();
@@ -235,13 +237,13 @@ export default function ImageArchitectPage() {
       for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
       const blob = new Blob([byteArray], { type: "image/jpeg" });
       const fileName = `generated-${Date.now()}.jpg`;
-      const path = `vetra/${fileName}`;
+      const path = `${brandId}/${fileName}`;
 
       await supabase.storage.from("brand-images").upload(path, blob, { upsert: true });
       const { data: urlData } = supabase.storage.from("brand-images").getPublicUrl(path);
 
       await supabase.from("brand_images").insert({
-        brand_id: "vetra",
+        brand_id: brandId,
         file_url: urlData.publicUrl,
         file_name: fileName,
         file_size: byteArray.length,
@@ -256,7 +258,7 @@ export default function ImageArchitectPage() {
     } catch (err) {
       console.error("Save to library failed:", err);
     }
-  }, [genResult, format]);
+  }, [genResult, format, brandId]);
 
   /* ================================================================ */
   /*  RENDER                                                           */

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -402,6 +403,7 @@ type ChannelKey = (typeof CHANNEL_TABS)[number]["key"];
 /* ------------------------------------------------------------------ */
 
 export default function BrandStrategyPage() {
+  const { brandId, brandName } = useBrand();
   const [screen, setScreen] = useState<Screen>("entry");
   const [category, setCategory] = useState<Category | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -435,7 +437,7 @@ export default function BrandStrategyPage() {
         const { data, error: dbError } = await supabase
           .from("brand_strategies")
           .select("*")
-          .eq("brand_id", "vetra")
+          .eq("brand_id", brandId)
           .order("created_at", { ascending: false })
           .limit(1);
 
@@ -616,7 +618,7 @@ export default function BrandStrategyPage() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: saved } = await supabase.from("brand_strategies").insert({
-          brand_id: "vetra",
+          brand_id: brandId,
           user_id: user?.id || null,
           category: category || "general",
           answers,
@@ -654,7 +656,7 @@ export default function BrandStrategyPage() {
         data: { user },
       } = await supabase.auth.getUser();
       const { data } = await supabase.from("brand_strategies").insert({
-        brand_id: "vetra",
+        brand_id: brandId,
         user_id: user?.id || null,
         category,
         answers,
@@ -1722,7 +1724,7 @@ export default function BrandStrategyPage() {
                 </div>
 
                 <h1 className="text-3xl font-display text-ink mb-2">
-                  Vetra &mdash; Brand Strategy
+                  {brandName} &mdash; Brand Strategy
                 </h1>
 
                 <p className="text-[0.82rem] text-muted leading-relaxed">

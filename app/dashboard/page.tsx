@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
 
 const quickChips = [
   "Weekly newsletter",
@@ -15,9 +16,9 @@ const quickChips = [
 ];
 
 const outputCards = [
-  { icon: "✉", label: "HTML", title: "Newsletter", desc: "Written in Vetra voice, built as ready-to-send HTML for Klaviyo" },
-  { icon: "🌐", label: "HTML", title: "Campaign Page", desc: "Landing page in Vetra style — deploy in an hour" },
-  { icon: "◈", label: "Deck", title: "Presentation", desc: "Bespoke pitch in Vetra brand for any room or meeting" },
+  { icon: "✉", label: "HTML", title: "Newsletter", desc: "Written in your brand voice, built as ready-to-send HTML for Klaviyo" },
+  { icon: "🌐", label: "HTML", title: "Campaign Page", desc: "Landing page in your brand style — deploy in an hour" },
+  { icon: "◈", label: "Deck", title: "Presentation", desc: "Bespoke pitch in your brand for any room or meeting" },
   { icon: "⊡", label: "Posts", title: "Social Content", desc: "On-brand posts for Instagram, Twitter, LinkedIn" },
 ];
 
@@ -43,6 +44,7 @@ const coherenceRows = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { brandName } = useBrand();
 
   // Check if user has completed onboarding
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function DashboardPage() {
             Good morning, <em className="text-brand-orange">Saara.</em>
           </h1>
           <p className="font-mono text-[0.62rem] text-muted tracking-wider">
-            Tuesday, 1 April 2026 · Vetra Mobile · Let&apos;s build your brand today
+            Tuesday, 1 April 2026 · {brandName} · Let&apos;s build your brand today
           </p>
         </div>
       </div>
@@ -86,7 +88,7 @@ export default function DashboardPage() {
       {/* Quick Create Bar */}
       <div className="mx-8 mt-6 bg-ink rounded-lg p-5">
         <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-white/40 mb-3">
-          Quick Create — Vetra
+          Quick Create — {brandName}
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3.5">
           {quickChips.map((chip) => (
@@ -103,7 +105,7 @@ export default function DashboardPage() {
           <input
             id="quickInput"
             type="text"
-            placeholder="What does Vetra need today?"
+            placeholder={`What does ${brandName} need today?`}
             className="flex-1 bg-white/[0.07] border border-white/[0.12] rounded-[5px] py-[9px] px-3.5 text-white font-light text-[0.84rem] outline-none focus:border-brand-orange/50 placeholder:text-white/30"
           />
           <button

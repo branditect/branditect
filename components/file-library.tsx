@@ -23,9 +23,10 @@ interface FileLibraryProps {
   previewType: "image" | "video" | "audio" | "file";
 }
 
-const BRAND_ID = "vetra";
+const DEFAULT_BRAND_ID = "default";
 
-export default function FileLibrary({ category, accept, acceptLabel, maxSize, icon, emptyMessage, previewType }: FileLibraryProps) {
+export default function FileLibrary({ category, accept, acceptLabel, maxSize, icon, emptyMessage, previewType, brandId = DEFAULT_BRAND_ID }: FileLibraryProps & { brandId?: string }) {
+  const BRAND_ID = brandId;
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

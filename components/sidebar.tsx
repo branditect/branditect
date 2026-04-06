@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
 
 interface NavItem {
   icon: string;
@@ -80,22 +79,7 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [brandName, setBrandName] = useState("");
-
-  useEffect(() => {
-    async function loadBrand() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("brands")
-        .select("brand_name")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      if (data?.brand_name) setBrandName(data.brand_name);
-    }
-    loadBrand();
-  }, []);
+  const { brandName } = useBrand();
 
   const initials = brandName ? brandName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "B";
 

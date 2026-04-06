@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
 import ImageLibrary from "@/components/image-library";
 
 /* ------------------------------------------------------------------ */
@@ -190,6 +191,7 @@ function LogoDropZone({
 /* ------------------------------------------------------------------ */
 
 export default function BrandLibraryPage() {
+  const { brandName } = useBrand();
   const [activeTab, setActiveTab] = useState("Visual");
 
   // Logo uploads: keyed by slot key
@@ -479,10 +481,10 @@ export default function BrandLibraryPage() {
       {/* Header */}
       <div className="px-8 pt-7 pb-4 border-b border-light shrink-0">
         <h1 className="font-display text-2xl text-ink tracking-tight mb-1">
-          Vetra Brand Library
+          {brandName} Brand Library
         </h1>
         <p className="text-[0.78rem] text-muted">
-          Upload your brand assets and define your strategy — everything Vetra needs to work for you.
+          Upload your brand assets and define your strategy — everything {brandName} needs to work for you.
         </p>
       </div>
 

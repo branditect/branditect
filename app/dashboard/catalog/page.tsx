@@ -1394,16 +1394,27 @@ export default function CatalogPage() {
     fetch(`/api/catalog?brand_id=${brandId}`)
       .then(r => r.json())
       .then(json => {
-        if (json.catalog?.business_types?.length) {
+        const hasProducts = json.products?.length > 0;
+        const hasCatalog = json.catalog?.business_types?.length > 0;
+
+        if (hasCatalog) {
           const types = json.catalog.business_types.map((t: string) =>
             t === "service" ? "services" : t === "saas_tier" ? "saas" : t
           ) as BusinessType[];
           setBusinessTypes(types);
-          setStep(4); // jump to review if data exists
+        } else if (hasProducts) {
+          // Infer business types from saved products if catalog row is missing
+          const inferredTypes = [...new Set(json.products.map((p: Record<string, unknown>) => {
+            const t = p.type as string;
+            return t === "service" ? "services" : t === "saas_tier" ? "saas" : t;
+          }))] as BusinessType[];
+          setBusinessTypes(inferredTypes);
         }
-        if (json.products?.length) {
+
+        if (hasProducts) {
           setProducts(json.products.map(dbToProduct).filter(Boolean) as Product[]);
         }
+
         if (json.financialRules) {
           const r = json.financialRules;
           setFinancialRules({
@@ -1421,6 +1432,8 @@ export default function CatalogPage() {
             freeTrialDays: r.free_trial_days != null ? String(r.free_trial_days) : "",
           });
         }
+
+        if (hasCatalog || hasProducts) setStep(4);
       })
       .catch(() => {});
   }, [brandId, brandLoading]);

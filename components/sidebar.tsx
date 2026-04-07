@@ -29,6 +29,7 @@ const libraryItems: NavItem[] = [
   { icon: "▣", label: "Products & Services", href: "/dashboard/catalog" },
   { icon: "◎", label: "Asset Library", href: "/dashboard/assets" },
   { icon: "⊞", label: "Knowledge Vault", href: "/dashboard/brand-library/knowledge-vault" },
+  { icon: "◫", label: "Visual Guideline", href: "/dashboard/brand-guideline" },
 ];
 
 const toolItems: NavItem[] = [

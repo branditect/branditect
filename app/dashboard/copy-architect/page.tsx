@@ -63,6 +63,17 @@ export default function CopyArchitectPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [primaryPicks, setPrimaryPicks] = useState<Record<number, number>>({})
   const [error, setError] = useState('')
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set())
+
+  async function saveFavorite(text: string, optionId: string, type: string) {
+    if (favoritedIds.has(optionId)) return
+    setFavoritedIds(prev => new Set(prev).add(optionId))
+    await fetch('/api/mission-board/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandId, content: text, title: `${type} — Copy Architect`, isDraft: false, isFavorite: true }),
+    })
+  }
 
   const catConfig = COPY_CONFIG[activeCat]
   const subConfig: SubTypeConfig = catConfig.subs[activeSub]
@@ -542,6 +553,16 @@ export default function CopyArchitectPage() {
                               <span className="text-[0.68rem] text-muted ml-auto">
                                 {option.text.length} chars
                               </span>
+                              <button
+                                onClick={() => saveFavorite(option.text, option.id, option.type)}
+                                className={`text-[0.72rem] font-medium border rounded-md px-2.5 py-1 transition-colors ${
+                                  favoritedIds.has(option.id)
+                                    ? 'border-amber-300 bg-amber-50 text-amber-600'
+                                    : 'border-light text-mid hover:border-amber-300 hover:text-amber-600'
+                                }`}
+                              >
+                                {favoritedIds.has(option.id) ? '★ Saved' : '☆ Save'}
+                              </button>
                               <button
                                 onClick={() => handleCopy(option.text, option.id)}
                                 className="text-[0.72rem] font-medium text-mid border border-light rounded-md px-2.5 py-1 hover:border-brand-orange hover:text-brand-orange transition-colors"

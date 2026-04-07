@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { brandId, content, isDraft, title, url } = body
+  const { brandId, content, isDraft, isFavorite, title, url } = body
 
   const { data, error } = await supabase
     .from('mission_notes')
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       brand_id: brandId,
       content: content || '',
       is_draft: isDraft || false,
+      is_favorite: isFavorite || false,
       title: title || '',
       url: url || '',
     })

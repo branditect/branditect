@@ -32,6 +32,7 @@ interface Note {
   title: string
   url: string
   is_draft: boolean
+  is_favorite: boolean
   created_at: string
 }
 
@@ -39,7 +40,7 @@ interface Note {
 
 export default function MissionBoardPage() {
   const { brandId, loading: brandLoading } = useBrand()
-  const [tab, setTab] = useState<'goals' | 'notes' | 'drafts'>('goals')
+  const [tab, setTab] = useState<'goals' | 'notes' | 'favorites' | 'drafts'>('goals')
   const [goals, setGoals] = useState<Goal[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [notes, setNotes] = useState<Note[]>([])
@@ -184,7 +185,8 @@ export default function MissionBoardPage() {
 
   /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
-  const regularNotes = notes.filter(n => !n.is_draft)
+  const regularNotes = notes.filter(n => !n.is_draft && !n.is_favorite)
+  const favorites = notes.filter(n => n.is_favorite && !n.is_draft)
   const drafts = notes.filter(n => n.is_draft)
 
   function isToday(d: string | null) {
@@ -273,22 +275,20 @@ export default function MissionBoardPage() {
 
       {/* Header */}
       <div style={{ padding: '28px 32px 0', borderBottom: '0.5px solid #EDEBE8' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#0D0D0D', marginBottom: 6, fontFamily: "'Space Grotesk', sans-serif" }}>Mission Board</h1>
-        <p style={{ fontSize: 13, color: '#6B6760', marginBottom: 20, lineHeight: 1.6 }}>Track goals, capture ideas, and draft content — all in one place.</p>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#0D0D0D', marginBottom: 6, fontFamily: "'Space Grotesk', sans-serif" }}>Goals & Tasks</h1>
+        <p style={{ fontSize: 13, color: '#6B6760', marginBottom: 20, lineHeight: 1.6 }}>Your goals live on the left. Your day lives on the right.</p>
 
         <div style={{ display: 'flex', gap: 0 }}>
           {([
-            { id: 'goals' as const, label: 'Goals & Tasks' },
-            { id: 'notes' as const, label: 'Notes' },
-            { id: 'drafts' as const, label: 'Draft Board' },
+            { id: 'goals' as const, label: 'Goals & Tasks', count: 0 },
+            { id: 'notes' as const, label: 'Notes', count: regularNotes.length },
+            { id: 'favorites' as const, label: 'Favorites', count: favorites.length },
+            { id: 'drafts' as const, label: 'Draft Board', count: drafts.length },
           ]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={tabBtn(tab === t.id)}>
               {t.label}
-              {t.id === 'notes' && regularNotes.length > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 10, background: tab === t.id ? '#FBE9E2' : '#F5F4F2', color: tab === t.id ? '#E8562A' : '#6B6760' }}>{regularNotes.length}</span>
-              )}
-              {t.id === 'drafts' && drafts.length > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 10, background: tab === t.id ? '#FBE9E2' : '#F5F4F2', color: tab === t.id ? '#E8562A' : '#6B6760' }}>{drafts.length}</span>
+              {t.count > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 10, background: tab === t.id ? '#FBE9E2' : '#F5F4F2', color: tab === t.id ? '#E8562A' : '#6B6760' }}>{t.count}</span>
               )}
             </button>
           ))}
@@ -303,10 +303,11 @@ export default function MissionBoardPage() {
 
             {/* Left: Goals */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6760', fontWeight: 500 }}>Goals</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6760', fontWeight: 500 }} title="A goal is a campaign, a launch, or a project — anything with a clear finish line. Break it into tasks and track it here until it's done.">Active Goals</div>
                 <button onClick={() => setAddGoalOpen(p => !p)} style={btnGhost}>+ Add goal</button>
               </div>
+              <p style={{ fontSize: 11, color: '#B0ACA4', marginBottom: 14, lineHeight: 1.5 }}>Campaigns, launches, projects — anything with a finish line.</p>
 
               {addGoalOpen && (
                 <div style={{ ...card, background: '#F5F4F2', marginBottom: 14 }}>
@@ -329,8 +330,10 @@ export default function MissionBoardPage() {
               )}
 
               {goals.length === 0 && !addGoalOpen && (
-                <div style={{ ...card, textAlign: 'center', padding: 32, color: '#B0ACA4', fontSize: 13 }}>
-                  No goals yet — add one to get started
+                <div style={{ ...card, textAlign: 'center', padding: 32 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#3A3835', marginBottom: 6 }}>Nothing running yet.</div>
+                  <div style={{ fontSize: 12.5, color: '#B0ACA4', lineHeight: 1.6, marginBottom: 14 }}>Add your first goal — a launch, a campaign, a deadline — and break it into the tasks that will actually get it done.</div>
+                  <button onClick={() => setAddGoalOpen(true)} style={btnOrange}>+ Add goal</button>
                 </div>
               )}
 
@@ -388,10 +391,11 @@ export default function MissionBoardPage() {
 
             {/* Right: Tasks */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6760', fontWeight: 500 }}>Tasks</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6760', fontWeight: 500 }} title="Tasks without a goal attached — quick things that need doing. Drag anything from a goal into here to make it part of your day.">Today / This Week</div>
                 <button onClick={() => { setAddTaskOpen(p => !p); setNewTaskGoalId(null) }} style={btnGhost}>+ Add task</button>
               </div>
+              <p style={{ fontSize: 11, color: '#B0ACA4', marginBottom: 14, lineHeight: 1.5 }}>Quick things that need doing — no goal required.</p>
 
               {addTaskOpen && (
                 <div style={{ ...card, background: '#F5F4F2', marginBottom: 14 }}>
@@ -460,8 +464,10 @@ export default function MissionBoardPage() {
                     )}
 
                     {todayTasks.length === 0 && weekTasks.length === 0 && otherTasks.length === 0 && !addTaskOpen && (
-                      <div style={{ ...card, textAlign: 'center', padding: 32, color: '#B0ACA4', fontSize: 13 }}>
-                        No standalone tasks — add one or create subtasks in goals
+                      <div style={{ ...card, textAlign: 'center', padding: 32 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: '#3A3835', marginBottom: 6 }}>Nothing on your plate today.</div>
+                        <div style={{ fontSize: 12.5, color: '#B0ACA4', lineHeight: 1.6, marginBottom: 14 }}>That either means you&apos;re ahead, or nothing&apos;s been assigned yet.</div>
+                        <button onClick={() => { setAddTaskOpen(true); setNewTaskGoalId(null) }} style={btnOrange}>+ Add task</button>
                       </div>
                     )}
                   </>
@@ -489,6 +495,38 @@ export default function MissionBoardPage() {
                       <span style={{ fontSize: 10, color: '#B0ACA4' }}>{timeAgo(note.created_at)}</span>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => moveToDraft(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px' }}>Move to Draft Board</button>
+                        <button onClick={() => deleteNote(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px', color: '#C0392B' }}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ FAVORITES TAB ═══ */}
+        {tab === 'favorites' && (
+          <div>
+            {favorites.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 48, color: '#B0ACA4', fontSize: 13 }}>
+                No favorites yet — star copy from the Copy Architect to save it here
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                {favorites.map(note => (
+                  <div key={note.id} style={{ ...card, borderLeft: '3px solid #E8562A' }}>
+                    {note.title && (
+                      <div style={{ fontSize: 11, fontWeight: 500, color: '#E8562A', marginBottom: 6 }}>{note.title}</div>
+                    )}
+                    <div style={{ fontSize: 13, color: '#3A3835', lineHeight: 1.65, marginBottom: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {note.content}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 10, color: '#B0ACA4' }}>{timeAgo(note.created_at)}</span>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => { copyText(note.content); }} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px' }}>Copy</button>
+                        <button onClick={() => moveToDraft(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px' }}>Move to Draft</button>
                         <button onClick={() => deleteNote(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px', color: '#C0392B' }}>Delete</button>
                       </div>
                     </div>

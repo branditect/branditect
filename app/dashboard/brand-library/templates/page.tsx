@@ -83,9 +83,18 @@ export default function TemplatesPage() {
     const { error } = await supabase.storage.from('brand-assets').upload(path, Buffer.from(bytes), { contentType: file.type, upsert: true })
     if (!error) {
       const { data: urlData } = supabase.storage.from('brand-assets').getPublicUrl(path)
-      const url = urlData.publicUrl + `?t=${Date.now()}`
-      await supabase.from('brand_templates').update({ thumbnail_url: urlData.publicUrl, thumbnail_path: path }).eq('id', templateId)
-      setTemplates(p => p.map(t => t.id === templateId ? { ...t, thumbnail_url: url } : t))
+      const thumbUrl = urlData.publicUrl + `?t=${Date.now()}`
+      await fetch('/api/templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: templateId, field: 'thumbnail_url', value: urlData.publicUrl }),
+      })
+      await fetch('/api/templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: templateId, field: 'thumbnail_path', value: path }),
+      })
+      setTemplates(p => p.map(t => t.id === templateId ? { ...t, thumbnail_url: thumbUrl } : t))
     }
     setThumbUploading(p => ({ ...p, [templateId]: false }))
   }
@@ -93,8 +102,15 @@ export default function TemplatesPage() {
   /* ── Save name / URL edits ──────────────────────────────────────────────── */
 
   async function saveField(templateId: string, field: 'name' | 'url', value: string) {
-    await supabase.from('brand_templates').update({ [field]: value }).eq('id', templateId)
-    setTemplates(p => p.map(t => t.id === templateId ? { ...t, [field]: value } : t))
+    const res = await fetch('/api/templates', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: templateId, field, value }),
+    })
+    const json = await res.json()
+    if (json.success) {
+      setTemplates(p => p.map(t => t.id === templateId ? { ...t, [field]: value } : t))
+    }
   }
 
   /* ── Connect (save URL) ─────────────────────────────────────────────────── */
@@ -108,10 +124,11 @@ export default function TemplatesPage() {
   /* ── Delete ──────────────────────────────────────────────────────────────── */
 
   async function deleteTemplate(template: Template) {
-    if (template.thumbnail_path) {
-      await supabase.storage.from('brand-assets').remove([template.thumbnail_path])
-    }
-    await supabase.from('brand_templates').delete().eq('id', template.id)
+    await fetch('/api/templates', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: template.id, thumbnail_path: template.thumbnail_path }),
+    })
     setTemplates(p => p.filter(t => t.id !== template.id))
   }
 
@@ -120,13 +137,14 @@ export default function TemplatesPage() {
   async function saveNewTemplate() {
     if (!modalName.trim() || !brandId) return
     setSaving(true)
-    const { data, error } = await supabase
-      .from('brand_templates')
-      .insert({ brand_id: brandId, name: modalName.trim(), platform: modalPlat, url: modalUrl.trim() })
-      .select()
-      .single()
-    if (!error && data) {
-      const t = data as Template
+    const res = await fetch('/api/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand_id: brandId, name: modalName.trim(), platform: modalPlat, url: modalUrl.trim() }),
+    })
+    const json = await res.json()
+    if (json.success && json.data) {
+      const t = json.data as Template
       setTemplates(p => [...p, t])
       setEditNames(p => ({ ...p, [t.id]: t.name }))
       setEditUrls(p => ({ ...p, [t.id]: t.url }))

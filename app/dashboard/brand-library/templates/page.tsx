@@ -31,7 +31,8 @@ const PLATFORM_STYLE: Record<Platform, React.CSSProperties> = {
 /* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function TemplatesPage() {
-  const { brandId } = useBrand()
+  const { brand } = useBrand()
+  const brandId = brand?.id || ''
 
   const [templates, setTemplates]   = useState<Template[]>([])
   const [loading, setLoading]       = useState(true)

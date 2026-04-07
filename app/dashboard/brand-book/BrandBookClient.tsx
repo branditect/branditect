@@ -3,6 +3,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
+type PDFJSLib = typeof import('pdfjs-dist')
+let pdfjsLib: PDFJSLib | null = null
+
+async function getPdfjs(): Promise<PDFJSLib> {
+  if (pdfjsLib) return pdfjsLib
+  pdfjsLib = await import('pdfjs-dist')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+  return pdfjsLib
+}
 
 interface Page {
   id: number
@@ -95,15 +104,61 @@ export default function BrandBookClient() {
     setTimeout(() => setToastVisible(false), 2500)
   }
 
+  // ── PDF to images ─────────────────────────────────────────────────────────
+
+  async function pdfToImages(file: File): Promise<File[]> {
+    const pdfjs = await getPdfjs()
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
+    const imageFiles: File[] = []
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i)
+      const scale = 2 // high-res render
+      const viewport = page.getViewport({ scale })
+
+      const canvas = document.createElement('canvas')
+      canvas.width = viewport.width
+      canvas.height = viewport.height
+      const ctx = canvas.getContext('2d')!
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (page as any).render({ canvasContext: ctx, viewport }).promise
+
+      const blob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob(b => resolve(b!), 'image/png')
+      )
+      const pageFile = new File([blob], `${file.name}-page-${i}.png`, { type: 'image/png' })
+      imageFiles.push(pageFile)
+    }
+
+    return imageFiles
+  }
+
   // ── Page upload ──────────────────────────────────────────────────────────
 
   async function handlePageUpload(files: FileList | null) {
     if (!files || !files.length) return
     setUploading(true)
 
-    const fileArr = Array.from(files)
-    for (let i = 0; i < fileArr.length; i++) {
-      const f = fileArr[i]
+    // Expand PDFs into individual page images
+    const allFiles: File[] = []
+    for (const f of Array.from(files)) {
+      if (f.type === 'application/pdf') {
+        try {
+          const pageImages = await pdfToImages(f)
+          allFiles.push(...pageImages)
+        } catch {
+          showToast('Failed to process PDF: ' + f.name)
+        }
+      } else {
+        allFiles.push(f)
+      }
+    }
+
+    let uploaded = 0
+    for (let i = 0; i < allFiles.length; i++) {
+      const f = allFiles[i]
       const fd = new FormData()
       fd.append('file', f)
       fd.append('brandId', brandId)
@@ -114,6 +169,7 @@ export default function BrandBookClient() {
         const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
         const json = await res.json()
         if (json.success) {
+          uploaded++
           setPages(prev => [...prev, {
             id: json.id,
             page_number: pages.length + i + 1,
@@ -127,7 +183,7 @@ export default function BrandBookClient() {
     }
 
     setUploading(false)
-    showToast(`${fileArr.length} page${fileArr.length > 1 ? 's' : ''} uploaded`)
+    if (uploaded > 0) showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
   }
 
   async function deletePage(id: number) {

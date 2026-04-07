@@ -50,6 +50,7 @@ export default function BrandBookClient() {
   const [curPage, setCurPage] = useState(0)
   const [viewMode, setViewMode] = useState<'book' | 'stack'>('book')
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState('')
   const [assetUploading, setAssetUploading] = useState<string | null>(null)
   const [chatMsgs, setChatMsgs] = useState([
     { type: 'bot', text: 'Upload your brand book and I can answer questions about it — colors, typography, logo rules, how to use the brand...' }
@@ -113,6 +114,7 @@ export default function BrandBookClient() {
     const imageFiles: File[] = []
 
     for (let i = 1; i <= pdf.numPages; i++) {
+      setUploadProgress(`Processing PDF page ${i} / ${pdf.numPages}...`)
       const page = await pdf.getPage(i)
       const scale = 2 // high-res render
       const viewport = page.getViewport({ scale })
@@ -158,6 +160,7 @@ export default function BrandBookClient() {
 
     let uploaded = 0
     for (let i = 0; i < allFiles.length; i++) {
+      setUploadProgress(`Uploading page ${i + 1} / ${allFiles.length}...`)
       const f = allFiles[i]
       const fd = new FormData()
       fd.append('file', f)
@@ -183,6 +186,7 @@ export default function BrandBookClient() {
     }
 
     setUploading(false)
+    setUploadProgress('')
     if (uploaded > 0) showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
   }
 
@@ -377,7 +381,7 @@ export default function BrandBookClient() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 4.5L7 1l3.5 3.5M1 11h12" stroke="var(--color-text-primary, #1a1a1a)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-primary, #1a1a1a)', marginBottom: 3 }}>
-              {uploading ? 'Uploading...' : 'Upload brand book'}
+              {uploading ? (uploadProgress || 'Uploading...') : 'Upload brand book'}
             </div>
             <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>PNG, JPG, PDF, screenshots</div>
           </div>

@@ -49,6 +49,11 @@ export default function TemplatesPage() {
   const [editUrls, setEditUrls]     = useState<Record<string, string>>({})
   const [thumbUploading, setThumbUploading] = useState<Record<string, boolean>>({})
 
+  // Notes
+  const [note, setNote] = useState('')
+  const [noteSaved, setNoteSaved] = useState(true)
+  const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const modalNameRef = useRef<HTMLInputElement>(null)
 
   /* ── Fetch ──────────────────────────────────────────────────────────────── */
@@ -70,7 +75,28 @@ export default function TemplatesPage() {
         }
         setLoading(false)
       })
+    // Fetch note
+    fetch(`/api/templates/note?brandId=${brandId}`)
+      .then(r => r.json())
+      .then(d => { if (d.note) setNote(d.note) })
+      .catch(() => {})
   }, [brandId])
+
+  /* ── Note auto-save ────────────────────────────────────────────────────── */
+
+  function handleNoteChange(value: string) {
+    setNote(value)
+    setNoteSaved(false)
+    if (noteTimer.current) clearTimeout(noteTimer.current)
+    noteTimer.current = setTimeout(async () => {
+      await fetch('/api/templates/note', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId, note: value }),
+      })
+      setNoteSaved(true)
+    }, 800)
+  }
 
   /* ── Thumbnail upload ───────────────────────────────────────────────────── */
 
@@ -182,6 +208,23 @@ export default function TemplatesPage() {
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
           Add template
         </button>
+      </div>
+
+      {/* Notes */}
+      <div style={{ marginBottom: 20, maxWidth: 780, position: 'relative' }}>
+        <textarea
+          value={note}
+          onChange={e => handleNoteChange(e.target.value)}
+          placeholder="Add notes about your templates — naming conventions, when to use which, links to design systems..."
+          style={{ width: '100%', minHeight: 60, fontSize: 13, lineHeight: 1.6, color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 8, padding: '10px 13px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
+          onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E8562A'; (e.target as HTMLTextAreaElement).style.background = 'white' }}
+          onBlur={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#EDEBE8'; (e.target as HTMLTextAreaElement).style.background = '#F5F4F2' }}
+        />
+        {note && (
+          <div style={{ position: 'absolute', bottom: 8, right: 10, fontSize: 10, color: noteSaved ? '#34C759' : '#B0ACA4' }}>
+            {noteSaved ? 'Saved' : 'Saving...'}
+          </div>
+        )}
       </div>
 
       {/* Template list */}

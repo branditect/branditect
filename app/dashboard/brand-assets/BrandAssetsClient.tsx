@@ -5,6 +5,18 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 
+type PDFJSLib = typeof import('pdfjs-dist')
+let pdfjsLib: PDFJSLib | null = null
+
+async function getPdfjs(): Promise<PDFJSLib> {
+  if (pdfjsLib) return pdfjsLib
+  pdfjsLib = await import('pdfjs-dist')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+  return pdfjsLib
+}
+
+interface GuidelinePage { url: string; name: string }
+
 interface Logo { id?: number; slot: string; file_url: string; file_name?: string }
 interface BrandColor { id: number; hex: string; name: string }
 interface BrandFont { id?: number; name: string; role?: string; google_font_url?: string; specimen?: string }
@@ -21,7 +33,7 @@ const GOOGLE_FONT_SUGGESTIONS = ['DM Sans', 'Inter', 'Plus Jakarta Sans', 'Syne'
 export default function BrandAssetsClient() {
   const { brandId, brandName, loading: brandLoading } = useBrand()
 
-  const [activeTab, setActiveTab] = useState<'logos' | 'colors' | 'typography' | 'guidelines'>('logos')
+  const [activeTab, setActiveTab] = useState<'guidelines' | 'logos' | 'colors' | 'typography'>('guidelines')
   const [logos, setLogos] = useState<Record<string, Logo>>({})
   const [colors, setColors] = useState<BrandColor[]>([])
   const [fonts, setFonts] = useState<BrandFont[]>([])
@@ -36,7 +48,8 @@ export default function BrandAssetsClient() {
   const colorScreenshotRef = useRef<HTMLInputElement>(null)
   const logoFileRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const guidelineRef = useRef<HTMLInputElement>(null)
-  const [guidelineUrl, setGuidelineUrl] = useState<string | null>(null)
+  const [guidelinePages, setGuidelinePages] = useState<GuidelinePage[]>([])
+  const [guidelineProgress, setGuidelineProgress] = useState('')
 
   // ── Load data ────────────────────────────────────────────────────────────
 
@@ -201,30 +214,80 @@ export default function BrandAssetsClient() {
     })
   }
 
-  // ── Guideline PDF upload ──────────────────────────────────────────────────
+  // ── Guideline PDF upload — converts pages to images ────────────────────
 
   async function uploadGuideline(files: FileList | null) {
     if (!files?.[0]) return
+    const file = files[0]
     setUploading('guideline')
-    const fd = new FormData()
-    fd.append('file', files[0])
-    fd.append('brandId', brandId)
-    fd.append('uploadType', 'guideline')
-    try {
-      const res = await fetch('/api/brand-assets/upload', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (json.success) { setGuidelineUrl(json.url); showToast('Guideline uploaded') }
-    } catch { showToast('Upload failed') }
+
+    let pageFiles: File[] = []
+
+    if (file.type === 'application/pdf') {
+      // Convert PDF pages to PNG images
+      try {
+        const pdfjs = await getPdfjs()
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          setGuidelineProgress(`Processing page ${i} / ${pdf.numPages}...`)
+          const page = await pdf.getPage(i)
+          const scale = 2
+          const viewport = page.getViewport({ scale })
+          const canvas = document.createElement('canvas')
+          canvas.width = viewport.width
+          canvas.height = viewport.height
+          const ctx = canvas.getContext('2d')!
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (page as any).render({ canvasContext: ctx, viewport }).promise
+          const blob = await new Promise<Blob>((resolve) =>
+            canvas.toBlob(b => resolve(b!), 'image/png')
+          )
+          pageFiles.push(new File([blob], `${file.name}-page-${i}.png`, { type: 'image/png' }))
+        }
+      } catch {
+        showToast('Failed to process PDF')
+        setUploading(null)
+        setGuidelineProgress('')
+        return
+      }
+    } else {
+      // Single image upload
+      pageFiles = [file]
+    }
+
+    // Upload each page
+    const uploaded: GuidelinePage[] = []
+    for (let i = 0; i < pageFiles.length; i++) {
+      setGuidelineProgress(`Uploading page ${i + 1} / ${pageFiles.length}...`)
+      const f = pageFiles[i]
+      const fd = new FormData()
+      fd.append('file', f)
+      fd.append('brandId', brandId)
+      fd.append('uploadType', 'guideline')
+      try {
+        const res = await fetch('/api/brand-assets/upload', { method: 'POST', body: fd })
+        const json = await res.json()
+        if (json.success) {
+          uploaded.push({ url: json.url, name: f.name })
+        }
+      } catch {}
+    }
+
+    setGuidelinePages(prev => [...prev, ...uploaded])
     setUploading(null)
+    setGuidelineProgress('')
+    if (uploaded.length) showToast(`${uploaded.length} page${uploaded.length > 1 ? 's' : ''} uploaded`)
   }
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
 
   const tabs: { id: typeof activeTab; label: string }[] = [
+    { id: 'guidelines', label: 'Brand guidelines' },
     { id: 'logos',      label: 'Logos' },
     { id: 'colors',     label: 'Color palette' },
     { id: 'typography', label: 'Typography' },
-    { id: 'guidelines', label: 'Brand guidelines' },
   ]
 
   if (brandLoading || dataLoading) {
@@ -459,45 +522,63 @@ export default function BrandAssetsClient() {
         {activeTab === 'guidelines' && (
           <div style={{ marginBottom: 40 }}>
             <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary, #999)', fontWeight: 500, marginBottom: 14 }}>Brand guidelines</div>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary, #999)', marginBottom: 20, lineHeight: 1.7 }}>Upload your brand guidelines document. This is used as context by the AI across all Branditect modules.</p>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary, #999)', marginBottom: 20, lineHeight: 1.7 }}>Upload your brand guidelines PDF. Pages are rendered so you can scroll through them and extract assets.</p>
 
-            {guidelineUrl ? (
-              <div style={{ border: '0.5px solid var(--color-border-tertiary, #e5e5e5)', borderRadius: 12, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, background: 'var(--color-background-secondary, #fafafa)' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 8, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="14" height="18" rx="2" stroke="#E8562A" strokeWidth="1.4"/><path d="M7 6h6M7 10h6M7 14h4" stroke="#E8562A" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary, #1a1a1a)' }}>Brand guidelines uploaded</div>
-                  <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)', marginTop: 2 }}>Used by AI across all Branditect modules</div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <a href={guidelineUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, padding: '6px 14px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', color: 'var(--color-text-primary, #1a1a1a)', textDecoration: 'none' }}>View &nearr;</a>
-                  <a href={guidelineUrl} download style={{ fontSize: 12, padding: '6px 14px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', color: 'var(--color-text-primary, #1a1a1a)', textDecoration: 'none' }}>&darr; Download</a>
-                  <button onClick={() => guidelineRef.current?.click()} style={{ fontSize: 12, padding: '6px 14px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'transparent', color: 'var(--color-text-secondary, #999)', cursor: 'pointer', fontFamily: 'inherit' }}>Replace</button>
-                </div>
-              </div>
-            ) : (
-              <div
+            {/* Upload zone — always visible */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+              <button
                 onClick={() => guidelineRef.current?.click()}
-                style={{ border: '1.5px dashed var(--color-border-secondary, #ddd)', borderRadius: 12, padding: 40, textAlign: 'center', cursor: 'pointer', background: 'var(--color-background-secondary, #fafafa)' }}
+                style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#E8562A', color: 'white', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                {uploading === 'guideline' ? (
-                  <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #999)' }}>Uploading...</div>
-                ) : (
-                  <>
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}><path d="M16 4v16M8 10l8-6 8 6M4 26h24" stroke="var(--color-text-secondary, #999)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary, #1a1a1a)', marginBottom: 6 }}>Upload brand guidelines PDF</div>
-                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #999)' }}>PDF, PPTX, or image files</div>
-                  </>
-                )}
+                {uploading === 'guideline' ? (guidelineProgress || 'Processing...') : guidelinePages.length > 0 ? 'Upload more pages' : 'Upload PDF'}
+              </button>
+              {guidelinePages.length > 0 && (
+                <span style={{ fontSize: 12, color: 'var(--color-text-secondary, #999)', alignSelf: 'center' }}>{guidelinePages.length} page{guidelinePages.length > 1 ? 's' : ''}</span>
+              )}
+            </div>
+            <input ref={guidelineRef} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={e => { uploadGuideline(e.target.files); e.target.value = '' }} />
+
+            {/* Asset shortcut buttons */}
+            {guidelinePages.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #999)', alignSelf: 'center', marginRight: 4 }}>Get assets:</div>
+                {[
+                  { id: 'colors' as const, label: 'Color palette' },
+                  { id: 'typography' as const, label: 'Typography' },
+                  { id: 'logos' as const, label: 'Logos' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    style={{ padding: '6px 14px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'var(--color-background-primary, #fff)', color: 'var(--color-text-primary, #1a1a1a)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {item.label} &rarr;
+                  </button>
+                ))}
               </div>
             )}
-            <input ref={guidelineRef} type="file" accept=".pdf,.pptx,image/*" style={{ display: 'none' }} onChange={e => uploadGuideline(e.target.files)} />
 
-            <div style={{ marginTop: 32, padding: '16px 20px', borderRadius: 8, background: 'var(--color-background-secondary, #fafafa)', border: '0.5px solid var(--color-border-tertiary, #e5e5e5)' }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--color-text-secondary, #999)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Tip</div>
-              <div style={{ fontSize: 13, color: 'var(--color-text-secondary, #999)', lineHeight: 1.7 }}>You can also upload individual screenshots of your brand book in the <Link href="/dashboard/brand-book" style={{ color: '#E8562A', textDecoration: 'none' }}>Brand book viewer</Link> — the AI reads all pages and answers questions about the brand.</div>
-            </div>
+            {/* Scrollable page viewer */}
+            {guidelinePages.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {guidelinePages.map((page, i) => (
+                  <div key={i} style={{ borderRadius: 8, overflow: 'hidden', border: '0.5px solid var(--color-border-tertiary, #e5e5e5)', position: 'relative' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={page.url} alt={`Page ${i + 1}`} style={{ width: '100%', display: 'block' }} />
+                    <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 4 }}>{i + 1}</div>
+                  </div>
+                ))}
+              </div>
+            ) : !uploading && (
+              <div
+                onClick={() => guidelineRef.current?.click()}
+                style={{ border: '1.5px dashed var(--color-border-secondary, #ddd)', borderRadius: 12, padding: 48, textAlign: 'center', cursor: 'pointer', background: 'var(--color-background-secondary, #fafafa)' }}
+              >
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}><path d="M16 4v16M8 10l8-6 8 6M4 26h24" stroke="var(--color-text-secondary, #999)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary, #1a1a1a)', marginBottom: 6 }}>Upload brand guidelines PDF</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary, #999)' }}>PDF or image files — pages will be rendered for browsing</div>
+              </div>
+            )}
           </div>
         )}
       </div>

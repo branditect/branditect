@@ -43,7 +43,7 @@ const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: "other", label: "Other" },
 ];
 
-const ACCEPTED = ".pdf,.pptx,.docx,.xlsx";
+const ACCEPTED = ".pdf,.pptx,.docx,.xlsx,.jpg,.jpeg,.png,.webp";
 const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 
 /* ------------------------------------------------------------------ */
@@ -75,6 +75,11 @@ function fileTypeBadge(ext: string): string {
       return "bg-[#DBEAFE] text-[#2563EB]";
     case "xlsx":
       return "bg-[#D1FAE5] text-[#059669]";
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "webp":
+      return "bg-[#EDE9FE] text-[#7C3AED]";
     default:
       return "bg-pale text-muted";
   }
@@ -323,7 +328,7 @@ export default function KnowledgeVaultPage() {
     e.preventDefault();
     setDragOver(false);
     const files = Array.from(e.dataTransfer.files).filter((f) =>
-      /\.(pdf|pptx|docx|xlsx)$/i.test(f.name)
+      /\.(pdf|pptx|docx|xlsx|jpg|jpeg|png|webp)$/i.test(f.name)
     );
     if (files.length) uploadFiles(files);
   }
@@ -450,7 +455,7 @@ export default function KnowledgeVaultPage() {
           <span className="text-brand-orange underline">browse</span>
         </p>
         <p className="text-[0.75rem] text-muted">
-          PDF, PPTX, DOCX, XLSX — max 50 MB per file
+          PDF, JPEG, PNG, PPTX, DOCX, XLSX — max 50 MB per file
         </p>
         <input
           ref={fileInputRef}

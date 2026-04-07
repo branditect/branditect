@@ -1,5 +1,6 @@
 import Topbar from "@/components/topbar";
 import Sidebar from "@/components/sidebar";
+import FloatingNotes from "@/components/floating-notes";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-white">{children}</main>
       </div>
+      <FloatingNotes />
     </div>
   );
 }

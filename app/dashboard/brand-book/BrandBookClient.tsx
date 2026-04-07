@@ -325,7 +325,7 @@ export default function BrandBookClient() {
             </div>
             <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>PNG, JPG, PDF, screenshots</div>
           </div>
-          <input ref={mainFileRef} type="file" accept="image/*,.pdf" multiple style={{ display: 'none' }} onChange={e => handlePageUpload(e.target.files)} />
+          <input ref={mainFileRef} type="file" accept="image/*,application/pdf" multiple style={{ display: 'none' }} onChange={e => handlePageUpload(e.target.files)} />
           {pages.length > 0 && (
             <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)', marginTop: 8, textAlign: 'center' }}>
               {pages.length} page{pages.length > 1 ? 's' : ''} uploaded

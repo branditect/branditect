@@ -2,66 +2,76 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData()
+  try {
+    const formData = await req.formData()
 
-  const file = formData.get('file') as File
-  const brandId = formData.get('brandId') as string
-  const uploadType = formData.get('uploadType') as string
-  const pageNumber = formData.get('pageNumber') as string | null
+    const file = formData.get('file') as File | null
+    const brandId = formData.get('brandId') as string
+    const uploadType = formData.get('uploadType') as string
+    const pageNumber = formData.get('pageNumber') as string | null
 
-  if (!file || !brandId || !uploadType) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-  }
+    if (!file || !brandId || !uploadType) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    }
 
-  const ext = file.name.split('.').pop()
-  const fileName = `${brandId}/brand-book/${uploadType}/${Date.now()}.${ext}`
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const ext = file.name.split('.').pop() || 'png'
+    const fileName = `${brandId}/brand-book/${uploadType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
-  const { error: uploadError } = await supabase.storage
-    .from('brand-assets')
-    .upload(fileName, file, { upsert: false, contentType: file.type })
+    const { error: uploadError } = await supabase.storage
+      .from('brand-assets')
+      .upload(fileName, buffer, { contentType: file.type, upsert: false })
 
-  if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 })
-  }
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 })
+    }
 
-  const { data: urlData } = supabase.storage
-    .from('brand-assets')
-    .getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage
+      .from('brand-assets')
+      .getPublicUrl(fileName)
 
-  const publicUrl = urlData.publicUrl
+    const publicUrl = urlData.publicUrl
 
-  if (uploadType === 'page') {
-    const { data, error } = await supabase
-      .from('brand_book_pages')
-      .insert({
-        brand_id: brandId,
-        page_number: pageNumber ? parseInt(pageNumber) : 999,
-        file_url: publicUrl,
-        file_name: file.name,
-      })
-      .select()
-      .single()
+    if (uploadType === 'page') {
+      const { data, error } = await supabase
+        .from('brand_book_pages')
+        .insert({
+          brand_id: brandId,
+          page_number: pageNumber ? parseInt(pageNumber) : 999,
+          file_url: publicUrl,
+          file_name: file.name,
+        })
+        .select()
+        .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true, id: data.id, url: publicUrl })
-  } else {
-    const { data, error } = await supabase
-      .from('brand_book_assets')
-      .insert({
-        brand_id: brandId,
-        category: uploadType,
-        file_url: publicUrl,
-        file_name: file.name,
-      })
-      .select()
-      .single()
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true, id: data.id, url: publicUrl })
+    } else {
+      const { data, error } = await supabase
+        .from('brand_book_assets')
+        .insert({
+          brand_id: brandId,
+          category: uploadType,
+          file_url: publicUrl,
+          file_name: file.name,
+        })
+        .select()
+        .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true, id: data.id, url: publicUrl })
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true, id: data.id, url: publicUrl })
+    }
+  } catch (err) {
+    console.error('[brand-book/upload POST]', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Upload failed' },
+      { status: 500 }
+    )
   }
 }

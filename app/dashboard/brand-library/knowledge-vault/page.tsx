@@ -80,6 +80,8 @@ function fileTypeBadge(ext: string): string {
     case "png":
     case "webp":
       return "bg-[#EDE9FE] text-[#7C3AED]";
+    case "txt":
+      return "bg-[#CFFAFE] text-[#0891B2]";
     default:
       return "bg-pale text-muted";
   }
@@ -182,6 +184,14 @@ export default function KnowledgeVaultPage() {
   const [dragOver, setDragOver] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Text editor
+  const [textOpen, setTextOpen] = useState(false);
+  const [textTitle, setTextTitle] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [textCategory, setTextCategory] = useState<CategoryKey>("other");
+  const [textSaving, setTextSaving] = useState(false);
+  const [textError, setTextError] = useState<string | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -304,11 +314,47 @@ export default function KnowledgeVaultPage() {
     }
   }
 
+  // Save text entry
+  async function saveTextEntry() {
+    setTextError(null);
+    if (!textTitle.trim()) { setTextError("Please add a title."); return; }
+    if (!textContent.trim()) { setTextError("Please add some content."); return; }
+    setTextSaving(true);
+    try {
+      const pagesCount = Math.max(1, Math.ceil(textContent.length / 3000));
+      const { data: docRow, error: insertErr } = await supabase
+        .from("brand_documents")
+        .insert({
+          brand_id: brandId,
+          file_name: textTitle.trim(),
+          file_type: "txt",
+          category: textCategory,
+          storage_path: "",
+          status: "ready",
+          extracted_text: textContent.trim(),
+          pages_count: pagesCount,
+        })
+        .select()
+        .single();
+
+      if (insertErr) throw new Error(insertErr.message);
+      setDocuments((prev) => [docRow as BrandDocument, ...prev]);
+      setTextOpen(false);
+      setTextTitle("");
+      setTextContent("");
+      setTextCategory("other");
+    } catch (err) {
+      setTextError(err instanceof Error ? err.message : "Save failed");
+    }
+    setTextSaving(false);
+  }
+
   // Delete document
   async function deleteDocument(id: string, storagePath: string) {
-    // Remove from storage
-    await supabase.storage.from("brand-documents").remove([storagePath]);
-    // Remove from DB
+    // Skip storage removal for text entries (no file stored)
+    if (storagePath) {
+      await supabase.storage.from("brand-documents").remove([storagePath]);
+    }
     await supabase.from("brand_documents").delete().eq("id", id);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
@@ -437,35 +483,131 @@ export default function KnowledgeVaultPage() {
         ))}
       </div>
 
-      {/* Upload drop zone */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all mb-5 ${
-          dragOver
-            ? "border-brand-orange bg-brand-orange-pale"
-            : "border-light bg-pale hover:border-muted"
-        }`}
-      >
-        <div className="text-2xl mb-2 text-muted select-none">⬆</div>
-        <p className="text-[0.85rem] font-medium text-ink mb-1">
-          Drop files here or{" "}
-          <span className="text-brand-orange underline">browse</span>
-        </p>
-        <p className="text-[0.75rem] text-muted">
-          PDF, JPEG, PNG, PPTX, DOCX, XLSX — max 50 MB per file
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept={ACCEPTED}
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+      {/* Upload + text entry row */}
+      <div className="flex gap-3 mb-5 items-stretch">
+        {/* Drop zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex-1 border-2 border-dashed rounded-lg p-7 text-center cursor-pointer transition-all ${
+            dragOver
+              ? "border-brand-orange bg-brand-orange-pale"
+              : "border-light bg-pale hover:border-muted"
+          }`}
+        >
+          <div className="text-2xl mb-2 text-muted select-none">⬆</div>
+          <p className="text-[0.85rem] font-medium text-ink mb-1">
+            Drop files here or{" "}
+            <span className="text-brand-orange underline">browse</span>
+          </p>
+          <p className="text-[0.75rem] text-muted">
+            PDF, JPEG, PNG, PPTX, DOCX, XLSX — max 50 MB
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ACCEPTED}
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+
+        {/* Write text button */}
+        <button
+          onClick={() => setTextOpen(true)}
+          className="w-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-light rounded-lg bg-pale hover:border-muted transition-all shrink-0"
+        >
+          <span className="text-2xl text-muted select-none">✎</span>
+          <span className="text-[0.82rem] font-medium text-ink">Write text</span>
+          <span className="text-[0.72rem] text-muted">Paste or type notes</span>
+        </button>
       </div>
+
+      {/* Text editor modal */}
+      {textOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-xl flex flex-col shadow-xl overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-light">
+              <span className="text-[0.95rem] font-semibold text-ink">Add text to vault</span>
+              <button
+                onClick={() => { setTextOpen(false); setTextError(null); }}
+                className="text-muted hover:text-ink text-xl leading-none"
+              >×</button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-5 flex flex-col gap-4 overflow-y-auto max-h-[70vh]">
+              {/* Title */}
+              <div>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Title</label>
+                <input
+                  type="text"
+                  value={textTitle}
+                  onChange={e => setTextTitle(e.target.value)}
+                  placeholder="e.g. Product launch notes, Pricing overview…"
+                  className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange transition-colors"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Category</label>
+                <select
+                  value={textCategory}
+                  onChange={e => setTextCategory(e.target.value as CategoryKey)}
+                  className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange bg-white transition-colors"
+                >
+                  {CATEGORIES.filter(c => c.key !== "all").map(c => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Content */}
+              <div>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Content</label>
+                <textarea
+                  value={textContent}
+                  onChange={e => setTextContent(e.target.value)}
+                  placeholder="Paste or write your brand information here — product details, pricing, company info, talking points…"
+                  rows={12}
+                  className="w-full border border-light rounded-lg px-3 py-2.5 text-[0.85rem] text-ink outline-none focus:border-brand-orange transition-colors resize-none leading-relaxed"
+                />
+                <div className="text-[0.7rem] text-muted text-right mt-1">
+                  {textContent.length.toLocaleString()} chars
+                </div>
+              </div>
+
+              {textError && (
+                <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-[0.78rem] text-red-600">
+                  {textError}
+                </div>
+              )}
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex gap-2 px-5 py-4 border-t border-light">
+              <button
+                onClick={() => { setTextOpen(false); setTextError(null); }}
+                className="flex-1 py-2 rounded-lg border border-light text-[0.82rem] text-mid hover:border-muted hover:text-ink transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveTextEntry}
+                disabled={textSaving}
+                className="flex-2 px-6 py-2 rounded-lg bg-brand-orange text-white text-[0.82rem] font-medium hover:bg-brand-orange-hover transition-all disabled:opacity-50"
+              >
+                {textSaving ? "Saving…" : "Save to vault →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (

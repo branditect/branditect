@@ -68,6 +68,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
       .from("brand_images")
       .select("*")
       .eq("brand_id", BRAND_ID)
+      .not("category", "in", '("video","audio","graphic","web")')
       .order("uploaded_at", { ascending: false });
 
     setImages(data || []);

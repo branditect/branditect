@@ -32,31 +32,34 @@ export async function POST(req: NextRequest) {
     }
 
     const contextParts: string[] = []
-    if (strategy) {
-      contextParts.push(`Brand Strategy:\n${JSON.stringify(strategy, null, 2)}`)
-    }
-    if (visualDna) {
-      contextParts.push(`Brand Visual DNA:\n${JSON.stringify(visualDna, null, 2)}`)
-    }
+    if (strategy) contextParts.push(`Brand Strategy:\n${JSON.stringify(strategy, null, 2)}`)
+    if (visualDna) contextParts.push(`Brand Visual DNA:\n${JSON.stringify(visualDna, null, 2)}`)
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',
-          content: `Based on this brand data, extract and synthesize concise copy for each brand guideline section. Return ONLY a valid JSON object with these exact keys (no markdown, no explanation):
+          content: `Based on this brand data, write rich editorial copy for each brand guideline section. Return ONLY a valid JSON object with these exact keys (no markdown, no explanation):
 
 {
-  "logoDescription": "One paragraph on logo usage philosophy",
-  "typographyIntro": "One paragraph on typography philosophy",
-  "colorPhilosophy": "One paragraph on color palette rationale",
-  "imageryPhilosophy": "One paragraph on image style and photography direction",
-  "buttonPhilosophy": "One sentence on button/UI component style",
-  "graphicElementsIntro": "One paragraph on graphic language and visual motifs",
-  "iconsIntro": "One sentence on icon style",
-  "packagingIntro": "One paragraph on packaging design approach",
-  "socialIntro": "One paragraph on social media visual presence"
+  "tagline": "Brand tagline or positioning line (1 sentence)",
+  "logoPhilosophy": "Full paragraph introducing the logo — its meaning, what it communicates, how it should be used. 3-5 sentences.",
+  "logoWordmarkNote": "One sentence on when to use the wordmark vs the symbol alone.",
+  "logoClearspace": "One sentence on clearspace rule.",
+  "typographyIntro": "Full paragraph on the typography system — choices, rationale, what it communicates. 2-4 sentences.",
+  "colorsIntro": "Full paragraph on the color palette — what each color means, how they work together. 3-5 sentences.",
+  "colorPrimaryUsage": "One sentence on primary color usage combination.",
+  "colorSecondaryUsage": "One sentence on dark mode / secondary color combination.",
+  "colorNeverCombine": "One sentence on which colors should never be paired.",
+  "imageStylePhilosophy": "Full paragraph on photography approach — real environments, authentic moments, what to look for. 3-5 sentences.",
+  "imageStyleApproved": ["5 specific approved photography directions"],
+  "imageStyleProhibited": ["5 specific prohibited imagery types"],
+  "buttonStyleNote": "One sentence on button design philosophy — corner radius, style, feel.",
+  "graphicsNote": "One sentence on graphic/decorative language of the brand.",
+  "packagingNote": "One sentence on packaging approach.",
+  "socialNote": "One paragraph on social media visual presence and approach. 2-3 sentences."
 }
 
 Brand data:

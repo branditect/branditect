@@ -15,7 +15,7 @@ async function detectLogoType(base64: string, mediaType: string): Promise<{ logo
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
+      max_tokens: 200,
       messages: [
         {
           role: 'user',
@@ -26,7 +26,7 @@ async function detectLogoType(base64: string, mediaType: string): Promise<{ logo
             },
             {
               type: 'text',
-              text: 'Analyze this logo image. Return ONLY a JSON object with two fields: "logoType" (one of: "wordmark", "lettermark", "logomark", "combination mark", "emblem") and "description" (one sentence describing the logo style). No markdown, no explanation.',
+              text: 'Analyze this logo. Return ONLY JSON: {"logoType":"wordmark|lettermark|logomark|combination mark|emblem","description":"one sentence"}. No markdown.',
             },
           ],
         },
@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File | null
     const brandId = formData.get('brandId') as string
     const category = (formData.get('category') as string) || 'logo'
-    const title = (formData.get('title') as string) || ''
+    const imageType = (formData.get('imageType') as string) || ''
+    const analyze = formData.get('analyze') === 'true'
 
     if (!file || !brandId) {
       return NextResponse.json({ success: false, error: 'Missing file or brandId' }, { status: 400 })
@@ -68,12 +69,13 @@ export async function POST(req: NextRequest) {
     const { data: urlData } = supabase.storage.from('brand-assets').getPublicUrl(fileName)
     const publicUrl = urlData.publicUrl
 
-    let meta: Record<string, string> = {}
-    if (category === 'logo') {
-      const base64 = buffer.toString('base64')
-      const detected = await detectLogoType(base64, file.type)
-      meta = detected
+    let analysis: Record<string, string> = {}
+    if (category === 'logo' && analyze) {
+      analysis = await detectLogoType(buffer.toString('base64'), file.type)
     }
+
+    const meta: Record<string, string> = { ...analysis }
+    if (imageType) meta.slot = imageType
 
     const { data: imageRow, error: dbError } = await supabase
       .from('brand_images')
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
         url: publicUrl,
         storage_path: fileName,
         category,
-        title: title || file.name,
+        title: file.name,
         meta,
       })
       .select()
@@ -92,11 +94,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: dbError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, image: imageRow })
+    return NextResponse.json({
+      success: true,
+      id: imageRow.id,
+      url: publicUrl,
+      analysis: analysis as { logoType?: string; description?: string },
+    })
   } catch (err) {
-    console.error('[upload-asset]', err)
+    console.error('[upload-asset POST]', err)
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : 'Upload failed' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id, brandId } = await req.json() as { id: string | number; brandId: string }
+    if (!id || !brandId) return NextResponse.json({ success: false, error: 'Missing id or brandId' }, { status: 400 })
+
+    const { data: row } = await supabase
+      .from('brand_images')
+      .select('storage_path')
+      .eq('id', id)
+      .eq('brand_id', brandId)
+      .single()
+
+    if (row?.storage_path) {
+      await supabase.storage.from('brand-assets').remove([row.storage_path])
+    }
+
+    await supabase.from('brand_images').delete().eq('id', id).eq('brand_id', brandId)
+
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('[upload-asset DELETE]', err)
+    return NextResponse.json(
+      { success: false, error: err instanceof Error ? err.message : 'Delete failed' },
       { status: 500 }
     )
   }

@@ -240,6 +240,9 @@ export default function TemplatesPage() {
                 </div>
 
                 {/* URL row */}
+                {(() => {
+                  const urlDirty = (currentUrl?.trim() || '') !== (t.url || '')
+                  return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input
                     type="text"
@@ -248,28 +251,31 @@ export default function TemplatesPage() {
                     placeholder="Paste template link…"
                     style={{ flex: 1, fontSize: 12, fontFamily: 'inherit', color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', outline: 'none', minWidth: 0, transition: 'border-color 0.15s' }}
                     onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E8562A'; (e.target as HTMLInputElement).style.background = 'white' }}
-                    onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2'; if ((e.target.value.trim() || '') !== (t.url || '')) saveField(t.id, 'url', e.target.value.trim()) }}
+                    onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2' }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); connectTemplate(t.id) } }}
                   />
-                  {isConnected ? (
-                    <>
-                      <button style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 11px', borderRadius: 6, background: '#E9F7EE', color: '#1A7A40', border: '1px solid #B8E6C8', cursor: 'default', flexShrink: 0 }}>
-                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg>
-                        Saved
-                      </button>
-                      <a href={t.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#6B6760', background: 'transparent', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/><polyline points="10,2 14,2 14,6"/><line x1="14" y1="2" x2="8" y2="8"/></svg>
-                        Open
-                      </a>
-                    </>
-                  ) : (
+                  {urlDirty || !isConnected ? (
                     <button
-                      onClick={() => connectTemplate(t.id)}
+                      onMouseDown={e => { e.preventDefault(); connectTemplate(t.id) }}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 12px', borderRadius: 6, background: '#E8562A', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
-                      Connect
+                      {isConnected ? 'Save' : 'Connect'}
+                    </button>
+                  ) : (
+                    <button style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 11px', borderRadius: 6, background: '#E9F7EE', color: '#1A7A40', border: '1px solid #B8E6C8', cursor: 'default', flexShrink: 0 }}>
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg>
+                      Saved
                     </button>
                   )}
+                  {isConnected && !urlDirty && (
+                    <a href={t.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#6B6760', background: 'transparent', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/><polyline points="10,2 14,2 14,6"/><line x1="14" y1="2" x2="8" y2="8"/></svg>
+                      Open
+                    </a>
+                  )}
                 </div>
+                  )
+                })()}
               </div>
 
               {/* Delete */}

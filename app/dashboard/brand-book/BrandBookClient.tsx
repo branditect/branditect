@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 type PDFJSLib = typeof import('pdfjs-dist')
@@ -391,6 +392,20 @@ export default function BrandBookClient() {
               {pages.length} page{pages.length > 1 ? 's' : ''} uploaded
             </div>
           )}
+          <Link
+            href="/dashboard/brand-assets"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginTop: 10, padding: '8px 12px', borderRadius: 8,
+              border: '0.5px solid var(--color-border-secondary, #ddd)',
+              background: 'var(--color-background-primary, #fff)',
+              color: 'var(--color-text-primary, #1a1a1a)',
+              fontSize: 12, fontWeight: 500, textDecoration: 'none', fontFamily: 'inherit',
+            }}
+          >
+            Brand visual assets
+            <span style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>&rarr;</span>
+          </Link>
         </div>
 
         {/* Asset sections */}

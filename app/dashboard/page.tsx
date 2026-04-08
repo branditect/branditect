@@ -45,6 +45,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedGoal, setSelectedGoal] = useState<number | null>(null);
   const [feedTab, setFeedTab] = useState<"today" | "week" | "all">("today");
+  const [noteInput, setNoteInput] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
 
   // Check onboarding
   useEffect(() => {
@@ -83,6 +85,21 @@ export default function DashboardPage() {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, is_complete: !current }),
     });
+  }
+
+  async function saveQuickNote() {
+    if (!noteInput.trim() || !brandId) return;
+    setNoteSaving(true);
+    try {
+      const res = await fetch("/api/mission-board/notes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandId, content: noteInput.trim() }),
+      });
+      const json = await res.json();
+      if (json.data) setNotes(prev => [json.data, ...prev]);
+      setNoteInput("");
+    } catch {}
+    setNoteSaving(false);
   }
 
   // Helpers
@@ -292,28 +309,46 @@ export default function DashboardPage() {
         {/* ═══ RIGHT COL ═══ */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* Latest Note */}
+          {/* Notes Pad */}
           <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, overflow: "hidden" }}>
+            {/* Write area */}
             <div style={{ background: "#FFFEF5", borderBottom: "1px solid #EDEABD", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Latest Note</div>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Quick Note</div>
                 <Link href="/dashboard/mission-board" style={{ fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none" }}>All notes →</Link>
               </div>
-              {latestNote ? (
-                <>
-                  {latestNote.title && (
-                    <div style={{ display: "inline-block", fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "#F0EABB", color: "#6A5500", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.06em" }}>{latestNote.title}</div>
-                  )}
-                  <div style={{ fontSize: 13, color: v.g800, lineHeight: 1.6 }}>{latestNote.content}</div>
-                  <div style={{ fontSize: 10.5, color: v.g400, marginTop: 7 }}>{timeAgo(latestNote.created_at)}</div>
-                </>
-              ) : (
-                <div style={{ fontSize: 13, color: v.g400 }}>No notes yet — use the floating pen to capture ideas.</div>
+              <textarea
+                value={noteInput}
+                onChange={e => setNoteInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && e.metaKey) saveQuickNote(); }}
+                placeholder="Write a note..."
+                style={{ width: "100%", minHeight: 70, background: "transparent", border: "none", outline: "none", fontSize: 13, lineHeight: 1.6, color: v.g800, resize: "none", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }}
+              />
+              {noteInput.trim() && (
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                  <button
+                    onClick={saveQuickNote}
+                    disabled={noteSaving}
+                    style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: v.orange, color: "#fff", fontSize: 11.5, fontWeight: 600, cursor: noteSaving ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: noteSaving ? 0.6 : 1 }}
+                  >
+                    {noteSaving ? "Saving..." : "Save note"}
+                  </button>
+                </div>
               )}
             </div>
+
+            {/* Latest note preview */}
+            {latestNote && (
+              <div style={{ padding: "10px 16px", borderBottom: `1px solid ${v.borderSoft}` }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: v.g400, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Latest</div>
+                <div style={{ fontSize: 12.5, color: v.g600, lineHeight: 1.55, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{latestNote.content}</div>
+                <div style={{ fontSize: 10, color: v.g400, marginTop: 4 }}>{timeAgo(latestNote.created_at)}</div>
+              </div>
+            )}
+
+            {/* Actions */}
             <div style={{ padding: "10px 12px", display: "flex", gap: 6 }}>
-              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Edit</Link>
-              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>+ New</Link>
+              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Mission Board</Link>
               <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.orangeMid}`, background: v.orangePale, fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>✦ Ask AI</Link>
             </div>
           </div>

@@ -156,7 +156,7 @@ export default function MissionBoardPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, is_draft: true }),
     })
-    showToast('Moved to Draft Board')
+    showToast('Moved to Draft Pad')
   }
 
   /* ── Draft actions ───────────────────────────────────────────────────────── */
@@ -305,7 +305,7 @@ export default function MissionBoardPage() {
             { id: 'goals' as const, label: 'Goals & Tasks', count: 0 },
             { id: 'notes' as const, label: 'Notes', count: regularNotes.length },
             { id: 'favorites' as const, label: 'Favorites', count: favorites.length },
-            { id: 'drafts' as const, label: 'Draft Board', count: drafts.length },
+            { id: 'drafts' as const, label: 'Draft Pad', count: drafts.length },
           ]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={tabBtn(tab === t.id)}>
               {t.label}
@@ -540,7 +540,7 @@ export default function MissionBoardPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 8, borderTop: '0.5px solid #FAFAFA' }}>
                           <span style={{ fontSize: 10, color: '#888888' }}>{formatDate(note.created_at)}</span>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button onClick={() => moveToDraft(note.id)} style={{ border: 'none', background: 'transparent', color: '#888888', cursor: 'pointer', fontSize: 11, padding: '1px 4px', fontFamily: 'inherit' }} title="Move to Draft Board">&#8594;</button>
+                            <button onClick={() => moveToDraft(note.id)} style={{ border: 'none', background: 'transparent', color: '#888888', cursor: 'pointer', fontSize: 11, padding: '1px 4px', fontFamily: 'inherit' }} title="Move to Draft Pad">&#8594;</button>
                             <button onClick={() => deleteNote(note.id)} style={{ border: 'none', background: 'transparent', color: '#C8C9CC', cursor: 'pointer', fontSize: 13, padding: '1px 4px' }} title="Delete">&times;</button>
                           </div>
                         </div>

@@ -7,6 +7,14 @@
   --text-on-grey: #1A1A1A;
   --text-heading: #111111;
   --text-muted: #6B6B6B;
+  --color-text-body: #1f1f1f;
+  --color-text-muted: #666666;
+  --color-text-subtle: #888888;
+  --color-border-default: #D0D3DA;
+  --color-bg-alabaster: #EBEBDF;
+  --color-blue-secondary: #A8C2E0;
+  --color-blue-secondary-text: #2a5a8c;
+  --color-orange-primary: #E8562A;
 }
 
 * {
@@ -15,9 +23,13 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 15px;
+}
+
 body {
-  background: #ffffff;
-  color: #1a1a1a;
+  background: #FAFAF8;
+  color: #1f1f1f;
   font-weight: 300;
   font-size: 14px;
 }

@@ -45,7 +45,7 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
   return (
     <div className="px-2.5 pt-4 pb-1">
       {label && (
-        <div className="font-mono text-[0.56rem] tracking-[0.14em] uppercase text-muted px-2 mb-1.5">
+        <div className="text-[10px] font-semibold text-[#888888] tracking-widest uppercase px-2 mb-1.5">
           {label}
         </div>
       )}
@@ -55,21 +55,21 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 py-[7px] px-2.5 rounded-[5px] mb-px transition-all ${
-              isActive ? "bg-brand-orange-pale" : "hover:bg-pale"
+            className={`flex items-center gap-2 py-[7px] px-2.5 rounded-md mb-px transition-colors ${
+              isActive ? "bg-[#FFF1ED] text-[#E8562A] font-medium" : "text-[#3d3d3d] hover:bg-gray-50"
             }`}
           >
-            <span className={`text-[0.82rem] w-4 text-center shrink-0 ${isActive ? "text-brand-orange" : "text-muted"}`}>
+            <span className={`text-[14px] w-4 text-center shrink-0 ${isActive ? "text-[#E8562A]" : "text-[#888888]"}`}>
               {item.icon}
             </span>
-            <span className={`text-[0.8rem] ${isActive ? "text-brand-orange font-medium" : "text-mid"}`}>
+            <span className="text-[14px]">
               {item.label}
             </span>
             {item.badge && (
-              <span className={`ml-auto font-mono text-[0.55rem] px-[5px] py-px rounded-lg border ${
+              <span className={`ml-auto font-mono text-[10px] px-[5px] py-px rounded-lg border ${
                 isActive
-                  ? "bg-brand-orange-pale border-brand-orange-mid text-brand-orange"
-                  : "bg-pale border-light text-muted"
+                  ? "bg-[#FEF0EB] border-[#F8C9B3] text-[#E8562A]"
+                  : "bg-[#F2F1EE] border-[#D0D3DA] text-[#888888]"
               }`}>
                 {item.badge}
               </span>
@@ -89,46 +89,46 @@ export default function Sidebar() {
   const logoUrl = brand?.logo_url;
 
   return (
-    <aside className="w-sidebar bg-[#FAFAFA] border-r border-light flex flex-col shrink-0 overflow-y-auto">
+    <aside className="w-sidebar bg-white border-r border-[#D0D3DA] flex flex-col shrink-0 overflow-y-auto">
       {/* Brand header */}
-      <div className="p-4 pb-3 border-b border-light flex items-center gap-[9px]">
+      <div className="p-4 pb-3 border-b border-[#D0D3DA] flex items-center gap-[9px]">
         {logoUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={logoUrl} alt={brandName} className="w-[30px] h-[30px] rounded-md object-contain shrink-0" />
         ) : (
-          <div className="w-[30px] h-[30px] bg-ink rounded-md flex items-center justify-center shrink-0">
+          <div className="w-[30px] h-[30px] bg-[#1f1f1f] rounded-md flex items-center justify-center shrink-0">
             <span className="text-white text-[0.65rem] font-bold font-mono">{initials}</span>
           </div>
         )}
         <div>
-          <div className="font-mono text-[0.75rem] font-medium tracking-wider text-ink uppercase">{brandName || "Workspace"}</div>
-          <div className="text-[0.65rem] text-muted mt-px">Branditect Workspace</div>
+          <div className="font-mono text-[12px] font-medium tracking-wider text-[#1f1f1f] uppercase">{brandName || "Workspace"}</div>
+          <div className="text-[11px] text-[#888888] mt-px">Branditect Workspace</div>
         </div>
       </div>
 
       <NavSection label="" items={dashboardItems} pathname={pathname} />
 
-      <div className="h-px bg-light mx-3" />
+      <div className="h-px bg-[#D0D3DA] mx-3" />
 
       <NavSection label="Create" items={createItems} pathname={pathname} />
 
-      <div className="h-px bg-light mx-3" />
+      <div className="h-px bg-[#D0D3DA] mx-3" />
 
       <NavSection label="Brand Library" items={libraryItems} pathname={pathname} />
 
-      <div className="h-px bg-light mx-3" />
+      <div className="h-px bg-[#D0D3DA] mx-3" />
 
       <NavSection label="Brand Tools" items={toolItems} pathname={pathname} />
 
       {/* User */}
-      <div className="mt-auto p-3 border-t border-light">
-        <div className="flex items-center gap-2 p-2 rounded-[5px] hover:bg-pale transition-all cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-semibold text-[0.65rem] text-brand-orange shrink-0">
+      <div className="mt-auto p-3 border-t border-[#D0D3DA]">
+        <div className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+          <div className="w-6 h-6 rounded-full bg-[#FEF0EB] border border-[#F8C9B3] flex items-center justify-center font-semibold text-[11px] text-[#E8562A] shrink-0">
             S
           </div>
           <div>
-            <div className="text-[0.75rem] font-medium text-ink">Saara Muuari</div>
-            <div className="text-[0.65rem] text-muted">Admin</div>
+            <div className="text-[12px] font-medium text-[#1f1f1f]">Saara Muuari</div>
+            <div className="text-[11px] text-[#888888]">Admin</div>
           </div>
         </div>
       </div>

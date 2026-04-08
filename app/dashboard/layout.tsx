@@ -12,7 +12,7 @@ export default function DashboardLayout({
       <Topbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-white">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-[#FAFAF8]">{children}</main>
       </div>
       <FloatingNotes />
     </div>

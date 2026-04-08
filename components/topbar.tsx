@@ -25,24 +25,24 @@ export default function Topbar() {
   }
 
   return (
-    <header className="h-topbar bg-white border-b border-light flex items-center px-6 shrink-0 z-50">
+    <header className="h-topbar bg-white border-b border-[#D0D3DA] flex items-center px-6 shrink-0 z-50">
       {/* Branditect wordmark */}
-      <span className="font-semibold text-[1.15rem] text-brand-orange tracking-tight shrink-0">
+      <span className="font-semibold text-[1.15rem] text-[#E8562A] tracking-tight shrink-0">
         Branditect
       </span>
 
       {/* "for" + brand name */}
       {brandName && (
         <>
-          <span className="text-[0.72rem] text-muted font-light px-2 shrink-0">
+          <span className="text-[12px] text-[#888888] font-light px-2 shrink-0">
             for
           </span>
-          <div className="flex items-center gap-[5px] bg-pale border border-light rounded px-2.5 py-[3px] shrink-0">
+          <div className="flex items-center gap-[5px] bg-[#F2F1EE] border border-[#D0D3DA] rounded px-2.5 py-[3px] shrink-0">
             {brand?.logo_url && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={brand.logo_url} alt="" className="w-4 h-4 object-contain" />
             )}
-            <span className="font-mono text-[0.68rem] font-medium tracking-wider text-ink uppercase">
+            <span className="font-mono text-[11px] font-medium tracking-wider text-[#1f1f1f] uppercase">
               {brandName}
             </span>
           </div>
@@ -50,7 +50,7 @@ export default function Topbar() {
       )}
 
       {/* Divider */}
-      <div className="w-px h-[18px] bg-light mx-5 shrink-0" />
+      <div className="w-px h-[18px] bg-[#D0D3DA] mx-5 shrink-0" />
 
       {/* Nav tabs */}
       <nav className="flex flex-1 gap-0">
@@ -60,10 +60,10 @@ export default function Topbar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`h-topbar flex items-center px-4 text-[0.8rem] border-b-2 -mb-px whitespace-nowrap transition-all ${
+              className={`h-topbar flex items-center px-4 text-[13px] border-b-2 -mb-px whitespace-nowrap transition-colors ${
                 isActive
-                  ? "text-brand-orange border-brand-orange font-medium"
-                  : "text-muted border-transparent hover:text-ink"
+                  ? "text-[#E8562A] border-[#E8562A] font-medium"
+                  : "text-[#666666] border-transparent hover:text-[#1f1f1f]"
               }`}
             >
               {tab.label}
@@ -76,17 +76,17 @@ export default function Topbar() {
       <div className="flex items-center gap-2 ml-auto">
         <button
           onClick={handleLogout}
-          className="h-[30px] px-3.5 rounded border border-light bg-transparent text-[0.78rem] text-mid hover:border-muted hover:text-ink transition-all"
+          className="bg-transparent text-[#444444] border border-[#D0D3DA] font-medium text-sm px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
         >
           Log out
         </button>
         <Link
           href="/dashboard/create"
-          className="h-[30px] px-3.5 rounded bg-brand-orange text-white text-[0.78rem] font-medium hover:bg-brand-orange-hover transition-all flex items-center"
+          className="bg-[#E8562A] text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-[#d14a22] transition-colors flex items-center border-none"
         >
           + Create
         </Link>
-        <div className="w-7 h-7 rounded-full bg-brand-orange-pale border border-brand-orange-mid flex items-center justify-center font-semibold text-[0.75rem] text-brand-orange cursor-pointer ml-0.5">
+        <div className="w-7 h-7 rounded-full bg-[#FEF0EB] border border-[#F8C9B3] flex items-center justify-center font-semibold text-[12px] text-[#E8562A] cursor-pointer ml-0.5">
           SM
         </div>
       </div>

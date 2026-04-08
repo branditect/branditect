@@ -38,20 +38,29 @@ export async function POST(req: NextRequest) {
 
     const publicUrl = urlData.publicUrl
 
+    const isPdf = ext === 'pdf' || file.type === 'application/pdf'
+
     if (uploadType === 'page') {
+      const row: Record<string, unknown> = {
+        brand_id: brandId,
+        page_number: pageNumber ? parseInt(pageNumber) : 999,
+        file_url: publicUrl,
+        file_name: file.name,
+      }
+      // Add file_type if column exists (won't fail if it doesn't)
+      if (isPdf) row.file_type = 'pdf'
+
       const { data, error } = await supabase
         .from('brand_book_pages')
-        .insert({
-          brand_id: brandId,
-          page_number: pageNumber ? parseInt(pageNumber) : 999,
-          file_url: publicUrl,
-          file_name: file.name,
-        })
+        .insert(row)
         .select()
         .single()
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      return NextResponse.json({ success: true, id: data.id, url: publicUrl })
+      return NextResponse.json({ success: true, id: data.id, url: publicUrl, isPdf })
+    } else if (uploadType === 'package') {
+      // Package upload — just return the URL, no DB insert
+      return NextResponse.json({ success: true, url: publicUrl })
     } else {
       const { data, error } = await supabase
         .from('brand_book_assets')

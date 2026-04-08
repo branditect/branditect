@@ -24,16 +24,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { brandId, content, isDraft, isFavorite, title, url } = body
 
+  const row: Record<string, unknown> = {
+    brand_id: brandId,
+    content: content || '',
+    is_draft: isDraft || false,
+    title: title || '',
+    url: url || '',
+  }
+  if (isFavorite) row.is_favorite = true
+
   const { data, error } = await supabase
     .from('mission_notes')
-    .insert({
-      brand_id: brandId,
-      content: content || '',
-      is_draft: isDraft || false,
-      is_favorite: isFavorite || false,
-      title: title || '',
-      url: url || '',
-    })
+    .insert(row)
     .select()
     .single()
 

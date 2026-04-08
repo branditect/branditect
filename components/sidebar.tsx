@@ -55,14 +55,14 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 py-[7px] px-2.5 rounded-md mb-px transition-colors ${
+            className={`flex items-center gap-2 py-[6px] px-2.5 rounded-md mb-px transition-colors ${
               isActive ? "bg-[#FFF1ED] text-[#E8562A] font-medium" : "text-[#3d3d3d] hover:bg-gray-50"
             }`}
           >
-            <span className={`text-[14px] w-4 text-center shrink-0 ${isActive ? "text-[#E8562A]" : "text-[#888888]"}`}>
+            <span className={`text-[12px] w-4 text-center shrink-0 ${isActive ? "text-[#E8562A]" : "text-[#888888]"}`}>
               {item.icon}
             </span>
-            <span className="text-[14px]">
+            <span className="text-[12.5px]">
               {item.label}
             </span>
             {item.badge && (

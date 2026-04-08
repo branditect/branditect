@@ -159,6 +159,7 @@ export default function DraftPadPage() {
   const [toast, setToast] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
   const [saveInfo, setSaveInfo] = useState('Not saved yet')
+  const [imgPickerFor, setImgPickerFor] = useState<string | null>(null)
 
   // Load saved drafts
   useEffect(() => {
@@ -190,6 +191,11 @@ export default function DraftPadPage() {
 
   function removeBlock(id: string) {
     setBlocks(prev => prev.filter(b => b.id !== id))
+  }
+
+  function pickImage(blockId: string, asset: typeof IMG_ASSETS[0]) {
+    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, label: asset.label, bg: asset.bg, col: asset.col } : b))
+    setImgPickerFor(null)
   }
 
   // ── Template loading ────────────────────────────────────────────────────
@@ -395,10 +401,34 @@ export default function DraftPadPage() {
                       />
                     )}
                     {block.type === 'img' && (
-                      <div style={{ width: '100%', borderRadius: 8, border: `0.5px solid ${C.bd}`, overflow: 'hidden' }}>
-                        <div style={{ width: '100%', height: 92, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 500, position: 'relative', background: block.bg || '#E2E3E6', color: block.col || '#888' }}>
+                      <div style={{ width: '100%', borderRadius: 8, border: `0.5px solid ${C.bd}`, overflow: 'hidden', position: 'relative' }}>
+                        <div
+                          onClick={() => setImgPickerFor(imgPickerFor === block.id ? null : block.id)}
+                          style={{ width: '100%', height: 92, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 500, cursor: 'pointer', background: block.bg || '#E2E3E6', color: block.col || '#888', transition: 'opacity 0.15s' }}
+                        >
                           {block.label}
+                          <div style={{ position: 'absolute', bottom: 6, right: 6, fontSize: 9, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,0,0,0.4)', color: 'white' }}>Click to change</div>
                         </div>
+                        {imgPickerFor === block.id && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 30, background: C.wh, border: `1px solid ${C.bd}`, borderRadius: '0 0 8px 8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 220, overflowY: 'auto' }}>
+                            <div style={{ padding: '8px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Images</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 8px 8px' }}>
+                              {IMG_ASSETS.map(a => (
+                                <div key={a.label} onClick={() => pickImage(block.id, a)} style={{ height: 44, borderRadius: 5, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 500, background: a.bg, color: a.col, transition: 'transform 0.1s' }}>
+                                  {a.short}
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ padding: '4px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Logos</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 8px 10px' }}>
+                              {LOGO_ASSETS.map(a => (
+                                <div key={a.label} onClick={() => pickImage(block.id, a)} style={{ height: 44, borderRadius: 5, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 500, background: a.bg, color: a.col }}>
+                                  {a.short}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     {block.type === 'btn' && (

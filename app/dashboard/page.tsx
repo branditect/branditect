@@ -1,238 +1,375 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 
-const quickChips = [
-  "Weekly newsletter",
-  "3 Instagram posts",
-  "StreamerX launch page",
-  "Sales deck for partnership",
-  "Anti-corporate ad copy",
-  "Creator onboarding copy",
+/* ── Types ──────────────────────────────────────────────────────────────────── */
+
+interface Goal {
+  id: number; title: string; due_date: string | null; category: string;
+}
+interface Task {
+  id: number; goal_id: number | null; title: string; is_complete: boolean; due_date: string | null; created_at: string;
+}
+interface Note {
+  id: number; content: string; title: string; is_draft: boolean; is_favorite: boolean; created_at: string;
+}
+
+/* ── Quick Create items ─────────────────────────────────────────────────────── */
+
+const QC_ITEMS = [
+  { label: "Weekly Newsletter", href: "/dashboard/copy-architect", bg: "#FEF0EB", color: "#E8562A" },
+  { label: "Social Post",       href: "/dashboard/copy-architect", bg: "#EEE8FF", color: "#7144D0" },
+  { label: "LinkedIn Post",     href: "/dashboard/copy-architect", bg: "#E8EFFF", color: "#3572F0" },
+  { label: "New Images",        href: "/dashboard/brand-library/image-architect", bg: "#E6F7EF", color: "#23A66A" },
+  { label: "Write Ads",         href: "/dashboard/copy-architect", bg: "#FEF8E6", color: "#D9920E" },
+  { label: "Brand Audit",       href: "/dashboard/brand-strategy", bg: "#FEECEC", color: "#D93B3B" },
 ];
 
-const outputCards = [
-  { icon: "✉", label: "HTML", title: "Newsletter", desc: "Written in your brand voice, built as ready-to-send HTML for Klaviyo" },
-  { icon: "🌐", label: "HTML", title: "Campaign Page", desc: "Landing page in your brand style — deploy in an hour" },
-  { icon: "◈", label: "Deck", title: "Presentation", desc: "Bespoke pitch in your brand for any room or meeting" },
-  { icon: "⊡", label: "Posts", title: "Social Content", desc: "On-brand posts for Instagram, Twitter, LinkedIn" },
-];
+/* ── Colors for goals ───────────────────────────────────────────────────────── */
 
-const recentOutputs = [
-  { icon: "✉", title: "April Newsletter — StreamerX Partnership Announcement", meta: "Today, 09:14", tag: "Newsletter" },
-  { icon: "⊡", title: "5 Instagram Posts — Anti-Corporate Campaign Week 3", meta: "Yesterday, 16:32", tag: "Social" },
-  { icon: "◈", title: "Creator Partner Deck — Series A Investor Overview", meta: "29 Mar", tag: "Deck" },
-  { icon: "🌐", title: "StreamerX Creator Partner Landing Page", meta: "27 Mar", tag: "HTML Page" },
-];
+const GOAL_COLORS = ["#E8562A", "#3572F0", "#23A66A", "#7144D0", "#D9920E"];
 
-const pulseItems = [
-  { color: "bg-green-500", text: "Phase 2 — YouTube & Podcasts expansion", date: "Q3 2026 launch" },
-  { color: "bg-brand-orange", text: "StreamerX creator partnership going live", date: "April 5, 2026" },
-  { color: "bg-amber-500", text: "Free Twitch sub mechanic — NDA, do not publish", date: "Hold until Apr 1" },
-];
-
-const coherenceRows = [
-  { label: "Voice", value: 96 },
-  { label: "Visual", value: 88 },
-  { label: "Messaging", value: 94 },
-  { label: "Financial", value: 82 },
-];
+/* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { brandName } = useBrand();
+  const { brandId, brandName, loading: brandLoading } = useBrand();
 
-  // Check if user has completed onboarding
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedGoal, setSelectedGoal] = useState<number | null>(null);
+  const [feedTab, setFeedTab] = useState<"today" | "week" | "all">("today");
+
+  // Check onboarding
   useEffect(() => {
     async function checkOnboarding() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push('/login'); return; }
-
+      if (!user) { router.push("/login"); return; }
       const { data: brands } = await supabase
-        .from('brands')
-        .select('brand_id')
-        .eq('user_id', user.id)
-        .eq('onboarding_completed', true)
-        .limit(1);
-
-      if (!brands || brands.length === 0) {
-        router.push('/onboarding');
-        return;
-      }
+        .from("brands").select("brand_id")
+        .eq("user_id", user.id).eq("onboarding_completed", true).limit(1);
+      if (!brands || brands.length === 0) { router.push("/onboarding"); }
     }
     checkOnboarding();
   }, [router]);
 
-  function handleQuickCreate(text: string) {
-    router.push(`/dashboard/create?brief=${encodeURIComponent(text)}`);
+  // Load data
+  useEffect(() => {
+    if (brandLoading || brandId === "default") return;
+    async function load() {
+      const [g, t, n] = await Promise.all([
+        fetch(`/api/mission-board/goals?brandId=${brandId}`).then(r => r.json()),
+        fetch(`/api/mission-board/tasks?brandId=${brandId}`).then(r => r.json()),
+        fetch(`/api/mission-board/notes?brandId=${brandId}`).then(r => r.json()),
+      ]);
+      setGoals(g.data || []);
+      setTasks(t.data || []);
+      setNotes(n.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [brandId, brandLoading]);
+
+  // Toggle task
+  async function toggleTask(id: number, current: boolean) {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, is_complete: !current } : t));
+    await fetch("/api/mission-board/tasks", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_complete: !current }),
+    });
+  }
+
+  // Helpers
+  function goalProgress(goalId: number) {
+    const gt = tasks.filter(t => t.goal_id === goalId);
+    if (!gt.length) return 0;
+    return Math.round((gt.filter(t => t.is_complete).length / gt.length) * 100);
+  }
+
+  function goalColor(idx: number) { return GOAL_COLORS[idx % GOAL_COLORS.length]; }
+
+  function isToday(d: string | null) {
+    if (!d) return false;
+    return new Date(d).toDateString() === new Date().toDateString();
+  }
+  function isThisWeek(d: string | null) {
+    if (!d) return false;
+    const now = new Date(); const date = new Date(d);
+    const ws = new Date(now); ws.setDate(now.getDate() - now.getDay());
+    const we = new Date(ws); we.setDate(ws.getDate() + 7);
+    return date >= ws && date < we;
+  }
+  function formatDate(d: string | null) {
+    if (!d) return "";
+    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  function timeAgo(d: string) {
+    const diff = Date.now() - new Date(d).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return formatDate(d);
+  }
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const dateStr = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  // Filter tasks for feed
+  const feedTasks = tasks.filter(t => {
+    if (selectedGoal !== null && t.goal_id !== selectedGoal) return false;
+    if (feedTab === "today") return isToday(t.due_date) || t.is_complete;
+    if (feedTab === "week") return isThisWeek(t.due_date) || isToday(t.due_date) || t.is_complete;
+    return true;
+  });
+  const priorityTasks = feedTasks.filter(t => !t.is_complete).concat(feedTasks.filter(t => t.is_complete));
+  const todayDueCount = tasks.filter(t => isToday(t.due_date) && !t.is_complete).length;
+
+  // Latest note
+  const latestNote = notes.find(n => !n.is_draft);
+
+  // CSS vars inline
+  const v = {
+    bg: "#EDECE8", card: "#fff", border: "#E2E1DC", borderSoft: "#ECEAE5",
+    orange: "#E8562A", orangePale: "#FEF0EB", orangeMid: "#F8C9B3",
+    black: "#0F0F0F", g800: "#2C2C2C", g600: "#5A5A5A", g500: "#848484", g400: "#ABABAB",
+    g200: "#E4E3DF", g100: "#F2F1EE",
+    green: "#23A66A", greenPale: "#E6F7EF",
+    blue: "#3572F0", bluePale: "#E8EFFF",
+    purple: "#7144D0", purplePale: "#EEE8FF",
+    red: "#D93B3B", redPale: "#FEECEC",
+    amber: "#D9920E", amberPale: "#FEF8E6",
+  };
+
+  if (brandLoading || loading) {
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: v.g400, fontSize: 13 }}>Loading dashboard...</div>;
   }
 
   return (
-    <div className="flex flex-col flex-1">
-      {/* Header */}
-      <div className="px-8 pt-8 pb-6 border-b border-light flex items-end justify-between">
-        <div>
-          <h1 className="font-semibold text-[clamp(1.5rem,3vw,2rem)] text-ink tracking-tight leading-tight mb-1">
-            Good morning, <em className="text-brand-orange">Saara.</em>
-          </h1>
-          <p className="font-mono text-[0.62rem] text-muted tracking-wider">
-            Tuesday, 1 April 2026 · {brandName} · Let&apos;s build your brand today
-          </p>
+    <div style={{ background: v.bg, minHeight: "100%", padding: "22px 22px 80px", fontFamily: "'DM Sans', sans-serif" }}>
+
+      {/* ── Greeting ── */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: v.black, letterSpacing: "-0.4px", display: "flex", alignItems: "baseline", gap: 10 }}>
+          {greeting}, {brandName?.split(" ")[0] || "there"} <span style={{ fontSize: 20 }}>👋</span>
+          <span style={{ fontSize: 12, color: v.g400, fontWeight: 400, fontFamily: "'DM Sans', sans-serif" }}>{dateStr}</span>
+        </div>
+        <div style={{ fontSize: 13, color: v.g500, marginTop: 3 }}>
+          {todayDueCount > 0 ? `${todayDueCount} task${todayDueCount > 1 ? "s" : ""} due today` : "No tasks due today"} · {goals.length} active goal{goals.length !== 1 ? "s" : ""}
         </div>
       </div>
 
-      {/* Quick Create Bar */}
-      <div className="mx-8 mt-6 bg-pale border border-light rounded-lg p-5">
-        <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-3">
-          Quick Create — {brandName}
-        </div>
-        <div className="flex flex-wrap gap-1.5 mb-3.5">
-          {quickChips.map((chip) => (
-            <button
-              key={chip}
-              onClick={() => handleQuickCreate(chip)}
-              className="px-3 py-[5px] bg-white border border-light rounded-full text-[0.75rem] text-mid hover:bg-brand-orange-pale hover:border-brand-orange-mid hover:text-brand-orange transition-all"
-            >
-              {chip}
-            </button>
+      {/* ── Quick Create Strip ── */}
+      <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: v.g400, whiteSpace: "nowrap", flexShrink: 0 }}>Quick Create</div>
+        <div style={{ width: 1, height: 28, background: v.border, flexShrink: 0 }} />
+        <div style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap" }}>
+          {QC_ITEMS.map(item => (
+            <Link key={item.label} href={item.href} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 8, border: `1px solid ${v.border}`, background: v.g100, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", transition: "all 0.13s" }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: item.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: item.color }} />
+              </div>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: v.black }}>{item.label}</span>
+            </Link>
           ))}
         </div>
-        <div className="flex gap-2">
-          <input
-            id="quickInput"
-            type="text"
-            placeholder={`What does ${brandName} need today?`}
-            className="flex-1 bg-white border border-light rounded-[5px] py-[9px] px-3.5 text-ink font-light text-[0.84rem] outline-none focus:border-brand-orange placeholder:text-muted"
-          />
-          <button
-            onClick={() => {
-              const el = document.getElementById("quickInput") as HTMLInputElement;
-              if (el?.value) handleQuickCreate(el.value);
-            }}
-            className="px-5 py-[9px] bg-brand-orange text-white rounded-[5px] font-medium text-[0.8rem] hover:bg-brand-orange-hover transition-all whitespace-nowrap"
-          >
-            Create →
-          </button>
-        </div>
       </div>
 
-      {/* Body */}
-      <div className="px-8 py-6 grid grid-cols-[1fr_280px] gap-6 flex-1">
-        {/* Left column */}
-        <div>
-          {/* Output type cards */}
-          <div className="fade-in mb-6">
-            <div className="flex items-center justify-between mb-3.5">
-              <span className="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted">Create</span>
-              <span className="text-[0.72rem] text-brand-orange cursor-pointer">All outputs →</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              {outputCards.map((card) => (
-                <Link
-                  key={card.title}
-                  href="/dashboard/create"
-                  className="group bg-white border border-light rounded-[7px] p-4 pb-3.5 relative hover:border-brand-orange hover:shadow-[0_1px_8px_rgba(232,86,42,0.08)] transition-all"
-                >
-                  <span className="font-mono text-[0.55rem] tracking-wider uppercase text-muted absolute top-2.5 right-2.5">
-                    {card.label}
-                  </span>
-                  <span className="text-[1.1rem] block mb-2">{card.icon}</span>
-                  <div className="font-semibold text-[0.95rem] text-ink mb-[3px] leading-tight">{card.title}</div>
-                  <div className="text-[0.72rem] text-muted leading-relaxed">{card.desc}</div>
-                </Link>
-              ))}
-            </div>
-          </div>
+      {/* ── Body Grid ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
 
-          {/* Recent Outputs */}
-          <div className="fade-in">
-            <div className="flex items-center justify-between mb-3.5">
-              <span className="font-mono text-[0.6rem] tracking-[0.12em] uppercase text-muted">Recent Outputs</span>
-              <span className="text-[0.72rem] text-brand-orange cursor-pointer">View all →</span>
+        {/* ═══ LEFT: Goals + Feed ═══ */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Goal Anchors */}
+          {goals.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(goals.length, 3)}, 1fr)`, gap: 10 }}>
+              {goals.slice(0, 3).map((goal, idx) => {
+                const color = goalColor(idx);
+                const progress = goalProgress(goal.id);
+                const isSelected = selectedGoal === goal.id;
+                const gt = tasks.filter(t => t.goal_id === goal.id);
+                const done = gt.filter(t => t.is_complete).length;
+                return (
+                  <div
+                    key={goal.id}
+                    onClick={() => setSelectedGoal(isSelected ? null : goal.id)}
+                    style={{ background: v.card, border: `1.5px solid ${isSelected ? color : v.border}`, borderRadius: 12, padding: "14px 15px", cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.15s", boxShadow: isSelected ? `0 0 0 3px ${color}18` : "none" }}
+                  >
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "12px 12px 0 0", background: color }} />
+                    <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: v.g400, marginBottom: 5 }}>Strategic Goal</div>
+                    <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color: v.black, lineHeight: 1.35, marginBottom: 10 }}>{goal.title}</div>
+                    <div style={{ height: 4, background: v.g100, borderRadius: 99, overflow: "hidden", marginBottom: 6 }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: color, width: `${progress}%`, transition: "width 1.2s ease" }} />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ fontSize: 11, color: v.g500 }}>{done} of {gt.length} tasks done</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color }}>{progress}%</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex flex-col gap-1.5">
-              {recentOutputs.map((item, i) => (
+          )}
+
+          {/* Task Feed */}
+          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 13, padding: "16px 16px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: v.black, letterSpacing: "-0.2px" }}>Today&apos;s Focus</div>
+                <div style={{ fontSize: 12, color: v.g400, marginTop: 1 }}>{todayDueCount} tasks due · {selectedGoal !== null ? "Filtered by goal" : "Click a goal above to filter"}</div>
+              </div>
+              <div style={{ display: "flex", gap: 2, background: v.g100, borderRadius: 8, padding: 3 }}>
+                {(["today", "week", "all"] as const).map(t => (
+                  <button key={t} onClick={() => setFeedTab(t)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, color: feedTab === t ? v.black : v.g500, cursor: "pointer", border: "none", background: feedTab === t ? v.card : "transparent", fontFamily: "'DM Sans', sans-serif", boxShadow: feedTab === t ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.13s", textTransform: "capitalize" }}>
+                    {t === "week" ? "This week" : t === "all" ? "All" : "Today"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section label */}
+            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400, marginBottom: 7, marginTop: 4 }}>Priority tasks</div>
+
+            {priorityTasks.length === 0 && (
+              <div style={{ padding: "24px 16px", textAlign: "center", color: v.g400, fontSize: 13 }}>
+                No tasks {feedTab === "today" ? "due today" : feedTab === "week" ? "this week" : "yet"}. <Link href="/dashboard/mission-board" style={{ color: v.orange, textDecoration: "none" }}>Add tasks in Mission Board →</Link>
+              </div>
+            )}
+
+            {priorityTasks.map(task => {
+              const isDone = task.is_complete;
+              const goalIdx = goals.findIndex(g => g.id === task.goal_id);
+              const goalTitle = goalIdx >= 0 ? goals[goalIdx].title : null;
+              const dotColor = goalIdx >= 0 ? goalColor(goalIdx) : v.g400;
+              const isUrgent = isToday(task.due_date) && !isDone;
+              return (
                 <div
-                  key={i}
-                  className="flex items-center gap-2.5 py-[9px] px-3 bg-pale border border-light rounded-md cursor-pointer hover:bg-white hover:border-muted transition-all"
+                  key={task.id}
+                  onClick={() => toggleTask(task.id, task.is_complete)}
+                  style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 11, padding: "13px 14px", marginBottom: 7, cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 11, opacity: isDone ? 0.52 : 1, transition: "all 0.14s" }}
                 >
-                  <div className="w-[26px] h-[26px] bg-white border border-light rounded flex items-center justify-center text-[0.78rem] shrink-0">
-                    {item.icon}
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${isDone ? v.green : v.g200}`, background: isDone ? v.green : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {isDone && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[0.78rem] text-ink truncate">{item.title}</div>
-                    <div className="font-mono text-[0.57rem] text-muted tracking-wide mt-px">{item.meta}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: isDone ? v.g400 : v.black, lineHeight: 1.4, textDecoration: isDone ? "line-through" : "none" }}>{task.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                      {goalTitle && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 500, color: v.g400 }}>
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: dotColor }} />
+                          {goalTitle}
+                        </div>
+                      )}
+                      {task.due_date && (
+                        <div style={{ fontSize: 10, fontWeight: 500, padding: "2px 6px", borderRadius: 5, whiteSpace: "nowrap", background: isUrgent ? v.redPale : v.g100, border: `1px solid ${isUrgent ? "#FACACA" : v.border}`, color: isUrgent ? v.red : v.g400 }}>
+                          {isUrgent ? "Due today" : formatDate(task.due_date)}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="font-mono text-[0.54rem] tracking-wider uppercase text-brand-orange bg-brand-orange-pale border border-brand-orange-mid px-1.5 py-[2px] rounded-[3px] whitespace-nowrap shrink-0">
-                    {item.tag}
-                  </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
+
+            {/* Add task link */}
+            <Link href="/dashboard/mission-board" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 14px", borderRadius: 9, border: `1px dashed ${v.border}`, cursor: "pointer", marginTop: 4, textDecoration: "none" }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5v9M1.5 6h9" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <span style={{ fontSize: 12, color: v.g400 }}>Add task or quick win…</span>
+            </Link>
           </div>
         </div>
 
-        {/* Right column */}
-        <div className="flex flex-col gap-4">
-          {/* Financial Flag */}
-          <div className="fade-in bg-brand-orange-pale border border-brand-orange-mid rounded-lg p-3.5">
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-[0.85rem]">⚠</span>
-              <span className="font-mono text-[0.58rem] tracking-wider uppercase text-brand-orange">Financial Flag</span>
-            </div>
-            <p className="text-[0.75rem] text-dark leading-relaxed mb-3">
-              Proposed 35% off Starter Plan drops margin to 18% — below your 25% floor. Review before publishing.
-            </p>
-            <button className="px-3.5 py-[5px] bg-brand-orange text-white rounded font-medium text-[0.72rem]">
-              Review
-            </button>
-          </div>
+        {/* ═══ RIGHT COL ═══ */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* Business Pulse */}
-          <div className="fade-in bg-white border border-light rounded-lg overflow-hidden">
-            <div className="px-4 py-3.5 border-b border-light flex items-center justify-between">
-              <span className="font-semibold text-[0.88rem] text-ink">Business Pulse</span>
-              <span className="font-mono text-[0.58rem] text-brand-orange bg-brand-orange-pale border border-brand-orange-mid px-[7px] py-[2px] rounded-[3px]">
-                3 Active
-              </span>
+          {/* Latest Note */}
+          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ background: "#FFFEF5", borderBottom: "1px solid #EDEABD", padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Latest Note</div>
+                <Link href="/dashboard/mission-board" style={{ fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none" }}>All notes →</Link>
+              </div>
+              {latestNote ? (
+                <>
+                  {latestNote.title && (
+                    <div style={{ display: "inline-block", fontSize: 9.5, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "#F0EABB", color: "#6A5500", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.06em" }}>{latestNote.title}</div>
+                  )}
+                  <div style={{ fontSize: 13, color: v.g800, lineHeight: 1.6 }}>{latestNote.content}</div>
+                  <div style={{ fontSize: 10.5, color: v.g400, marginTop: 7 }}>{timeAgo(latestNote.created_at)}</div>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: v.g400 }}>No notes yet — use the floating pen to capture ideas.</div>
+              )}
             </div>
-            <div className="p-4">
-              {pulseItems.map((item, i) => (
-                <div
-                  key={i}
-                  className={`flex gap-2 ${i < pulseItems.length - 1 ? "mb-3 pb-3 border-b border-pale" : ""}`}
-                >
-                  <div className={`w-[5px] h-[5px] rounded-full mt-1.5 shrink-0 ${item.color}`} />
-                  <div>
-                    <div className="text-[0.75rem] text-mid leading-relaxed">{item.text}</div>
-                    <div className="font-mono text-[0.57rem] text-muted mt-[2px]">{item.date}</div>
-                  </div>
-                </div>
-              ))}
+            <div style={{ padding: "10px 12px", display: "flex", gap: 6 }}>
+              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Edit</Link>
+              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>+ New</Link>
+              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.orangeMid}`, background: v.orangePale, fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>✦ Ask AI</Link>
             </div>
           </div>
 
-          {/* Brand Coherence */}
-          <div className="fade-in bg-white border border-light rounded-lg overflow-hidden">
-            <div className="px-4 py-3.5 border-b border-light flex items-center justify-between">
-              <span className="font-semibold text-[0.88rem] text-ink">Brand Coherence</span>
-              <span className="font-semibold text-[1.25rem] text-brand-orange">91%</span>
+          {/* Recent Outputs — static for now */}
+          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Recent Outputs</div>
+              <Link href="/dashboard/copy-architect" style={{ fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View all →</Link>
             </div>
-            <div className="p-4">
-              {coherenceRows.map((row) => (
-                <div key={row.label} className="flex items-center gap-2.5 mb-2.5 last:mb-0">
-                  <span className="text-[0.7rem] text-muted w-[72px] shrink-0">{row.label}</span>
-                  <div className="flex-1 h-1 bg-light rounded-sm overflow-hidden">
-                    <div className="h-full bg-brand-orange rounded-sm" style={{ width: `${row.value}%` }} />
-                  </div>
-                  <span className="font-mono text-[0.6rem] text-muted w-7 text-right shrink-0">{row.value}%</span>
+            {[
+              { title: "Newsletter — Draft 1", meta: "Copy Architect", chip: "NL", chipBg: v.orangePale, chipColor: v.orange, time: "Today" },
+              { title: "Instagram — Phase 2 teaser", meta: "Content Architect", chip: "SOC", chipBg: v.purplePale, chipColor: v.purple, time: "Yesterday" },
+              { title: "Q2 unit economics model", meta: "Financial Tools", chip: "FIN", chipBg: v.greenPale, chipColor: v.green, time: formatDate(new Date(Date.now() - 172800000).toISOString()) },
+            ].map((row, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < 2 ? `1px solid ${v.borderSoft}` : "none", cursor: "pointer" }}>
+                <div style={{ width: 30, height: 30, borderRadius: 7, background: v.orangePale, border: `1px solid ${v.orangeMid}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: v.orange }} />
                 </div>
-              ))}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: v.black, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.title}</div>
+                  <div style={{ fontSize: 10.5, color: v.g400, marginTop: 1 }}>{row.meta}</div>
+                </div>
+                <div style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", background: row.chipBg, color: row.chipColor }}>{row.chip}</div>
+                <div style={{ fontSize: 10.5, color: v.g400, whiteSpace: "nowrap" }}>{row.time}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Brand Readiness */}
+          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Brand Readiness</div>
+              <Link href="/dashboard/brand-strategy" style={{ fontSize: 11, fontWeight: 600, color: v.orange, textDecoration: "none" }}>Complete →</Link>
             </div>
+
+            {[
+              { name: "Brand Strategy", pct: 100, status: "done" },
+              { name: "Visual Identity", pct: 60, status: "part" },
+              { name: "Brand Tone", pct: 0, status: "empty" },
+              { name: "Products & Services", pct: 0, status: "empty" },
+              { name: "Financial Rules", pct: 0, status: "empty" },
+            ].map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.g200, border: item.status === "empty" ? `1.5px solid ${v.g400}` : "none" }} />
+                <div style={{ flex: 1, fontSize: 11, fontWeight: 500, color: v.g600 }}>{item.name}</div>
+                <div style={{ width: 48, height: 3, background: v.g100, borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 99, background: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.orange, width: `${item.pct}%` }} />
+                </div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, minWidth: 24, textAlign: "right", color: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.g400 }}>{item.pct}%</div>
+              </div>
+            ))}
+
+            <Link href="/dashboard/brand-strategy" style={{ display: "block", marginTop: 12, padding: 8, borderRadius: 8, background: v.orangePale, border: `1px solid ${v.orangeMid}`, fontSize: 12, fontWeight: 600, color: v.orange, textAlign: "center", textDecoration: "none" }}>
+              Complete Brand Setup →
+            </Link>
           </div>
         </div>
       </div>

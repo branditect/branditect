@@ -148,7 +148,7 @@ function LogoDropZone({
           dragOver
             ? "border-brand-orange bg-brand-orange-pale"
             : uploaded
-            ? `border-transparent ${isDark ? "bg-[#1A1A1A]" : "bg-[#F8F8F8]"}`
+            ? `border-transparent ${isDark ? "bg-[#315A72]" : "bg-[#F8F8F8]"}`
             : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"
         }`}
       >

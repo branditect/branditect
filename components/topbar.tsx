@@ -24,7 +24,7 @@ export default function Topbar() {
 
   return (
     <header className="h-topbar bg-white border-b border-[#C8C9CC] flex items-center px-6 shrink-0 z-50">
-      <span className="font-semibold text-[16px] text-[#315A72] tracking-tight shrink-0">
+      <span className="font-semibold text-[16px] text-[#E16C00] tracking-tight shrink-0">
         Branditect
       </span>
 

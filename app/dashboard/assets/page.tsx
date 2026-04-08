@@ -6,11 +6,11 @@ import FileLibrary from "@/components/file-library";
 import { useBrand } from "@/lib/useBrand";
 
 const assetTypes = [
-  { key: "images", label: "Images", icon: "🖼", desc: "Photos, screenshots, brand imagery" },
-  { key: "videos", label: "Videos", icon: "🎬", desc: "Brand videos, reels, ads" },
-  { key: "sounds", label: "Sounds", icon: "🎵", desc: "Audio logos, jingles, podcasts" },
-  { key: "graphics", label: "Graphics", icon: "✦", desc: "Logos, icons, illustrations, vectors" },
-  { key: "web", label: "Website / App", icon: "🌐", desc: "Screenshots, wireframes, UI components" },
+  { key: "images", label: "Images", icon: "IMG", desc: "Photos, screenshots, brand imagery" },
+  { key: "videos", label: "Videos", icon: "VID", desc: "Brand videos, reels, ads" },
+  { key: "sounds", label: "Sounds", icon: "SND", desc: "Audio logos, jingles, podcasts" },
+  { key: "graphics", label: "Graphics", icon: "GFX", desc: "Logos, icons, illustrations, vectors" },
+  { key: "web", label: "Website / App", icon: "WEB", desc: "Screenshots, wireframes, UI components" },
 ];
 
 export default function AssetsPage() {

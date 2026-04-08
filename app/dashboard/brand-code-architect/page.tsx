@@ -396,8 +396,8 @@ export default function BrandCodeArchitectPage() {
                       {copied ? 'Copied!' : 'Copy code'}
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto bg-[#0A0A0F] p-4" style={{ maxHeight: '520px' }}>
-                    <pre className="font-mono text-[0.7rem] text-[#E5E5E5] leading-relaxed whitespace-pre-wrap break-all">
+                  <div className="flex-1 overflow-y-auto bg-[#2C3E4A] p-4" style={{ maxHeight: '520px' }}>
+                    <pre className="font-mono text-[0.7rem] text-[#F5F4F0] leading-relaxed whitespace-pre-wrap break-all">
                       {result.html}
                     </pre>
                   </div>

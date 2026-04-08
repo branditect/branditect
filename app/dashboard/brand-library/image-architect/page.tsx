@@ -38,9 +38,9 @@ const FORMAT_OPTIONS = [
 ];
 
 const MODE_OPTIONS = [
-  { key: "studio", label: "Studio", icon: "📸" },
-  { key: "outdoor_people", label: "Outdoor People", icon: "🌅" },
-  { key: "environment", label: "Environment", icon: "🏙" },
+  { key: "studio", label: "Studio", icon: "STD" },
+  { key: "outdoor_people", label: "Outdoor People", icon: "OUT" },
+  { key: "environment", label: "Environment", icon: "ENV" },
 ];
 
 /* ------------------------------------------------------------------ */

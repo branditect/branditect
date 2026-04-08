@@ -177,7 +177,7 @@ export default function DashboardPage() {
       {/* ── Greeting ── */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: v.black, letterSpacing: "-0.4px", display: "flex", alignItems: "baseline", gap: 10 }}>
-          {greeting}, {brandName?.split(" ")[0] || "there"} <span style={{ fontSize: 20 }}>👋</span>
+          {greeting}, {brandName?.split(" ")[0] || "there"}
           <span style={{ fontSize: 12, color: v.g400, fontWeight: 400, fontFamily: "'DM Sans', sans-serif" }}>{dateStr}</span>
         </div>
         <div style={{ fontSize: 13, color: v.g500, marginTop: 3 }}>

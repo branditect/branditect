@@ -1343,10 +1343,10 @@ export default function BrandStrategyPage() {
 
               {/* ---------- Brand Passport ---------- */}
               <section>
-                <div className="bg-[#0F0F0F] rounded-2xl p-8 text-white">
+                <div className="bg-white border border-[#315A72] rounded-2xl p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A]">Brand Passport</span>
-                    <span className="text-[0.82rem] font-semibold text-white/80">{strategyJSON.brandName}</span>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#888888]">Brand Passport</span>
+                    <span className="text-[0.82rem] font-semibold text-[#315A72]">{strategyJSON.brandName}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 mb-6">
                     {([
@@ -1358,15 +1358,15 @@ export default function BrandStrategyPage() {
                       ["Insight", strategyJSON.passport.insight],
                     ] as const).map(([label, value]) => (
                       <div key={label}>
-                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">{label}</div>
-                        <div className="text-[0.82rem] text-white/90 leading-relaxed">{value}</div>
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">{label}</div>
+                        <div className="text-[0.82rem] text-[#1A1A1A] leading-relaxed">{value}</div>
                       </div>
                     ))}
                   </div>
-                  <div className="border-t border-white/10 pt-5 space-y-4">
+                  <div className="border-t border-[#E2E3E6] pt-5 space-y-4">
                     <div>
-                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Target Group</div>
-                      <div className="text-[0.82rem] text-white/90 leading-relaxed">{strategyJSON.passport.targetGroup}</div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">Target Group</div>
+                      <div className="text-[0.82rem] text-[#1A1A1A] leading-relaxed">{strategyJSON.passport.targetGroup}</div>
                     </div>
                     <div>
                       <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-1">Only-We Claim</div>
@@ -1379,14 +1379,14 @@ export default function BrandStrategyPage() {
               {/* ---------- Brand Pyramid ---------- */}
               <section>
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
-                <div className="bg-[#1A1A1A] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
+                <div className="bg-[#F5F4F0] border border-[#C8C9CC] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
                   {([
                     { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E16C00", text: "white" },
-                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#C44A24", text: "white" },
-                    { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#3D3D3D", text: "white" },
-                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#2D2D2D", text: "#E5E5E5" },
-                    { label: "Market", value: strategyJSON.pyramid.market, maxW: "760px", bg: "#252525", text: "#9A9A9A" },
-                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#1F1F1F", text: "#9A9A9A" },
+                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#FFCAA7", text: "#1A1A1A" },
+                    { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#315A72", text: "white" },
+                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#87C5EA", text: "#1A1A1A" },
+                    { label: "Market", value: strategyJSON.pyramid.market, maxW: "760px", bg: "#EBF5FC", text: "#315A72" },
+                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#EBEBDF", text: "#555555" },
                   ] as const).map((tier) => (
                     <div
                       key={tier.label}

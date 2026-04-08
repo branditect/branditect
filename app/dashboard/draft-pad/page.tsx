@@ -160,13 +160,19 @@ export default function DraftPadPage() {
   const [toastVisible, setToastVisible] = useState(false)
   const [saveInfo, setSaveInfo] = useState('Not saved yet')
   const [imgPickerFor, setImgPickerFor] = useState<string | null>(null)
+  const [productPickerFor, setProductPickerFor] = useState<string | null>(null)
+  const [catalogProducts, setCatalogProducts] = useState<{id: string; name: string; price_rrp: number | null; currency: string}[]>([])
 
-  // Load saved drafts
+  // Load saved drafts + products
   useEffect(() => {
     if (!brandId || brandId === 'default') return
     fetch(`/api/mission-board/notes?brandId=${brandId}`)
       .then(r => r.json())
       .then(d => setSavedDrafts((d.data || []).filter((n: Draft) => n.is_draft)))
+      .catch(() => {})
+    fetch(`/api/catalog?brand_id=${brandId}`)
+      .then(r => r.json())
+      .then(d => setCatalogProducts(d.products || []))
       .catch(() => {})
   }, [brandId])
 
@@ -445,12 +451,49 @@ export default function DraftPadPage() {
                       <div style={{ height: 1, background: C.bd, width: '100%', margin: '6px 0' }} />
                     )}
                     {block.type === 'product' && (
-                      <div style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 8, padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, background: block.bg || '#FAC775', color: block.col || '#854F0B' }}>IMG</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 500, color: C.blk, marginBottom: 2 }}>{block.name}</div>
-                          <div style={{ fontSize: 11, color: C.mu }}>{block.price}</div>
+                      <div style={{ position: 'relative' }}>
+                        <div
+                          onClick={() => setProductPickerFor(productPickerFor === block.id ? null : block.id)}
+                          style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 8, padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                        >
+                          <div style={{ width: 40, height: 40, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, background: block.bg || '#FAC775', color: block.col || '#854F0B' }}>P</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <input
+                              value={block.name || ''}
+                              onChange={e => updateBlock(block.id, 'name', e.target.value)}
+                              onClick={e => e.stopPropagation()}
+                              placeholder="Product name..."
+                              style={{ fontSize: 12, fontWeight: 500, color: C.blk, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: 0, fontFamily: "'DM Sans', sans-serif" }}
+                            />
+                            <input
+                              value={block.price || ''}
+                              onChange={e => updateBlock(block.id, 'price', e.target.value)}
+                              onClick={e => e.stopPropagation()}
+                              placeholder="Price..."
+                              style={{ fontSize: 11, color: C.mu, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: 0, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}
+                            />
+                          </div>
+                          <div style={{ fontSize: 9, color: C.mu, flexShrink: 0 }}>Pick</div>
                         </div>
+                        {productPickerFor === block.id && catalogProducts.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 30, background: C.wh, border: `1px solid ${C.bd}`, borderRadius: '0 0 8px 8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto' }}>
+                            <div style={{ padding: '8px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Your products</div>
+                            {catalogProducts.map(p => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  updateBlock(block.id, 'name', p.name)
+                                  updateBlock(block.id, 'price', p.price_rrp ? `${p.currency || 'EUR'} ${p.price_rrp}` : '')
+                                  setProductPickerFor(null)
+                                }}
+                                style={{ padding: '8px 12px', fontSize: 12, color: C.blk, cursor: 'pointer', borderBottom: `0.5px solid ${C.bd}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                              >
+                                <span style={{ fontWeight: 500 }}>{p.name}</span>
+                                {p.price_rrp && <span style={{ fontSize: 11, color: C.mu }}>{p.currency || 'EUR'} {p.price_rrp}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

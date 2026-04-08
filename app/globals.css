@@ -4,7 +4,7 @@
 
 :root {
   /* Backgrounds */
-  --bg-page: #F5F4F0;
+  --bg-page: #FAFAFA;
   --bg-surface: #FFFFFF;
   --bg-subtle: #EBEBDF;
 
@@ -45,7 +45,7 @@ html {
 }
 
 body {
-  background-color: var(--bg-page);
+  background-color: #FAFAFA;
   color: var(--text-primary);
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;

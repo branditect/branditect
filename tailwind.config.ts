@@ -21,7 +21,7 @@ const config: Config = {
         muted: "#888888",
         subtle: "#AAAAAA",
         light: "#C8C9CC",
-        pale: "#F5F4F0",
+        pale: "#FAFAFA",
         alabaster: "#EBEBDF",
         payne: "#315A72",
         sky: "#87C5EA",

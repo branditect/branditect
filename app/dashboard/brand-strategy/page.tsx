@@ -1379,7 +1379,7 @@ export default function BrandStrategyPage() {
               {/* ---------- Brand Pyramid ---------- */}
               <section>
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
-                <div className="bg-[#F5F4F0] border border-[#C8C9CC] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
+                <div className="bg-[#FAFAFA] border border-[#C8C9CC] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
                   {([
                     { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E16C00", text: "white" },
                     { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#FFCAA7", text: "#1A1A1A" },

@@ -58,7 +58,7 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
             className={`flex items-center gap-2 py-[6px] px-3 rounded-md mb-px transition-colors ${
               isActive
                 ? "bg-[#FFF0E6] text-[#E16C00] font-medium"
-                : "text-[#1A1A1A] hover:bg-[#F5F4F0]"
+                : "text-[#1A1A1A] hover:bg-[#F5F5F5]"
             }`}
           >
             <span className={`text-[12px] w-4 text-center shrink-0 ${isActive ? "text-[#E16C00]" : "text-[#888888]"}`}>
@@ -118,7 +118,7 @@ export default function Sidebar() {
 
       {/* User */}
       <div className="mt-auto p-3 border-t border-[#E2E3E6]">
-        <div className="flex items-center gap-2 p-2 rounded-md hover:bg-[#F5F4F0] transition-colors cursor-pointer">
+        <div className="flex items-center gap-2 p-2 rounded-md hover:bg-[#F5F5F5] transition-colors cursor-pointer">
           <div className="w-6 h-6 rounded-full bg-[#FFF0E6] border border-[#FFCAA7] flex items-center justify-center font-semibold text-[11px] text-[#E16C00] shrink-0">
             S
           </div>

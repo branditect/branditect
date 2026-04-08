@@ -397,7 +397,7 @@ export default function BrandCodeArchitectPage() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto bg-[#2C3E4A] p-4" style={{ maxHeight: '520px' }}>
-                    <pre className="font-mono text-[0.7rem] text-[#F5F4F0] leading-relaxed whitespace-pre-wrap break-all">
+                    <pre className="font-mono text-[0.7rem] text-[#FAFAFA] leading-relaxed whitespace-pre-wrap break-all">
                       {result.html}
                     </pre>
                   </div>

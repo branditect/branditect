@@ -156,15 +156,15 @@ export default function DashboardPage() {
 
   // CSS vars inline
   const v = {
-    bg: "#F5F4F0", card: "#fff", border: "#C8C9CC", borderSoft: "#E2E3E6",
+    bg: "#FAFAFA", card: "#fff", border: "#C8C9CC", borderSoft: "#E2E3E6",
     orange: "#E16C00", orangePale: "#FFF0E6", orangeMid: "#FFCAA7",
     black: "#1A1A1A", g800: "#1A1A1A", g600: "#555555", g500: "#555555", g400: "#888888",
-    g200: "#E2E3E6", g100: "#F5F4F0",
+    g200: "#E2E3E6", g100: "#FAFAFA",
     green: "#315A72", greenPale: "#EBF5FC",
     blue: "#315A72", bluePale: "#EBF5FC",
     purple: "#315A72", purplePale: "#EBF5FC",
     red: "#C45C00", redPale: "#FFF0E6",
-    amber: "#888888", amberPale: "#F5F4F0",
+    amber: "#888888", amberPale: "#FAFAFA",
   };
 
   if (brandLoading || loading) {

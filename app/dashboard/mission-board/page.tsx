@@ -267,7 +267,7 @@ export default function MissionBoardPage() {
   const inputStyle = {
     width: '100%', padding: '7px 10px', border: '0.5px solid #C8C9CC',
     borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none',
-    background: '#F5F4F0', boxSizing: 'border-box' as const,
+    background: '#FAFAFA', boxSizing: 'border-box' as const,
   }
 
   const btnOrange = {
@@ -310,7 +310,7 @@ export default function MissionBoardPage() {
             <button key={t.id} onClick={() => setTab(t.id)} style={tabBtn(tab === t.id)}>
               {t.label}
               {t.count > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 10, background: tab === t.id ? '#FFF0E6' : '#F5F4F0', color: tab === t.id ? '#E16C00' : '#555555' }}>{t.count}</span>
+                <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 10, background: tab === t.id ? '#FFF0E6' : '#FAFAFA', color: tab === t.id ? '#E16C00' : '#555555' }}>{t.count}</span>
               )}
             </button>
           ))}
@@ -332,7 +332,7 @@ export default function MissionBoardPage() {
               <p style={{ fontSize: 11, color: '#888888', marginBottom: 14, lineHeight: 1.5 }}>Campaigns, launches, projects — anything with a finish line.</p>
 
               {addGoalOpen && (
-                <div style={{ ...card, background: '#F5F4F0', marginBottom: 14 }}>
+                <div style={{ ...card, background: '#FAFAFA', marginBottom: 14 }}>
                   <input value={newGoalTitle} onChange={e => setNewGoalTitle(e.target.value)} placeholder="Goal title" onKeyDown={e => e.key === 'Enter' && addGoal()} style={{ ...inputStyle, marginBottom: 8, background: '#fff' }} />
                   <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newGoalDue} onChange={e => setNewGoalDue(e.target.value)} style={{ ...inputStyle, flex: 1, background: '#fff' }} />
@@ -372,7 +372,7 @@ export default function MissionBoardPage() {
                             {formatDate(goal.due_date)}
                           </span>
                         )}
-                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#F5F4F0', color: '#555555' }}>
+                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: '#FAFAFA', color: '#555555' }}>
                           {goal.category}
                         </span>
                       </div>
@@ -385,7 +385,7 @@ export default function MissionBoardPage() {
 
                     {/* Subtasks */}
                     {goalTasks.map(task => (
-                      <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '0.5px solid #F5F4F0' }}>
+                      <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '0.5px solid #FAFAFA' }}>
                         <input
                           type="checkbox"
                           checked={task.is_complete}
@@ -420,7 +420,7 @@ export default function MissionBoardPage() {
               <p style={{ fontSize: 11, color: '#888888', marginBottom: 14, lineHeight: 1.5 }}>Quick things that need doing — no goal required.</p>
 
               {addTaskOpen && (
-                <div style={{ ...card, background: '#F5F4F0', marginBottom: 14 }}>
+                <div style={{ ...card, background: '#FAFAFA', marginBottom: 14 }}>
                   <input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="Task title" onKeyDown={e => e.key === 'Enter' && addTask()} style={{ ...inputStyle, marginBottom: 8, background: '#fff' }} />
                   <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                     <input type="date" value={newTaskDue} onChange={e => setNewTaskDue(e.target.value)} style={{ ...inputStyle, flex: 1, background: '#fff' }} />
@@ -510,9 +510,9 @@ export default function MissionBoardPage() {
                   value={noteSearch}
                   onChange={e => setNoteSearch(e.target.value)}
                   placeholder="Search notes..."
-                  style={{ width: '100%', padding: '9px 12px 9px 34px', border: '0.5px solid #C8C9CC', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#F5F4F0', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '9px 12px 9px 34px', border: '0.5px solid #C8C9CC', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#FAFAFA', boxSizing: 'border-box' }}
                   onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E16C00'; (e.target as HTMLInputElement).style.background = '#fff' }}
-                  onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#C8C9CC'; (e.target as HTMLInputElement).style.background = '#F5F4F0' }}
+                  onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#C8C9CC'; (e.target as HTMLInputElement).style.background = '#FAFAFA' }}
                 />
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function MissionBoardPage() {
                             {note.content}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 8, borderTop: '0.5px solid #F5F4F0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 8, borderTop: '0.5px solid #FAFAFA' }}>
                           <span style={{ fontSize: 10, color: '#888888' }}>{formatDate(note.created_at)}</span>
                           <div style={{ display: 'flex', gap: 4 }}>
                             <button onClick={() => moveToDraft(note.id)} style={{ border: 'none', background: 'transparent', color: '#888888', cursor: 'pointer', fontSize: 11, padding: '1px 4px', fontFamily: 'inherit' }} title="Move to Draft Board">&#8594;</button>
@@ -691,7 +691,7 @@ export default function MissionBoardPage() {
                       onChange={e => setNotes(prev => prev.map(n => n.id === draft.id ? { ...n, content: e.target.value } : n))}
                       onBlur={e => updateDraft(draft.id, { content: e.target.value })}
                       placeholder="Write your draft content..."
-                      style={{ width: '100%', minHeight: 80, fontSize: 12.5, lineHeight: 1.65, color: '#1A1A1A', background: '#F5F4F0', border: '1px solid #C8C9CC', borderRadius: 8, padding: '10px 12px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10 }}
+                      style={{ width: '100%', minHeight: 80, fontSize: 12.5, lineHeight: 1.65, color: '#1A1A1A', background: '#FAFAFA', border: '1px solid #C8C9CC', borderRadius: 8, padding: '10px 12px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 10 }}
                     />
 
                     {/* URL input */}

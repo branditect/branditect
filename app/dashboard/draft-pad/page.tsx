@@ -5,579 +5,469 @@ import { useBrand } from '@/lib/useBrand'
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
-interface Block {
+type SectionType = 'headline' | 'text' | 'image' | 'products' | 'notes'
+
+interface Section {
   id: string
-  type: 'heading' | 'subheading' | 'text' | 'img' | 'btn' | 'sep' | 'product'
+  type: SectionType
   value: string
   label?: string
-  bg?: string
-  col?: string
-  name?: string
-  price?: string
+  imgName?: string
+  imgBg?: string
+  imgCol?: string
+  products?: { key: string; name: string; price: string; letter: string; bg: string; col: string }[]
 }
 
-interface Draft {
-  id: number
-  title: string
-  content: string
-  is_draft: boolean
-  created_at: string
-}
-
-interface Template {
-  key: string
-  title: string
-  badge: string
-  desc: string
-  pillBlocks: string[]
-  gradientFrom: string
-  gradientTo: string
-  blocks: Omit<Block, 'id'>[]
-}
+interface LikedCopy { id: number; title: string; content: string; created_at: string }
+interface SavedDraft { id: number; title: string; content: string; created_at: string }
+interface CatalogProduct { id: string; name: string; price_rrp: number | null; currency: string; description: string; type: string }
 
 /* ── Colors ─────────────────────────────────────────────────────────────────── */
 
 const C = {
   or: '#E16C00', orl: '#FFF0E6',
-  bd: '#C8C9CC', bg: '#FAFAFA',
-  wh: '#fff', blk: '#1A1A1A', mu: '#888888',
-  surface: '#FAFAFA', payne: '#315A72',
+  bd: '#C8C9CC', bdl: '#E2E3E6',
+  blk: '#1A1A1A', sec: '#555555', mu: '#888888',
+  bg: '#FAFAFA', wh: '#fff', payne: '#315A72',
 }
 
-/* ── Sample assets ──────────────────────────────────────────────────────────── */
+/* ── Sample image assets ────────────────────────────────────────────────────── */
 
-const IMG_ASSETS = [
-  { label: 'hero-banner-v2.jpg', bg: '#F5C4B3', col: '#C44A22', short: 'hero' },
-  { label: 'email-hero-dark.png', bg: '#B5D4F4', col: '#185FA5', short: 'email' },
-  { label: 'ig-story-v1.png', bg: '#C0DD97', col: '#3B6D11', short: 'story' },
-  { label: 'streamerx-badge.png', bg: '#F4C0D1', col: '#993556', short: 'badge' },
-  { label: 'product-shot.jpg', bg: '#FAC775', col: '#854F0B', short: 'product' },
-  { label: 'team-photo.jpg', bg: '#D3D1C7', col: '#555', short: 'team' },
-]
-
-const COPY_SNIPPETS = [
-  { label: 'Hero', value: 'Your monthly bill just became your biggest flex.' },
-  { label: 'Tagline', value: 'Always on. Never behind.' },
-  { label: 'Sub-tagline', value: 'Support your favourite streamer — no extra cost, no extra effort. Just switch.' },
-  { label: 'CTA', value: 'Pick your creator' },
-]
-
-const LOGO_ASSETS = [
-  { label: 'logo-dark.svg', bg: '#315A72', col: '#87C5EA', short: 'Dark' },
-  { label: 'logo-light.svg', bg: '#F4F3F1', col: '#1A1A1A', short: 'Light' },
-  { label: 'icon-mark.svg', bg: '#C0DD97', col: '#3B6D11', short: 'V' },
-  { label: 'icon-orange.svg', bg: '#FFF0E6', col: '#E16C00', short: 'V' },
+const IMG_LIBRARY = [
+  { name: 'hero-banner-v2.jpg', bg: '#F5C4B3', col: '#C44A22', short: 'hero' },
+  { name: 'email-hero-dark.png', bg: '#B5D4F4', col: '#185FA5', short: 'email' },
+  { name: 'ig-story-v1.png', bg: '#C0DD97', col: '#3B6D11', short: 'story' },
+  { name: 'streamerx-badge.png', bg: '#F4C0D1', col: '#993556', short: 'badge' },
+  { name: 'product-shot.jpg', bg: '#FAC775', col: '#854F0B', short: 'product' },
+  { name: 'team-photo.jpg', bg: '#D3D1C7', col: '#555', short: 'team' },
+  { name: 'logo-dark.svg', bg: C.payne, col: '#87C5EA', short: 'logo' },
+  { name: 'icon-mark.svg', bg: '#EBF5FC', col: C.payne, short: 'icon' },
 ]
 
 /* ── Templates ──────────────────────────────────────────────────────────────── */
 
-const TEMPLATES: Template[] = [
-  {
-    key: 'newsletter', title: 'Email newsletter', badge: 'Newsletter',
-    desc: 'Hero image, headline, body copy, and a CTA button. Ready to paste into Klaviyo.',
-    pillBlocks: ['Image', 'Heading', 'Text', 'Button'],
-    gradientFrom: '#F5C4B3', gradientTo: '#FBF0ED',
-    blocks: [
-      { type: 'img', value: '', label: 'hero-banner-v2.jpg', bg: '#F5C4B3', col: '#C44A22' },
-      { type: 'heading', value: 'Your monthly bill just became your biggest flex.' },
-      { type: 'text', value: 'Support your favourite streamer — no extra cost, no extra effort. This April, every subscriber gets a free monthly sub to the creator of their choice.' },
-      { type: 'sep', value: '' },
-      { type: 'btn', value: 'Pick your creator' },
-    ],
-  },
-  {
-    key: 'landing', title: 'Campaign landing page', badge: 'Landing page',
-    desc: 'Hero, headline, sub-copy, product block, and a CTA. Hand off to dev as HTML.',
-    pillBlocks: ['Image', 'Heading', 'Subheading', 'Product', 'Button'],
-    gradientFrom: '#B5D4F4', gradientTo: '#E6F1FB',
-    blocks: [
-      { type: 'img', value: '', label: 'hero-banner-v2.jpg', bg: '#F5C4B3', col: '#C44A22' },
-      { type: 'heading', value: 'The only phone plan that supports your favourite creator.' },
-      { type: 'subheading', value: 'Always on. Never behind.' },
-      { type: 'text', value: 'Every month, your bill gives back. Pick a streamer, and we send them a sub automatically, with your plan.' },
-      { type: 'product', value: '', name: 'Starter Plan', price: '12.99/mo', bg: '#F5C4B3', col: '#C44A22' },
-      { type: 'btn', value: 'Get started' },
-    ],
-  },
-  {
-    key: 'ad', title: 'Ad copy brief', badge: 'Ad copy',
-    desc: 'Primary text, headline options, and a CTA. Works for Meta, TikTok, or Google.',
-    pillBlocks: ['Heading', 'Text', 'Divider', 'Text', 'Button'],
-    gradientFrom: '#C0DD97', gradientTo: '#EAF3DE',
-    blocks: [
-      { type: 'heading', value: 'Primary text' },
-      { type: 'text', value: 'Your phone bill just got an upgrade. Every month, a free sub to your favourite streamer. No extra cost. No extra steps. Just switch.' },
-      { type: 'sep', value: '' },
-      { type: 'heading', value: 'Headline options' },
-      { type: 'text', value: 'A) Your bill. Your crew.\nB) Always on. Never behind.\nC) Switch and support your streamer.' },
-      { type: 'btn', value: 'Switch now' },
-    ],
-  },
-  {
-    key: 'social', title: 'Social post', badge: 'Social post',
-    desc: 'Visual, a punchy caption, and a CTA link. Draft and share for approval.',
-    pillBlocks: ['Image', 'Text', 'Button'],
-    gradientFrom: '#FAC775', gradientTo: '#FAEEDA',
-    blocks: [
-      { type: 'img', value: '', label: 'ig-story-v1.png', bg: '#C0DD97', col: '#3B6D11' },
-      { type: 'text', value: 'Something bigger is coming for creators.\n\nWe started with Twitch. Next is everywhere.\n\nStay tuned — and make sure your plan is ready.' },
-      { type: 'btn', value: 'Coming soon' },
-    ],
-  },
-  {
-    key: 'blank', title: 'Blank canvas', badge: '',
-    desc: 'Start from scratch. Add blocks one by one.',
-    pillBlocks: [],
-    gradientFrom: '#E2E3E6', gradientTo: '#F5F5F5',
-    blocks: [],
-  },
+const TEMPLATES = [
+  { key: 'newsletter', title: 'Email newsletter', badge: 'Newsletter', desc: 'Hero image, headline, body, CTA. Paste into Klaviyo.', pills: ['Image', 'Headline', 'Text', 'Products'], from: '#F5C4B3', to: '#FBF0ED',
+    sections: [
+      { type: 'headline' as SectionType, value: 'Your monthly bill just became your biggest flex.' },
+      { type: 'text' as SectionType, value: 'Support your favourite streamer — no extra cost, no extra effort. This April, every subscriber gets a free monthly sub to the creator of their choice.' },
+      { type: 'image' as SectionType, value: '', imgName: 'hero-banner-v2.jpg', imgBg: '#F5C4B3', imgCol: '#C44A22' },
+      { type: 'products' as SectionType, value: '' },
+    ]},
+  { key: 'landing', title: 'Campaign landing page', badge: 'Landing page', desc: 'Hero, headline, copy, products, CTA. Hand off as HTML.', pills: ['Image', 'Headline', 'Products'], from: '#B5D4F4', to: '#E6F1FB',
+    sections: [
+      { type: 'image' as SectionType, value: '', imgName: 'hero-banner-v2.jpg', imgBg: '#F5C4B3', imgCol: '#C44A22' },
+      { type: 'headline' as SectionType, value: 'The only phone plan that supports your favourite creator.' },
+      { type: 'text' as SectionType, value: 'Every month, your bill gives back. Pick a streamer, and we send them a sub — automatically, with your plan.' },
+      { type: 'products' as SectionType, value: '' },
+    ]},
+  { key: 'ad', title: 'Ad copy brief', badge: 'Ad brief', desc: 'Primary text, headline options, CTA. For Meta or TikTok.', pills: ['Headline', 'Text', 'Notes'], from: '#C0DD97', to: '#EAF3DE',
+    sections: [
+      { type: 'headline' as SectionType, value: 'Primary text' },
+      { type: 'text' as SectionType, value: 'Your phone bill just got an upgrade. Every month, a free sub to your favourite streamer. No extra cost. Just switch.' },
+      { type: 'headline' as SectionType, value: 'Headline options' },
+      { type: 'text' as SectionType, value: 'A) Your bill. Your crew.\nB) Always on. Never behind.\nC) Switch and support your streamer.' },
+      { type: 'notes' as SectionType, value: '' },
+    ]},
+  { key: 'social', title: 'Social post', badge: 'Social post', desc: 'Visual and caption. Share for approval before posting.', pills: ['Image', 'Text'], from: '#FAC775', to: '#FAEEDA',
+    sections: [
+      { type: 'image' as SectionType, value: '', imgName: 'ig-story-v1.png', imgBg: '#C0DD97', imgCol: '#3B6D11' },
+      { type: 'text' as SectionType, value: 'Something bigger is coming for creators.\n\nWe started with Twitch. Next is everywhere.\n\nStay tuned.' },
+    ]},
+  { key: 'product', title: 'Product banner', badge: 'Product banner', desc: 'Image, product card, short copy. For email or social.', pills: ['Image', 'Products', 'Text'], from: '#F4C0D1', to: '#FBEAF0',
+    sections: [
+      { type: 'image' as SectionType, value: '', imgName: 'product-shot.jpg', imgBg: '#FAC775', imgCol: '#854F0B' },
+      { type: 'products' as SectionType, value: '' },
+      { type: 'text' as SectionType, value: 'Unlimited calls and data. Plus a free monthly sub to the creator you choose.' },
+    ]},
 ]
 
 /* ── Helpers ─────────────────────────────────────────────────────────────────── */
 
-let blockIdCounter = 0
-function uid() { return `b${++blockIdCounter}` }
+let _sid = 0
+function sid() { return `s${++_sid}` }
+
+function timeAgo(d: string) {
+  const diff = Date.now() - new Date(d).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
 
 /* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function DraftPadPage() {
   const { brandId } = useBrand()
 
-  // Canvas state
-  const [blocks, setBlocks] = useState<Block[]>([])
+  const [sections, setSections] = useState<Section[]>([])
   const [draftTitle, setDraftTitle] = useState('')
   const [typeBadge, setTypeBadge] = useState('')
-  const [showMenu, setShowMenu] = useState(false)
 
-  // Sidebar state
-  const [assetTab, setAssetTab] = useState<'img' | 'snip' | 'logo'>('img')
-  const [assetSearch, setAssetSearch] = useState('')
+  // Left panel
+  const [likedCopy, setLikedCopy] = useState<LikedCopy[]>([])
+
+  // Right panel
   const [rsTab, setRsTab] = useState<'tpl' | 'saved'>('tpl')
+  const [savedDrafts, setSavedDrafts] = useState<SavedDraft[]>([])
 
-  // Saved drafts
-  const [savedDrafts, setSavedDrafts] = useState<Draft[]>([])
-  const [toast, setToast] = useState('')
-  const [toastVisible, setToastVisible] = useState(false)
-  const [saveInfo, setSaveInfo] = useState('Not saved yet')
-  const [imgPickerFor, setImgPickerFor] = useState<string | null>(null)
+  // Product picker
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([])
   const [productPickerFor, setProductPickerFor] = useState<string | null>(null)
-  const [catalogProducts, setCatalogProducts] = useState<{id: string; name: string; price_rrp: number | null; currency: string}[]>([])
+  const [selectedProductKeys, setSelectedProductKeys] = useState<Set<string>>(new Set())
 
-  // Load saved drafts + products
+  // Image picker
+  const [imgPickerFor, setImgPickerFor] = useState<string | null>(null)
+
+  // Send modal
+  const [sendModalOpen, setSendModalOpen] = useState(false)
+
+  // Toast
+  const [toast, setToast] = useState(''); const [toastVisible, setToastVisible] = useState(false)
+  const [saveInfo, setSaveInfo] = useState('Not saved yet')
+
+  function showToast(msg: string) { setToast(msg); setToastVisible(true); setTimeout(() => setToastVisible(false), 2200) }
+
+  // ── Load data ────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!brandId || brandId === 'default') return
+    // Load liked copy (favorites)
     fetch(`/api/mission-board/notes?brandId=${brandId}`)
       .then(r => r.json())
-      .then(d => setSavedDrafts((d.data || []).filter((n: Draft) => n.is_draft)))
+      .then(d => {
+        const all = d.data || []
+        setLikedCopy(all.filter((n: LikedCopy & { is_favorite?: boolean }) => n.is_favorite))
+        setSavedDrafts(all.filter((n: SavedDraft & { is_draft?: boolean }) => n.is_draft))
+      })
       .catch(() => {})
+    // Load catalog products
     fetch(`/api/catalog?brand_id=${brandId}`)
       .then(r => r.json())
       .then(d => setCatalogProducts(d.products || []))
       .catch(() => {})
   }, [brandId])
 
-  function showToastMsg(msg: string) {
-    setToast(msg); setToastVisible(true)
-    setTimeout(() => setToastVisible(false), 2200)
+  // ── Section operations ──────────────────────────────────────────────────
+
+  function addSection(type: SectionType, prefill?: string, label?: string) {
+    const s: Section = { id: sid(), type, value: prefill || '', label }
+    if (type === 'products') s.products = []
+    setSections(prev => [...prev, s])
   }
 
-  // ── Block operations ────────────────────────────────────────────────────
-
-  function addBlock(type: Block['type']) {
-    const b: Block = { id: uid(), type, value: '' }
-    if (type === 'img') { b.label = 'Drop image or paste URL'; b.bg = '#E2E3E6'; b.col = '#888' }
-    if (type === 'product') { b.name = 'Product name'; b.price = '0.00'; b.bg = '#FAC775'; b.col = '#854F0B' }
-    setBlocks(prev => [...prev, b])
-    setShowMenu(false)
+  function updateSection(id: string, field: string, value: unknown) {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s))
   }
 
-  function updateBlock(id: string, field: string, value: string) {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, [field]: value } : b))
+  function removeSection(id: string) {
+    setSections(prev => prev.filter(s => s.id !== id))
   }
 
-  function removeBlock(id: string) {
-    setBlocks(prev => prev.filter(b => b.id !== id))
+  function dropLiked(copy: LikedCopy) {
+    addSection('text', copy.content, copy.title)
+    showToast(`"${copy.title || 'Copy'}" dropped into draft`)
   }
 
-  function pickImage(blockId: string, asset: typeof IMG_ASSETS[0]) {
-    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, label: asset.label, bg: asset.bg, col: asset.col } : b))
+  // ── Image picker ────────────────────────────────────────────────────────
+
+  function pickImage(sectionId: string, img: typeof IMG_LIBRARY[0]) {
+    updateSection(sectionId, 'imgName', img.name)
+    updateSection(sectionId, 'imgBg', img.bg)
+    updateSection(sectionId, 'imgCol', img.col)
     setImgPickerFor(null)
+    showToast('Image added')
+  }
+
+  function clearImage(sectionId: string) {
+    updateSection(sectionId, 'imgName', undefined)
+    updateSection(sectionId, 'imgBg', undefined)
+    updateSection(sectionId, 'imgCol', undefined)
+  }
+
+  // ── Product picker ──────────────────────────────────────────────────────
+
+  function toggleProductSelect(key: string) {
+    setSelectedProductKeys(prev => {
+      const n = new Set(prev)
+      if (n.has(key)) n.delete(key)
+      else if (n.size < 3) n.add(key)
+      else { showToast('Max 3 products'); return prev }
+      return n
+    })
+  }
+
+  function confirmProducts(sectionId: string) {
+    const selected = catalogProducts.filter(p => selectedProductKeys.has(p.id)).map(p => ({
+      key: p.id, name: p.name, price: p.price_rrp ? `${p.currency || 'EUR'} ${p.price_rrp}` : '', letter: p.name[0]?.toUpperCase() || 'P', bg: '#EBF5FC', col: C.payne,
+    }))
+    updateSection(sectionId, 'products', selected)
+    setProductPickerFor(null)
+    setSelectedProductKeys(new Set())
+    if (selected.length) showToast('Products added to draft')
   }
 
   // ── Template loading ────────────────────────────────────────────────────
 
-  function loadTemplate(tpl: Template) {
+  function loadTemplate(tpl: typeof TEMPLATES[0]) {
     setDraftTitle(tpl.title)
     setTypeBadge(tpl.badge)
-    setBlocks(tpl.blocks.map(b => ({ ...b, id: uid() })))
-    setRsTab('tpl')
-    showToastMsg('Template loaded — make it yours')
+    setSections(tpl.sections.map(s => ({ ...s, id: sid(), products: s.type === 'products' ? [] : undefined })))
+    showToast('Template loaded — make it yours')
   }
 
   // ── Save draft ──────────────────────────────────────────────────────────
 
   async function saveDraft() {
     const title = draftTitle || 'Untitled draft'
-    const content = blocks.map(b => {
-      if (b.type === 'heading' || b.type === 'subheading') return `## ${b.value}`
-      if (b.type === 'text') return b.value
-      if (b.type === 'btn') return `[${b.value}]`
-      if (b.type === 'img') return `[Image: ${b.label}]`
-      if (b.type === 'product') return `[Product: ${b.name} — ${b.price}]`
-      return '---'
+    const content = sections.map(s => {
+      if (s.type === 'headline') return `## ${s.value}`
+      if (s.type === 'text') return s.value
+      if (s.type === 'image') return `[Image: ${s.imgName || 'none'}]`
+      if (s.type === 'products') return (s.products || []).map(p => `[Product: ${p.name} ${p.price}]`).join('\n')
+      if (s.type === 'notes') return `[Note: ${s.value}]`
+      return ''
     }).join('\n\n')
 
     const res = await fetch('/api/mission-board/notes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brandId, content, title, isDraft: true }),
     })
     const json = await res.json()
-    if (json.data) {
-      setSavedDrafts(prev => [json.data, ...prev])
-      setSaveInfo('Saved just now')
-      setRsTab('saved')
-      showToastMsg('Saved to drafts')
-    }
+    if (json.data) { setSavedDrafts(prev => [json.data, ...prev]); setSaveInfo('Saved just now'); setRsTab('saved'); showToast('Saved to drafts') }
   }
-
-  // ── Drop handler ────────────────────────────────────────────────────────
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    const data = e.dataTransfer.getData('text/plain')
-    try {
-      const parsed = JSON.parse(data)
-      if (parsed.type === 'img') {
-        setBlocks(prev => [...prev, { id: uid(), type: 'img', value: '', label: parsed.label, bg: parsed.bg, col: parsed.col }])
-      } else if (parsed.type === 'snip') {
-        setBlocks(prev => [...prev, { id: uid(), type: 'text', value: parsed.value }])
-      }
-    } catch {}
-  }
-
-  function startDrag(e: React.DragEvent, data: object) {
-    e.dataTransfer.setData('text/plain', JSON.stringify(data))
-    e.dataTransfer.effectAllowed = 'copy'
-  }
-
-  // ── Filtered assets ─────────────────────────────────────────────────────
-
-  const q = assetSearch.toLowerCase()
-  const filteredImgs = IMG_ASSETS.filter(a => !q || a.label.toLowerCase().includes(q))
-  const filteredSnippets = COPY_SNIPPETS.filter(a => !q || a.value.toLowerCase().includes(q))
-  const filteredLogos = LOGO_ASSETS.filter(a => !q || a.label.toLowerCase().includes(q))
 
   // ── Styles ──────────────────────────────────────────────────────────────
 
-  const s = {
-    shell: { display: 'grid', gridTemplateColumns: '200px 1fr 220px', flex: 1, overflow: 'hidden', background: C.wh } as React.CSSProperties,
-    sbHead: { padding: '14px 14px 10px', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 } as React.CSSProperties,
-    sbTitle: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 8 },
-    sbSearch: { width: '100%', padding: '5px 9px', fontSize: 11, border: `0.5px solid ${C.bd}`, borderRadius: 7, background: C.wh, color: C.blk, fontFamily: "'DM Sans', sans-serif", outline: 'none', boxSizing: 'border-box' as const },
-    tab: (on: boolean) => ({ flex: 1, padding: '7px 4px', fontSize: 10, fontWeight: 500, textAlign: 'center' as const, cursor: 'pointer', color: on ? C.or : C.mu, borderBottom: on ? `2px solid ${C.or}` : '2px solid transparent', background: 'none', border: 'none', borderTop: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' }),
-    imgThumb: (bg: string, col: string) => ({ borderRadius: 7, border: `0.5px solid ${C.bd}`, height: 56, cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, overflow: 'hidden', position: 'relative' as const, background: bg, color: col }),
-    snippet: { background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 7, padding: '7px 9px', marginBottom: 5, cursor: 'grab', fontSize: 11, color: C.mu, transition: 'border-color 0.15s' },
-    addBtn: { width: '100%', marginTop: 6, padding: 7, fontSize: 10.5, fontWeight: 500, border: `0.5px dashed ${C.bd}`, borderRadius: 7, background: 'transparent', color: C.mu, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
-  }
+  const secRow = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 } as React.CSSProperties
+  const secLabel = { fontSize: 10, fontWeight: 500, color: C.mu, textTransform: 'uppercase' as const, letterSpacing: '0.07em' }
+  const secRemove = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#CCC', fontFamily: "'DM Sans', sans-serif" }
+  const sBtn = { fontSize: 11, padding: '6px 12px', borderRadius: 7, border: `0.5px solid ${C.bdl}`, background: C.wh, color: C.sec, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }
+  const sBtnPrimary = { ...sBtn, background: C.blk, color: 'white', borderColor: C.blk }
 
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: "'DM Sans', sans-serif" }}>
-      <div style={s.shell}>
+      <div style={{ display: 'grid', gridTemplateColumns: '210px 1fr 210px', flex: 1, overflow: 'hidden', background: C.wh }}>
 
-        {/* ═══ LEFT: Asset library ═══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: C.surface, borderRight: `0.5px solid ${C.bd}`, minHeight: 0 }}>
-          <div style={s.sbHead}>
-            <div style={s.sbTitle}>Asset library</div>
-            <input
-              style={s.sbSearch}
-              placeholder="Search assets..."
-              value={assetSearch}
-              onChange={e => setAssetSearch(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 }}>
-            {(['img', 'snip', 'logo'] as const).map(t => (
-              <button key={t} style={s.tab(assetTab === t)} onClick={() => setAssetTab(t)}>
-                {t === 'img' ? 'Images' : t === 'snip' ? 'Copy' : 'Logos'}
-              </button>
-            ))}
+        {/* ═══ LEFT: Recent Likes ═══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: C.bg, borderRight: `0.5px solid ${C.bd}`, minHeight: 0 }}>
+          <div style={{ padding: '16px 14px 12px', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, color: C.blk, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+              <span style={{ color: '#E8A020' }}>*</span> Recent likes
+            </div>
+            <div style={{ fontSize: 10.5, color: C.mu, lineHeight: 1.5 }}>Starred in Copy Architect. Click to drop into your draft.</div>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
-
-            {assetTab === 'img' && (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
-                  {filteredImgs.map(a => (
-                    <div key={a.label} style={s.imgThumb(a.bg, a.col)} draggable onDragStart={e => startDrag(e, { type: 'img', label: a.label, bg: a.bg, col: a.col })}>
-                      {a.short}
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.32)', color: 'white', fontSize: 8, padding: '2px 5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</div>
-                    </div>
-                  ))}
+            {likedCopy.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 12px' }}>
+                <p style={{ fontSize: 11, color: C.mu, lineHeight: 1.6 }}>No starred copy yet. Star outputs in the Copy Architect and they appear here.</p>
+              </div>
+            ) : likedCopy.map(lc => (
+              <div key={lc.id} onClick={() => dropLiked(lc)} style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 9, padding: '10px 11px', marginBottom: 7, cursor: 'pointer', transition: 'all 0.15s' }}>
+                <div style={{ fontSize: 9, fontWeight: 500, color: C.or, marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
+                  {lc.title || 'Starred copy'} <span style={{ color: C.mu, fontWeight: 400 }}>{timeAgo(lc.created_at)}</span>
                 </div>
-                <button style={s.addBtn}>+ Add new image</button>
-              </>
-            )}
-
-            {assetTab === 'snip' && (
-              <>
-                {filteredSnippets.map((sn, i) => (
-                  <div key={i} style={s.snippet} draggable onDragStart={e => startDrag(e, { type: 'snip', value: sn.value })}>
-                    <div style={{ fontSize: 9, fontWeight: 500, color: C.or, marginBottom: 2 }}>{sn.label}</div>
-                    {sn.value}
-                  </div>
-                ))}
-                <button style={s.addBtn}>+ Add snippet</button>
-              </>
-            )}
-
-            {assetTab === 'logo' && (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
-                  {filteredLogos.map(a => (
-                    <div key={a.label} style={s.imgThumb(a.bg, a.col)} draggable onDragStart={e => startDrag(e, { type: 'img', label: a.label, bg: a.bg, col: a.col })}>
-                      {a.short}
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.32)', color: 'white', fontSize: 8, padding: '2px 5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</div>
-                    </div>
-                  ))}
-                </div>
-                <button style={s.addBtn}>+ Upload logo</button>
-              </>
-            )}
+                <div style={{ fontSize: 11, color: C.sec, lineHeight: 1.6, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const }}>{lc.content}</div>
+                <div style={{ fontSize: 9.5, color: C.or, fontWeight: 500, marginTop: 6, opacity: 0.7 }}>+ Drop into draft</div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* ═══ CENTER: Canvas ═══ */}
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, borderRight: `0.5px solid ${C.bd}` }}>
-          {/* Canvas header */}
-          <div style={{ padding: '13px 18px 11px', borderBottom: `0.5px solid ${C.bd}`, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: C.wh }}>
-            <input
-              style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, flex: 1, border: 'none', outline: 'none', background: 'transparent', color: C.blk, minWidth: 0 }}
-              value={draftTitle}
-              onChange={e => setDraftTitle(e.target.value)}
-              placeholder="Name this draft..."
-            />
-            {typeBadge && (
-              <span style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 20, background: C.orl, color: '#C45C00', flexShrink: 0 }}>{typeBadge}</span>
-            )}
+          <div style={{ padding: '13px 20px 12px', borderBottom: `0.5px solid ${C.bd}`, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: C.wh }}>
+            <input style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, flex: 1, border: 'none', outline: 'none', background: 'transparent', color: C.blk }} value={draftTitle} onChange={e => setDraftTitle(e.target.value)} placeholder="Name this draft..." />
+            {typeBadge && <span style={{ fontSize: 10, fontWeight: 500, padding: '3px 10px', borderRadius: 20, background: C.orl, color: '#C45C00', flexShrink: 0 }}>{typeBadge}</span>}
           </div>
 
-          {/* Canvas body */}
-          <div
-            style={{ flex: 1, overflowY: 'auto', padding: '16px 18px' }}
-            onDragOver={e => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            {blocks.length === 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 32, textAlign: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: C.orl, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: 18, color: C.or }}>P</div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
+            {sections.length === 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', padding: 32 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: C.orl, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: 16, color: C.or }}>P</div>
                 <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: C.blk, marginBottom: 6 }}>Your draft starts here</h3>
-                <p style={{ fontSize: 11.5, color: C.mu, lineHeight: 1.65, maxWidth: 220 }}>Pick a template on the right to get the structure, then fill it with your images, copy, and products.</p>
+                <p style={{ fontSize: 11.5, color: C.mu, lineHeight: 1.65, maxWidth: 220 }}>Pick a template on the right, or add sections below.</p>
               </div>
-            ) : (
-              blocks.map(block => (
-                <div key={block.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8, position: 'relative' }} className="draft-block">
-                  <div style={{ opacity: 0.3, cursor: 'grab', color: C.mu, fontSize: 12, paddingTop: 3, flexShrink: 0, userSelect: 'none' }}>&#x2807;</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {block.type === 'heading' && (
-                      <input
-                        style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, color: C.blk, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: '3px 0' }}
-                        value={block.value}
-                        onChange={e => updateBlock(block.id, 'value', e.target.value)}
-                        placeholder="Heading..."
-                      />
-                    )}
-                    {block.type === 'subheading' && (
-                      <input
-                        style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 500, color: C.mu, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: '3px 0' }}
-                        value={block.value}
-                        onChange={e => updateBlock(block.id, 'value', e.target.value)}
-                        placeholder="Subheading..."
-                      />
-                    )}
-                    {block.type === 'text' && (
-                      <textarea
-                        style={{ fontSize: 12.5, color: '#555', border: 'none', outline: 'none', background: 'transparent', width: '100%', resize: 'none', lineHeight: 1.75, padding: '3px 0', fontFamily: "'DM Sans', sans-serif", minHeight: 44, boxSizing: 'border-box' }}
-                        value={block.value}
-                        onChange={e => updateBlock(block.id, 'value', e.target.value)}
-                        placeholder="Write something..."
-                        rows={3}
-                      />
-                    )}
-                    {block.type === 'img' && (
-                      <div style={{ width: '100%', borderRadius: 8, border: `0.5px solid ${C.bd}`, overflow: 'hidden', position: 'relative' }}>
-                        <div
-                          onClick={() => setImgPickerFor(imgPickerFor === block.id ? null : block.id)}
-                          style={{ width: '100%', height: 92, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 500, cursor: 'pointer', background: block.bg || '#E2E3E6', color: block.col || '#888', transition: 'opacity 0.15s' }}
-                        >
-                          {block.label}
-                          <div style={{ position: 'absolute', bottom: 6, right: 6, fontSize: 9, padding: '2px 8px', borderRadius: 4, background: 'rgba(0,0,0,0.4)', color: 'white' }}>Click to change</div>
-                        </div>
-                        {imgPickerFor === block.id && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 30, background: C.wh, border: `1px solid ${C.bd}`, borderRadius: '0 0 8px 8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 220, overflowY: 'auto' }}>
-                            <div style={{ padding: '8px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Images</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 8px 8px' }}>
-                              {IMG_ASSETS.map(a => (
-                                <div key={a.label} onClick={() => pickImage(block.id, a)} style={{ height: 44, borderRadius: 5, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 500, background: a.bg, color: a.col, transition: 'transform 0.1s' }}>
-                                  {a.short}
-                                </div>
-                              ))}
-                            </div>
-                            <div style={{ padding: '4px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Logos</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 8px 10px' }}>
-                              {LOGO_ASSETS.map(a => (
-                                <div key={a.label} onClick={() => pickImage(block.id, a)} style={{ height: 44, borderRadius: 5, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 500, background: a.bg, color: a.col }}>
-                                  {a.short}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {block.type === 'btn' && (
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={e => updateBlock(block.id, 'value', e.currentTarget.textContent || '')}
-                        style={{ background: C.or, color: 'white', padding: '8px 18px', borderRadius: 20, fontSize: 11.5, fontWeight: 500, display: 'inline-block', cursor: 'text', outline: 'none' }}
-                      >
-                        {block.value || 'Button'}
-                      </div>
-                    )}
-                    {block.type === 'sep' && (
-                      <div style={{ height: 1, background: C.bd, width: '100%', margin: '6px 0' }} />
-                    )}
-                    {block.type === 'product' && (
-                      <div style={{ position: 'relative' }}>
-                        <div
-                          onClick={() => setProductPickerFor(productPickerFor === block.id ? null : block.id)}
-                          style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 8, padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', transition: 'border-color 0.15s' }}
-                        >
-                          <div style={{ width: 40, height: 40, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, background: block.bg || '#FAC775', color: block.col || '#854F0B' }}>P</div>
+            )}
+
+            {sections.map(section => (
+              <div key={section.id} style={{ marginBottom: 10 }}>
+                <div style={secRow}>
+                  <span style={secLabel}>{section.label || section.type}</span>
+                  <button style={secRemove} onClick={() => removeSection(section.id)}>Remove</button>
+                </div>
+
+                {/* Headline */}
+                {section.type === 'headline' && (
+                  <input value={section.value} onChange={e => updateSection(section.id, 'value', e.target.value)} placeholder="Write your headline..." style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 17, fontWeight: 600, color: C.blk, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: '4px 0', borderBottom: '1.5px solid transparent' }} onFocus={e => { (e.target as HTMLInputElement).style.borderBottomColor = C.bdl }} onBlur={e => { (e.target as HTMLInputElement).style.borderBottomColor = 'transparent' }} />
+                )}
+
+                {/* Text */}
+                {section.type === 'text' && (
+                  <textarea value={section.value} onChange={e => updateSection(section.id, 'value', e.target.value)} placeholder="Write your copy..." rows={4} style={{ fontSize: 13, color: C.sec, border: 'none', outline: 'none', background: 'transparent', width: '100%', resize: 'none', lineHeight: 1.8, padding: '4px 0', fontFamily: "'DM Sans', sans-serif", minHeight: 56, boxSizing: 'border-box' }} />
+                )}
+
+                {/* Image */}
+                {section.type === 'image' && (
+                  <div>
+                    {section.imgName ? (
+                      <div style={{ border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                          <div style={{ width: 48, height: 48, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, background: section.imgBg, color: section.imgCol }}>IMG</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <input
-                              value={block.name || ''}
-                              onChange={e => updateBlock(block.id, 'name', e.target.value)}
-                              onClick={e => e.stopPropagation()}
-                              placeholder="Product name..."
-                              style={{ fontSize: 12, fontWeight: 500, color: C.blk, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: 0, fontFamily: "'DM Sans', sans-serif" }}
-                            />
-                            <input
-                              value={block.price || ''}
-                              onChange={e => updateBlock(block.id, 'price', e.target.value)}
-                              onClick={e => e.stopPropagation()}
-                              placeholder="Price..."
-                              style={{ fontSize: 11, color: C.mu, border: 'none', outline: 'none', background: 'transparent', width: '100%', padding: 0, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}
-                            />
+                            <div style={{ fontSize: 12, fontWeight: 500, color: C.blk, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{section.imgName}</div>
+                            <div style={{ fontSize: 10, color: C.mu, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>brand-assets/{section.imgName}</div>
                           </div>
-                          <div style={{ fontSize: 9, color: C.mu, flexShrink: 0 }}>Pick</div>
                         </div>
-                        {productPickerFor === block.id && catalogProducts.length > 0 && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 30, background: C.wh, border: `1px solid ${C.bd}`, borderRadius: '0 0 8px 8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto' }}>
-                            <div style={{ padding: '8px 10px 4px', fontSize: 9, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Your products</div>
-                            {catalogProducts.map(p => (
-                              <div
-                                key={p.id}
-                                onClick={() => {
-                                  updateBlock(block.id, 'name', p.name)
-                                  updateBlock(block.id, 'price', p.price_rrp ? `${p.currency || 'EUR'} ${p.price_rrp}` : '')
-                                  setProductPickerFor(null)
-                                }}
-                                style={{ padding: '8px 12px', fontSize: 12, color: C.blk, cursor: 'pointer', borderBottom: `0.5px solid ${C.bd}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                              >
-                                <span style={{ fontWeight: 500 }}>{p.name}</span>
-                                {p.price_rrp && <span style={{ fontSize: 11, color: C.mu }}>{p.currency || 'EUR'} {p.price_rrp}</span>}
-                              </div>
-                            ))}
+                        <button onClick={() => clearImage(section.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CCC', fontSize: 16, padding: 0 }}>&times;</button>
+                      </div>
+                    ) : (
+                      <div onClick={() => setImgPickerFor(imgPickerFor === section.id ? null : section.id)} style={{ border: `0.5px dashed ${C.bdl}`, borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" stroke={C.mu} strokeWidth="1.3"/><path d="M1 11l4-5 3.5 4.5 2.5-3L15 11" stroke={C.mu} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </div>
-                        )}
+                          <div><div style={{ fontSize: 12, fontWeight: 500, color: C.blk, marginBottom: 1 }}>Add image</div><div style={{ fontSize: 10.5, color: C.mu }}>Choose from asset library</div></div>
+                        </div>
+                        <span style={{ fontSize: 10.5, fontWeight: 500, color: C.or }}>Browse</span>
+                      </div>
+                    )}
+                    {imgPickerFor === section.id && (
+                      <div style={{ background: C.bg, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: 12, marginTop: 8 }}>
+                        <div style={{ fontSize: 10, fontWeight: 500, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Asset library</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                          {IMG_LIBRARY.map(img => (
+                            <div key={img.name} onClick={() => pickImage(section.id, img)} style={{ height: 50, borderRadius: 6, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, position: 'relative', overflow: 'hidden', background: img.bg, color: img.col, transition: 'all 0.15s' }}>
+                              {img.short}
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: 7.5, padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{img.name}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                  <button onClick={() => removeBlock(block.id)} style={{ border: 'none', background: 'transparent', color: '#CCC', cursor: 'pointer', fontSize: 14, padding: '2px 4px', flexShrink: 0, opacity: 0.5 }}>&times;</button>
-                </div>
-              ))
-            )}
+                )}
 
-            {/* Add block button */}
-            {blocks.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, cursor: 'pointer', position: 'relative' }} onClick={() => setShowMenu(p => !p)}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', border: `0.5px solid ${C.bd}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: C.mu, flexShrink: 0, background: C.wh, lineHeight: 1 }}>+</div>
-                <span style={{ fontSize: 11, color: C.mu }}>Add a block</span>
-                {showMenu && (
-                  <div style={{ position: 'absolute', left: 26, top: 26, background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: 6, zIndex: 20, minWidth: 150, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} onClick={e => e.stopPropagation()}>
-                    {[
-                      { type: 'heading' as const, icon: 'H', label: 'Heading' },
-                      { type: 'text' as const, icon: 'T', label: 'Text' },
-                      { type: 'img' as const, icon: 'I', label: 'Image' },
-                      { type: 'btn' as const, icon: 'B', label: 'Button' },
-                      { type: 'sep' as const, icon: '-', label: 'Divider' },
-                      { type: 'product' as const, icon: 'P', label: 'Product' },
-                    ].map(item => (
-                      <div key={item.type} onClick={() => addBlock(item.type)} style={{ padding: '7px 10px', fontSize: 11.5, color: '#555', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, width: 14, textAlign: 'center', opacity: 0.7 }}>{item.icon}</span>
-                        {item.label}
+                {/* Products */}
+                {section.type === 'products' && (
+                  <div>
+                    {(section.products || []).map((p, i) => (
+                      <div key={i} style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 9, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, background: p.bg, color: p.col }}>{p.letter}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 600, color: C.blk }}>{p.name}</div>
+                        </div>
+                        <span style={{ fontSize: 12.5, fontWeight: 600, color: C.or, flexShrink: 0 }}>{p.price}</span>
+                        <button onClick={() => updateSection(section.id, 'products', (section.products || []).filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CCC', fontSize: 16 }}>&times;</button>
                       </div>
                     ))}
+                    <button onClick={() => { setProductPickerFor(productPickerFor === section.id ? null : section.id); setSelectedProductKeys(new Set()) }} style={{ ...sBtn, fontSize: 10.5, padding: '5px 10px' }}>+ Add product from catalogue</button>
+                    {productPickerFor === section.id && catalogProducts.length > 0 && (
+                      <div style={{ background: C.bg, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: 12, marginTop: 6 }}>
+                        {catalogProducts.slice(0, 6).map(p => {
+                          const isOn = selectedProductKeys.has(p.id)
+                          return (
+                            <div key={p.id} onClick={() => toggleProductSelect(p.id)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', border: `0.5px solid ${isOn ? C.or : C.bd}`, borderRadius: 8, cursor: 'pointer', background: isOn ? C.orl : C.wh, marginBottom: 5, transition: 'all 0.15s' }}>
+                              <div style={{ width: 30, height: 30, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 600, flexShrink: 0, background: '#EBF5FC', color: C.payne }}>{p.name[0]}</div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 12, fontWeight: 500, color: C.blk }}>{p.name}</div>
+                                <div style={{ fontSize: 10, color: C.mu, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.type}</div>
+                              </div>
+                              {p.price_rrp && <span style={{ fontSize: 12, fontWeight: 600, color: C.or, flexShrink: 0 }}>{p.currency} {p.price_rrp}</span>}
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', border: `1.5px solid ${isOn ? '#2A7A4B' : '#CCC'}`, background: isOn ? '#2A7A4B' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'white', flexShrink: 0 }}>{isOn ? 'v' : ''}</div>
+                            </div>
+                          )
+                        })}
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                          <button onClick={() => setProductPickerFor(null)} style={sBtn}>Cancel</button>
+                          <button onClick={() => confirmProducts(section.id)} style={sBtnPrimary}>Add to draft</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Notes */}
+                {section.type === 'notes' && (
+                  <div style={{ background: C.bg, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#FAC775', flexShrink: 0 }} />
+                      <span style={{ fontSize: 10.5, fontWeight: 500, color: C.mu }}>Only visible to your team — not published</span>
+                    </div>
+                    <textarea value={section.value} onChange={e => updateSection(section.id, 'value', e.target.value)} placeholder="Add a note for your team..." rows={3} style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 12, color: C.blk, fontFamily: "'DM Sans', sans-serif", resize: 'none', lineHeight: 1.7, minHeight: 60, boxSizing: 'border-box' }} />
                   </div>
                 )}
               </div>
-            )}
+            ))}
+
+            {/* Add section bar */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '14px 0 4px', borderTop: sections.length > 0 ? `0.5px solid ${C.bd}` : 'none', marginTop: sections.length > 0 ? 6 : 0 }}>
+              <span style={{ fontSize: 10, color: C.mu, width: '100%', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Add section</span>
+              {[
+                { type: 'headline' as SectionType, label: 'Headline' },
+                { type: 'text' as SectionType, label: 'Text' },
+                { type: 'image' as SectionType, label: 'Image' },
+                { type: 'products' as SectionType, label: 'Products' },
+                { type: 'notes' as SectionType, label: 'Notes' },
+              ].map(item => (
+                <button key={item.type} onClick={() => addSection(item.type)} style={{ fontSize: 11, padding: '6px 12px', border: `0.5px dashed ${C.bdl}`, borderRadius: 7, background: 'transparent', color: C.mu, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' }}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Canvas bar */}
-          <div style={{ padding: '11px 18px', borderTop: `0.5px solid ${C.bd}`, display: 'flex', gap: 6, alignItems: 'center', background: C.surface, flexShrink: 0 }}>
-            <button onClick={saveDraft} style={{ fontSize: 11, padding: '6px 12px', borderRadius: 7, border: `0.5px solid ${C.bd}`, background: C.wh, color: '#555', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>Save to drafts</button>
-            <button onClick={() => showToastMsg('Link copied')} style={{ fontSize: 11, padding: '6px 12px', borderRadius: 7, border: `0.5px solid ${C.bd}`, background: C.wh, color: '#555', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>Share link</button>
+          <div style={{ padding: '11px 20px', borderTop: `0.5px solid ${C.bd}`, display: 'flex', gap: 6, alignItems: 'center', background: C.bg, flexShrink: 0 }}>
+            <button onClick={saveDraft} style={sBtn}>Save to drafts</button>
+            <button onClick={() => showToast('Link copied')} style={sBtn}>Share link</button>
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: C.mu }}>{saveInfo}</span>
-            <button onClick={() => showToastMsg('Sent to team for review')} style={{ fontSize: 11, padding: '6px 12px', borderRadius: 7, border: `0.5px solid ${C.blk}`, background: C.blk, color: 'white', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>Send to team</button>
+            <button onClick={() => setSendModalOpen(true)} style={sBtnPrimary}>Send to team</button>
           </div>
         </div>
 
-        {/* ═══ RIGHT: Templates + Saved Drafts ═══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', background: C.surface, minHeight: 0 }}>
-          <div style={{ padding: '14px 14px 10px', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 }}>
-            <div style={s.sbTitle}>Start from a template</div>
-            <p style={{ fontSize: 10.5, color: C.mu, lineHeight: 1.55, marginTop: 2 }}>Pick a format to get the layout — then make it yours.</p>
+        {/* ═══ RIGHT: Templates + Saved ═══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: C.bg, minHeight: 0 }}>
+          <div style={{ padding: '16px 14px 12px', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 4 }}>Start from a template</div>
+            <div style={{ fontSize: 10.5, color: C.mu, lineHeight: 1.5 }}>Pick a format, then fill it with your assets.</div>
           </div>
           <div style={{ display: 'flex', borderBottom: `0.5px solid ${C.bd}`, flexShrink: 0 }}>
-            <button style={s.tab(rsTab === 'tpl')} onClick={() => setRsTab('tpl')}>Templates</button>
-            <button style={s.tab(rsTab === 'saved')} onClick={() => setRsTab('saved')}>Saved drafts</button>
+            {(['tpl', 'saved'] as const).map(t => (
+              <button key={t} onClick={() => setRsTab(t)} style={{ flex: 1, padding: '7px 4px', fontSize: 10, fontWeight: 500, textAlign: 'center', cursor: 'pointer', color: rsTab === t ? C.or : C.mu, borderBottom: rsTab === t ? `2px solid ${C.or}` : '2px solid transparent', background: 'none', border: 'none', borderTop: 'none', fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s' }}>
+                {t === 'tpl' ? 'Templates' : 'Saved'}
+              </button>
+            ))}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
-
             {rsTab === 'tpl' && TEMPLATES.map(tpl => (
               <div key={tpl.key} onClick={() => loadTemplate(tpl)} style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 9, marginBottom: 8, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.15s' }}>
-                <div style={{ height: 52, background: `linear-gradient(135deg, ${tpl.gradientFrom}, ${tpl.gradientTo})`, display: 'flex', alignItems: 'flex-end', padding: '7px 10px', position: 'relative' }}>
-                  <span style={{ fontSize: 8.5, fontWeight: 500, color: 'white', background: 'rgba(0,0,0,0.35)', padding: '2px 6px', borderRadius: 4 }}>{tpl.badge || 'Blank'}</span>
+                <div style={{ height: 44, background: `linear-gradient(135deg, ${tpl.from}, ${tpl.to})`, position: 'relative', display: 'flex', alignItems: 'flex-end', paddingBottom: 6 }}>
+                  <span style={{ fontSize: 8.5, fontWeight: 500, color: 'white', background: 'rgba(0,0,0,0.32)', padding: '2px 6px', borderRadius: 3, marginLeft: 8 }}>{tpl.badge}</span>
                 </div>
-                <div style={{ padding: '9px 10px 10px' }}>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11.5, fontWeight: 600, color: C.blk, marginBottom: 3 }}>{tpl.title}</div>
+                <div style={{ padding: '8px 10px 10px' }}>
+                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 3 }}>{tpl.title}</div>
                   <div style={{ fontSize: 10, color: C.mu, lineHeight: 1.5 }}>{tpl.desc}</div>
-                  {tpl.pillBlocks.length > 0 && (
-                    <div style={{ display: 'flex', gap: 3, marginTop: 6, flexWrap: 'wrap' }}>
-                      {tpl.pillBlocks.map((p, i) => (
-                        <span key={i} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: '#F2F2F0', color: C.mu, fontWeight: 500 }}>{p}</span>
-                      ))}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                    {tpl.pills.map((p, i) => <span key={i} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 8, background: '#F2F2F0', color: C.mu, fontWeight: 500 }}>{p}</span>)}
+                  </div>
                 </div>
               </div>
             ))}
-
             {rsTab === 'saved' && (
               savedDrafts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 24, color: C.mu, fontSize: 11 }}>No saved drafts yet</div>
-              ) : savedDrafts.map(draft => (
-                <div key={draft.id} style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 8, marginBottom: 8, overflow: 'hidden', cursor: 'pointer' }}>
+              ) : savedDrafts.map(d => (
+                <div key={d.id} style={{ background: C.wh, border: `0.5px solid ${C.bd}`, borderRadius: 8, marginBottom: 7, overflow: 'hidden', cursor: 'pointer' }}>
                   <div style={{ padding: '8px 10px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 500, color: C.blk, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{draft.title || 'Untitled'}</div>
-                    <div style={{ fontSize: 10, color: C.mu, marginBottom: 6 }}>{new Date(draft.created_at).toLocaleDateString()}</div>
-                    <span style={{ fontSize: 9.5, padding: '2px 7px', borderRadius: 20, fontWeight: 500, background: '#F2F0EE', color: C.mu }}>Draft</span>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: C.blk, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.title || 'Untitled'}</div>
+                    <div style={{ fontSize: 10, color: C.mu }}>{timeAgo(d.created_at)}</div>
                   </div>
                 </div>
               ))
@@ -586,11 +476,24 @@ export default function DraftPadPage() {
         </div>
       </div>
 
+      {/* Send modal */}
+      {sendModalOpen && (
+        <div onClick={e => { if (e.target === e.currentTarget) setSendModalOpen(false) }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: C.wh, borderRadius: 12, padding: 22, width: 310 }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Send to team</div>
+            <div style={{ fontSize: 11.5, color: C.mu, marginBottom: 16 }}>They will get a view link and notification.</div>
+            <textarea placeholder="Add a note for your team..." rows={3} style={{ width: '100%', padding: '8px 10px', fontSize: 12, fontFamily: "'DM Sans', sans-serif", border: `0.5px solid ${C.bdl}`, borderRadius: 7, resize: 'none', outline: 'none', color: C.blk, marginBottom: 14, boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+              <button onClick={() => setSendModalOpen(false)} style={sBtn}>Cancel</button>
+              <button onClick={() => { setSendModalOpen(false); showToast('Draft sent — team notified') }} style={sBtnPrimary}>Send</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast */}
       {toastVisible && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.blk, color: 'white', fontSize: 12, padding: '9px 18px', borderRadius: 8, zIndex: 100, whiteSpace: 'nowrap', pointerEvents: 'none', fontFamily: "'DM Sans', sans-serif" }}>
-          {toast}
-        </div>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.blk, color: 'white', fontSize: 12, padding: '9px 18px', borderRadius: 8, zIndex: 200, whiteSpace: 'nowrap', pointerEvents: 'none', fontFamily: "'DM Sans', sans-serif" }}>{toast}</div>
       )}
     </div>
   )

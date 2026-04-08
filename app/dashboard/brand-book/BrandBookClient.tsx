@@ -475,7 +475,7 @@ export default function BrandBookClient() {
 
             {addColorOpen && (
               <div style={{ padding: 10, border: '0.5px solid var(--color-border-tertiary, #e5e5e5)', borderRadius: 8, marginBottom: 8, background: 'var(--color-background-primary, #fff)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <input value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#E8562A" style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'monospace', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+                <input value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#E16C00" style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'monospace', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                 <input value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color name" style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={addColor} style={{ flex: 1, padding: '5px 0', borderRadius: 4, border: 'none', background: 'var(--color-text-primary, #1a1a1a)', color: 'var(--color-background-primary, #fff)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Add</button>

@@ -319,7 +319,7 @@ export default function BrandAssetsClient() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeTab === tab.id ? '#E8562A' : 'var(--color-text-secondary, #999)', cursor: 'pointer', fontFamily: 'inherit', borderBottom: activeTab === tab.id ? '2px solid #E8562A' : '2px solid transparent', transition: 'all 0.13s' }}
+              style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeTab === tab.id ? '#E16C00' : 'var(--color-text-secondary, #999)', cursor: 'pointer', fontFamily: 'inherit', borderBottom: activeTab === tab.id ? '2px solid #E16C00' : '2px solid transparent', transition: 'all 0.13s' }}
             >
               {tab.label}
             </button>
@@ -368,7 +368,7 @@ export default function BrandAssetsClient() {
                     {uploaded && (
                       <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>{uploaded.file_name}</span>
-                        <a href={uploaded.file_url} download={uploaded.file_name} style={{ fontSize: 11, color: '#E8562A', textDecoration: 'none' }}>&darr; Download</a>
+                        <a href={uploaded.file_url} download={uploaded.file_name} style={{ fontSize: 11, color: '#E16C00', textDecoration: 'none' }}>&darr; Download</a>
                       </div>
                     )}
                   </div>
@@ -432,13 +432,13 @@ export default function BrandAssetsClient() {
               <div style={{ border: '0.5px solid var(--color-border-tertiary, #e5e5e5)', borderRadius: 12, padding: 16, display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 16, background: 'var(--color-background-secondary, #fafafa)' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)', marginBottom: 5 }}>Hex code</div>
-                  <input value={newHex} onChange={e => setNewHex(e.target.value)} placeholder="#E8562A" onKeyDown={e => e.key === 'Enter' && addColor()} style={{ width: '100%', padding: '7px 10px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 6, fontSize: 12, fontFamily: 'var(--font-mono, monospace)', outline: 'none', boxSizing: 'border-box' }} />
+                  <input value={newHex} onChange={e => setNewHex(e.target.value)} placeholder="#E16C00" onKeyDown={e => e.key === 'Enter' && addColor()} style={{ width: '100%', padding: '7px 10px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 6, fontSize: 12, fontFamily: 'var(--font-mono, monospace)', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)', marginBottom: 5 }}>Color name</div>
                   <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Brand Orange" onKeyDown={e => e.key === 'Enter' && addColor()} style={{ width: '100%', padding: '7px 10px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <button onClick={addColor} style={{ padding: '7px 16px', borderRadius: 6, border: 'none', background: '#E8562A', color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Add color</button>
+                <button onClick={addColor} style={{ padding: '7px 16px', borderRadius: 6, border: 'none', background: '#E16C00', color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Add color</button>
                 <button onClick={() => setAddColorOpen(false)} style={{ padding: '7px 12px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'transparent', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
               </div>
             )}
@@ -503,7 +503,7 @@ export default function BrandAssetsClient() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={addFont} style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: '#E8562A', color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Add font</button>
+                  <button onClick={addFont} style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: '#E16C00', color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Add font</button>
                   <button onClick={() => setAddFontOpen(false)} style={{ padding: '7px 14px', borderRadius: 6, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'transparent', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
                 </div>
               </div>
@@ -528,7 +528,7 @@ export default function BrandAssetsClient() {
             <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
               <button
                 onClick={() => guidelineRef.current?.click()}
-                style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#E8562A', color: 'white', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#E16C00', color: 'white', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {uploading === 'guideline' ? (guidelineProgress || 'Processing...') : guidelinePages.length > 0 ? 'Upload more pages' : 'Upload PDF'}
               </button>

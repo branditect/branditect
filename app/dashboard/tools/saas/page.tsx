@@ -108,16 +108,16 @@ function BreakEvenChart({ fixedCosts, pricePerUser, variableCost, vatRate, curre
       <polyline points={costPoints} fill="none" stroke="#9CA3AF" strokeWidth={2} strokeDasharray="4,4" />
 
       {/* Revenue line */}
-      <polyline points={revPoints} fill="none" stroke="#E8562A" strokeWidth={2} />
+      <polyline points={revPoints} fill="none" stroke="#E16C00" strokeWidth={2} />
 
       {/* Break-even line */}
-      <line x1={beX} y1={P} x2={beX} y2={P + chartH} stroke="#E8562A" strokeWidth={1.5} strokeDasharray="6,4" />
-      <text x={beX} y={P - 6} textAnchor="middle" className="font-mono" fontSize={9} fill="#E8562A">
+      <line x1={beX} y1={P} x2={beX} y2={P + chartH} stroke="#E16C00" strokeWidth={1.5} strokeDasharray="6,4" />
+      <text x={beX} y={P - 6} textAnchor="middle" className="font-mono" fontSize={9} fill="#E16C00">
         BE: {breakEvenUsers} users
       </text>
 
       {/* Current users dot */}
-      <circle cx={curX} cy={curY} r={5} fill="#E8562A" />
+      <circle cx={curX} cy={curY} r={5} fill="#E16C00" />
       <text x={curX} y={curY - 10} textAnchor="middle" className="font-mono" fontSize={8} fill="#1A1A1A">
         {currentUsers} users
       </text>
@@ -127,7 +127,7 @@ function BreakEvenChart({ fixedCosts, pricePerUser, variableCost, vatRate, curre
       <text x={P - 4} y={P + 4} textAnchor="end" className="font-mono" fontSize={9} fill="#9A9A9A">€</text>
 
       {/* Legend */}
-      <line x1={P + 10} y1={H - 8} x2={P + 24} y2={H - 8} stroke="#E8562A" strokeWidth={2} />
+      <line x1={P + 10} y1={H - 8} x2={P + 24} y2={H - 8} stroke="#E16C00" strokeWidth={2} />
       <text x={P + 28} y={H - 4} className="font-mono" fontSize={8} fill="#6B6B6B">Revenue</text>
       <line x1={P + 80} y1={H - 8} x2={P + 94} y2={H - 8} stroke="#9CA3AF" strokeWidth={2} strokeDasharray="4,4" />
       <text x={P + 98} y={H - 4} className="font-mono" fontSize={8} fill="#6B6B6B">Costs</text>

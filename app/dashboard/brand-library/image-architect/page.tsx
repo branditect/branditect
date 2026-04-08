@@ -485,7 +485,7 @@ export default function ImageArchitectPage() {
           transition: border-color 0.15s;
           font-family: var(--font-dm-sans), sans-serif;
         }
-        .form-input:focus { border-color: #E8562A; }
+        .form-input:focus { border-color: #E16C00; }
         .form-input::placeholder { color: #9A9A9A; }
       `}</style>
     </div>

@@ -9,8 +9,6 @@ const tabs = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Create", href: "/dashboard/create" },
   { label: "Brand Library", href: "/dashboard/brand-library" },
-  { label: "Brand Bases", href: "/dashboard/brand-bases" },
-  { label: "Meta Insights", href: "/dashboard/meta-insights" },
 ];
 
 export default function Topbar() {
@@ -25,34 +23,28 @@ export default function Topbar() {
   }
 
   return (
-    <header className="h-topbar bg-white border-b border-[#D0D3DA] flex items-center px-6 shrink-0 z-50">
-      {/* Branditect wordmark */}
-      <span className="font-semibold text-[1.15rem] text-[#E8562A] tracking-tight shrink-0">
+    <header className="h-topbar bg-white border-b border-[#C8C9CC] flex items-center px-6 shrink-0 z-50">
+      <span className="font-semibold text-[16px] text-[#315A72] tracking-tight shrink-0">
         Branditect
       </span>
 
-      {/* "for" + brand name */}
       {brandName && (
         <>
-          <span className="text-[12px] text-[#888888] font-light px-2 shrink-0">
-            for
-          </span>
-          <div className="flex items-center gap-[5px] bg-[#F2F1EE] border border-[#D0D3DA] rounded px-2.5 py-[3px] shrink-0">
+          <span className="text-[12px] text-[#888888] px-2 shrink-0">for</span>
+          <div className="flex items-center gap-[5px] bg-[#FFF0E6] border border-[#FFCAA7] rounded px-2.5 py-[3px] shrink-0">
             {brand?.logo_url && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={brand.logo_url} alt="" className="w-4 h-4 object-contain" />
             )}
-            <span className="font-mono text-[11px] font-medium tracking-wider text-[#1f1f1f] uppercase">
+            <span className="text-[11px] font-semibold tracking-wider text-[#E16C00] uppercase">
               {brandName}
             </span>
           </div>
         </>
       )}
 
-      {/* Divider */}
-      <div className="w-px h-[18px] bg-[#D0D3DA] mx-5 shrink-0" />
+      <div className="w-px h-[18px] bg-[#E2E3E6] mx-5 shrink-0" />
 
-      {/* Nav tabs */}
       <nav className="flex flex-1 gap-0">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
@@ -62,8 +54,8 @@ export default function Topbar() {
               href={tab.href}
               className={`h-topbar flex items-center px-4 text-[13px] border-b-2 -mb-px whitespace-nowrap transition-colors ${
                 isActive
-                  ? "text-[#E8562A] border-[#E8562A] font-medium"
-                  : "text-[#666666] border-transparent hover:text-[#1f1f1f]"
+                  ? "text-[#E16C00] border-[#E16C00] font-medium"
+                  : "text-[#888888] border-transparent hover:text-[#555555]"
               }`}
             >
               {tab.label}
@@ -72,21 +64,20 @@ export default function Topbar() {
         })}
       </nav>
 
-      {/* Right */}
       <div className="flex items-center gap-2 ml-auto">
         <button
           onClick={handleLogout}
-          className="bg-transparent text-[#444444] border border-[#D0D3DA] font-medium text-sm px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+          className="bg-transparent text-[#555555] border border-[#C8C9CC] font-medium text-[13px] px-4 py-1.5 rounded-lg hover:bg-[#F5F4F0] transition-colors"
         >
           Log out
         </button>
         <Link
           href="/dashboard/create"
-          className="bg-[#E8562A] text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-[#d14a22] transition-colors flex items-center border-none"
+          className="bg-[#E16C00] text-white font-medium text-[13px] px-4 py-1.5 rounded-lg hover:bg-[#C45C00] transition-colors flex items-center border-0"
         >
           + Create
         </Link>
-        <div className="w-7 h-7 rounded-full bg-[#FEF0EB] border border-[#F8C9B3] flex items-center justify-center font-semibold text-[12px] text-[#E8562A] cursor-pointer ml-0.5">
+        <div className="w-7 h-7 rounded-full bg-[#FFF0E6] border border-[#FFCAA7] flex items-center justify-center font-semibold text-[11px] text-[#E16C00] cursor-pointer ml-0.5">
           SM
         </div>
       </div>

@@ -156,15 +156,15 @@ export default function DashboardPage() {
 
   // CSS vars inline
   const v = {
-    bg: "#EDECE8", card: "#fff", border: "#E2E1DC", borderSoft: "#ECEAE5",
-    orange: "#E8562A", orangePale: "#FEF0EB", orangeMid: "#F8C9B3",
-    black: "#0F0F0F", g800: "#2C2C2C", g600: "#5A5A5A", g500: "#848484", g400: "#ABABAB",
-    g200: "#E4E3DF", g100: "#F2F1EE",
-    green: "#23A66A", greenPale: "#E6F7EF",
-    blue: "#3572F0", bluePale: "#E8EFFF",
-    purple: "#7144D0", purplePale: "#EEE8FF",
-    red: "#D93B3B", redPale: "#FEECEC",
-    amber: "#D9920E", amberPale: "#FEF8E6",
+    bg: "#F5F4F0", card: "#fff", border: "#C8C9CC", borderSoft: "#E2E3E6",
+    orange: "#E16C00", orangePale: "#FFF0E6", orangeMid: "#FFCAA7",
+    black: "#1A1A1A", g800: "#1A1A1A", g600: "#555555", g500: "#555555", g400: "#888888",
+    g200: "#E2E3E6", g100: "#F5F4F0",
+    green: "#315A72", greenPale: "#EBF5FC",
+    blue: "#315A72", bluePale: "#EBF5FC",
+    purple: "#315A72", purplePale: "#EBF5FC",
+    red: "#C45C00", redPale: "#FFF0E6",
+    amber: "#888888", amberPale: "#F5F4F0",
   };
 
   if (brandLoading || loading) {

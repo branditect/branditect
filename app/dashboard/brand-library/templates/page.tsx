@@ -203,7 +203,7 @@ export default function TemplatesPage() {
         </div>
         <button
           onClick={() => { setModalOpen(true); setTimeout(() => modalNameRef.current?.focus(), 50) }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E8562A', color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E16C00', color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
         >
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
           Add template
@@ -217,7 +217,7 @@ export default function TemplatesPage() {
           onChange={e => handleNoteChange(e.target.value)}
           placeholder="Add notes about your templates — naming conventions, when to use which, links to design systems..."
           style={{ width: '100%', minHeight: 60, fontSize: 13, lineHeight: 1.6, color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 8, padding: '10px 13px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
-          onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E8562A'; (e.target as HTMLTextAreaElement).style.background = 'white' }}
+          onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E16C00'; (e.target as HTMLTextAreaElement).style.background = 'white' }}
           onBlur={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#EDEBE8'; (e.target as HTMLTextAreaElement).style.background = '#F5F4F2' }}
         />
         {note && (
@@ -235,14 +235,14 @@ export default function TemplatesPage() {
           return (
             <div
               key={t.id}
-              style={{ background: 'white', border: `1px solid ${isConnected ? '#E8562A' : '#EDEBE8'}`, borderLeft: isConnected ? '3px solid #E8562A' : '1px solid #EDEBE8', borderRadius: 10, padding: '13px 15px', display: 'grid', gridTemplateColumns: '64px 1fr auto', alignItems: 'start', gap: 14 }}
+              style={{ background: 'white', border: `1px solid ${isConnected ? '#E16C00' : '#EDEBE8'}`, borderLeft: isConnected ? '3px solid #E16C00' : '1px solid #EDEBE8', borderRadius: 10, padding: '13px 15px', display: 'grid', gridTemplateColumns: '64px 1fr auto', alignItems: 'start', gap: 14 }}
             >
               {/* Thumbnail */}
               <label
                 style={{ width: 64, height: 64, borderRadius: 7, background: '#F5F4F2', border: '1.5px dashed #D9D6D0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0 }}
               >
                 {thumbUploading[t.id] ? (
-                  <div style={{ width: 18, height: 18, border: '2px solid #D9D6D0', borderTopColor: '#E8562A', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
+                  <div style={{ width: 18, height: 18, border: '2px solid #D9D6D0', borderTopColor: '#E16C00', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
                 ) : t.thumbnail_url ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={t.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
@@ -269,7 +269,7 @@ export default function TemplatesPage() {
                   onChange={e => setEditNames(p => ({ ...p, [t.id]: e.target.value }))}
                   onBlur={e => { if (e.target.value.trim() !== t.name) saveField(t.id, 'name', e.target.value.trim()) }}
                   style={{ fontSize: 13.5, fontWeight: 500, color: '#0D0D0D', background: 'transparent', border: 'none', borderBottom: '1.5px solid transparent', outline: 'none', padding: '1px 2px', width: '100%', marginBottom: 7, fontFamily: 'inherit', transition: 'border-color 0.15s' }}
-                  onFocus={e => { (e.target as HTMLInputElement).style.borderBottomColor = '#E8562A' }}
+                  onFocus={e => { (e.target as HTMLInputElement).style.borderBottomColor = '#E16C00' }}
                 />
 
                 {/* Tags */}
@@ -294,14 +294,14 @@ export default function TemplatesPage() {
                     onChange={e => setEditUrls(p => ({ ...p, [t.id]: e.target.value }))}
                     placeholder="Paste template link…"
                     style={{ flex: 1, fontSize: 12, fontFamily: 'inherit', color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', outline: 'none', minWidth: 0, transition: 'border-color 0.15s' }}
-                    onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E8562A'; (e.target as HTMLInputElement).style.background = 'white' }}
+                    onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E16C00'; (e.target as HTMLInputElement).style.background = 'white' }}
                     onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2' }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); connectTemplate(t.id) } }}
                   />
                   {urlDirty || !isConnected ? (
                     <button
                       onMouseDown={e => { e.preventDefault(); connectTemplate(t.id) }}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 12px', borderRadius: 6, background: '#E8562A', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 12px', borderRadius: 6, background: '#E16C00', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       {isConnected ? 'Save' : 'Connect'}
                     </button>
@@ -342,7 +342,7 @@ export default function TemplatesPage() {
         <button
           onClick={() => { setModalOpen(true); setTimeout(() => modalNameRef.current?.focus(), 50) }}
           style={{ background: 'transparent', border: '1.5px dashed #D9D6D0', borderRadius: 10, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left', fontFamily: 'inherit' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#E8562A'; (e.currentTarget as HTMLButtonElement).style.background = '#FBE9E2' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#E16C00'; (e.currentTarget as HTMLButtonElement).style.background = '#FBE9E2' }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#D9D6D0'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
         >
           <div style={{ width: 38, height: 38, borderRadius: 7, background: '#EDEBE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -385,7 +385,7 @@ export default function TemplatesPage() {
                   <button
                     key={p}
                     onClick={() => setModalPlat(p)}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px 10px', border: `1px solid ${modalPlat === p ? '#E8562A' : '#EDEBE8'}`, borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', background: modalPlat === p ? '#FBE9E2' : 'white', color: modalPlat === p ? '#E8562A' : '#3A3835', transition: 'all 0.12s' }}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px 10px', border: `1px solid ${modalPlat === p ? '#E16C00' : '#EDEBE8'}`, borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', background: modalPlat === p ? '#FBE9E2' : 'white', color: modalPlat === p ? '#E16C00' : '#3A3835', transition: 'all 0.12s' }}
                   >
                     {PLATFORM_LABEL[p]}
                   </button>
@@ -415,7 +415,7 @@ export default function TemplatesPage() {
               <button
                 onClick={saveNewTemplate}
                 disabled={!modalName.trim() || saving}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: !modalName.trim() || saving ? '#F5F4F2' : '#E8562A', color: !modalName.trim() || saving ? '#B0ACA4' : 'white', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: !modalName.trim() || saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: !modalName.trim() || saving ? '#F5F4F2' : '#E16C00', color: !modalName.trim() || saving ? '#B0ACA4' : 'white', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: !modalName.trim() || saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
               >
                 {saving ? 'Adding…' : 'Add template'}
               </button>

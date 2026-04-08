@@ -821,7 +821,7 @@ export default function BrandStrategyPage() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+              <div className="px-4 py-3 rounded-xl bg-white border border-[#C8C9CC] text-sm text-[#555555]">
                 {error}
               </div>
             )}
@@ -965,7 +965,7 @@ export default function BrandStrategyPage() {
                       <span
                         className={`text-xs font-mono ${
                           answered === total
-                            ? "text-green-600"
+                            ? "text-[#315A72]"
                             : "text-muted"
                         }`}
                       >
@@ -1076,7 +1076,7 @@ export default function BrandStrategyPage() {
               </div>
 
               {error && (
-                <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm font-sans">
+                <div className="mt-4 p-3 rounded-lg bg-white text-[#555555] text-sm font-sans">
                   {error}
                 </div>
               )}
@@ -1148,7 +1148,7 @@ export default function BrandStrategyPage() {
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-mono transition-colors ${
                       idx < generationStage
-                        ? "bg-green-500 text-white"
+                        ? "bg-[#EBF5FC]0 text-white"
                         : idx === generationStage
                           ? "bg-brand-orange text-white animate-pulse"
                           : "bg-light text-muted"
@@ -1193,7 +1193,7 @@ export default function BrandStrategyPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-sans">
+              <div className="p-3 rounded-lg bg-white text-[#555555] text-sm font-sans">
                 {error}
                 <button
                   onClick={() => {
@@ -1250,7 +1250,7 @@ export default function BrandStrategyPage() {
                 disabled={saved}
                 className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors font-sans ${
                   saved
-                    ? "bg-green-500 text-white"
+                    ? "bg-[#EBF5FC]0 text-white"
                     : "bg-brand-orange text-white hover:bg-brand-orange-hover"
                 }`}
               >
@@ -1285,8 +1285,8 @@ export default function BrandStrategyPage() {
               {/* ---------- Topbar ---------- */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span className="flex items-center gap-1.5 bg-[#EBF5FC] text-[#315A72] text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#EBF5FC]0" />
                     Complete
                   </span>
                   {strategyRecord && (
@@ -1328,13 +1328,13 @@ export default function BrandStrategyPage() {
                 <div className="flex items-center gap-3 mt-6">
                   <button
                     onClick={downloadJSON}
-                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E8562A] hover:text-[#E8562A] transition-colors"
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E16C00] hover:text-[#E16C00] transition-colors"
                   >
                     Export
                   </button>
                   <button
                     onClick={() => setShowRedoModal(true)}
-                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E8562A] hover:text-[#E8562A] transition-colors"
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E16C00] hover:text-[#E16C00] transition-colors"
                   >
                     Re-do brand strategy
                   </button>
@@ -1369,8 +1369,8 @@ export default function BrandStrategyPage() {
                       <div className="text-[0.82rem] text-white/90 leading-relaxed">{strategyJSON.passport.targetGroup}</div>
                     </div>
                     <div>
-                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-1">Only-We Claim</div>
-                      <div className="text-[0.88rem] text-[#E8562A] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-1">Only-We Claim</div>
+                      <div className="text-[0.88rem] text-[#E16C00] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
                     </div>
                   </div>
                 </div>
@@ -1381,7 +1381,7 @@ export default function BrandStrategyPage() {
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
                 <div className="bg-[#1A1A1A] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
                   {([
-                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E8562A", text: "white" },
+                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E16C00", text: "white" },
                     { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#C44A24", text: "white" },
                     { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#3D3D3D", text: "white" },
                     { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#2D2D2D", text: "#E5E5E5" },
@@ -1412,7 +1412,7 @@ export default function BrandStrategyPage() {
                   ))}
                 </div>
                 <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-6">
-                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">Our Solution</div>
+                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">Our Solution</div>
                   <div className="text-[0.85rem] text-[#1A1A1A] leading-relaxed">{strategyJSON.solution}</div>
                 </div>
               </section>
@@ -1422,12 +1422,12 @@ export default function BrandStrategyPage() {
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">What Makes Us Different</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
-                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">First To</div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">First To</div>
                     <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.firstTo.claim}</div>
                     <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.firstTo.explanation}</div>
                   </div>
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
-                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E8562A] mb-2">Only Ones Who</div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">Only Ones Who</div>
                     <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.onlyOnesWho.claim}</div>
                     <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.onlyOnesWho.explanation}</div>
                   </div>
@@ -1458,7 +1458,7 @@ export default function BrandStrategyPage() {
                         </div>
                         <span className={`ml-auto text-[0.65rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                           p.type === "primary"
-                            ? "bg-[#FFF2EE] text-[#E8562A]"
+                            ? "bg-[#FFF2EE] text-[#E16C00]"
                             : "bg-[#F5F5F5] text-[#6B6B6B]"
                         }`}>{p.type}</span>
                       </div>
@@ -1482,7 +1482,7 @@ export default function BrandStrategyPage() {
                             {p.channels.map((ch, ci) => (
                               <span key={ci} className={`text-[0.68rem] px-2 py-0.5 rounded-full ${
                                 p.activeChannels.includes(ch)
-                                  ? "bg-[#FFF2EE] text-[#E8562A] font-semibold"
+                                  ? "bg-[#FFF2EE] text-[#E16C00] font-semibold"
                                   : "bg-[#F5F5F5] text-[#6B6B6B]"
                               }`}>{ch}</span>
                             ))}
@@ -1523,7 +1523,7 @@ export default function BrandStrategyPage() {
                         <tr key={i} className={`border-t border-[#E5E5E5] ${c.isUs ? "bg-[#FFF2EE]" : "bg-white"}`}>
                           <td className="px-4 py-3 font-medium text-[#1A1A1A]">
                             {c.name}
-                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#E8562A] uppercase">(Us)</span>}
+                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#E16C00] uppercase">(Us)</span>}
                           </td>
                           <td className="px-4 py-3 text-[#6B6B6B]">{c.type}</td>
                           <td className="px-4 py-3 text-[#2D2D2D]">{c.doWell}</td>
@@ -1542,7 +1542,7 @@ export default function BrandStrategyPage() {
                 {/* Pillars */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   {strategyJSON.messagingPillars.map((p, i) => (
-                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#E8562A]">
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#E16C00]">
                       <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{p.title}</div>
                       <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
                     </div>
@@ -1557,7 +1557,7 @@ export default function BrandStrategyPage() {
                         onClick={() => setActiveChannelTab(tab.key)}
                         className={`px-5 py-3 text-[0.78rem] font-medium transition-colors ${
                           activeChannelTab === tab.key
-                            ? "bg-white text-[#E8562A] border-b-2 border-b-[#E8562A] -mb-px"
+                            ? "bg-white text-[#E16C00] border-b-2 border-b-[#E16C00] -mb-px"
                             : "text-[#6B6B6B] hover:text-[#1A1A1A]"
                         }`}
                       >
@@ -1570,7 +1570,7 @@ export default function BrandStrategyPage() {
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          {m.pillar && <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>}
+                          {m.pillar && <span className="text-[0.6rem] text-[#E16C00]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
@@ -1588,7 +1588,7 @@ export default function BrandStrategyPage() {
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          {m.pillar && <span className="text-[0.6rem] text-[#E8562A]">{m.pillar}</span>}
+                          {m.pillar && <span className="text-[0.6rem] text-[#E16C00]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
@@ -1623,13 +1623,13 @@ export default function BrandStrategyPage() {
                 <div className="space-y-3 mb-6">
                   {strategyJSON.voiceDoDont.map((pair, i) => (
                     <div key={i} className="grid grid-cols-2 gap-3">
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-green-700 mb-1">Do</div>
-                        <div className="text-[0.78rem] text-green-900 leading-relaxed">{pair.do}</div>
+                      <div className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-4">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#315A72] mb-1">Do</div>
+                        <div className="text-[0.78rem] text-[#1A1A1A] leading-relaxed">{pair.do}</div>
                       </div>
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-red-700 mb-1">Don&apos;t</div>
-                        <div className="text-[0.78rem] text-red-900 leading-relaxed">{pair.dont}</div>
+                      <div className="bg-white border border-[#C8C9CC] rounded-xl p-4">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">Don&apos;t</div>
+                        <div className="text-[0.78rem] text-[#1A1A1A] leading-relaxed">{pair.dont}</div>
                       </div>
                     </div>
                   ))}
@@ -1641,7 +1641,7 @@ export default function BrandStrategyPage() {
                     <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Always Use</div>
                     <div className="flex flex-wrap gap-1.5">
                       {strategyJSON.alwaysUse.map((w, i) => (
-                        <span key={i} className="bg-green-50 text-green-800 text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
+                        <span key={i} className="bg-[#EBF5FC] text-[#315A72] text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
                       ))}
                     </div>
                   </div>
@@ -1649,7 +1649,7 @@ export default function BrandStrategyPage() {
                     <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Never Use</div>
                     <div className="flex flex-wrap gap-1.5">
                       {strategyJSON.neverUse.map((w, i) => (
-                        <span key={i} className="bg-red-50 text-red-800 text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
+                        <span key={i} className="bg-white text-[#555555] text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
                       ))}
                     </div>
                   </div>
@@ -1663,18 +1663,18 @@ export default function BrandStrategyPage() {
                   {/* Risks */}
                   <div className="space-y-3">
                     {strategyJSON.risks.map((r, i) => (
-                      <div key={i} className="bg-red-50 border border-red-200 rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-red-900 mb-1">{r.title}</div>
-                        <div className="text-[0.78rem] text-red-800 leading-relaxed">{r.text}</div>
+                      <div key={i} className="bg-white border border-[#C8C9CC] rounded-xl p-5">
+                        <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-1">{r.title}</div>
+                        <div className="text-[0.78rem] text-[#555555] leading-relaxed">{r.text}</div>
                       </div>
                     ))}
                   </div>
                   {/* Opportunities */}
                   <div className="space-y-3">
                     {strategyJSON.opportunities.map((o, i) => (
-                      <div key={i} className="bg-green-50 border border-green-200 rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-green-900 mb-1">{o.title}</div>
-                        <div className="text-[0.78rem] text-green-800 leading-relaxed">{o.text}</div>
+                      <div key={i} className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-5">
+                        <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-1">{o.title}</div>
+                        <div className="text-[0.78rem] text-[#315A72] leading-relaxed">{o.text}</div>
                       </div>
                     ))}
                   </div>
@@ -1687,7 +1687,7 @@ export default function BrandStrategyPage() {
                 <div className="space-y-3">
                   {strategyJSON.taglines.map((t, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#E8562A] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
+                      <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#E16C00] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
                       <div>
                         <div className="text-[1rem] font-semibold text-[#1A1A1A] mb-1">&ldquo;{t.text}&rdquo;</div>
                         <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{t.rationale}</div>
@@ -1712,8 +1712,8 @@ export default function BrandStrategyPage() {
               {/* Header area */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="flex items-center gap-1.5 bg-green-50 text-green-700 text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span className="flex items-center gap-1.5 bg-[#EBF5FC] text-[#315A72] text-[0.68rem] font-bold px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#EBF5FC]0" />
                     Complete
                   </span>
                   {strategyRecord && (

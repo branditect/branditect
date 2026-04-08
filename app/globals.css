@@ -3,18 +3,35 @@
 @tailwind utilities;
 
 :root {
-  --text-on-white: #4A4A4A;
-  --text-on-grey: #1A1A1A;
-  --text-heading: #111111;
-  --text-muted: #6B6B6B;
-  --color-text-body: #1f1f1f;
-  --color-text-muted: #666666;
-  --color-text-subtle: #888888;
-  --color-border-default: #D0D3DA;
-  --color-bg-alabaster: #EBEBDF;
-  --color-blue-secondary: #A8C2E0;
-  --color-blue-secondary-text: #2a5a8c;
-  --color-orange-primary: #E8562A;
+  /* Backgrounds */
+  --bg-page: #F5F4F0;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #EBEBDF;
+
+  /* Borders */
+  --border-strong: #315A72;
+  --border-default: #C8C9CC;
+  --border-light: #E2E3E6;
+
+  /* Text */
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --text-on-dark: #FFFFFF;
+
+  /* Brand actions */
+  --action-primary: #E16C00;
+  --action-primary-hover: #C45C00;
+  --action-primary-light: #FFF0E6;
+
+  /* Secondary UI */
+  --action-secondary: #87C5EA;
+  --action-secondary-text: #315A72;
+  --action-secondary-hover: #EBF5FC;
+
+  /* Accent */
+  --accent-peach: #FFCAA7;
+  --accent-payne: #315A72;
 }
 
 * {
@@ -28,8 +45,9 @@ html {
 }
 
 body {
-  background: #FAFAF8;
-  color: #1f1f1f;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   font-size: 14px;
 }
@@ -41,22 +59,22 @@ h1, h2, h3, h4 {
 
 input, textarea, select {
   background-color: #FFFFFF;
-  border: 1px solid #E0E0E0;
-  color: #1A1A1A;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   border-radius: 6px;
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #E8562A;
-  box-shadow: 0 0 0 2px rgba(232, 86, 42, 0.15);
+  border-color: var(--action-primary);
+  box-shadow: 0 0 0 2px rgba(225, 108, 0, 0.15);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #9a9a9a; }
+::-webkit-scrollbar-thumb { background: #C8C9CC; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #999; }
 
 /* Animations */
 @keyframes fadeIn {
@@ -86,7 +104,7 @@ input:focus, textarea:focus, select:focus {
   display: inline-block;
   width: 3px;
   height: 3px;
-  background: #E8562A;
+  background: var(--action-primary);
   border-radius: 50%;
   animation: genDot 1.2s ease-in-out infinite;
   margin: 0 1px;

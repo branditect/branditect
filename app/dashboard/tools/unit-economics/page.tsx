@@ -60,7 +60,7 @@ function ProductMarginCalc() {
     { label: "Packaging", value: packaging, color: "#D1D5DB" },
     { label: "Shipping", value: shipping, color: "#93C5FD" },
     { label: "CAC", value: cac, color: "#FCD34D" },
-    { label: "Profit", value: Math.max(netProfit, 0), color: "#E8562A" },
+    { label: "Profit", value: Math.max(netProfit, 0), color: "#E16C00" },
   ];
   const segTotal = segments.reduce((s, x) => s + Math.max(x.value, 0), 0);
 

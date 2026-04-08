@@ -46,6 +46,8 @@ export default function MissionBoardPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(''); const [toastVisible, setToastVisible] = useState(false)
+  const [noteSearch, setNoteSearch] = useState('')
+  const [scratchPad, setScratchPad] = useState('')
 
   // Add forms
   const [addGoalOpen, setAddGoalOpen] = useState(false)
@@ -183,11 +185,31 @@ export default function MissionBoardPage() {
     showToast('Copied')
   }
 
+  async function saveScratchPad() {
+    if (!scratchPad.trim()) return
+    const res = await fetch('/api/mission-board/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandId, content: scratchPad.trim() }),
+    })
+    const json = await res.json()
+    if (json.data) setNotes(prev => [json.data, ...prev])
+    setScratchPad('')
+    showToast('Note saved')
+  }
+
   /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
   const regularNotes = notes.filter(n => !n.is_draft && !n.is_favorite)
   const favorites = notes.filter(n => n.is_favorite && !n.is_draft)
   const drafts = notes.filter(n => n.is_draft)
+
+  const filteredNotes = noteSearch.trim()
+    ? regularNotes.filter(n => n.content.toLowerCase().includes(noteSearch.toLowerCase()))
+    : regularNotes
+
+  const recentStarred = favorites.slice(0, 5)
+  const recentNotes = regularNotes.slice(0, 5)
 
   function isToday(d: string | null) {
     if (!d) return false
@@ -480,28 +502,129 @@ export default function MissionBoardPage() {
         {/* ═══ NOTES TAB ═══ */}
         {tab === 'notes' && (
           <div>
-            {regularNotes.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 48, color: '#B0ACA4', fontSize: 13 }}>
-                No notes yet — use the floating pen button to capture ideas from any page
+            {/* Search bar */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ position: 'relative', maxWidth: 420 }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="7" cy="7" r="5.5" stroke="#B0ACA4" strokeWidth="1.3"/><line x1="11" y1="11" x2="14.5" y2="14.5" stroke="#B0ACA4" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                <input
+                  value={noteSearch}
+                  onChange={e => setNoteSearch(e.target.value)}
+                  placeholder="Search notes..."
+                  style={{ width: '100%', padding: '9px 12px 9px 34px', border: '0.5px solid #EDEBE8', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#F5F4F2', boxSizing: 'border-box' }}
+                  onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E8562A'; (e.target as HTMLInputElement).style.background = '#fff' }}
+                  onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2' }}
+                />
               </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-                {regularNotes.map(note => (
-                  <div key={note.id} style={card}>
-                    <div style={{ fontSize: 13, color: '#3A3835', lineHeight: 1.65, marginBottom: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                      {note.content}
+            </div>
+
+            {/* Top section: Notes row + Scratch pad */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, marginBottom: 36 }}>
+
+              {/* Notes cards row */}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0D0D0D', marginBottom: 12, fontFamily: "'Space Grotesk', sans-serif" }}>Notes</div>
+                {filteredNotes.length === 0 ? (
+                  <div style={{ ...card, textAlign: 'center', padding: 32, color: '#B0ACA4', fontSize: 13 }}>
+                    {noteSearch ? 'No matching notes' : 'No notes yet — use the floating pen button to capture ideas'}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                    {filteredNotes.map(note => (
+                      <div key={note.id} style={{ ...card, minWidth: 200, maxWidth: 220, flexShrink: 0, cursor: 'default', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+                        <div>
+                          {note.title && <div style={{ fontSize: 12, fontWeight: 600, color: '#0D0D0D', marginBottom: 4 }}>{note.title}</div>}
+                          <div style={{ fontSize: 12, color: '#3A3835', lineHeight: 1.55, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 6, WebkitBoxOrient: 'vertical' as const, wordBreak: 'break-word' }}>
+                            {note.content}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 8, borderTop: '0.5px solid #F5F4F2' }}>
+                          <span style={{ fontSize: 10, color: '#B0ACA4' }}>{formatDate(note.created_at)}</span>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button onClick={() => moveToDraft(note.id)} style={{ border: 'none', background: 'transparent', color: '#B0ACA4', cursor: 'pointer', fontSize: 11, padding: '1px 4px', fontFamily: 'inherit' }} title="Move to Draft Board">&#8594;</button>
+                            <button onClick={() => deleteNote(note.id)} style={{ border: 'none', background: 'transparent', color: '#D9D6D0', cursor: 'pointer', fontSize: 13, padding: '1px 4px' }} title="Delete">&times;</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Scratch pad */}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0D0D0D', marginBottom: 12, fontFamily: "'Space Grotesk', sans-serif" }}>Scratch pad</div>
+                <div style={{ background: '#FDF8E8', border: '0.5px solid #F0E6C0', borderRadius: 10, padding: 16, minHeight: 160, display: 'flex', flexDirection: 'column' }}>
+                  <textarea
+                    value={scratchPad}
+                    onChange={e => setScratchPad(e.target.value)}
+                    placeholder="Start writing..."
+                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, lineHeight: 1.6, color: '#3A3835', resize: 'none', fontFamily: 'inherit', minHeight: 100 }}
+                  />
+                  {scratchPad.trim() && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                      <button onClick={saveScratchPad} style={{ ...btnOrange, fontSize: 11, padding: '5px 12px' }}>Save as note</button>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 10, color: '#B0ACA4' }}>{timeAgo(note.created_at)}</span>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => moveToDraft(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px' }}>Move to Draft Board</button>
-                        <button onClick={() => deleteNote(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '3px 8px', color: '#C0392B' }}>Delete</button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom section: Recently captured + Recent notes */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+
+              {/* Recently captured (starred copy) */}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0D0D0D', marginBottom: 12, fontFamily: "'Space Grotesk', sans-serif" }}>Recently captured</div>
+                <div style={{ fontSize: 11, color: '#B0ACA4', marginBottom: 12, marginTop: -8 }}>Starred copy from Copy Architect</div>
+                {recentStarred.length === 0 ? (
+                  <div style={{ ...card, textAlign: 'center', padding: 24, color: '#B0ACA4', fontSize: 12.5 }}>
+                    Star copy in the Copy Architect to capture it here.
+                  </div>
+                ) : (
+                  recentStarred.map(note => (
+                    <div key={note.id} style={{ ...card, borderLeft: '3px solid #E8562A', padding: '12px 14px' }}>
+                      {note.title && <div style={{ fontSize: 10, fontWeight: 500, color: '#E8562A', marginBottom: 4 }}>{note.title}</div>}
+                      <div style={{ fontSize: 12.5, color: '#3A3835', lineHeight: 1.55, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const }}>
+                        {note.content}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                        <span style={{ fontSize: 10, color: '#B0ACA4' }}>{timeAgo(note.created_at)}</span>
+                        <button onClick={() => copyText(note.content)} style={{ ...btnGhost, fontSize: 10, padding: '2px 8px' }}>Copy</button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
+                {favorites.length > 5 && (
+                  <button onClick={() => setTab('favorites')} style={{ ...btnGhost, width: '100%', marginTop: 6, textAlign: 'center' }}>View all {favorites.length} favorites &rarr;</button>
+                )}
               </div>
-            )}
+
+              {/* Recent notes */}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0D0D0D', marginBottom: 12, fontFamily: "'Space Grotesk', sans-serif" }}>Recent notes</div>
+                <div style={{ fontSize: 11, color: '#B0ACA4', marginBottom: 12, marginTop: -8 }}>Quick captures from the floating pen</div>
+                {recentNotes.length === 0 ? (
+                  <div style={{ ...card, textAlign: 'center', padding: 24, color: '#B0ACA4', fontSize: 12.5 }}>
+                    Use the floating pen button to jot down ideas from any page.
+                  </div>
+                ) : (
+                  recentNotes.map(note => (
+                    <div key={note.id} style={{ ...card, padding: '12px 14px' }}>
+                      <div style={{ fontSize: 12.5, color: '#3A3835', lineHeight: 1.55, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const }}>
+                        {note.content}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                        <span style={{ fontSize: 10, color: '#B0ACA4' }}>{timeAgo(note.created_at)}</span>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => moveToDraft(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '2px 8px' }}>To draft</button>
+                          <button onClick={() => deleteNote(note.id)} style={{ ...btnGhost, fontSize: 10, padding: '2px 8px', color: '#C0392B' }}>Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
 

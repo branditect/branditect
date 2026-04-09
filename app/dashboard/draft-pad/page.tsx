@@ -154,9 +154,13 @@ export default function DraftPadPage() {
   // ── Section operations ──────────────────────────────────────────────────
 
   function addSection(type: SectionType, prefill?: string, label?: string) {
-    const s: Section = { id: sid(), type, value: prefill || '', label }
+    const newId = sid()
+    const s: Section = { id: newId, type, value: prefill || '', label }
     if (type === 'products') s.products = []
     setSections(prev => [...prev, s])
+    // Auto-open picker for image and product sections
+    if (type === 'image') setTimeout(() => setImgPickerFor(newId), 50)
+    if (type === 'products') setTimeout(() => setProductPickerFor(newId), 50)
   }
 
   function updateSection(id: string, field: string, value: unknown) {

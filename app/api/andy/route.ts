@@ -12,12 +12,16 @@ const supabase = createClient(
 )
 
 async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes] = await Promise.all([
+  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes] = await Promise.all([
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, price_wholesale, price_cogs, currency, type, category').eq('brand_id', brandId).limit(10),
-    supabase.from('brands').select('strategy_text').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brands').select('strategy_text, colors').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_book_colors').select('hex, name').eq('brand_id', brandId).limit(20),
+    supabase.from('brand_logos').select('slot, file_url, file_name').eq('brand_id', brandId),
+    supabase.from('brand_fonts').select('name, role, google_font_url').eq('brand_id', brandId),
+    supabase.from('brand_visual').select('*').eq('brand_id', brandId).maybeSingle(),
   ])
 
   const brand = brandRes.data
@@ -67,6 +71,52 @@ async function getBrandContext(brandId: string): Promise<string> {
       ctx += `\n`
       if (p.description) ctx += `  ${(p.description as string).slice(0, 200)}\n`
     })
+  }
+
+  // Visual Identity — colors
+  const colors = colorsRes.data
+  const brandColors = brandStratRes.data?.colors
+  if ((colors && colors.length > 0) || brandColors) {
+    ctx += `\nVISUAL IDENTITY — COLORS:\n`
+    if (brandColors && Array.isArray(brandColors)) {
+      brandColors.forEach((c: { hex?: string; name?: string }) => {
+        if (c.hex) ctx += `- ${c.name || 'Color'}: ${c.hex}\n`
+      })
+    }
+    if (colors && colors.length > 0) {
+      colors.forEach((c: { hex: string; name: string }) => {
+        ctx += `- ${c.name}: ${c.hex}\n`
+      })
+    }
+  }
+
+  // Visual Identity — logos
+  const logos = logosRes.data
+  if (logos && logos.length > 0) {
+    ctx += `\nVISUAL IDENTITY — LOGOS:\n`
+    logos.forEach((l: { slot: string; file_name: string | null }) => {
+      ctx += `- ${l.slot} logo: ${l.file_name || 'uploaded'}\n`
+    })
+  }
+
+  // Visual Identity — fonts
+  const fonts = fontsRes.data
+  if (fonts && fonts.length > 0) {
+    ctx += `\nVISUAL IDENTITY — TYPOGRAPHY:\n`
+    fonts.forEach((f: { name: string; role: string | null }) => {
+      ctx += `- ${f.name} (${f.role || 'general'})\n`
+    })
+  }
+
+  // Visual Identity — additional from brand_visual table
+  const visual = visualRes.data
+  if (visual) {
+    const { id: _vi, user_id: _vu, brand_id: _vb, created_at: _vc, updated_at: _vup, ...visualFields } = visual
+    void _vi; void _vu; void _vb; void _vc; void _vup;
+    const vJson = JSON.stringify(visualFields)
+    if (vJson.length > 10) {
+      ctx += `\nVISUAL IDENTITY — ADDITIONAL:\n${vJson.slice(0, 1500)}\n`
+    }
   }
 
   return ctx

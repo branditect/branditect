@@ -2,6 +2,7 @@ import Topbar from "@/components/topbar";
 import Sidebar from "@/components/sidebar";
 import FloatingNotes from "@/components/floating-notes";
 import AndyTrigger from "@/components/andy-trigger";
+import WelcomeModal from "@/components/welcome-modal";
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
       </div>
       <FloatingNotes />
       <AndyTrigger />
+      <WelcomeModal />
     </div>
   );
 }

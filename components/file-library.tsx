@@ -179,6 +179,9 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
                 {hoveredId === item.id && (
                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
                     <div className="flex gap-1.5">
+                      <a href={item.file_url} download={item.file_name} onClick={e => e.stopPropagation()} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline">
+                        Download
+                      </a>
                       <button onClick={() => copyUrl(item.file_url)} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
                         {copiedUrl === item.file_url ? "Copied ✓" : "Copy URL"}
                       </button>

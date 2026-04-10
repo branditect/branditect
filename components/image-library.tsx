@@ -449,6 +449,14 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                       {img.file_name}
                     </span>
                     <div className="flex gap-1.5">
+                      <a
+                        href={img.file_url}
+                        download={img.file_name}
+                        onClick={e => e.stopPropagation()}
+                        className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline"
+                      >
+                        Download
+                      </a>
                       <button
                         onClick={() => copyUrl(img.file_url)}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30"

@@ -12,7 +12,7 @@ const supabase = createClient(
 )
 
 async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes] = await Promise.all([
+  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes] = await Promise.all([
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
@@ -22,6 +22,7 @@ async function getBrandContext(brandId: string): Promise<string> {
     supabase.from('brand_logos').select('slot, file_url, file_name').eq('brand_id', brandId),
     supabase.from('brand_fonts').select('name, role, google_font_url').eq('brand_id', brandId),
     supabase.from('brand_visual').select('*').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_documents').select('file_name, category, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(10),
   ])
 
   const brand = brandRes.data
@@ -116,6 +117,28 @@ async function getBrandContext(brandId: string): Promise<string> {
     const vJson = JSON.stringify(visualFields)
     if (vJson.length > 10) {
       ctx += `\nVISUAL IDENTITY — ADDITIONAL:\n${vJson.slice(0, 1500)}\n`
+    }
+  }
+
+  // Knowledge Vault — extracted documents
+  const docs = docsRes.data
+  if (docs && docs.length > 0) {
+    ctx += `\nKNOWLEDGE VAULT (${docs.length} documents):\n`
+    ctx += `These are uploaded brand documents with extracted text. Use this information to answer questions accurately.\n\n`
+    let charBudget = 8000 // allocate up to 8k chars for vault docs
+    for (const doc of docs) {
+      if (charBudget <= 0) break
+      const text = (doc as Record<string, string>).extracted_text
+      if (!text) {
+        ctx += `--- Document: ${(doc as Record<string, string>).file_name} [no text extracted] ---\n\n`
+        continue
+      }
+      const chunk = text.slice(0, Math.min(charBudget, 2000))
+      ctx += `--- Document: ${(doc as Record<string, string>).file_name} ---\n`
+      ctx += chunk
+      if (text.length > chunk.length) ctx += `\n[...truncated, ${text.length} chars total]`
+      ctx += `\n\n`
+      charBudget -= chunk.length
     }
   }
 

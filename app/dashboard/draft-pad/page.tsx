@@ -171,6 +171,20 @@ export default function DraftPadPage() {
     setSections(prev => prev.filter(s => s.id !== id))
   }
 
+  function moveSection(id: string, dir: -1 | 1) {
+    setSections(prev => {
+      const idx = prev.findIndex(s => s.id === id)
+      if (idx < 0) return prev
+      const newIdx = idx + dir
+      if (newIdx < 0 || newIdx >= prev.length) return prev
+      const next = [...prev]
+      const temp = next[idx]
+      next[idx] = next[newIdx]
+      next[newIdx] = temp
+      return next
+    })
+  }
+
   function dropLiked(copy: LikedCopy) {
     addSection('text', copy.content, copy.title)
     showToast(`"${copy.title || 'Copy'}" dropped into draft`)
@@ -299,11 +313,15 @@ export default function DraftPadPage() {
               </div>
             )}
 
-            {sections.map(section => (
+            {sections.map((section, sIdx) => (
               <div key={section.id} style={{ marginBottom: 10 }}>
                 <div style={secRow}>
                   <span style={secLabel}>{section.label || section.type}</span>
-                  <button style={secRemove} onClick={() => removeSection(section.id)}>Remove</button>
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <button style={{ ...secRemove, fontSize: 13, opacity: sIdx === 0 ? 0.3 : 1 }} onClick={() => moveSection(section.id, -1)} disabled={sIdx === 0} title="Move up">&uarr;</button>
+                    <button style={{ ...secRemove, fontSize: 13, opacity: sIdx === sections.length - 1 ? 0.3 : 1 }} onClick={() => moveSection(section.id, 1)} disabled={sIdx === sections.length - 1} title="Move down">&darr;</button>
+                    <button style={secRemove} onClick={() => removeSection(section.id)}>Remove</button>
+                  </div>
                 </div>
 
                 {/* Headline */}
@@ -313,13 +331,20 @@ export default function DraftPadPage() {
 
                 {/* Text */}
                 {section.type === 'text' && (
-                  <textarea value={section.value} onChange={e => updateSection(section.id, 'value', e.target.value)} placeholder="Write your copy..." rows={4} style={{ fontSize: 13, color: C.sec, border: 'none', outline: 'none', background: 'transparent', width: '100%', resize: 'none', lineHeight: 1.8, padding: '4px 0', fontFamily: "'DM Sans', sans-serif", minHeight: 56, boxSizing: 'border-box' }} />
+                  <textarea
+                    value={section.value}
+                    onChange={e => { updateSection(section.id, 'value', e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
+                    placeholder="Write your copy..."
+                    rows={3}
+                    ref={el => { if (el && el.scrollHeight > el.clientHeight) el.style.height = el.scrollHeight + 'px' }}
+                    style={{ fontSize: 13, color: C.sec, border: 'none', outline: 'none', background: 'transparent', width: '100%', resize: 'vertical', lineHeight: 1.8, padding: '4px 0', fontFamily: "'DM Sans', sans-serif", minHeight: 56, boxSizing: 'border-box', overflow: 'hidden' }}
+                  />
                 )}
 
                 {/* Image */}
                 {section.type === 'image' && (
                   <div>
-                    {section.imgName ? (
+                    {section.imgName && imgPickerFor !== section.id ? (
                       <div style={{ border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
                           <div style={{ width: 48, height: 48, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, background: section.imgBg, color: section.imgCol }}>IMG</div>
@@ -328,10 +353,13 @@ export default function DraftPadPage() {
                             <div style={{ fontSize: 10, color: C.mu, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>brand-assets/{section.imgName}</div>
                           </div>
                         </div>
-                        <button onClick={() => clearImage(section.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CCC', fontSize: 16, padding: 0 }}>&times;</button>
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                          <button onClick={() => setImgPickerFor(section.id)} style={{ background: 'none', border: `0.5px solid ${C.bdl}`, borderRadius: 5, cursor: 'pointer', color: C.mu, fontSize: 10, padding: '3px 8px', fontFamily: "'DM Sans', sans-serif" }}>Change</button>
+                          <button onClick={() => clearImage(section.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CCC', fontSize: 16, padding: 0 }}>&times;</button>
+                        </div>
                       </div>
-                    ) : (
-                      <div onClick={() => setImgPickerFor(imgPickerFor === section.id ? null : section.id)} style={{ border: `0.5px dashed ${C.bdl}`, borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer' }}>
+                    ) : imgPickerFor !== section.id ? (
+                      <div onClick={() => setImgPickerFor(section.id)} style={{ border: `0.5px dashed ${C.bdl}`, borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, cursor: 'pointer' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 36, height: 36, borderRadius: 8, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" stroke={C.mu} strokeWidth="1.3"/><path d="M1 11l4-5 3.5 4.5 2.5-3L15 11" stroke={C.mu} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -340,13 +368,16 @@ export default function DraftPadPage() {
                         </div>
                         <span style={{ fontSize: 10.5, fontWeight: 500, color: C.or }}>Browse</span>
                       </div>
-                    )}
+                    ) : null}
                     {imgPickerFor === section.id && (
-                      <div style={{ background: C.bg, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: 12, marginTop: 8 }}>
-                        <div style={{ fontSize: 10, fontWeight: 500, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Asset library</div>
+                      <div style={{ background: C.bg, border: `0.5px solid ${C.bd}`, borderRadius: 10, padding: 12, marginTop: section.imgName ? 8 : 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <div style={{ fontSize: 10, fontWeight: 500, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pick from asset library</div>
+                          <button onClick={() => setImgPickerFor(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.mu, fontSize: 12 }}>&times;</button>
+                        </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                           {IMG_LIBRARY.map(img => (
-                            <div key={img.name} onClick={() => pickImage(section.id, img)} style={{ height: 50, borderRadius: 6, border: `0.5px solid ${C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, position: 'relative', overflow: 'hidden', background: img.bg, color: img.col, transition: 'all 0.15s' }}>
+                            <div key={img.name} onClick={() => pickImage(section.id, img)} style={{ height: 50, borderRadius: 6, border: `0.5px solid ${img.name === section.imgName ? C.or : C.bd}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 500, position: 'relative', overflow: 'hidden', background: img.bg, color: img.col, transition: 'all 0.15s' }}>
                               {img.short}
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: 7.5, padding: '2px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{img.name}</div>
                             </div>

@@ -1,6 +1,7 @@
 import Topbar from "@/components/topbar";
 import Sidebar from "@/components/sidebar";
 import FloatingNotes from "@/components/floating-notes";
+import AndyTrigger from "@/components/andy-trigger";
 
 export default function DashboardLayout({
   children,
@@ -15,6 +16,7 @@ export default function DashboardLayout({
         <main className="flex-1 overflow-y-auto bg-[#FAFAFA]">{children}</main>
       </div>
       <FloatingNotes />
+      <AndyTrigger />
     </div>
   );
 }

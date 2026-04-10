@@ -232,7 +232,11 @@ export default function VisualIdentityPage() {
 
     setPageUploading(false)
     setPageProgress('')
-    if (uploaded > 0) showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
+    if (uploaded > 0) {
+      // Jump to first newly uploaded page
+      setCurPage(pages.length)
+      showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
+    }
   }
 
   async function deletePage(id: number) {
@@ -435,33 +439,32 @@ export default function VisualIdentityPage() {
               <input ref={pageUploadRef} type="file" accept="image/*,.pdf,application/pdf" multiple style={{ display: 'none' }} onChange={e => uploadPages(e.target.files)} />
             </div>
 
-            {pages.length > 0 ? (
+            {pages.length > 0 ? (() => {
+              const safeIdx = Math.min(curPage, pages.length - 1)
+              const activePage = pages[safeIdx]
+              return (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ background: '#1a1a1a', borderRadius: 10, overflow: 'hidden', marginBottom: 8, position: 'relative', aspectRatio: '16/9' }}>
-                  {pages[curPage]?.file_type === 'pdf' ? (
-                    <iframe src={`${pages[curPage].file_url}#toolbar=0`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF" />
-                  ) : (
+                  {activePage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={pages[curPage]?.file_url} alt={`Page ${curPage + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-                  )}
-                  <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 11, padding: '3px 10px', borderRadius: 12 }}>{curPage + 1} / {pages.length}</div>
-                  {curPage > 0 && <button onClick={() => setCurPage(p => p - 1)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&larr;</button>}
-                  {curPage < pages.length - 1 && <button onClick={() => setCurPage(p => p + 1)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&rarr;</button>}
+                    <img src={activePage.file_url} alt={`Page ${safeIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                  ) : null}
+                  <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 11, padding: '3px 10px', borderRadius: 12 }}>{safeIdx + 1} / {pages.length}</div>
+                  {safeIdx > 0 && <button onClick={() => setCurPage(p => p - 1)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&larr;</button>}
+                  {safeIdx < pages.length - 1 && <button onClick={() => setCurPage(p => p + 1)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&rarr;</button>}
                 </div>
                 <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
                   {pages.map((pg, i) => (
-                    <div key={pg.id} onClick={() => setCurPage(i)} style={{ width: 80, height: 45, borderRadius: 5, overflow: 'hidden', flexShrink: 0, cursor: 'pointer', border: i === curPage ? `2px solid ${C.or}` : '1.5px solid transparent', background: '#1a1a1a', position: 'relative' }}>
-                      {pg.file_type === 'pdf'
-                        ? <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>PDF</div>
-                        // eslint-disable-next-line @next/next/no-img-element
-                        : <img src={pg.file_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      }
+                    <div key={pg.id} onClick={() => setCurPage(i)} style={{ width: 80, height: 45, borderRadius: 5, overflow: 'hidden', flexShrink: 0, cursor: 'pointer', border: i === safeIdx ? `2px solid ${C.or}` : '1.5px solid transparent', background: '#1a1a1a', position: 'relative' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={pg.file_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       <button onClick={e => { e.stopPropagation(); deletePage(pg.id) }} style={{ position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
                     </div>
                   ))}
                 </div>
               </div>
-            ) : (
+              )
+            })() : (
               <div onClick={() => pageUploadRef.current?.click()} style={{ border: `1.5px dashed ${C.bdl}`, borderRadius: 10, aspectRatio: '16/9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', background: C.bg, marginBottom: 24 }}>
                 <div style={{ fontSize: 13, color: C.mu }}>Upload your brand guidelines</div>
                 <div style={{ fontSize: 11, color: C.bd }}>PNG, JPG or PDF</div>

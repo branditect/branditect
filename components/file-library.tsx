@@ -36,6 +36,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
   const [filterText, setFilterText] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTags, setEditTags] = useState("");
+  const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = useCallback(async () => {
@@ -212,7 +213,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
               onMouseLeave={() => setHoveredId(null)}
             >
               {/* Preview */}
-              <div className="relative aspect-square bg-pale flex items-center justify-center">
+              <div className="relative aspect-square bg-pale flex items-center justify-center cursor-pointer" onClick={() => setPreviewItem(item)}>
                 {previewType === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.file_url} alt={item.file_name} className="w-full h-full object-cover" />
@@ -267,6 +268,40 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {previewItem && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-8"
+          onClick={() => setPreviewItem(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            {previewType === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewItem.file_url} alt={previewItem.file_name} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
+            ) : previewType === "video" ? (
+              <video src={previewItem.file_url} controls autoPlay className="max-w-full max-h-[75vh] rounded-lg" />
+            ) : previewType === "audio" ? (
+              <div className="bg-white rounded-lg p-8 flex flex-col items-center gap-4">
+                <div className="text-4xl text-muted">SND</div>
+                <div className="text-sm font-medium text-ink">{previewItem.file_name}</div>
+                <audio src={previewItem.file_url} controls autoPlay className="w-80" />
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg p-8 text-center">
+                <div className="text-4xl text-muted mb-3">{icon}</div>
+                <div className="text-sm font-medium text-ink">{previewItem.file_name}</div>
+              </div>
+            )}
+            <div className="mt-3 flex items-center gap-3">
+              <span className="text-white text-sm">{previewItem.file_name}</span>
+              <a href={previewItem.file_url} download={previewItem.file_name} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline">Download</a>
+              <button onClick={() => { navigator.clipboard.writeText(previewItem.file_url); }} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30">Copy URL</button>
+            </div>
+            <button onClick={() => setPreviewItem(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg hover:bg-black/70">&times;</button>
+          </div>
         </div>
       )}
     </div>

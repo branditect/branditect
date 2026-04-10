@@ -60,6 +60,9 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTags, setEditTags] = useState("");
 
+  // Lightbox
+  const [previewImg, setPreviewImg] = useState<BrandImage | null>(null);
+
   /* ---- Fetch images ---- */
 
   const fetchImages = useCallback(async () => {
@@ -434,7 +437,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               onMouseLeave={() => { setHoveredId(null); if (editingId === img.id) { /* keep */ } }}
             >
               {/* Image */}
-              <div className="relative aspect-square bg-pale">
+              <div className="relative aspect-square bg-pale cursor-pointer" onClick={() => setPreviewImg(img)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img.file_url}
@@ -525,6 +528,53 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {previewImg && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-8"
+          onClick={() => setPreviewImg(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={e => e.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImg.file_url}
+              alt={previewImg.file_name}
+              className="w-full h-full object-contain rounded-lg"
+              style={{ maxHeight: '80vh' }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 rounded-b-lg px-4 py-3 flex items-center justify-between">
+              <div>
+                <div className="text-white text-sm font-medium">{previewImg.file_name}</div>
+                <div className="text-white/50 text-xs mt-0.5">
+                  {previewImg.tags?.length > 0 && previewImg.tags.join(', ')}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={previewImg.file_url}
+                  download={previewImg.file_name}
+                  className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline"
+                >
+                  Download
+                </a>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(previewImg.file_url); }}
+                  className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30"
+                >
+                  Copy URL
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={() => setPreviewImg(null)}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg hover:bg-black/70"
+            >
+              &times;
+            </button>
+          </div>
         </div>
       )}
     </div>

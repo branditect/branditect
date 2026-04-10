@@ -428,5 +428,80 @@ export const COPY_CONFIG: Record<string, CategoryConfig> = {
         deliverable: 'Deliver: 5 SMS/push options. Each under 160 characters. Include char count.'
       }
     }
+  },
+  seo: {
+    label: 'SEO Content',
+    icon: '\u2606',
+    subs: {
+      blogpost: {
+        icon: '\u2606',
+        title: 'SEO Blog Post',
+        desc: 'Keyword-optimized blog article with proper heading structure, internal linking suggestions, and meta tags.',
+        fields: [
+          { id: 'keyword', label: 'Primary keyword / topic', type: 'input', placeholder: 'e.g. best project management tools 2026', full: true, req: true },
+          { id: 'secondary', label: 'Secondary keywords (comma-separated)', type: 'input', placeholder: 'e.g. task management, team productivity, remote work tools', full: true },
+          { id: 'intent', label: 'Search intent', type: 'select', options: ['Informational (how-to, guide)', 'Commercial (comparison, best-of)', 'Transactional (buy, pricing)', 'Navigational (brand-specific)'], req: true },
+          { id: 'length', label: 'Target length', type: 'select', options: ['Short (600-800 words)', 'Medium (1000-1500 words)', 'Long-form (2000+ words)'] },
+          { id: 'audience', label: 'Target audience', type: 'input', placeholder: 'e.g. SaaS founders, first-time buyers, marketing managers' },
+          { id: 'angle', label: 'Unique angle or hook', type: 'textarea', placeholder: 'What makes your take different? Any data, experience, or contrarian view?' },
+          { id: 'cta', label: 'Call-to-action goal', type: 'select', options: ['Sign up / free trial', 'Read more content', 'Book a demo', 'Buy product', 'Subscribe to newsletter', 'No CTA'] },
+          { id: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Competing articles to beat, internal pages to link to, things to avoid' }
+        ],
+        deliverable: 'Deliver a complete SEO blog post with:\n1. SEO title tag (under 60 chars) with primary keyword near the start\n2. Meta description (under 155 chars) with keyword and a compelling hook\n3. H1 headline (can differ from title tag)\n4. Full article body with H2 and H3 subheadings, each incorporating secondary keywords naturally\n5. Keyword density guidance: primary keyword appears 3-5 times naturally in the body\n6. One \"Featured Snippet\" formatted answer box (a clear, concise 40-60 word answer to the implied question)\n7. 3 internal linking suggestions with anchor text recommendations\n8. Closing CTA paragraph\n\nWrite in the brand voice. Avoid keyword stuffing — the copy should read naturally. Front-load value in every section. Use short paragraphs (2-3 sentences max).'
+      },
+      productpage: {
+        icon: '\u2606',
+        title: 'SEO Product Page',
+        desc: 'Keyword-rich product description optimized for search and conversion.',
+        fields: [
+          { id: 'product', label: 'Product name', type: 'input', placeholder: 'e.g. Vetra Starter Plan', req: true },
+          { id: 'keyword', label: 'Primary keyword', type: 'input', placeholder: 'e.g. affordable mobile plan Finland', full: true, req: true },
+          { id: 'secondary', label: 'Secondary keywords', type: 'input', placeholder: 'e.g. cheap phone plan, mobile subscription, data plan', full: true },
+          { id: 'features', label: 'Key features / benefits', type: 'textarea', placeholder: 'List the main features, pricing, differentiators', full: true, req: true },
+          { id: 'competitors', label: 'Competitors to differentiate from', type: 'input', placeholder: 'e.g. Elisa, DNA, Telia' },
+          { id: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Price, availability, special offers, FAQs to address' }
+        ],
+        deliverable: 'Deliver a complete SEO product page with:\n1. SEO title tag (under 60 chars)\n2. Meta description (under 155 chars)\n3. H1 product headline\n4. Opening hook paragraph (2-3 sentences, includes primary keyword)\n5. Features section with H2 heading and bullet points\n6. Benefits section with H2 — focus on outcomes, not specs\n7. \"Why choose [product] over alternatives\" comparison section (H2)\n8. FAQ section with 4-5 questions in H3 format (optimized for People Also Ask)\n9. CTA section\n10. Schema markup suggestion for Product structured data\n\nKeyword placement: primary keyword in title, H1, first paragraph, one H2, and naturally 2-3 times in body. Secondary keywords in H2s and body.'
+      },
+      landingseo: {
+        icon: '\u2606',
+        title: 'SEO Landing Page',
+        desc: 'Search-optimized landing page copy with heading hierarchy and conversion focus.',
+        fields: [
+          { id: 'keyword', label: 'Primary keyword', type: 'input', placeholder: 'e.g. creator monetization platform', full: true, req: true },
+          { id: 'secondary', label: 'Secondary keywords', type: 'input', placeholder: 'e.g. streamer support, creator economy, fan subscription', full: true },
+          { id: 'offer', label: 'What are you offering?', type: 'textarea', placeholder: 'The product, service, or value proposition', full: true, req: true },
+          { id: 'audience', label: 'Target audience', type: 'input', placeholder: 'Who should find this page?' },
+          { id: 'goal', label: 'Conversion goal', type: 'select', options: ['Sign up', 'Book demo', 'Start free trial', 'Download', 'Buy now', 'Learn more'], req: true },
+          { id: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Social proof, stats, testimonials to include' }
+        ],
+        deliverable: 'Deliver a complete SEO landing page with:\n1. SEO title tag (under 60 chars)\n2. Meta description (under 155 chars)\n3. H1 headline with primary keyword\n4. Hero subheadline (1-2 sentences)\n5. 3 benefit blocks, each with H2 heading incorporating a secondary keyword\n6. Social proof section (testimonial placeholder, stat callouts)\n7. Features list with keyword-rich descriptions\n8. FAQ section (4 questions in H3, targeting People Also Ask)\n9. Final CTA section with urgency\n10. Internal linking suggestions\n\nOptimize for both search rankings and conversion. The page should rank for the primary keyword while guiding visitors toward the CTA.'
+      },
+      metatags: {
+        icon: '\u2606',
+        title: 'Meta Tags Generator',
+        desc: 'SEO title tags and meta descriptions for any page. Optimized for click-through rate.',
+        fields: [
+          { id: 'page', label: 'What page is this for?', type: 'input', placeholder: 'e.g. Homepage, About, Pricing, Blog: How to...', full: true, req: true },
+          { id: 'keyword', label: 'Primary keyword', type: 'input', placeholder: 'e.g. mobile virtual network operator', full: true, req: true },
+          { id: 'usp', label: 'Unique selling point', type: 'input', placeholder: 'What makes this page worth clicking?', full: true },
+          { id: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Brand name to include, competitors, tone preferences' }
+        ],
+        deliverable: 'Deliver 5 options, each containing:\n1. Title tag (under 60 characters, primary keyword near start, brand name at end)\n2. Meta description (under 155 characters, includes keyword, has a clear value prop and implicit CTA)\n3. Character count for both\n4. Brief rationale explaining the SEO and CTR strategy\n\nAlso deliver:\n- Open Graph title suggestion\n- Open Graph description suggestion\n- Canonical URL recommendation\n- Primary H1 suggestion for the page'
+      },
+      pillarcluster: {
+        icon: '\u2606',
+        title: 'Content Cluster Plan',
+        desc: 'Plan a pillar page + supporting cluster articles for topical authority.',
+        fields: [
+          { id: 'topic', label: 'Core topic / pillar keyword', type: 'input', placeholder: 'e.g. creator economy, mobile gaming, sustainable fashion', full: true, req: true },
+          { id: 'brand', label: 'How does your brand relate to this topic?', type: 'textarea', placeholder: 'Your expertise, products, or angle on this topic', full: true, req: true },
+          { id: 'audience', label: 'Target audience', type: 'input', placeholder: 'Who are you building authority with?' },
+          { id: 'existing', label: 'Existing content (if any)', type: 'textarea', placeholder: 'List URLs or titles of content you already have on this topic' },
+          { id: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Competitors dominating this topic, content gaps you see' }
+        ],
+        deliverable: 'Deliver a complete content cluster plan:\n\n1. PILLAR PAGE:\n- Suggested title and URL slug\n- Target keyword and search volume estimate (low/medium/high)\n- Outline with H2 sections (8-12 sections)\n- Word count recommendation\n- Internal linking strategy\n\n2. CLUSTER ARTICLES (8-12 articles):\nFor each article deliver:\n- Title\n- Target keyword\n- Search intent (informational/commercial/transactional)\n- Estimated difficulty (low/medium/high)\n- Brief 2-sentence description\n- How it links back to the pillar page\n\n3. CONTENT CALENDAR:\n- Suggested publishing order (pillar first, then clusters by priority)\n- Recommended frequency\n\n4. QUICK WINS:\n- 3 articles to write first based on low competition + high relevance'
+      }
+    }
   }
 };

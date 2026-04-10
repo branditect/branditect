@@ -109,7 +109,8 @@ export default function DashboardPage() {
     return Math.round((gt.filter(t => t.is_complete).length / gt.length) * 100);
   }
 
-  function goalColor(idx: number) { return GOAL_COLORS[idx % GOAL_COLORS.length]; }
+  // goalColor available if needed
+  void GOAL_COLORS;
 
   function isToday(d: string | null) {
     if (!d) return false;
@@ -139,7 +140,7 @@ export default function DashboardPage() {
   // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const dateStr = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  // date available if needed
 
   // Filter tasks for feed
   const feedTasks = tasks.filter(t => {
@@ -168,50 +169,60 @@ export default function DashboardPage() {
   };
 
   if (brandLoading || loading) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: v.g400, fontSize: 13 }}>Loading dashboard...</div>;
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: v.g400, fontSize: 13, fontFamily: "'Inter', sans-serif" }}>Loading dashboard...</div>;
   }
 
+  const cardStyle = { background: v.card, borderRadius: 16, boxShadow: "0 4px 20px rgba(43,47,49,0.02)" } as React.CSSProperties;
+
   return (
-    <div style={{ background: v.bg, minHeight: "100%", padding: "22px 22px 80px", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100%", padding: "32px 32px 80px", fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── Greeting ── */}
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: v.black, letterSpacing: "-0.4px", display: "flex", alignItems: "baseline", gap: 10 }}>
-          {greeting}, {brandName?.split(" ")[0] || "there"}
-          <span style={{ fontSize: 12, color: v.g400, fontWeight: 400, fontFamily: "'DM Sans', sans-serif" }}>{dateStr}</span>
-        </div>
-        <div style={{ fontSize: 13, color: v.g500, marginTop: 3 }}>
-          {todayDueCount > 0 ? `${todayDueCount} task${todayDueCount > 1 ? "s" : ""} due today` : "No tasks due today"} · {goals.length} active goal{goals.length !== 1 ? "s" : ""}
-        </div>
-      </div>
+      <section style={{ marginBottom: 40 }}>
+        <h1 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 36, fontWeight: 800, color: v.black, letterSpacing: "-0.5px", lineHeight: 1.15, marginBottom: 8 }}>
+          {greeting}, {brandName || "there"}
+        </h1>
+        <p style={{ fontSize: 16, color: v.g500, lineHeight: 1.5 }}>
+          {todayDueCount > 0 ? `${todayDueCount} task${todayDueCount > 1 ? "s" : ""} due today` : "Your brand ecosystem is looking healthy today"}.
+          {goals.length > 0 && ` ${goals.length} active goal${goals.length !== 1 ? "s" : ""}.`}
+        </p>
+      </section>
 
-      {/* ── Quick Create Strip ── */}
-      <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: v.g400, whiteSpace: "nowrap", flexShrink: 0 }}>Quick Create</div>
-        <div style={{ width: 1, height: 28, background: v.border, flexShrink: 0 }} />
-        <div style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap" }}>
+      {/* ── Quick Create — Bento Grid ── */}
+      <section style={{ marginBottom: 48 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
+          <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 20, fontWeight: 700, color: v.black }}>Quick Create</h2>
+          <Link href="/dashboard/create" style={{ fontSize: 14, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View All</Link>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {QC_ITEMS.map(item => (
-            <Link key={item.label} href={item.href} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 8, border: `1px solid ${v.border}`, background: v.g100, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", transition: "all 0.13s" }}>
-              <div style={{ width: 22, height: 22, borderRadius: 6, background: item.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: item.color }} />
+            <Link key={item.label} href={item.href} style={{ ...cardStyle, padding: 20, textDecoration: "none", display: "flex", flexDirection: "column", gap: 16, transition: "transform 0.15s", cursor: "pointer" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${item.color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 14, height: 14, borderRadius: 4, background: item.color }} />
               </div>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: v.black }}>{item.label}</span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 14, color: v.black }}>{item.label}</span>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* ── Body Grid ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }}>
 
         {/* ═══ LEFT: Goals + Feed ═══ */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-          {/* Goal Anchors */}
-          {goals.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(goals.length, 3)}, 1fr)`, gap: 10 }}>
-              {goals.slice(0, 3).map((goal, idx) => {
-                const color = goalColor(idx);
+          {/* Strategic Goals */}
+          <section>
+            <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 20, fontWeight: 700, color: v.black, marginBottom: 24 }}>Strategic Goals</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {goals.length === 0 && (
+                <div style={{ ...cardStyle, padding: 32, textAlign: "center" }}>
+                  <p style={{ fontSize: 14, color: v.g500, marginBottom: 12 }}>No goals yet. Set your first strategic goal to track progress.</p>
+                  <Link href="/dashboard/mission-board" style={{ fontSize: 14, fontWeight: 600, color: v.orange, textDecoration: "none" }}>Add a goal →</Link>
+                </div>
+              )}
+              {goals.slice(0, 3).map((goal) => {
                 const progress = goalProgress(goal.id);
                 const isSelected = selectedGoal === goal.id;
                 const gt = tasks.filter(t => t.goal_id === goal.id);
@@ -220,191 +231,175 @@ export default function DashboardPage() {
                   <div
                     key={goal.id}
                     onClick={() => setSelectedGoal(isSelected ? null : goal.id)}
-                    style={{ background: v.card, border: `1.5px solid ${isSelected ? color : v.border}`, borderRadius: 12, padding: "14px 15px", cursor: "pointer", position: "relative", overflow: "hidden", transition: "all 0.15s", boxShadow: isSelected ? `0 0 0 3px ${color}18` : "none" }}
+                    style={{ ...cardStyle, padding: 24, cursor: "pointer", transition: "all 0.2s", boxShadow: isSelected ? "0 4px 30px rgba(166,51,0,0.08)" : cardStyle.boxShadow }}
                   >
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "12px 12px 0 0", background: color }} />
-                    <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: v.g400, marginBottom: 5 }}>Strategic Goal</div>
-                    <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color: v.black, lineHeight: 1.35, marginBottom: 10 }}>{goal.title}</div>
-                    <div style={{ height: 4, background: v.g100, borderRadius: 99, overflow: "hidden", marginBottom: 6 }}>
-                      <div style={{ height: "100%", borderRadius: 99, background: color, width: `${progress}%`, transition: "width 1.2s ease" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                      <div>
+                        <h3 style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 16, color: v.black, marginBottom: 4 }}>{goal.title}</h3>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: v.g500 }}>{goal.category}</p>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: 99, background: progress >= 70 ? "#d8e3f9" : progress > 0 ? v.g100 : v.g100, color: progress >= 70 ? "#475264" : v.g500 }}>
+                        {progress >= 100 ? "Complete" : progress >= 70 ? "On Track" : progress > 0 ? "In Progress" : "Pending"}
+                      </span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ fontSize: 11, color: v.g500 }}>{done} of {gt.length} tasks done</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color }}>{progress}%</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: v.g500 }}>{progress}% Complete</span>
+                      <span style={{ fontSize: 10, color: v.g400 }}>{goal.due_date ? `Due ${formatDate(goal.due_date)}` : `${done} of ${gt.length} tasks`}</span>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: v.g100, borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg, ${v.orange}, #ff7949)`, width: `${progress}%`, transition: "width 1.2s ease" }} />
                     </div>
                   </div>
                 );
               })}
             </div>
-          )}
+          </section>
 
           {/* Task Feed */}
-          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 13, padding: "16px 16px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div>
-                <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: v.black, letterSpacing: "-0.2px" }}>Today&apos;s Focus</div>
-                <div style={{ fontSize: 12, color: v.g400, marginTop: 1 }}>{todayDueCount} tasks due · {selectedGoal !== null ? "Filtered by goal" : "Click a goal above to filter"}</div>
-              </div>
-              <div style={{ display: "flex", gap: 2, background: v.g100, borderRadius: 8, padding: 3 }}>
-                {(["today", "week", "all"] as const).map(t => (
-                  <button key={t} onClick={() => setFeedTab(t)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, color: feedTab === t ? v.black : v.g500, cursor: "pointer", border: "none", background: feedTab === t ? v.card : "transparent", fontFamily: "'DM Sans', sans-serif", boxShadow: feedTab === t ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.13s", textTransform: "capitalize" }}>
-                    {t === "week" ? "This week" : t === "all" ? "All" : "Today"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Section label */}
-            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400, marginBottom: 7, marginTop: 4 }}>Priority tasks</div>
-
-            {priorityTasks.length === 0 && (
-              <div style={{ padding: "24px 16px", textAlign: "center", color: v.g400, fontSize: 13 }}>
-                No tasks {feedTab === "today" ? "due today" : feedTab === "week" ? "this week" : "yet"}. <Link href="/dashboard/mission-board" style={{ color: v.orange, textDecoration: "none" }}>Add tasks in Mission Board →</Link>
-              </div>
-            )}
-
-            {priorityTasks.map(task => {
-              const isDone = task.is_complete;
-              const goalIdx = goals.findIndex(g => g.id === task.goal_id);
-              const goalTitle = goalIdx >= 0 ? goals[goalIdx].title : null;
-              const dotColor = goalIdx >= 0 ? goalColor(goalIdx) : v.g400;
-              const isUrgent = isToday(task.due_date) && !isDone;
-              return (
-                <div
-                  key={task.id}
-                  onClick={() => toggleTask(task.id, task.is_complete)}
-                  style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 11, padding: "13px 14px", marginBottom: 7, cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 11, opacity: isDone ? 0.52 : 1, transition: "all 0.14s" }}
-                >
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${isDone ? v.green : v.g200}`, background: isDone ? v.green : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {isDone && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: isDone ? v.g400 : v.black, lineHeight: 1.4, textDecoration: isDone ? "line-through" : "none" }}>{task.title}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                      {goalTitle && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 500, color: v.g400 }}>
-                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: dotColor }} />
-                          {goalTitle}
-                        </div>
-                      )}
-                      {task.due_date && (
-                        <div style={{ fontSize: 10, fontWeight: 500, padding: "2px 6px", borderRadius: 5, whiteSpace: "nowrap", background: isUrgent ? v.redPale : v.g100, border: `1px solid ${isUrgent ? "#FACACA" : v.border}`, color: isUrgent ? v.red : v.g400 }}>
-                          {isUrgent ? "Due today" : formatDate(task.due_date)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+          <section>
+            <div style={{ ...cardStyle, padding: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 700, color: v.black }}>Today&apos;s Focus</h2>
+                  <p style={{ fontSize: 13, color: v.g500, marginTop: 2 }}>{todayDueCount} tasks due {selectedGoal !== null ? "· Filtered" : ""}</p>
                 </div>
-              );
-            })}
+                <div style={{ display: "flex", gap: 2, background: v.g100, borderRadius: 10, padding: 3 }}>
+                  {(["today", "week", "all"] as const).map(t => (
+                    <button key={t} onClick={() => setFeedTab(t)} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, color: feedTab === t ? v.black : v.g400, cursor: "pointer", border: "none", background: feedTab === t ? v.card : "transparent", fontFamily: "'Inter', sans-serif", boxShadow: feedTab === t ? "0 2px 8px rgba(43,47,49,0.06)" : "none", transition: "all 0.15s" }}>
+                      {t === "week" ? "This week" : t === "all" ? "All" : "Today"}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Add task link */}
-            <Link href="/dashboard/mission-board" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 14px", borderRadius: 9, border: `1px dashed ${v.border}`, cursor: "pointer", marginTop: 4, textDecoration: "none" }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5v9M1.5 6h9" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <span style={{ fontSize: 12, color: v.g400 }}>Add task or quick win…</span>
-            </Link>
-          </div>
+              {priorityTasks.length === 0 && (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: v.g400, fontSize: 14 }}>
+                  No tasks {feedTab === "today" ? "due today" : feedTab === "week" ? "this week" : "yet"}. <Link href="/dashboard/mission-board" style={{ color: v.orange, textDecoration: "none", fontWeight: 600 }}>Add tasks →</Link>
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {priorityTasks.map(task => {
+                  const isDone = task.is_complete;
+                  const goalIdx = goals.findIndex(g => g.id === task.goal_id);
+                  const goalTitle = goalIdx >= 0 ? goals[goalIdx].title : null;
+                  const isUrgent = isToday(task.due_date) && !isDone;
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleTask(task.id, task.is_complete)}
+                      style={{ background: v.g100, borderRadius: 12, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 12, opacity: isDone ? 0.5 : 1, transition: "all 0.15s" }}
+                    >
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${isDone ? "#556072" : v.g200}`, background: isDone ? "#556072" : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {isDone && <svg width="10" height="10" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: isDone ? v.g400 : v.black, lineHeight: 1.4, textDecoration: isDone ? "line-through" : "none" }}>{task.title}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                          {goalTitle && <span style={{ fontSize: 11, fontWeight: 500, color: v.g400 }}>{goalTitle}</span>}
+                          {task.due_date && (
+                            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "2px 8px", borderRadius: 99, background: isUrgent ? v.redPale : "transparent", color: isUrgent ? v.red : v.g400 }}>
+                              {isUrgent ? "Due today" : formatDate(task.due_date)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Link href="/dashboard/mission-board" style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", marginTop: 8, textDecoration: "none" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: v.orange }}>+ Add task or quick win</span>
+              </Link>
+            </div>
+          </section>
         </div>
 
         {/* ═══ RIGHT COL ═══ */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
           {/* Notes Pad */}
-          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, overflow: "hidden" }}>
-            {/* Write area */}
-            <div style={{ background: "#FFFEF5", borderBottom: "1px solid #EDEABD", padding: "14px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Quick Note</div>
-                <Link href="/dashboard/mission-board" style={{ fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none" }}>All notes →</Link>
+          <div style={{ ...cardStyle, overflow: "hidden" }}>
+            <div style={{ background: "#faf8f0", padding: "20px 20px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Quick Note</span>
+                <Link href="/dashboard/mission-board" style={{ fontSize: 12, fontWeight: 600, color: v.orange, textDecoration: "none" }}>All notes →</Link>
               </div>
               <textarea
                 value={noteInput}
                 onChange={e => setNoteInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && e.metaKey) saveQuickNote(); }}
                 placeholder="Write a note..."
-                style={{ width: "100%", minHeight: 70, background: "transparent", border: "none", outline: "none", fontSize: 13, lineHeight: 1.6, color: v.g800, resize: "none", fontFamily: "'DM Sans', sans-serif", boxSizing: "border-box" }}
+                style={{ width: "100%", minHeight: 72, background: "transparent", border: "none", outline: "none", fontSize: 14, lineHeight: 1.65, color: v.black, resize: "none", fontFamily: "'Inter', sans-serif", boxSizing: "border-box" }}
               />
               {noteInput.trim() && (
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-                  <button
-                    onClick={saveQuickNote}
-                    disabled={noteSaving}
-                    style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: v.orange, color: "#fff", fontSize: 11.5, fontWeight: 600, cursor: noteSaving ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: noteSaving ? 0.6 : 1 }}
-                  >
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                  <button onClick={saveQuickNote} disabled={noteSaving} className="signature-gradient" style={{ padding: "6px 16px", borderRadius: 8, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: noteSaving ? "not-allowed" : "pointer", opacity: noteSaving ? 0.5 : 1, fontFamily: "'Inter', sans-serif" }}>
                     {noteSaving ? "Saving..." : "Save note"}
                   </button>
                 </div>
               )}
             </div>
-
-            {/* Latest note preview */}
             {latestNote && (
-              <div style={{ padding: "10px 16px", borderBottom: `1px solid ${v.borderSoft}` }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: v.g400, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Latest</div>
-                <div style={{ fontSize: 12.5, color: v.g600, lineHeight: 1.55, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{latestNote.content}</div>
-                <div style={{ fontSize: 10, color: v.g400, marginTop: 4 }}>{timeAgo(latestNote.created_at)}</div>
+              <div style={{ padding: "14px 20px" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: v.g400 }}>Latest</span>
+                <div style={{ fontSize: 13, color: v.g600, lineHeight: 1.6, marginTop: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>{latestNote.content}</div>
+                <div style={{ fontSize: 11, color: v.g400, marginTop: 6 }}>{timeAgo(latestNote.created_at)}</div>
               </div>
             )}
-
-            {/* Actions */}
-            <div style={{ padding: "10px 12px", display: "flex", gap: 6 }}>
-              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.border}`, background: v.g100, fontSize: 11.5, fontWeight: 500, color: v.g800, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>Mission Board</Link>
-              <Link href="/dashboard/mission-board" style={{ flex: 1, padding: "7px 8px", borderRadius: 7, border: `1px solid ${v.orangeMid}`, background: v.orangePale, fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>✦ Ask AI</Link>
-            </div>
           </div>
 
-          {/* Recent Outputs — static for now */}
-          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Recent Outputs</div>
-              <Link href="/dashboard/copy-architect" style={{ fontSize: 11.5, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View all →</Link>
+          {/* Recent Outputs */}
+          <div style={{ ...cardStyle, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Recent Outputs</span>
+              <Link href="/dashboard/copy-architect" style={{ fontSize: 12, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View all →</Link>
             </div>
             {[
-              { title: "Newsletter — Draft 1", meta: "Copy Architect", chip: "NL", chipBg: v.orangePale, chipColor: v.orange, time: "Today" },
-              { title: "Instagram — Phase 2 teaser", meta: "Content Architect", chip: "SOC", chipBg: v.purplePale, chipColor: v.purple, time: "Yesterday" },
-              { title: "Q2 unit economics model", meta: "Financial Tools", chip: "FIN", chipBg: v.greenPale, chipColor: v.green, time: formatDate(new Date(Date.now() - 172800000).toISOString()) },
+              { title: "Newsletter — Draft 1", meta: "Copy Architect", time: "Today" },
+              { title: "Instagram — Phase 2 teaser", meta: "Content Architect", time: "Yesterday" },
+              { title: "Q2 unit economics model", meta: "Financial Tools", time: formatDate(new Date(Date.now() - 172800000).toISOString()) },
             ].map((row, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < 2 ? `1px solid ${v.borderSoft}` : "none", cursor: "pointer" }}>
-                <div style={{ width: 30, height: 30, borderRadius: 7, background: v.orangePale, border: `1px solid ${v.orangeMid}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, background: v.orange }} />
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", cursor: "pointer" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: `${v.orange}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 3, background: v.orange }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: v.black, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.title}</div>
-                  <div style={{ fontSize: 10.5, color: v.g400, marginTop: 1 }}>{row.meta}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: v.black, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.title}</div>
+                  <div style={{ fontSize: 11, color: v.g400, marginTop: 2 }}>{row.meta}</div>
                 </div>
-                <div style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", background: row.chipBg, color: row.chipColor }}>{row.chip}</div>
-                <div style={{ fontSize: 10.5, color: v.g400, whiteSpace: "nowrap" }}>{row.time}</div>
+                <div style={{ fontSize: 11, color: v.g400, whiteSpace: "nowrap", flexShrink: 0 }}>{row.time}</div>
               </div>
             ))}
           </div>
 
-          {/* Brand Readiness */}
-          <div style={{ background: v.card, border: `1px solid ${v.border}`, borderRadius: 12, padding: "14px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: v.g400 }}>Brand Readiness</div>
-              <Link href="/dashboard/brand-strategy" style={{ fontSize: 11, fontWeight: 600, color: v.orange, textDecoration: "none" }}>Complete →</Link>
-            </div>
-
-            {[
-              { name: "Brand Strategy", pct: 100, status: "done" },
-              { name: "Visual Identity", pct: 60, status: "part" },
-              { name: "Brand Tone", pct: 0, status: "empty" },
-              { name: "Products & Services", pct: 0, status: "empty" },
-              { name: "Financial Rules", pct: 0, status: "empty" },
-            ].map((item, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.g200, border: item.status === "empty" ? `1.5px solid ${v.g400}` : "none" }} />
-                <div style={{ flex: 1, fontSize: 11, fontWeight: 500, color: v.g600 }}>{item.name}</div>
-                <div style={{ width: 48, height: 3, background: v.g100, borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ height: "100%", borderRadius: 99, background: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.orange, width: `${item.pct}%` }} />
-                </div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, minWidth: 24, textAlign: "right", color: item.status === "done" ? v.green : item.status === "part" ? v.amber : v.g400 }}>{item.pct}%</div>
+          {/* Brand Pulse — Dark Card */}
+          <div style={{ background: "#0c0f10", borderRadius: 24, padding: 32, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Brand Pulse</h2>
+              <p style={{ fontSize: 13, color: "#9b9d9e", marginBottom: 24, maxWidth: 200, lineHeight: 1.55 }}>Your brand readiness overview.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { name: "Strategy", pct: 100 },
+                  { name: "Visual Identity", pct: 60 },
+                  { name: "Tone", pct: 0 },
+                  { name: "Products", pct: 0 },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, color: "#9b9d9e", width: 80, flexShrink: 0 }}>{item.name}</span>
+                    <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: item.pct >= 100 ? "#556072" : `linear-gradient(90deg, ${v.orange}, #ff7949)`, width: `${item.pct}%` }} />
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: item.pct > 0 ? "#fff" : "#555", width: 28, textAlign: "right" }}>{item.pct}%</span>
+                  </div>
+                ))}
               </div>
-            ))}
-
-            <Link href="/dashboard/brand-strategy" style={{ display: "block", marginTop: 12, padding: 8, borderRadius: 8, background: v.orangePale, border: `1px solid ${v.orangeMid}`, fontSize: 12, fontWeight: 600, color: v.orange, textAlign: "center", textDecoration: "none" }}>
-              Complete Brand Setup →
-            </Link>
+              <Link href="/dashboard/brand-strategy" style={{ display: "inline-block", marginTop: 20, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#fff", textDecoration: "none" }}>Complete Setup →</Link>
+            </div>
+            {/* Decorative blurs */}
+            <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, background: `${v.orange}30`, borderRadius: "50%", filter: "blur(60px)" }} />
+            <div style={{ position: "absolute", bottom: -20, right: -20, width: 100, height: 100, background: "#55607220", borderRadius: "50%", filter: "blur(40px)" }} />
           </div>
         </div>
       </div>

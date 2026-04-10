@@ -16,7 +16,7 @@ async function getBrandContext(brandId: string): Promise<string> {
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('catalog_products').select('name, description, price_rrp, currency, type, category').eq('brand_id', brandId).limit(10),
+    supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, price_wholesale, price_cogs, currency, type, category').eq('brand_id', brandId).limit(10),
     supabase.from('brands').select('strategy_text').eq('brand_id', brandId).maybeSingle(),
   ])
 
@@ -54,12 +54,18 @@ async function getBrandContext(brandId: string): Promise<string> {
 
   if (products && products.length > 0) {
     ctx += `\nPRODUCTS & SERVICES (${products.length} items):\n`
-    products.forEach((p: { name: string; description: string; price_rrp: number | null; currency: string; type: string; category: string | null }) => {
+    products.forEach((p: Record<string, unknown>) => {
       ctx += `- ${p.name} (${p.type})`
-      if (p.price_rrp) ctx += ` — ${p.currency || 'EUR'} ${p.price_rrp}`
+      const price = p.price_rrp || p.price_monthly || p.price_wholesale
+      const cur = (p.currency as string) || 'EUR'
+      if (price) {
+        const priceLabel = p.price_monthly ? `${cur} ${p.price_monthly}/mo` : `${cur} ${price}`
+        ctx += ` — ${priceLabel}`
+      }
+      if (p.price_cogs) ctx += ` (COGS: ${cur} ${p.price_cogs})`
       if (p.category) ctx += ` [${p.category}]`
       ctx += `\n`
-      if (p.description) ctx += `  ${p.description.slice(0, 200)}\n`
+      if (p.description) ctx += `  ${(p.description as string).slice(0, 200)}\n`
     })
   }
 

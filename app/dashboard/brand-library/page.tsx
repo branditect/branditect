@@ -4,6 +4,15 @@ import { useState, useRef, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 
+type PDFJSLib = typeof import('pdfjs-dist')
+let pdfjsLib: PDFJSLib | null = null
+async function getPdfjs(): Promise<PDFJSLib> {
+  if (pdfjsLib) return pdfjsLib
+  pdfjsLib = await import('pdfjs-dist')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+  return pdfjsLib
+}
+
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
 interface Logo { id?: number; slot: string; file_url: string; file_name?: string }
@@ -58,6 +67,7 @@ export default function VisualIdentityPage() {
   const [addFontOpen, setAddFontOpen] = useState(false)
   const [newFontName, setNewFontName] = useState(''); const [newFontRole, setNewFontRole] = useState('body')
   const [pageUploading, setPageUploading] = useState(false)
+  const [pageProgress, setPageProgress] = useState('')
   const [packageUrl, setPackageUrl] = useState<string | null>(null)
   const [packageName, setPackageName] = useState<string | null>(null)
   const [packageUploading, setPackageUploading] = useState(false)
@@ -167,23 +177,62 @@ export default function VisualIdentityPage() {
     showToast('Font added')
   }
 
-  // ── Pages upload ────────────────────────────────────────────────────────
+  // ── Pages upload — PDFs converted to images client-side ──────────────
 
   async function uploadPages(files: FileList | null) {
     if (!files?.length) return
     setPageUploading(true)
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i]
+
+    // Expand PDFs into individual page images
+    const allFiles: File[] = []
+    for (const f of Array.from(files)) {
+      if (f.type === 'application/pdf') {
+        try {
+          setPageProgress('Processing PDF...')
+          const pdfjs = await getPdfjs()
+          const arrayBuffer = await f.arrayBuffer()
+          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
+          for (let i = 1; i <= pdf.numPages; i++) {
+            setPageProgress(`Converting page ${i} / ${pdf.numPages}...`)
+            const page = await pdf.getPage(i)
+            const scale = 2
+            const viewport = page.getViewport({ scale })
+            const canvas = document.createElement('canvas')
+            canvas.width = viewport.width
+            canvas.height = viewport.height
+            const ctx = canvas.getContext('2d')!
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (page as any).render({ canvasContext: ctx, viewport }).promise
+            const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'))
+            allFiles.push(new File([blob], `${f.name}-page-${i}.png`, { type: 'image/png' }))
+          }
+        } catch {
+          showToast('Failed to process PDF: ' + f.name)
+        }
+      } else {
+        allFiles.push(f)
+      }
+    }
+
+    // Upload each page image
+    let uploaded = 0
+    for (let i = 0; i < allFiles.length; i++) {
+      setPageProgress(`Uploading page ${i + 1} / ${allFiles.length}...`)
+      const f = allFiles[i]
       const fd = new FormData(); fd.append('file', f); fd.append('brandId', brandId); fd.append('uploadType', 'page'); fd.append('pageNumber', String(pages.length + i + 1))
       try {
         const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
         const json = await res.json()
         if (json.success) {
-          setPages(p => [...p, { id: json.id, page_number: pages.length + i + 1, file_url: json.url, file_name: f.name, file_type: json.isPdf ? 'pdf' : 'image' }])
+          uploaded++
+          setPages(p => [...p, { id: json.id, page_number: pages.length + i + 1, file_url: json.url, file_name: f.name, file_type: 'image' }])
         }
       } catch {}
     }
-    setPageUploading(false); showToast(`${files.length} file${files.length > 1 ? 's' : ''} uploaded`)
+
+    setPageUploading(false)
+    setPageProgress('')
+    if (uploaded > 0) showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
   }
 
   async function deletePage(id: number) {
@@ -380,7 +429,7 @@ export default function VisualIdentityPage() {
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
               <button onClick={() => pageUploadRef.current?.click()} style={{ padding: '8px 18px', borderRadius: 8, border: `0.5px solid ${C.bdl}`, background: 'white', color: C.sec, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {pageUploading ? 'Uploading...' : 'Upload pages'}
+                {pageUploading ? (pageProgress || 'Processing...') : 'Upload pages'}
               </button>
               <span style={{ fontSize: 11, color: C.mu }}>PNG, JPG or PDF</span>
               <input ref={pageUploadRef} type="file" accept="image/*,.pdf,application/pdf" multiple style={{ display: 'none' }} onChange={e => uploadPages(e.target.files)} />

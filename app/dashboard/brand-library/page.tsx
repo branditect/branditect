@@ -23,9 +23,9 @@ interface Page { id: number; page_number: number; file_url: string; file_name?: 
 /* ── Constants ──────────────────────────────────────────────────────────────── */
 
 const LOGO_SLOTS = [
-  { id: 'primary', label: 'Primary logo',            bg: '#ffffff', textCol: '#C8C9CC', border: '1.5px dashed #E2E3E6' },
+  { id: 'primary', label: 'Primary logo',            bg: '#ffffff', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
   { id: 'dark',    label: 'Dark background version',  bg: '#315A72', textCol: 'rgba(255,255,255,0.35)', border: 'none' },
-  { id: 'icon',    label: 'Icon / mark only',         bg: '#FAFAFA', textCol: '#C8C9CC', border: '1.5px dashed #E2E3E6' },
+  { id: 'icon',    label: 'Icon / mark only',         bg: '#f4f7f9', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
   { id: 'white',   label: 'White version',            bg: '#87C5EA', textCol: 'rgba(255,255,255,0.4)', border: 'none' },
 ]
 
@@ -42,9 +42,9 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const C = {
-  or: '#E16C00', orl: '#FFF0E6', payne: '#315A72', sky: '#87C5EA',
-  blk: '#1A1A1A', sec: '#555555', mu: '#888888', bd: '#C8C9CC', bdl: '#E2E3E6',
-  bg: '#FAFAFA',
+  or: '#a63300', orl: '#fff0e6', payne: '#315A72', sky: '#87C5EA',
+  blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e', bd: '#e5e9eb', bdl: '#e5e9eb',
+  bg: '#f4f7f9',
 }
 
 /* ── Component ──────────────────────────────────────────────────────────────── */
@@ -384,7 +384,7 @@ export default function VisualIdentityPage() {
             </div>
             {addColorOpen && (
               <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', padding: '14px 18px', borderRadius: 10, background: C.bg, border: `0.5px solid ${C.bdl}` }}>
-                <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Hex</div><input value={newHex} onChange={e => setNewHex(e.target.value)} onKeyDown={e => e.key === 'Enter' && addColor()} placeholder="#E16C00" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }} /></div>
+                <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Hex</div><input value={newHex} onChange={e => setNewHex(e.target.value)} onKeyDown={e => e.key === 'Enter' && addColor()} placeholder="#a63300" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }} /></div>
                 <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Name</div><input value={newColorName} onChange={e => setNewColorName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addColor()} placeholder="Brand Orange" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} /></div>
                 <button onClick={addColor} style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: C.or, color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Add</button>
                 <button onClick={() => setAddColorOpen(false)} style={{ padding: '7px 12px', borderRadius: 6, border: `0.5px solid ${C.bdl}`, background: 'transparent', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>

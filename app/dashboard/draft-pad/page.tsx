@@ -25,10 +25,10 @@ interface CatalogProduct { id: string; name: string; price_rrp: number | null; c
 /* ── Colors ─────────────────────────────────────────────────────────────────── */
 
 const C = {
-  or: '#E16C00', orl: '#FFF0E6',
-  bd: '#C8C9CC', bdl: '#E2E3E6',
-  blk: '#1A1A1A', sec: '#555555', mu: '#888888',
-  bg: '#FAFAFA', wh: '#fff', payne: '#315A72',
+  or: '#a63300', orl: '#fff0e6',
+  bd: 'rgba(170,174,176,0.15)', bdl: '#e5e9eb',
+  blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e',
+  bg: '#f4f7f9', wh: '#fff', payne: '#2b2f31',
 }
 
 /* ── Sample image assets ────────────────────────────────────────────────────── */

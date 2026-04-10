@@ -821,7 +821,7 @@ export default function BrandStrategyPage() {
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-white border border-[#C8C9CC] text-sm text-[#555555]">
+              <div className="px-4 py-3 rounded-xl bg-white border border-[#e5e9eb] text-sm text-[#5a6062]">
                 {error}
               </div>
             )}
@@ -1076,7 +1076,7 @@ export default function BrandStrategyPage() {
               </div>
 
               {error && (
-                <div className="mt-4 p-3 rounded-lg bg-white text-[#555555] text-sm font-sans">
+                <div className="mt-4 p-3 rounded-lg bg-white text-[#5a6062] text-sm font-sans">
                   {error}
                 </div>
               )}
@@ -1193,7 +1193,7 @@ export default function BrandStrategyPage() {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-white text-[#555555] text-sm font-sans">
+              <div className="p-3 rounded-lg bg-white text-[#5a6062] text-sm font-sans">
                 {error}
                 <button
                   onClick={() => {
@@ -1308,19 +1308,19 @@ export default function BrandStrategyPage() {
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-[0.75rem]">
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Category</span>
-                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.category}</div>
+                    <div className="text-[#2b2f31] font-medium mt-0.5">{strategyJSON.category}</div>
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Stage</span>
-                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.stage}</div>
+                    <div className="text-[#2b2f31] font-medium mt-0.5">{strategyJSON.stage}</div>
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Target</span>
-                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.target}</div>
+                    <div className="text-[#2b2f31] font-medium mt-0.5">{strategyJSON.target}</div>
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Archetype</span>
-                    <div className="text-[#1A1A1A] font-medium mt-0.5">{strategyJSON.archetype}</div>
+                    <div className="text-[#2b2f31] font-medium mt-0.5">{strategyJSON.archetype}</div>
                   </div>
                 </div>
 
@@ -1328,13 +1328,13 @@ export default function BrandStrategyPage() {
                 <div className="flex items-center gap-3 mt-6">
                   <button
                     onClick={downloadJSON}
-                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E16C00] hover:text-[#E16C00] transition-colors"
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#a63300] hover:text-[#a63300] transition-colors"
                   >
                     Export
                   </button>
                   <button
                     onClick={() => setShowRedoModal(true)}
-                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#E16C00] hover:text-[#E16C00] transition-colors"
+                    className="border border-[#E5E5E5] rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-[#2D2D2D] hover:border-[#a63300] hover:text-[#a63300] transition-colors"
                   >
                     Re-do brand strategy
                   </button>
@@ -1345,7 +1345,7 @@ export default function BrandStrategyPage() {
               <section>
                 <div className="bg-white border border-[#315A72] rounded-2xl p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#888888]">Brand Passport</span>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#767c7e]">Brand Passport</span>
                     <span className="text-[0.82rem] font-semibold text-[#315A72]">{strategyJSON.brandName}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 mb-6">
@@ -1358,19 +1358,19 @@ export default function BrandStrategyPage() {
                       ["Insight", strategyJSON.passport.insight],
                     ] as const).map(([label, value]) => (
                       <div key={label}>
-                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">{label}</div>
-                        <div className="text-[0.82rem] text-[#1A1A1A] leading-relaxed">{value}</div>
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#767c7e] mb-1">{label}</div>
+                        <div className="text-[0.82rem] text-[#2b2f31] leading-relaxed">{value}</div>
                       </div>
                     ))}
                   </div>
-                  <div className="border-t border-[#E2E3E6] pt-5 space-y-4">
+                  <div className="border-t border-[#e5e9eb] pt-5 space-y-4">
                     <div>
-                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">Target Group</div>
-                      <div className="text-[0.82rem] text-[#1A1A1A] leading-relaxed">{strategyJSON.passport.targetGroup}</div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#767c7e] mb-1">Target Group</div>
+                      <div className="text-[0.82rem] text-[#2b2f31] leading-relaxed">{strategyJSON.passport.targetGroup}</div>
                     </div>
                     <div>
-                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-1">Only-We Claim</div>
-                      <div className="text-[0.88rem] text-[#E16C00] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
+                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#a63300] mb-1">Only-We Claim</div>
+                      <div className="text-[0.88rem] text-[#a63300] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
                     </div>
                   </div>
                 </div>
@@ -1379,14 +1379,14 @@ export default function BrandStrategyPage() {
               {/* ---------- Brand Pyramid ---------- */}
               <section>
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
-                <div className="bg-[#FAFAFA] border border-[#C8C9CC] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
+                <div className="bg-[#f4f7f9] border border-[#e5e9eb] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
                   {([
-                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#E16C00", text: "white" },
-                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#FFCAA7", text: "#1A1A1A" },
+                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#a63300", text: "white" },
+                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#ffcaa7", text: "#2b2f31" },
                     { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#315A72", text: "white" },
-                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#87C5EA", text: "#1A1A1A" },
+                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#87C5EA", text: "#2b2f31" },
                     { label: "Market", value: strategyJSON.pyramid.market, maxW: "760px", bg: "#EBF5FC", text: "#315A72" },
-                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#EBEBDF", text: "#555555" },
+                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#EBEBDF", text: "#5a6062" },
                   ] as const).map((tier) => (
                     <div
                       key={tier.label}
@@ -1406,14 +1406,14 @@ export default function BrandStrategyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                   {strategyJSON.problems.map((p, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
-                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{p.title}</div>
+                      <div className="text-[0.82rem] font-semibold text-[#2b2f31] mb-2">{p.title}</div>
                       <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
                     </div>
                   ))}
                 </div>
                 <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-6">
-                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">Our Solution</div>
-                  <div className="text-[0.85rem] text-[#1A1A1A] leading-relaxed">{strategyJSON.solution}</div>
+                  <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#a63300] mb-2">Our Solution</div>
+                  <div className="text-[0.85rem] text-[#2b2f31] leading-relaxed">{strategyJSON.solution}</div>
                 </div>
               </section>
 
@@ -1422,13 +1422,13 @@ export default function BrandStrategyPage() {
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">What Makes Us Different</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
-                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">First To</div>
-                    <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.firstTo.claim}</div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#a63300] mb-2">First To</div>
+                    <div className="text-[0.85rem] font-semibold text-[#2b2f31] mb-1">{strategyJSON.firstTo.claim}</div>
                     <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.firstTo.explanation}</div>
                   </div>
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
-                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#E16C00] mb-2">Only Ones Who</div>
-                    <div className="text-[0.85rem] font-semibold text-[#1A1A1A] mb-1">{strategyJSON.onlyOnesWho.claim}</div>
+                    <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#a63300] mb-2">Only Ones Who</div>
+                    <div className="text-[0.85rem] font-semibold text-[#2b2f31] mb-1">{strategyJSON.onlyOnesWho.claim}</div>
                     <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.onlyOnesWho.explanation}</div>
                   </div>
                 </div>
@@ -1436,7 +1436,7 @@ export default function BrandStrategyPage() {
                   {strategyJSON.differentiators.map((d, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
                       <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">{d.label}</div>
-                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{d.title}</div>
+                      <div className="text-[0.82rem] font-semibold text-[#2b2f31] mb-2">{d.title}</div>
                       <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{d.text}</div>
                     </div>
                   ))}
@@ -1453,12 +1453,12 @@ export default function BrandStrategyPage() {
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center text-xl">{p.emoji}</div>
                         <div>
-                          <div className="text-[0.88rem] font-semibold text-[#1A1A1A]">{p.name}</div>
+                          <div className="text-[0.88rem] font-semibold text-[#2b2f31]">{p.name}</div>
                           <div className="text-[0.75rem] text-[#6B6B6B]">{p.role}</div>
                         </div>
                         <span className={`ml-auto text-[0.65rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                           p.type === "primary"
-                            ? "bg-[#FFF2EE] text-[#E16C00]"
+                            ? "bg-[#FFF2EE] text-[#a63300]"
                             : "bg-[#F5F5F5] text-[#6B6B6B]"
                         }`}>{p.type}</span>
                       </div>
@@ -1482,7 +1482,7 @@ export default function BrandStrategyPage() {
                             {p.channels.map((ch, ci) => (
                               <span key={ci} className={`text-[0.68rem] px-2 py-0.5 rounded-full ${
                                 p.activeChannels.includes(ch)
-                                  ? "bg-[#FFF2EE] text-[#E16C00] font-semibold"
+                                  ? "bg-[#FFF2EE] text-[#a63300] font-semibold"
                                   : "bg-[#F5F5F5] text-[#6B6B6B]"
                               }`}>{ch}</span>
                             ))}
@@ -1511,19 +1511,19 @@ export default function BrandStrategyPage() {
                   <table className="w-full text-[0.78rem]">
                     <thead>
                       <tr className="bg-[#F5F5F5] text-left">
-                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Competitor</th>
-                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Type</th>
-                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Strengths</th>
-                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">Weaknesses</th>
-                        <th className="px-4 py-3 font-semibold text-[#1A1A1A]">vs Us</th>
+                        <th className="px-4 py-3 font-semibold text-[#2b2f31]">Competitor</th>
+                        <th className="px-4 py-3 font-semibold text-[#2b2f31]">Type</th>
+                        <th className="px-4 py-3 font-semibold text-[#2b2f31]">Strengths</th>
+                        <th className="px-4 py-3 font-semibold text-[#2b2f31]">Weaknesses</th>
+                        <th className="px-4 py-3 font-semibold text-[#2b2f31]">vs Us</th>
                       </tr>
                     </thead>
                     <tbody>
                       {strategyJSON.competitors.map((c, i) => (
                         <tr key={i} className={`border-t border-[#E5E5E5] ${c.isUs ? "bg-[#FFF2EE]" : "bg-white"}`}>
-                          <td className="px-4 py-3 font-medium text-[#1A1A1A]">
+                          <td className="px-4 py-3 font-medium text-[#2b2f31]">
                             {c.name}
-                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#E16C00] uppercase">(Us)</span>}
+                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#a63300] uppercase">(Us)</span>}
                           </td>
                           <td className="px-4 py-3 text-[#6B6B6B]">{c.type}</td>
                           <td className="px-4 py-3 text-[#2D2D2D]">{c.doWell}</td>
@@ -1542,8 +1542,8 @@ export default function BrandStrategyPage() {
                 {/* Pillars */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   {strategyJSON.messagingPillars.map((p, i) => (
-                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#E16C00]">
-                      <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-2">{p.title}</div>
+                    <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#a63300]">
+                      <div className="text-[0.82rem] font-semibold text-[#2b2f31] mb-2">{p.title}</div>
                       <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
                     </div>
                   ))}
@@ -1557,8 +1557,8 @@ export default function BrandStrategyPage() {
                         onClick={() => setActiveChannelTab(tab.key)}
                         className={`px-5 py-3 text-[0.78rem] font-medium transition-colors ${
                           activeChannelTab === tab.key
-                            ? "bg-white text-[#E16C00] border-b-2 border-b-[#E16C00] -mb-px"
-                            : "text-[#6B6B6B] hover:text-[#1A1A1A]"
+                            ? "bg-white text-[#a63300] border-b-2 border-b-[#a63300] -mb-px"
+                            : "text-[#6B6B6B] hover:text-[#2b2f31]"
                         }`}
                       >
                         {tab.label}
@@ -1570,7 +1570,7 @@ export default function BrandStrategyPage() {
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          {m.pillar && <span className="text-[0.6rem] text-[#E16C00]">{m.pillar}</span>}
+                          {m.pillar && <span className="text-[0.6rem] text-[#a63300]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
@@ -1588,7 +1588,7 @@ export default function BrandStrategyPage() {
                       <div key={i} className="bg-[#F5F5F5] rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A]">{m.format}</span>
-                          {m.pillar && <span className="text-[0.6rem] text-[#E16C00]">{m.pillar}</span>}
+                          {m.pillar && <span className="text-[0.6rem] text-[#a63300]">{m.pillar}</span>}
                         </div>
                         <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed whitespace-pre-wrap">{m.body}</div>
                       </div>
@@ -1625,11 +1625,11 @@ export default function BrandStrategyPage() {
                     <div key={i} className="grid grid-cols-2 gap-3">
                       <div className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-4">
                         <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#315A72] mb-1">Do</div>
-                        <div className="text-[0.78rem] text-[#1A1A1A] leading-relaxed">{pair.do}</div>
+                        <div className="text-[0.78rem] text-[#2b2f31] leading-relaxed">{pair.do}</div>
                       </div>
-                      <div className="bg-white border border-[#C8C9CC] rounded-xl p-4">
-                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#888888] mb-1">Don&apos;t</div>
-                        <div className="text-[0.78rem] text-[#1A1A1A] leading-relaxed">{pair.dont}</div>
+                      <div className="bg-white border border-[#e5e9eb] rounded-xl p-4">
+                        <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#767c7e] mb-1">Don&apos;t</div>
+                        <div className="text-[0.78rem] text-[#2b2f31] leading-relaxed">{pair.dont}</div>
                       </div>
                     </div>
                   ))}
@@ -1649,7 +1649,7 @@ export default function BrandStrategyPage() {
                     <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Never Use</div>
                     <div className="flex flex-wrap gap-1.5">
                       {strategyJSON.neverUse.map((w, i) => (
-                        <span key={i} className="bg-white text-[#555555] text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
+                        <span key={i} className="bg-white text-[#5a6062] text-[0.72rem] px-2.5 py-1 rounded-full">{w}</span>
                       ))}
                     </div>
                   </div>
@@ -1663,9 +1663,9 @@ export default function BrandStrategyPage() {
                   {/* Risks */}
                   <div className="space-y-3">
                     {strategyJSON.risks.map((r, i) => (
-                      <div key={i} className="bg-white border border-[#C8C9CC] rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-1">{r.title}</div>
-                        <div className="text-[0.78rem] text-[#555555] leading-relaxed">{r.text}</div>
+                      <div key={i} className="bg-white border border-[#e5e9eb] rounded-xl p-5">
+                        <div className="text-[0.82rem] font-semibold text-[#2b2f31] mb-1">{r.title}</div>
+                        <div className="text-[0.78rem] text-[#5a6062] leading-relaxed">{r.text}</div>
                       </div>
                     ))}
                   </div>
@@ -1673,7 +1673,7 @@ export default function BrandStrategyPage() {
                   <div className="space-y-3">
                     {strategyJSON.opportunities.map((o, i) => (
                       <div key={i} className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-[#1A1A1A] mb-1">{o.title}</div>
+                        <div className="text-[0.82rem] font-semibold text-[#2b2f31] mb-1">{o.title}</div>
                         <div className="text-[0.78rem] text-[#315A72] leading-relaxed">{o.text}</div>
                       </div>
                     ))}
@@ -1687,9 +1687,9 @@ export default function BrandStrategyPage() {
                 <div className="space-y-3">
                   {strategyJSON.taglines.map((t, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#E16C00] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
+                      <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#a63300] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
                       <div>
-                        <div className="text-[1rem] font-semibold text-[#1A1A1A] mb-1">&ldquo;{t.text}&rdquo;</div>
+                        <div className="text-[1rem] font-semibold text-[#2b2f31] mb-1">&ldquo;{t.text}&rdquo;</div>
                         <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{t.rationale}</div>
                       </div>
                     </div>

@@ -11,11 +11,12 @@ export default function AndyTrigger() {
       {/* Trigger button in bottom-left, next to floating notes */}
       <button
         onClick={() => setOpen(p => !p)}
+        className="signature-gradient"
         style={{
           position: 'fixed', bottom: 20, right: 80, width: 48, height: 48,
-          borderRadius: '50%', background: '#E16C00', border: 'none',
+          borderRadius: 16, border: 'none',
           cursor: 'pointer', zIndex: 150, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', boxShadow: '0 4px 16px rgba(225,108,0,0.3)',
+          justifyContent: 'center', boxShadow: '0 4px 30px rgba(166,51,0,0.2)',
           transition: 'transform 0.15s',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}

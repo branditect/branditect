@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 const C = {
-  or: '#E16C00', orl: '#FFF0E6', blk: '#1A1A1A', sec: '#555', mu: '#888',
-  bd: '#E2E3E6', bg: '#FAFAFA', wh: '#fff', payne: '#315A72',
+  or: '#a63300', orl: '#fff0e6', blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e',
+  bd: '#e5e9eb', bg: '#f4f7f9', wh: '#fff', payne: '#2b2f31',
 }
 
 const STEPS = [
@@ -55,7 +55,7 @@ export default function WelcomeModal() {
           <div>
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, ${C.payne}, ${C.or})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, #a63300, #ff7949)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V3h18v18H3zm2-2h14V5H5v14zm3-3h8v-2H8v2zm0-4h8V10H8v2z" fill="white"/></svg>
               </div>
               <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: C.or, letterSpacing: '-0.3px' }}>Branditect</span>
@@ -117,7 +117,7 @@ export default function WelcomeModal() {
               <Link
                 href="/dashboard"
                 onClick={() => dismiss(false)}
-                style={{ background: `linear-gradient(135deg, ${C.payne}, ${C.or})`, color: 'white', padding: '14px 32px', borderRadius: 10, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '0.02em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 16px ${C.or}30` }}
+                style={{ background: `linear-gradient(135deg, #a63300, #ff7949)`, color: 'white', padding: '14px 32px', borderRadius: 10, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '0.02em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 16px ${C.or}30` }}
               >
                 Enter workspace
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

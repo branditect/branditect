@@ -8,8 +8,8 @@ interface SavedNote { id: number; content: string; ts: string }
 interface Conversation { id: string; title: string; messages: Msg[]; ts: string }
 
 const C = {
-  or: '#E16C00', orl: '#FFF0E6', blk: '#1A1A1A', sec: '#555', mu: '#888', mu2: '#BBB',
-  bd: '#E2E3E6', bg: '#FAFAFA', wh: '#fff', payne: '#315A72',
+  or: '#a63300', orl: '#fff0e6', blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e', mu2: '#aaaeb0',
+  bd: '#e5e9eb', bg: '#f4f7f9', wh: '#fff', payne: '#2b2f31',
 }
 
 const BUBBLE = (

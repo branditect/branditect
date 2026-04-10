@@ -8,7 +8,6 @@ interface NavItem {
   icon: string;
   label: string;
   href: string;
-  badge?: string;
 }
 
 const dashboardItems: NavItem[] = [
@@ -44,7 +43,7 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
   return (
     <div className="px-3 pt-5 pb-1">
       {label && (
-        <div className="text-[10px] font-semibold text-[#888888] tracking-[0.1em] uppercase mb-1 px-3">
+        <div className="font-label text-[10px] font-semibold text-outline tracking-[0.12em] uppercase mb-2 px-3">
           {label}
         </div>
       )}
@@ -54,27 +53,18 @@ function NavSection({ label, items, pathname }: { label: string; items: NavItem[
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 py-[6px] px-3 rounded-md mb-px transition-colors ${
+            className={`flex items-center gap-2.5 py-[7px] px-3 rounded-lg mb-0.5 transition-all duration-200 ${
               isActive
-                ? "bg-[#FFF0E6] text-[#E16C00] font-medium"
-                : "text-[#1A1A1A] hover:bg-[#F5F5F5]"
+                ? "bg-surface-lowest text-primary font-medium ambient-shadow-sm"
+                : "text-on-surface-variant hover:bg-surface-lowest/60"
             }`}
           >
-            <span className={`text-[12px] w-4 text-center shrink-0 ${isActive ? "text-[#E16C00]" : "text-[#888888]"}`}>
+            <span className={`text-[11px] w-4 text-center shrink-0 ${isActive ? "text-primary" : "text-outline-variant"}`}>
               {item.icon}
             </span>
-            <span className="text-[13px]">
+            <span className="text-[13px] font-body">
               {item.label}
             </span>
-            {item.badge && (
-              <span className={`ml-auto text-[10px] font-semibold px-[5px] py-px rounded border ${
-                isActive
-                  ? "bg-[#FFF0E6] border-[#FFCAA7] text-[#E16C00]"
-                  : "bg-[#F5F4F0] border-[#C8C9CC] text-[#888888]"
-              }`}>
-                {item.badge}
-              </span>
-            )}
           </Link>
         );
       })}
@@ -90,40 +80,40 @@ export default function Sidebar() {
   const logoUrl = brand?.logo_url;
 
   return (
-    <aside className="w-sidebar bg-white border-r border-[#C8C9CC] flex flex-col shrink-0 overflow-y-auto">
+    <aside className="w-sidebar bg-surface-low flex flex-col shrink-0 overflow-y-auto">
       {/* Brand header */}
-      <div className="p-4 pb-3 border-b border-[#E2E3E6] flex items-center gap-[9px]">
+      <div className="p-5 pb-4 flex items-center gap-3">
         {logoUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={logoUrl} alt={brandName} className="w-[30px] h-[30px] rounded-md object-contain shrink-0" />
+          <img src={logoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-contain shrink-0" />
         ) : (
-          <div className="w-[30px] h-[30px] bg-[#315A72] rounded-md flex items-center justify-center shrink-0">
-            <span className="text-white text-[11px] font-bold font-mono">{initials}</span>
+          <div className="w-8 h-8 signature-gradient rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-white text-[10px] font-bold font-headline">{initials}</span>
           </div>
         )}
         <div>
-          <div className="text-[13px] font-semibold text-[#1A1A1A]">{brandName || "Workspace"}</div>
-          <div className="text-[11px] text-[#888888]">Branditect Workspace</div>
+          <div className="font-headline text-[13px] font-bold text-on-surface">{brandName || "Workspace"}</div>
+          <div className="text-[11px] text-outline">Branditect</div>
         </div>
       </div>
 
       <NavSection label="" items={dashboardItems} pathname={pathname} />
-      <div className="h-px bg-[#E2E3E6] mx-3" />
+      <div className="h-px bg-surface-high mx-5 my-1" />
       <NavSection label="Create" items={createItems} pathname={pathname} />
-      <div className="h-px bg-[#E2E3E6] mx-3" />
+      <div className="h-px bg-surface-high mx-5 my-1" />
       <NavSection label="Brand Library" items={libraryItems} pathname={pathname} />
-      <div className="h-px bg-[#E2E3E6] mx-3" />
-      <NavSection label="Brand Tools" items={toolItems} pathname={pathname} />
+      <div className="h-px bg-surface-high mx-5 my-1" />
+      <NavSection label="Tools" items={toolItems} pathname={pathname} />
 
       {/* User */}
-      <div className="mt-auto p-3 border-t border-[#E2E3E6]">
-        <div className="flex items-center gap-2 p-2 rounded-md hover:bg-[#F5F5F5] transition-colors cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-[#FFF0E6] border border-[#FFCAA7] flex items-center justify-center font-semibold text-[11px] text-[#E16C00] shrink-0">
+      <div className="mt-auto p-4">
+        <div className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-surface-lowest/60 transition-all cursor-pointer">
+          <div className="w-7 h-7 rounded-full signature-gradient flex items-center justify-center font-bold text-[10px] text-white shrink-0">
             S
           </div>
           <div>
-            <div className="text-[12px] font-medium text-[#1A1A1A]">Saara Muuari</div>
-            <div className="text-[11px] text-[#888888]">Admin</div>
+            <div className="text-[12px] font-semibold text-on-surface font-body">Saara Muuari</div>
+            <div className="text-[10px] text-outline">Admin</div>
           </div>
         </div>
       </div>

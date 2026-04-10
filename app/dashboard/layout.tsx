@@ -10,11 +10,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden bg-surface">
       <Topbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-[#FAFAFA]">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-surface">{children}</main>
       </div>
       <FloatingNotes />
       <AndyTrigger />

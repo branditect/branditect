@@ -12,15 +12,19 @@ const supabase = createClient(
 )
 
 async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes] = await Promise.all([
-    supabase.from('brands').select('brand_name, website, industry').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_visual').select('strategy_text').eq('brand_id', brandId).maybeSingle(),
+  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes] = await Promise.all([
+    supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('catalog_products').select('name, description, price_rrp, currency, type, category').eq('brand_id', brandId).limit(10),
+    supabase.from('brands').select('strategy_text').eq('brand_id', brandId).maybeSingle(),
   ])
 
   const brand = brandRes.data
   const strategy = strategyRes.data
   const tone = toneRes.data
+  const products = productsRes.data
+  const brandStrat = brandStratRes.data
 
   let ctx = `BRAND KNOWLEDGE:\n`
   if (brand) {
@@ -28,11 +32,35 @@ async function getBrandContext(brandId: string): Promise<string> {
     if (brand.website) ctx += `- Website: ${brand.website}\n`
     if (brand.industry) ctx += `- Industry: ${brand.industry}\n`
   }
-  if (strategy?.strategy_text) {
-    ctx += `\nBRAND STRATEGY:\n${strategy.strategy_text.slice(0, 2000)}\n`
+
+  // Full generated strategy (from brand strategy page)
+  if (strategy?.generated_strategy) {
+    const stratText = typeof strategy.generated_strategy === 'string'
+      ? strategy.generated_strategy
+      : JSON.stringify(strategy.generated_strategy)
+    ctx += `\nBRAND STRATEGY (generated):\n${stratText.slice(0, 4000)}\n`
   }
+
+  // Strategy text from brands table (onboarding)
+  if (brandStrat?.strategy_text) {
+    ctx += `\nBRAND STRATEGY (summary):\n${brandStrat.strategy_text.slice(0, 2000)}\n`
+  }
+
   if (tone) {
-    ctx += `\nBRAND TONE:\n${JSON.stringify(tone).slice(0, 1000)}\n`
+    const { id: _i, user_id: _u, brand_id: _b, created_at: _c, updated_at: _up, ...toneFields } = tone
+    void _i; void _u; void _b; void _c; void _up;
+    ctx += `\nBRAND TONE OF VOICE:\n${JSON.stringify(toneFields, null, 2).slice(0, 2000)}\n`
+  }
+
+  if (products && products.length > 0) {
+    ctx += `\nPRODUCTS & SERVICES (${products.length} items):\n`
+    products.forEach((p: { name: string; description: string; price_rrp: number | null; currency: string; type: string; category: string | null }) => {
+      ctx += `- ${p.name} (${p.type})`
+      if (p.price_rrp) ctx += ` — ${p.currency || 'EUR'} ${p.price_rrp}`
+      if (p.category) ctx += ` [${p.category}]`
+      ctx += `\n`
+      if (p.description) ctx += `  ${p.description.slice(0, 200)}\n`
+    })
   }
 
   return ctx

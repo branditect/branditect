@@ -237,7 +237,7 @@ export default function ToneOfVoicePage() {
         setDraft({ expression_label: toneData.expression_label, expression_text: toneData.expression_text });
         break;
       case "pillars":
-        setDraft({ pillars: toneData.pillars?.length ? JSON.parse(JSON.stringify(toneData.pillars)) : [{ icon: "🎯", name: "", desc: "", bullets: ["", "", ""] }] });
+        setDraft({ pillars: toneData.pillars?.length ? JSON.parse(JSON.stringify(toneData.pillars)) : [{ icon: "", name: "", desc: "", bullets: ["", "", ""] }] });
         break;
       case "dos":
         setDraft({ dos: [...(toneData.dos || [])] });
@@ -249,7 +249,7 @@ export default function ToneOfVoicePage() {
         setDraft({ vocab_yes: [...(toneData.vocab_yes || [])], vocab_no: [...(toneData.vocab_no || [])] });
         break;
       case "touchpoints":
-        setDraft({ touchpoints: toneData.touchpoints?.length ? JSON.parse(JSON.stringify(toneData.touchpoints)) : [{ icon: "🌐", name: "", badge: "", bad: "", good: "" }] });
+        setDraft({ touchpoints: toneData.touchpoints?.length ? JSON.parse(JSON.stringify(toneData.touchpoints)) : [{ icon: "", name: "", badge: "", bad: "", good: "" }] });
         break;
       case "checklist":
         setDraft({ checklist: [...(toneData.checklist || DEFAULT_CHECKLIST)] });
@@ -310,7 +310,7 @@ export default function ToneOfVoicePage() {
                   onClick={() => setEntryMode("paste")}
                   className="flex items-start gap-4 text-left border border-light rounded-xl p-4 hover:border-brand-orange hover:bg-brand-orange-pale/30 transition-colors"
                 >
-                  <span className="text-brand-orange text-xl mt-0.5">✦</span>
+                  <span className="text-brand-orange text-sm font-bold mt-0.5">*</span>
                   <div>
                     <p className="font-semibold text-ink text-sm">Paste writing samples</p>
                     <p className="text-muted text-xs mt-0.5">
@@ -410,7 +410,7 @@ export default function ToneOfVoicePage() {
           >
             &larr; Brand Library
           </Link>
-          <h1 className="font-semibold text-[1.5rem] text-ink mt-3">Brand Tone of Voice</h1>
+          <h1 className="font-headline font-bold text-[1.5rem] text-ink mt-3">Brand Tone of Voice</h1>
           <p className="text-muted text-sm mt-1">{brandName}</p>
         </div>
 
@@ -421,14 +421,14 @@ export default function ToneOfVoicePage() {
           </p>
           {td.expression_label ? (
             <>
-              <h2 className="font-semibold italic text-3xl mb-3 text-heading">{td.expression_label}</h2>
+              <h2 className="font-headline font-bold italic text-3xl mb-3 text-heading">{td.expression_label}</h2>
               <p className="text-on-white text-sm leading-relaxed max-w-xl">
                 {td.expression_text}
               </p>
             </>
           ) : (
             <>
-              <h2 className="font-semibold italic text-3xl mb-3 text-muted">
+              <h2 className="font-headline font-bold italic text-3xl mb-3 text-muted">
                 Your expression here
               </h2>
               {placeholder("Not defined yet — click edit to add")}
@@ -451,8 +451,8 @@ export default function ToneOfVoicePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {pillars.map((p, i) => (
                 <div key={i} className="bg-white border border-light rounded-xl p-5">
-                  <span className="text-xl mb-2 block">{p.icon}</span>
-                  <h3 className="font-semibold text-ink text-sm">{p.name}</h3>
+                  <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center mb-3 text-xs font-headline font-bold text-on-surface-variant">{p.name?.[0] || 'P'}</div>
+                  <h3 className="font-headline font-bold text-ink text-sm">{p.name}</h3>
                   <p className="text-muted text-xs mt-1 mb-3">{p.desc}</p>
                   {p.bullets?.length > 0 && (
                     <ul className="space-y-1">
@@ -579,8 +579,8 @@ export default function ToneOfVoicePage() {
               {touchpoints.map((tp, i) => (
                 <div key={i} className="bg-white border border-light rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-lg">{tp.icon}</span>
-                    <h3 className="font-semibold text-ink text-sm">{tp.name}</h3>
+                    <div className="w-7 h-7 rounded-md bg-surface-container-high flex items-center justify-center text-[10px] font-headline font-bold text-on-surface-variant">{tp.name?.[0] || 'T'}</div>
+                    <h3 className="font-headline font-bold text-ink text-sm">{tp.name}</h3>
                     <span className="ml-auto bg-brand-orange-pale text-brand-orange text-[0.6rem] font-mono px-2 py-0.5 rounded-full">
                       {tp.badge}
                     </span>
@@ -745,7 +745,7 @@ export default function ToneOfVoicePage() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setDraft((d) => ({ ...d, pillars: [...(d.pillars || []), { icon: "🎯", name: "", desc: "", bullets: [""] }] }))}
+                  onClick={() => setDraft((d) => ({ ...d, pillars: [...(d.pillars || []), { icon: "", name: "", desc: "", bullets: [""] }] }))}
                   className="text-brand-orange text-xs font-mono hover:underline"
                 >
                   + Add pillar
@@ -899,7 +899,7 @@ export default function ToneOfVoicePage() {
                   onClick={() =>
                     setDraft((d) => ({
                       ...d,
-                      touchpoints: [...(d.touchpoints || []), { icon: "🌐", name: "", badge: "", bad: "", good: "" }],
+                      touchpoints: [...(d.touchpoints || []), { icon: "", name: "", badge: "", bad: "", good: "" }],
                     }))
                   }
                   className="text-brand-orange text-xs font-mono hover:underline"

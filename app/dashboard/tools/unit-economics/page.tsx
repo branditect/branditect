@@ -87,7 +87,7 @@ function ProductMarginCalc() {
 
           {warn && (
             <div className={`px-3 py-2 rounded-lg mb-4 text-[0.72rem] ${netProfit < 0 ? "bg-red-50 border border-red-200 text-red-700" : "bg-amber-50 border border-amber-200 text-amber-700"}`}>
-              {netProfit < 0 ? "⚠ Negative margin — you're losing money on every sale." : "⚠ Margin below 15% — limited room for growth and unexpected costs."}
+              {netProfit < 0 ? "Warning: Negative margin — you\u2019re losing money on every sale." : "Warning: Margin below 15% — limited room for growth and unexpected costs."}
             </div>
           )}
 
@@ -222,7 +222,7 @@ function WholesaleCalc() {
 
           {/* Insight box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <div className="font-mono text-[0.52rem] tracking-wider uppercase text-blue-600 mb-1">💡 Wholesale vs Direct</div>
+            <div className="font-mono text-[0.52rem] tracking-wider uppercase text-blue-600 mb-1">TIP: Wholesale vs Direct</div>
             <p className="text-[0.72rem] text-blue-800 leading-relaxed">
               At wholesale you earn <strong>€{profitPerUnit.toFixed(2)}</strong> per unit ({yourMargin.toFixed(1)}% margin).
               Selling direct at €{suggestedRetail.toFixed(2)} you&apos;d earn <strong>€{directProfit.toFixed(2)}</strong> per unit ({directMargin.toFixed(1)}% margin)

@@ -42,7 +42,7 @@ const CAT_ICONS: Record<string, string> = {
   newsletter: '▤',
   product: '△',
   presentation: '▣',
-  other: '✦',
+  other: 'OTH',
 }
 
 const catKeys = Object.keys(COPY_CONFIG)
@@ -417,7 +417,7 @@ export default function CopyArchitectPage() {
                   : 'bg-light text-muted cursor-not-allowed'
               }`}
             >
-              <span>✦</span>
+              <span>+</span>
               Generate copy
             </button>
           </div>

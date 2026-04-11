@@ -42,10 +42,10 @@ const KIND_COLOR: Record<Kind, string> = {
   digital: "bg-amber-50 text-amber-700 border-amber-200",
 };
 const KIND_OPTIONS: { kind: Kind; icon: string; label: string; desc: string }[] = [
-  { kind: "physical", icon: "📦", label: "Physical Product", desc: "Tangible goods, shipped to customers" },
-  { kind: "services", icon: "💼", label: "Service", desc: "Consulting, coaching, agency work" },
-  { kind: "saas", icon: "💻", label: "SaaS / Subscription", desc: "Software or recurring digital service" },
-  { kind: "digital", icon: "✦", label: "Digital Product", desc: "Downloads, courses, templates" },
+  { kind: "physical", icon: "PHY", label: "Physical Product", desc: "Tangible goods, shipped to customers" },
+  { kind: "services", icon: "SRV", label: "Service", desc: "Consulting, coaching, agency work" },
+  { kind: "saas", icon: "SAS", label: "SaaS / Subscription", desc: "Software or recurring digital service" },
+  { kind: "digital", icon: "DIG", label: "Digital Product", desc: "Downloads, courses, templates" },
 ];
 const PRICE_MODELS = ["Per project", "Per hour", "Retainer / monthly", "Custom quote"];
 

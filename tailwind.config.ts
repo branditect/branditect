@@ -8,135 +8,103 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      /* ── Colors: exact values from DESIGN.md Tailwind config block ── */
       colors: {
-        // Surface hierarchy (No-Line Rule)
-        background: "#f8f9fa",
-        surface: {
-          DEFAULT: "#f8f9fa",
-          bright: "#f8f9fa",
-          dim: "#d5dbdd",
-          container: "#ebeef0",
-          "container-low": "#f1f4f5",
-          "container-lowest": "#ffffff",
-          "container-high": "#e5e9eb",
-          "container-highest": "#dee3e6",
-          variant: "#dee3e6",
-          tint: "#ad3507",
-        },
-        // Primary (Signature Coral)
-        primary: {
-          DEFAULT: "#ad3507",
-          dim: "#9b2b00",
-          container: "#ff6e41",
-          fixed: "#ff6e41",
-          "fixed-dim": "#ed6235",
-        },
-        "on-primary": {
-          DEFAULT: "#fff7f5",
-          container: "#3d0b00",
-          fixed: "#000000",
-          "fixed-variant": "#4e1100",
-        },
+        "secondary-fixed": "#d8e3f9",
+        "secondary-fixed-dim": "#cad5ea",
+        "on-primary": "#fff7f5",
+        "tertiary": "#755b25",
         "inverse-primary": "#ff6e41",
-        // Secondary
-        secondary: {
-          DEFAULT: "#556072",
-          dim: "#495465",
-          container: "#d8e3f9",
-          fixed: "#d8e3f9",
-          "fixed-dim": "#cad5ea",
-        },
-        "on-secondary": {
-          DEFAULT: "#f8f8ff",
-          container: "#475264",
-          fixed: "#354051",
-          "fixed-variant": "#515c6e",
-        },
-        // Tertiary
-        tertiary: {
-          DEFAULT: "#755b25",
-          dim: "#684f1a",
-          container: "#f9d593",
-          fixed: "#f9d593",
-          "fixed-dim": "#eac787",
-        },
-        "on-tertiary": {
-          DEFAULT: "#fff8f1",
-          container: "#614914",
-          fixed: "#4c3602",
-          "fixed-variant": "#6b521d",
-        },
-        // Error
-        error: {
-          DEFAULT: "#a83836",
-          dim: "#67040d",
-          container: "#fa746f",
-        },
-        "on-error": {
-          DEFAULT: "#fff7f6",
-          container: "#6e0a12",
-        },
-        // Text
-        "on-surface": {
-          DEFAULT: "#2d3335",
-          variant: "#5a6062",
-        },
+        "tertiary-fixed": "#f9d593",
+        "secondary-container": "#d8e3f9",
         "on-background": "#2d3335",
+        "tertiary-container": "#f9d593",
+        "primary-fixed-dim": "#ed6235",
+        "primary-dim": "#9b2b00",
+        "surface-bright": "#f8f9fa",
+        "surface-variant": "#dee3e6",
+        "on-secondary-container": "#475264",
+        "outline": "#767c7e",
+        "tertiary-dim": "#684f1a",
         "inverse-surface": "#0c0f10",
+        "surface-container-lowest": "#ffffff",
+        "error": "#a83836",
+        "on-secondary-fixed-variant": "#515c6e",
+        "surface-container-low": "#f1f4f5",
+        "on-tertiary-fixed": "#4c3602",
+        "error-dim": "#67040d",
+        "on-surface": "#2d3335",
+        "on-secondary": "#f8f8ff",
+        "tertiary-fixed-dim": "#eac787",
+        "surface-container": "#ebeef0",
+        "outline-variant": "#adb3b5",
         "inverse-on-surface": "#9b9d9e",
-        outline: {
-          DEFAULT: "#767c7e",
-          variant: "#adb3b5",
-        },
-        // Semantic aliases
+        "on-tertiary-container": "#614914",
+        "surface": "#f8f9fa",
+        "on-tertiary-fixed-variant": "#6b521d",
+        "error-container": "#fa746f",
+        "surface-tint": "#ad3507",
+        "primary": "#ad3507",
+        "on-secondary-fixed": "#354051",
+        "primary-container": "#ff6e41",
+        "on-primary-fixed": "#000000",
+        "secondary": "#556072",
+        "on-primary-fixed-variant": "#4e1100",
+        "on-error-container": "#6e0a12",
+        "secondary-dim": "#495465",
+        "on-primary-container": "#3d0b00",
+        "primary-fixed": "#ff6e41",
+        "on-surface-variant": "#5a6062",
+        "surface-container-highest": "#dee3e6",
+        "background": "#f8f9fa",
+        "surface-container-high": "#e5e9eb",
+        "on-error": "#fff7f6",
+        "surface-dim": "#d5dbdd",
+        "on-tertiary": "#fff8f1",
+        // Semantic aliases for existing code compat
         ink: "#2d3335",
         dark: "#2d3335",
         mid: "#5a6062",
         muted: "#767c7e",
         subtle: "#adb3b5",
-        // Legacy compat
+        pale: "#f1f4f5",
+        alabaster: "#ebeef0",
+        payne: "#2d3335",
+        light: "rgba(173, 179, 181, 0.15)",
         brand: {
           orange: "#ad3507",
           "orange-hover": "#9b2b00",
           "orange-pale": "#fff0e6",
           "orange-mid": "#ffcaa7",
         },
-        pale: "#f1f4f5",
-        alabaster: "#ebeef0",
-        payne: "#2d3335",
-        light: "rgba(173, 179, 181, 0.15)",
+        heading: "#2d3335",
       },
+
+      /* ── Border Radius: exact values from DESIGN.md ── */
       borderRadius: {
-        DEFAULT: "0.5rem",    // 8px min (no sharp corners)
-        sm: "0.5rem",         // 8px
-        md: "0.75rem",        // 12px — buttons, inputs
-        lg: "1rem",           // 16px — inner cards
-        xl: "1.5rem",         // 24px — main dashboard cards
-        "2xl": "2rem",        // 32px
+        DEFAULT: "0.25rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
         full: "9999px",
       },
-      spacing: {
-        "space-xs": "4px",
-        "space-sm": "8px",
-        "space-md": "16px",
-        "space-lg": "24px",
-        "space-xl": "32px",
-        "space-2xl": "48px",
-        "space-3xl": "64px",
+
+      /* ── Font Family: exact values from DESIGN.md ── */
+      fontFamily: {
+        headline: ["Manrope"],
+        body: ["Inter"],
+        label: ["Inter"],
+        display: ["Manrope"],
+        // Compat aliases
+        sans: ["Inter", "var(--font-inter)", "DM Sans", "sans-serif"],
+        mono: ["var(--font-dm-mono)", "monospace"],
       },
+
+      /* ── Additional scales ── */
       width: {
         sidebar: "220px",
       },
       height: {
         topbar: "52px",
-      },
-      fontFamily: {
-        headline: ["Manrope", "var(--font-manrope)", "sans-serif"],
-        display: ["Manrope", "var(--font-manrope)", "sans-serif"],
-        body: ["Inter", "var(--font-inter)", "DM Sans", "sans-serif"],
-        label: ["Inter", "var(--font-inter)", "DM Sans", "sans-serif"],
-        sans: ["Inter", "var(--font-inter)", "DM Sans", "sans-serif"],
-        mono: ["var(--font-dm-mono)", "monospace"],
       },
       fontSize: {
         "display-lg": ["3.5rem", { lineHeight: "1.1", fontWeight: "800" }],

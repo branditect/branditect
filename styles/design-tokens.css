@@ -1,0 +1,111 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BRANDITECT DESIGN TOKENS
+   Source: DESIGN.md — "The Editorial Architect"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surface Hierarchy ── */
+  --background:               #f8f9fa;
+  --surface:                  #f8f9fa;
+  --surface-bright:           #f8f9fa;
+  --surface-dim:              #d5dbdd;
+  --surface-container:        #ebeef0;
+  --surface-container-low:    #f1f4f5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-high:   #e5e9eb;
+  --surface-container-highest:#dee3e6;
+  --surface-tint:             #ad3507;
+  --surface-variant:          #dee3e6;
+
+  /* ── Primary ── */
+  --primary:                  #ad3507;
+  --primary-dim:              #9b2b00;
+  --primary-container:        #ff6e41;
+  --primary-fixed:            #ff6e41;
+  --primary-fixed-dim:        #ed6235;
+  --on-primary:               #fff7f5;
+  --on-primary-container:     #3d0b00;
+  --on-primary-fixed:         #000000;
+  --on-primary-fixed-variant: #4e1100;
+  --inverse-primary:          #ff6e41;
+
+  /* ── Secondary ── */
+  --secondary:                #556072;
+  --secondary-dim:            #495465;
+  --secondary-container:      #d8e3f9;
+  --secondary-fixed:          #d8e3f9;
+  --secondary-fixed-dim:      #cad5ea;
+  --on-secondary:             #f8f8ff;
+  --on-secondary-container:   #475264;
+  --on-secondary-fixed:       #354051;
+  --on-secondary-fixed-variant:#515c6e;
+
+  /* ── Tertiary ── */
+  --tertiary:                 #755b25;
+  --tertiary-dim:             #684f1a;
+  --tertiary-container:       #f9d593;
+  --tertiary-fixed:           #f9d593;
+  --tertiary-fixed-dim:       #eac787;
+  --on-tertiary:              #fff8f1;
+  --on-tertiary-container:    #614914;
+  --on-tertiary-fixed:        #4c3602;
+  --on-tertiary-fixed-variant:#6b521d;
+
+  /* ── Error ── */
+  --error:                    #a83836;
+  --error-dim:                #67040d;
+  --error-container:          #fa746f;
+  --on-error:                 #fff7f6;
+  --on-error-container:       #6e0a12;
+
+  /* ── Text / On-Surface ── */
+  --on-surface:               #2d3335;
+  --on-surface-variant:       #5a6062;
+  --on-background:            #2d3335;
+  --inverse-surface:          #0c0f10;
+  --inverse-on-surface:       #9b9d9e;
+
+  /* ── Outline ── */
+  --outline:                  #767c7e;
+  --outline-variant:          #adb3b5;
+
+  /* ── Spacing (base-8 grid) ── */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   32px;
+  --space-2xl:  48px;
+  --space-3xl:  64px;
+
+  /* ── Typography Scale ── */
+  --text-display-lg:   3.5rem;
+  --text-display-md:   2.5rem;
+  --text-headline-lg:  2rem;
+  --text-headline-md:  1.75rem;
+  --text-headline-sm:  1.25rem;
+  --text-title-lg:     1.125rem;
+  --text-title-md:     1rem;
+  --text-body-lg:      1rem;
+  --text-body-md:      0.875rem;
+  --text-body-sm:      0.8125rem;
+  --text-label-lg:     0.875rem;
+  --text-label-md:     0.75rem;
+  --text-label-sm:     0.6875rem;
+
+  /* ── Radius ── */
+  --radius-sm:   0.5rem;
+  --radius-md:   0.75rem;
+  --radius-lg:   1rem;
+  --radius-xl:   1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Elevation (Ambient Light) ── */
+  --shadow-ambient-sm: 0 2px 20px rgba(45, 51, 53, 0.04);
+  --shadow-ambient-md: 0 4px 32px rgba(45, 51, 53, 0.05);
+  --shadow-ambient-lg: 0 8px 48px rgba(45, 51, 53, 0.06);
+  --shadow-float:      0 12px 60px rgba(45, 51, 53, 0.08);
+
+  /* ── Ghost Border ── */
+  --ghost-border: inset 0 0 0 1px rgba(173, 179, 181, 0.15);
+}

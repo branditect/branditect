@@ -689,16 +689,6 @@ export default function ToneOfVoicePage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        value={p.icon}
-                        onChange={(e) => {
-                          const arr = [...(draft.pillars || [])];
-                          arr[i] = { ...arr[i], icon: e.target.value };
-                          setDraft((d) => ({ ...d, pillars: arr }));
-                        }}
-                        className="w-12 border border-light rounded-lg px-2 py-1 text-center text-lg focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
-                      />
-                      <input
-                        type="text"
                         value={p.name}
                         onChange={(e) => {
                           const arr = [...(draft.pillars || [])];
@@ -823,16 +813,6 @@ export default function ToneOfVoicePage() {
                 {(draft.touchpoints || []).map((tp, i) => (
                   <div key={i} className="border border-light rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={tp.icon}
-                        onChange={(e) => {
-                          const arr = [...(draft.touchpoints || [])];
-                          arr[i] = { ...arr[i], icon: e.target.value };
-                          setDraft((d) => ({ ...d, touchpoints: arr }));
-                        }}
-                        className="w-12 border border-light rounded-lg px-2 py-1 text-center text-lg focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
-                      />
                       <input
                         type="text"
                         value={tp.name}

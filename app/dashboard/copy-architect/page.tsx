@@ -2,68 +2,115 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
-import type { SubTypeConfig } from '@/lib/copy-architect-config'
 import { useBrand } from '@/lib/useBrand'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+/* ── Types ──────────────────────────────────────────────────────────────────── */
 
-interface CopyOption {
-  id: string
-  type: string
-  text: string
-  rationale: string
-}
+interface CopyOption { id: string; type: string; text: string; rationale: string }
+interface CopySection { label: string; options: CopyOption[] }
+interface CopyResult { sections: CopySection[]; qualityChecks: string[]; placeholders: string[]; toneMatch: string }
 
-interface CopySection {
-  label: string
-  options: CopyOption[]
-}
+/* ── Simplified nav categories ──────────────────────────────────────────────── */
 
-interface CopyResult {
-  sections: CopySection[]
-  qualityChecks: string[]
-  placeholders: string[]
-  toneMatch: string
-}
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const BRAND_DEFAULTS = {
-  tone: ['Direct', 'Irreverent', 'Insider', 'Anti-corporate'],
-  positioning: 'The only phone carrier that turns your monthly bill into creator support.',
-  tagline: 'Always on. Never behind.',
-  strategy: 'Loaded',
-}
-
-const CAT_ICONS: Record<string, string> = {
-  social: '◻',
-  email: '◇',
-  website: '◎',
-  newsletter: '▤',
-  product: '△',
-  presentation: '▣',
-  other: 'OTH',
-}
-
-const catKeys = Object.keys(COPY_CONFIG)
+const NAV_ITEMS = [
+  {
+    key: 'social', label: 'Social',
+    title: 'Social post',
+    subtitle: 'Hook-first. Platform-optimised. Brand-checked before it leaves.',
+    dropdownLabel: 'Platform',
+    dropdownOptions: ['Instagram caption', 'LinkedIn post', 'X / Twitter post', 'TikTok caption & hook', 'Facebook post'],
+    topicLabel: "What's the post about?",
+    topicPlaceholder: 'Topic, angle, hook idea, product, campaign... anything that gives direction.',
+    configCat: 'social',
+    subMap: { 'Instagram caption': 'instagram', 'LinkedIn post': 'linkedin', 'X / Twitter post': 'x', 'TikTok caption & hook': 'tiktok', 'Facebook post': 'facebook' } as Record<string, string>,
+  },
+  {
+    key: 'other', label: 'Other',
+    title: 'Other copy',
+    subtitle: 'Ad copy, video hooks, bios, press releases, SMS — whatever you need.',
+    dropdownLabel: 'Type',
+    dropdownOptions: ['Ad copy', 'Video hooks', 'Bio / Profile', 'Press release', 'SMS / Push notification'],
+    topicLabel: "What are you writing?",
+    topicPlaceholder: 'The message, announcement, or content you need.',
+    configCat: 'other',
+    subMap: { 'Ad copy': 'ad', 'Video hooks': 'videohooks', 'Bio / Profile': 'bio', 'Press release': 'press', 'SMS / Push notification': 'sms' } as Record<string, string>,
+  },
+  {
+    key: 'email', label: 'Email',
+    title: 'Email',
+    subtitle: 'Subject lines that get opened. Body copy that converts.',
+    dropdownLabel: 'Type',
+    dropdownOptions: ['Newsletter', 'Proposal', 'Cold outreach', 'Other'],
+    topicLabel: "What's this email about?",
+    topicPlaceholder: 'The message, offer, or announcement this email delivers.',
+    configCat: 'email',
+    subMap: { 'Newsletter': 'newsletter_email', 'Proposal': 'proposal', 'Cold outreach': 'cold_outreach', 'Other': 'transactional' } as Record<string, string>,
+  },
+  {
+    key: 'product', label: 'Product Info',
+    title: 'Product copy',
+    subtitle: 'Descriptions, features, pricing — written to sell.',
+    dropdownLabel: 'Type',
+    dropdownOptions: ['Product description', 'Feature list', 'Pricing page', 'Comparison page'],
+    topicLabel: "What product or service?",
+    topicPlaceholder: 'The product, service, or offer you need copy for.',
+    configCat: 'product',
+    subMap: { 'Product description': 'product_desc', 'Feature list': 'feature_list', 'Pricing page': 'pricing', 'Comparison page': 'comparison' } as Record<string, string>,
+  },
+  {
+    key: 'seo', label: 'SEO Content',
+    title: 'SEO content',
+    subtitle: 'Keyword-optimised. Search-intent matched. Rank-ready.',
+    dropdownLabel: 'Type',
+    dropdownOptions: ['SEO blog post', 'SEO product page', 'SEO landing page', 'Meta tags generator', 'Content cluster plan'],
+    topicLabel: "Primary keyword or topic",
+    topicPlaceholder: 'The keyword you want to rank for, or the topic you want to cover.',
+    configCat: 'seo',
+    subMap: { 'SEO blog post': 'blogpost', 'SEO product page': 'productpage', 'SEO landing page': 'landingseo', 'Meta tags generator': 'metatags', 'Content cluster plan': 'pillarcluster' } as Record<string, string>,
+  },
+  {
+    key: 'presentation', label: 'Presentation',
+    title: 'Presentation',
+    subtitle: 'Slide decks, pitch scripts, and talking points.',
+    dropdownLabel: 'Type',
+    dropdownOptions: ['Pitch deck', 'Sales deck', 'Internal presentation', 'Keynote script'],
+    topicLabel: "What's the presentation about?",
+    topicPlaceholder: 'The topic, audience, and goal of this presentation.',
+    configCat: 'presentation',
+    subMap: { 'Pitch deck': 'pitch_deck', 'Sales deck': 'sales_deck', 'Internal presentation': 'internal', 'Keynote script': 'keynote' } as Record<string, string>,
+  },
+]
 
 const OPTION_LABELS = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E']
 
-// ─── Component ────────────────────────────────────────────────────────────────
+/* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function CopyArchitectPage() {
   const { brandId, brandName } = useBrand()
-  const BRAND = { name: brandName, ...BRAND_DEFAULTS }
-  const [activeCat, setActiveCat] = useState(catKeys[0])
-  const [activeSub, setActiveSub] = useState(Object.keys(COPY_CONFIG[catKeys[0]].subs)[0])
-  const [formValues, setFormValues] = useState<Record<string, string>>({})
+  const tonePills = ['Direct', 'Clear', 'On-brand']
+
+  const [activeNav, setActiveNav] = useState(NAV_ITEMS[0])
+  const [dropdown, setDropdown] = useState(NAV_ITEMS[0].dropdownOptions[0])
+  const [topic, setTopic] = useState('')
+  const [notes, setNotes] = useState('')
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState<CopyResult | null>(null)
-  const [activeTab, setActiveTab] = useState<'copy' | 'quality' | 'placeholders'>('copy')
+  const [error, setError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [primaryPicks, setPrimaryPicks] = useState<Record<number, number>>({})
-  const [error, setError] = useState('')
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set())
+
+  function switchNav(item: typeof NAV_ITEMS[0]) {
+    setActiveNav(item)
+    setDropdown(item.dropdownOptions[0])
+    setTopic('')
+    setNotes('')
+    setResult(null)
+    setError('')
+    setPrimaryPicks({})
+  }
+
+  const canGenerate = useMemo(() => topic.trim().length > 0, [topic])
 
   async function saveFavorite(text: string, optionId: string, type: string) {
     if (favoritedIds.has(optionId)) return
@@ -75,497 +122,224 @@ export default function CopyArchitectPage() {
     })
   }
 
-  const catConfig = COPY_CONFIG[activeCat]
-  const subConfig: SubTypeConfig = catConfig.subs[activeSub]
-
-  const canGenerate = useMemo(() => {
-    return subConfig.fields
-      .filter(f => f.req)
-      .every(f => formValues[f.id]?.trim())
-  }, [subConfig, formValues])
-
-  const handleCatClick = useCallback((catKey: string) => {
-    if (activeCat === catKey) return
-    setActiveCat(catKey)
-    const firstSub = Object.keys(COPY_CONFIG[catKey].subs)[0]
-    setActiveSub(firstSub)
-    setFormValues({})
-    setResult(null)
-    setError('')
-    setPrimaryPicks({})
-    setActiveTab('copy')
-  }, [activeCat])
-
-  const handleSubClick = useCallback((subKey: string) => {
-    setActiveSub(subKey)
-    setFormValues({})
-    setResult(null)
-    setError('')
-    setPrimaryPicks({})
-    setActiveTab('copy')
-  }, [])
-
-  const handleFieldChange = useCallback((fieldId: string, value: string) => {
-    setFormValues(prev => ({ ...prev, [fieldId]: value }))
-  }, [])
-
   const handleGenerate = useCallback(async () => {
     setGenerating(true)
     setError('')
     setResult(null)
     setPrimaryPicks({})
-    setActiveTab('copy')
+
+    // Map to config
+    const configCat = activeNav.configCat
+    const subKey = activeNav.subMap[dropdown] || Object.keys(COPY_CONFIG[configCat]?.subs || {})[0] || 'instagram'
 
     try {
       const res = await fetch('/api/copy-architect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category: activeCat,
-          subType: activeSub,
-          fields: formValues,
+          category: configCat,
+          subType: subKey,
+          fields: { topic, notes, goal: dropdown },
           brand_id: brandId,
         }),
       })
-
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Generation failed')
-        return
-      }
-
+      if (!res.ok) { setError(data.error || 'Generation failed'); return }
       setResult(data)
-
-      // Set first option in each section as primary
       const picks: Record<number, number> = {}
-      data.sections?.forEach((_: CopySection, i: number) => {
-        picks[i] = 0
-      })
+      data.sections?.forEach((_: CopySection, i: number) => { picks[i] = 0 })
       setPrimaryPicks(picks)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error')
     } finally {
       setGenerating(false)
     }
-  }, [activeCat, activeSub, formValues])
+  }, [activeNav, dropdown, topic, notes, brandId])
 
   const handleCopy = useCallback(async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedId(id)
-      setTimeout(() => setCopiedId(null), 1500)
-    } catch {
-      /* clipboard not available */
-    }
+    try { await navigator.clipboard.writeText(text); setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) } catch {}
   }, [])
 
-  const handleCopyAllSection = useCallback(async (section: CopySection, sectionIdx: number) => {
-    const allText = section.options.map(o => o.text).join('\n\n')
-    try {
-      await navigator.clipboard.writeText(allText)
-      setCopiedId(`section-${sectionIdx}`)
-      setTimeout(() => setCopiedId(null), 1500)
-    } catch {
-      /* clipboard not available */
-    }
-  }, [])
-
-  const handleCopySelected = useCallback(async () => {
-    if (!result) return
-    const selectedTexts = result.sections
-      .map((section, i) => {
-        const pickIdx = primaryPicks[i] ?? 0
-        const option = section.options[pickIdx]
-        return option ? `--- ${section.label} ---\n${option.text}` : null
-      })
-      .filter(Boolean)
-      .join('\n\n')
-    try {
-      await navigator.clipboard.writeText(selectedTexts)
-      setCopiedId('__selected__')
-      setTimeout(() => setCopiedId(null), 1500)
-    } catch {
-      /* clipboard not available */
-    }
-  }, [result, primaryPicks])
-
-  // ─── Render ─────────────────────────────────────────────────────────────────
+  /* ── Render ──────────────────────────────────────────────────────────────── */
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full font-body">
+
       {/* ── Left Sidebar ── */}
-      <aside className="w-60 bg-white border-r border-light shrink-0 flex flex-col">
-        {/* Scrollable top section */}
-        <div className="flex-1 overflow-y-auto p-3 pt-4">
-          <p className="font-mono text-[0.65rem] text-muted uppercase tracking-wider mb-3 px-1">
-            What are you writing?
-          </p>
-
-          <nav className="space-y-0.5">
-            {catKeys.map(catKey => {
-              const cat = COPY_CONFIG[catKey]
-              const isActive = activeCat === catKey
-              const subKeys = Object.keys(cat.subs)
-
-              return (
-                <div key={catKey}>
-                  <button
-                    onClick={() => handleCatClick(catKey)}
-                    className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-[0.8rem] transition-colors ${
-                      isActive
-                        ? 'bg-brand-orange-pale text-brand-orange font-medium'
-                        : 'text-mid hover:bg-pale hover:text-ink'
-                    }`}
-                  >
-                    <span
-                      className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center text-xs shrink-0 ${
-                        isActive ? 'bg-brand-orange-mid' : 'bg-pale'
-                      }`}
-                    >
-                      {CAT_ICONS[catKey] || cat.icon}
-                    </span>
-                    <span className="flex-1 truncate">{cat.label}</span>
-                    <span
-                      className={`text-[0.6rem] transition-transform duration-200 ${
-                        isActive ? 'rotate-90' : ''
-                      }`}
-                    >
-                      ▶
-                    </span>
-                  </button>
-
-                  <div
-                    className="overflow-hidden transition-all duration-200"
-                    style={{ maxHeight: isActive ? `${subKeys.length * 36}px` : '0px' }}
-                  >
-                    {subKeys.map(subKey => {
-                      const sub = cat.subs[subKey]
-                      const isSubActive = activeSub === subKey && isActive
-                      return (
-                        <button
-                          key={subKey}
-                          onClick={() => handleSubClick(subKey)}
-                          className={`w-full flex items-center gap-2 pl-[50px] pr-2 py-1.5 text-left text-[0.78rem] transition-colors ${
-                            isSubActive
-                              ? 'text-brand-orange font-medium'
-                              : 'text-muted hover:text-ink'
-                          }`}
-                        >
-                          <span
-                            className={`w-[6px] h-[6px] rounded-full shrink-0 ${
-                              isSubActive ? 'bg-brand-orange' : 'bg-light'
-                            }`}
-                          />
-                          <span className="truncate">{sub.title}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
+      <aside className="w-56 bg-surface-container-low shrink-0 flex flex-col">
+        <div className="flex-1 p-4 pt-6">
+          <nav className="space-y-1">
+            {NAV_ITEMS.map(item => (
+              <button
+                key={item.key}
+                onClick={() => switchNav(item)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] font-body transition-all ${
+                  activeNav.key === item.key
+                    ? 'bg-surface-container-lowest text-primary font-semibold shadow-ambient-sm'
+                    : 'text-on-surface-variant hover:bg-surface-container-lowest/60'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </nav>
         </div>
 
-        {/* ── Brand strip ── */}
-        <div className="mt-auto border-t border-light p-3.5 space-y-1.5">
-          <p className="font-semibold text-[0.82rem] text-ink">{BRAND.name}</p>
-          <div className="flex flex-wrap gap-1">
-            {BRAND.tone.map(t => (
-              <span
-                key={t}
-                className="inline-block bg-brand-orange-pale border border-brand-orange-mid text-brand-orange text-[0.65rem] px-2 py-0.5 rounded-full"
-              >
-                {t}
-              </span>
-            ))}
+        {/* Brand context footer */}
+        <div className="p-4 pt-0">
+          <div className="bg-surface-container-lowest rounded-xl p-3.5 shadow-ambient-sm">
+            <div className="text-[13px] font-headline font-bold text-on-surface mb-2">{brandName || 'Brand'}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {tonePills.map(pill => (
+                <span key={pill} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
+                  {pill}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="text-[0.68rem] text-muted leading-relaxed">{BRAND.positioning}</p>
-          <p className="text-[0.68rem] text-muted italic">{BRAND.tagline}</p>
-          <p className="text-[0.68rem] text-muted">Strategy: {BRAND.strategy}</p>
         </div>
       </aside>
 
-      {/* ── Main Area ── */}
-      <div className="flex-1 bg-pale overflow-y-auto p-6 space-y-5">
-        {/* Context strip */}
-        <div className="bg-white border border-light rounded-[10px] p-3 px-4 flex gap-7 flex-wrap items-center">
-          <span className="flex items-center gap-2 text-[0.82rem] font-medium text-ink">
-            <span className="w-2 h-2 rounded-full bg-brand-orange" />
-            {BRAND.name}
-          </span>
-          <span className="flex items-center gap-1.5 text-[0.78rem] text-mid">
-            <span className="text-muted text-[0.7rem]">Tone</span>
-            <span className="flex gap-1">
-              {BRAND.tone.map(t => (
-                <span
-                  key={t}
-                  className="bg-brand-orange-pale border border-brand-orange-mid text-brand-orange text-[0.65rem] px-2 py-0.5 rounded-full"
-                >
-                  {t}
-                </span>
-              ))}
-            </span>
-          </span>
-          <span className="text-[0.78rem] text-muted">{BRAND.positioning}</span>
-          <span className="flex items-center gap-1.5 text-[0.78rem] text-mid">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
-            Strategy: {BRAND.strategy}
-          </span>
-        </div>
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Form card */}
-        <div className="bg-white border border-light rounded-xl overflow-hidden">
-          {/* Header */}
-          <div className="p-[18px] px-[22px] border-b border-light">
-            <div className="flex items-start gap-3">
-              <span className="w-[40px] h-[40px] rounded-[10px] bg-brand-orange-pale flex items-center justify-center text-lg shrink-0">
-                {subConfig.icon}
-              </span>
-              <div className="min-w-0">
-                <p className="font-mono text-[0.65rem] text-muted uppercase tracking-wider">
-                  <span className="text-muted">{catConfig.label}</span>
-                  <span className="mx-1.5">›</span>
-                  <span className="text-brand-orange">{subConfig.title}</span>
-                </p>
-                <h1 className="text-[1rem] font-semibold text-ink mt-0.5">{subConfig.title}</h1>
-                <p className="text-[0.78rem] text-muted mt-0.5">{subConfig.desc}</p>
-              </div>
-            </div>
-          </div>
+        {/* Form area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl mx-auto px-8 py-10">
 
-          {/* Fields or Loading */}
-          {generating ? (
-            <div className="p-12 flex flex-col items-center justify-center gap-4">
-              <div className="w-[40px] h-[40px] rounded-full border-[3px] border-brand-orange-pale border-t-brand-orange animate-spin" />
-              <p className="text-[0.82rem] text-muted text-center max-w-sm">
-                Reading brand strategy, tone of voice, and Business Pulse...
-              </p>
-              <div className="flex flex-col gap-2 mt-2">
-                <span className="flex items-center gap-2 text-[0.78rem]">
-                  <span className="w-4 h-4 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[0.6rem]">✓</span>
-                  <span className="text-green-700">Brand context loaded</span>
-                </span>
-                <span className="flex items-center gap-2 text-[0.78rem]">
-                  <span className="w-4 h-4 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[0.6rem]">✓</span>
-                  <span className="text-green-700">Tone locked</span>
-                </span>
-                <span className="flex items-center gap-2 text-[0.78rem]">
-                  <span className="w-4 h-4 rounded-full bg-brand-orange-pale text-brand-orange flex items-center justify-center text-[0.6rem]">●</span>
-                  <span className="text-brand-orange">Writing copy...</span>
-                </span>
-                <span className="flex items-center gap-2 text-[0.78rem]">
-                  <span className="w-4 h-4 rounded-full bg-pale text-muted flex items-center justify-center text-[0.6rem]">○</span>
-                  <span className="text-muted">Quality check</span>
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="p-5 px-[22px]">
-              <div className="grid grid-cols-2 gap-3.5">
-                {subConfig.fields.map(field => (
-                  <div key={field.id} className={field.full ? 'col-span-2' : ''}>
-                    <label className="block text-[0.78rem] font-medium text-ink mb-1.5">
-                      {field.label}
-                      {field.req && <span className="text-brand-orange ml-0.5">*</span>}
-                    </label>
+            {/* Header */}
+            <h1 className="font-headline font-bold text-headline-md text-on-surface mb-2">{activeNav.title}</h1>
+            <p className="text-body-md text-on-surface-variant mb-10">{activeNav.subtitle}</p>
 
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        value={formValues[field.id] || ''}
-                        onChange={e => handleFieldChange(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="w-full rounded-md bg-pale border border-light px-3 py-2 text-[0.82rem] text-ink placeholder:text-muted/50 min-h-[82px] resize-y focus:outline-none focus:border-brand-orange focus:bg-white focus:ring focus:ring-brand-orange/10 transition-colors"
-                      />
-                    ) : field.type === 'select' ? (
-                      <select
-                        value={formValues[field.id] || ''}
-                        onChange={e => handleFieldChange(field.id, e.target.value)}
-                        className="w-full rounded-md bg-pale border border-light px-3 py-2 text-[0.82rem] text-ink appearance-none cursor-pointer focus:outline-none focus:border-brand-orange focus:bg-white focus:ring focus:ring-brand-orange/10 transition-colors"
-                      >
-                        <option value="">Select...</option>
-                        {field.options?.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={formValues[field.id] || ''}
-                        onChange={e => handleFieldChange(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="w-full rounded-md bg-pale border border-light px-3 py-2 text-[0.82rem] text-ink placeholder:text-muted/50 focus:outline-none focus:border-brand-orange focus:bg-white focus:ring focus:ring-brand-orange/10 transition-colors"
-                      />
-                    )}
-                  </div>
+            {/* Dropdown */}
+            <div className="mb-6">
+              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
+                {activeNav.dropdownLabel}
+              </label>
+              <select
+                value={dropdown}
+                onChange={e => setDropdown(e.target.value)}
+                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)]"
+              >
+                {activeNav.dropdownOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Action bar */}
-          <div className="px-[22px] py-3.5 border-t border-light bg-pale flex items-center justify-between">
-            <p className="text-[0.75rem] text-muted">
-              {subConfig.fields.filter(f => f.req).length} required field{subConfig.fields.filter(f => f.req).length !== 1 ? 's' : ''} — brand context auto-loaded
-            </p>
-            <button
-              onClick={handleGenerate}
-              disabled={!canGenerate || generating}
-              className={`rounded-[10px] px-5 py-2.5 font-semibold text-[0.82rem] flex items-center gap-2 transition-all ${
-                canGenerate && !generating
-                  ? 'bg-brand-orange text-white hover:bg-brand-orange-hover active:scale-[0.98]'
-                  : 'bg-light text-muted cursor-not-allowed'
-              }`}
-            >
-              <span>+</span>
-              Generate copy
-            </button>
-          </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-[0.82rem] text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* Output card */}
-        {result && (
-          <div className="bg-white border border-light rounded-xl overflow-hidden">
-            {/* Output header */}
-            <div className="px-[22px] py-3.5 border-b border-light flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="text-[1rem] font-semibold text-ink">Generated Copy</h2>
-                <span className="bg-green-50 text-green-700 border border-green-200 text-[0.68rem] font-semibold px-2.5 py-0.5 rounded-full">
-                  On-brand ✓
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  className="px-3.5 py-1.5 rounded-[8px] text-[0.78rem] font-medium text-mid border border-light hover:border-brand-orange hover:text-brand-orange transition-colors"
-                >
-                  Regenerate
-                </button>
-                <button
-                  onClick={handleCopySelected}
-                  className="px-3.5 py-1.5 rounded-[8px] text-[0.78rem] font-medium text-mid border border-light hover:border-brand-orange hover:text-brand-orange transition-colors"
-                >
-                  {copiedId === '__selected__' ? 'Copied!' : 'Copy selected'}
-                </button>
-              </div>
+              </select>
             </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-light px-[22px]">
-              {[
-                { key: 'copy' as const, label: 'Copy output' },
-                { key: 'quality' as const, label: 'Quality checks' },
-                { key: 'placeholders' as const, label: 'Placeholders' },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2.5 text-[0.82rem] font-medium transition-colors border-b-2 -mb-px ${
-                    activeTab === tab.key
-                      ? 'text-brand-orange border-brand-orange'
-                      : 'text-muted border-transparent hover:text-ink'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Topic textarea */}
+            <div className="mb-6">
+              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
+                {activeNav.topicLabel}
+              </label>
+              <textarea
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                placeholder={activeNav.topicPlaceholder}
+                rows={4}
+                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body resize-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)] placeholder:text-outline-variant"
+              />
             </div>
 
-            {/* Tab content */}
-            {activeTab === 'copy' && (
-              <div className="p-[22px] space-y-5">
+            {/* Notes textarea */}
+            <div className="mb-8">
+              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
+                Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Specific claims, offers, or things to include (optional)."
+                rows={2}
+                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body resize-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)] placeholder:text-outline-variant"
+              />
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="mb-6 px-4 py-3 rounded-xl bg-error-container/10 text-error text-body-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Generating state */}
+            {generating && (
+              <div className="flex items-center gap-3 mb-8 px-4 py-4 bg-surface-container-low rounded-xl">
+                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-body-sm text-on-surface-variant">Generating copy...</span>
+              </div>
+            )}
+
+            {/* Results */}
+            {result && !generating && (
+              <div className="space-y-8">
                 {result.sections.map((section, sIdx) => (
                   <div key={sIdx}>
-                    {sIdx > 0 && <hr className="border-light mb-5" />}
-                    <div className="flex items-center gap-2 mb-3">
-                      <h3 className="font-mono text-[0.7rem] text-muted uppercase tracking-wider">
-                        {section.label}
-                      </h3>
-                      <span className="bg-pale text-muted rounded-full px-2 text-[0.68rem]">
-                        {section.options.length}
-                      </span>
-                      <button
-                        onClick={() => handleCopyAllSection(section, sIdx)}
-                        className="ml-auto text-[0.72rem] text-muted hover:text-brand-orange transition-colors"
-                      >
-                        {copiedId === `section-${sIdx}` ? 'Copied!' : 'Copy all'}
-                      </button>
+                    <div className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
+                      {section.label}
                     </div>
-
                     <div className="space-y-3">
                       {section.options.map((option, oIdx) => {
-                        const isPrimary = (primaryPicks[sIdx] ?? 0) === oIdx
+                        const isPrimary = primaryPicks[sIdx] === oIdx
                         return (
                           <div
                             key={option.id}
-                            className={`rounded-xl border p-4 transition-colors ${
-                              isPrimary
-                                ? 'border-brand-orange bg-brand-orange-pale'
-                                : 'border-light'
+                            className={`bg-surface-container-lowest rounded-xl p-5 transition-all ${
+                              isPrimary ? 'shadow-ambient-sm' : ''
                             }`}
+                            style={isPrimary ? { boxShadow: 'inset 0 0 0 1.5px #ad3507, 0 2px 20px rgba(45,51,53,0.04)' } : {}}
                           >
-                            {/* Head row */}
-                            <div className="flex items-center justify-between mb-2">
+                            {/* Head */}
+                            <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
                                 {isPrimary ? (
-                                  <span className="text-[0.72rem] font-semibold text-brand-orange">★ Recommended</span>
+                                  <span className="text-label-sm font-bold text-primary">Selected</span>
                                 ) : (
-                                  <span className="text-[0.72rem] font-medium text-mid">{OPTION_LABELS[oIdx] || `Option ${oIdx + 1}`}</span>
+                                  <span className="text-label-sm font-medium text-on-surface-variant">{OPTION_LABELS[oIdx] || `Option ${oIdx + 1}`}</span>
                                 )}
-                                <span className="bg-pale text-muted text-[0.65rem] px-2 py-0.5 rounded-full border border-light">
+                                <span className="text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
                                   {option.type}
                                 </span>
                               </div>
                             </div>
 
                             {/* Copy text */}
-                            <p className="text-[0.82rem] leading-[1.68] whitespace-pre-wrap text-ink">
+                            <p className="text-body-md text-on-surface leading-relaxed whitespace-pre-wrap mb-4">
                               {option.text}
                             </p>
 
-                            {/* Rationale */}
                             {option.rationale && (
-                              <p className="mt-2 italic text-[0.75rem] text-muted">
+                              <p className="text-body-sm text-on-surface-variant italic mb-4">
                                 {option.rationale}
                               </p>
                             )}
 
-                            {/* Footer */}
-                            <div className="flex items-center gap-3 mt-3 pt-2 border-t border-light/60">
-                              {isPrimary ? (
-                                <span className="text-[0.72rem] font-medium text-brand-orange">★ Selected</span>
-                              ) : (
+                            {/* Actions */}
+                            <div className="flex items-center gap-3 pt-3" style={{ borderTop: '1px solid var(--surface-container-high)' }}>
+                              {!isPrimary && (
                                 <button
                                   onClick={() => setPrimaryPicks(prev => ({ ...prev, [sIdx]: oIdx }))}
-                                  className="text-[0.72rem] font-medium text-mid hover:text-brand-orange transition-colors"
+                                  className="text-label-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
                                 >
-                                  ☆ Use this
+                                  Use this
                                 </button>
                               )}
-                              <span className="text-[0.68rem] text-muted ml-auto">
+                              <span className="text-label-sm text-outline ml-auto">
                                 {option.text.length} chars
                               </span>
                               <button
                                 onClick={() => saveFavorite(option.text, option.id, option.type)}
-                                className={`text-[0.72rem] font-medium border rounded-md px-2.5 py-1 transition-colors ${
+                                className={`text-label-sm font-medium px-2.5 py-1 rounded-lg transition-colors ${
                                   favoritedIds.has(option.id)
-                                    ? 'border-amber-300 bg-amber-50 text-amber-600'
-                                    : 'border-light text-mid hover:border-amber-300 hover:text-amber-600'
+                                    ? 'bg-primary-fixed/15 text-primary'
+                                    : 'text-on-surface-variant hover:text-primary'
                                 }`}
                               >
-                                {favoritedIds.has(option.id) ? '★ Saved' : '☆ Save'}
+                                {favoritedIds.has(option.id) ? 'Saved' : 'Save'}
                               </button>
                               <button
                                 onClick={() => handleCopy(option.text, option.id)}
-                                className="text-[0.72rem] font-medium text-mid border border-light rounded-md px-2.5 py-1 hover:border-brand-orange hover:text-brand-orange transition-colors"
+                                className="text-label-sm font-medium text-on-surface-variant hover:text-primary px-2.5 py-1 rounded-lg transition-colors bg-surface-container-high"
                               >
                                 {copiedId === option.id ? 'Copied' : 'Copy'}
                               </button>
@@ -576,56 +350,37 @@ export default function CopyArchitectPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
 
-            {activeTab === 'quality' && (
-              <div className="p-[22px]">
-                {result.qualityChecks?.length > 0 ? (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm">✓</span>
-                      <h3 className="text-[0.88rem] font-semibold text-green-800">All quality checks passed</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+                {/* Quality checks */}
+                {result.qualityChecks?.length > 0 && (
+                  <div>
+                    <div className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider mb-3">Quality checks</div>
+                    <div className="bg-surface-container-lowest rounded-xl p-5 space-y-2">
                       {result.qualityChecks.map((check, i) => (
-                        <span
-                          key={i}
-                          className="bg-green-50 text-green-700 border border-green-200 text-[0.75rem] px-3 py-1 rounded-full"
-                        >
-                          ✓ {check}
-                        </span>
+                        <div key={i} className="text-body-sm text-on-surface-variant">{check}</div>
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <p className="text-[0.82rem] text-muted">No quality checks available.</p>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'placeholders' && (
-              <div className="p-[22px] space-y-3">
-                {result.placeholders?.length > 0 ? (
-                  result.placeholders.map((ph, i) => (
-                    <div
-                      key={i}
-                      className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
-                    >
-                      <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-[0.7rem] shrink-0 mt-0.5">!</span>
-                      <div>
-                        <p className="text-[0.82rem] font-medium text-amber-800">{ph}</p>
-                        <p className="text-[0.75rem] text-amber-600 mt-0.5">Replace this placeholder with actual content before publishing.</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[0.82rem] text-muted">No placeholders found — copy is ready to use.</p>
                 )}
               </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Footer bar */}
+        <div className="px-8 py-3.5 bg-surface-container-lowest flex items-center justify-between shrink-0" style={{ boxShadow: '0 -2px 20px rgba(45,51,53,0.03)' }}>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#34a853]" />
+            <span className="text-label-sm text-on-surface-variant">Brand context loaded</span>
+          </div>
+          <button
+            onClick={handleGenerate}
+            disabled={!canGenerate || generating}
+            className="signature-gradient text-on-primary font-headline font-bold text-[13px] px-6 py-2.5 rounded-xl disabled:opacity-40 transition-opacity"
+          >
+            {generating ? 'Generating...' : 'Generate'}
+          </button>
+        </div>
       </div>
     </div>
   )

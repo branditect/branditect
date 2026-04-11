@@ -124,7 +124,7 @@
   html { font-size: 15px; }
 
   body {
-    background: var(--background);
+    background: #ffffff;
     color: var(--on-surface);
     font-family: 'Inter', 'DM Sans', sans-serif;
     font-weight: 400;

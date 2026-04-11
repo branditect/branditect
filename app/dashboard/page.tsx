@@ -157,7 +157,7 @@ export default function DashboardPage() {
 
   // CSS vars inline — editorial design system
   const v = {
-    bg: "#f4f7f9", card: "#fff", border: "rgba(170,174,176,0.15)", borderSoft: "#e5e9eb",
+    bg: "#ffffff", card: "#fff", border: "rgba(170,174,176,0.15)", borderSoft: "#e5e9eb",
     orange: "#a63300", orangePale: "#fff0e6", orangeMid: "#ffcaa7",
     black: "#2b2f31", g800: "#2b2f31", g600: "#5a6062", g500: "#5a6062", g400: "#767c7e",
     g200: "#e5e9eb", g100: "#edf1f3",

@@ -14,7 +14,7 @@ export default function DashboardLayout({
       <Topbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-surface">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-white">{children}</main>
       </div>
       <FloatingNotes />
       <AndyTrigger />

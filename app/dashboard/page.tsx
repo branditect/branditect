@@ -169,17 +169,17 @@ export default function DashboardPage() {
   };
 
   if (brandLoading || loading) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: v.g400, fontSize: 13, fontFamily: "'Inter', sans-serif" }}>Loading dashboard...</div>;
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: v.g400, fontSize: 13, fontFamily: "var(--font-manrope), 'Manrope', sans-serif" }}>Loading dashboard...</div>;
   }
 
   const cardStyle = { background: v.card, borderRadius: 16, boxShadow: "0 4px 20px rgba(43,47,49,0.02)" } as React.CSSProperties;
 
   return (
-    <div style={{ minHeight: "100%", padding: "32px 32px 80px", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100%", padding: "32px 32px 80px", fontFamily: "var(--font-manrope), 'Manrope', sans-serif" }}>
 
       {/* ── Greeting ── */}
       <section style={{ marginBottom: 40 }}>
-        <h1 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 36, fontWeight: 800, color: v.black, letterSpacing: "-0.5px", lineHeight: 1.15, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 36, fontWeight: 800, color: v.black, letterSpacing: "-0.5px", lineHeight: 1.15, marginBottom: 8 }}>
           {greeting}, {brandName || "there"}
         </h1>
         <p style={{ fontSize: 16, color: v.g500, lineHeight: 1.5 }}>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
       {/* ── Quick Create — Bento Grid ── */}
       <section style={{ marginBottom: 48 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
-          <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 20, fontWeight: 700, color: v.black }}>Quick Create</h2>
+          <h2 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 20, fontWeight: 700, color: v.black }}>Quick Create</h2>
           <Link href="/dashboard/create" style={{ fontSize: 14, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View All</Link>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
@@ -200,7 +200,7 @@ export default function DashboardPage() {
               <div style={{ width: 40, height: 40, borderRadius: 12, background: `${item.color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <div style={{ width: 14, height: 14, borderRadius: 4, background: item.color }} />
               </div>
-              <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 14, color: v.black }}>{item.label}</span>
+              <span style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 14, color: v.black }}>{item.label}</span>
             </Link>
           ))}
         </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
 
           {/* Strategic Goals */}
           <section>
-            <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 20, fontWeight: 700, color: v.black, marginBottom: 24 }}>Strategic Goals</h2>
+            <h2 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 20, fontWeight: 700, color: v.black, marginBottom: 24 }}>Strategic Goals</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {goals.length === 0 && (
                 <div style={{ ...cardStyle, padding: 32, textAlign: "center" }}>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                       <div>
-                        <h3 style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 16, color: v.black, marginBottom: 4 }}>{goal.title}</h3>
+                        <h3 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 16, color: v.black, marginBottom: 4 }}>{goal.title}</h3>
                         <p style={{ fontSize: 13, fontWeight: 500, color: v.g500 }}>{goal.category}</p>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: 99, background: progress >= 70 ? "#d8e3f9" : progress > 0 ? v.g100 : v.g100, color: progress >= 70 ? "#475264" : v.g500 }}>
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                       <span style={{ fontSize: 10, color: v.g400 }}>{goal.due_date ? `Due ${formatDate(goal.due_date)}` : `${done} of ${gt.length} tasks`}</span>
                     </div>
                     <div style={{ width: "100%", height: 8, background: v.g100, borderRadius: 99, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg, ${v.orange}, #ff7949)`, width: `${progress}%`, transition: "width 1.2s ease" }} />
+                      <div style={{ height: "100%", borderRadius: 99, background: `linear-gradient(135deg, #ec5c36, #d34520)`, width: `${progress}%`, transition: "width 1.2s ease" }} />
                     </div>
                   </div>
                 );
@@ -260,12 +260,12 @@ export default function DashboardPage() {
             <div style={{ ...cardStyle, padding: 24 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 18, fontWeight: 700, color: v.black }}>Today&apos;s Focus</h2>
+                  <h2 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 700, color: v.black }}>Today&apos;s Focus</h2>
                   <p style={{ fontSize: 13, color: v.g500, marginTop: 2 }}>{todayDueCount} tasks due {selectedGoal !== null ? "· Filtered" : ""}</p>
                 </div>
                 <div style={{ display: "flex", gap: 2, background: v.g100, borderRadius: 10, padding: 3 }}>
                   {(["today", "week", "all"] as const).map(t => (
-                    <button key={t} onClick={() => setFeedTab(t)} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, color: feedTab === t ? v.black : v.g400, cursor: "pointer", border: "none", background: feedTab === t ? v.card : "transparent", fontFamily: "'Inter', sans-serif", boxShadow: feedTab === t ? "0 2px 8px rgba(43,47,49,0.06)" : "none", transition: "all 0.15s" }}>
+                    <button key={t} onClick={() => setFeedTab(t)} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, color: feedTab === t ? v.black : v.g400, cursor: "pointer", border: "none", background: feedTab === t ? v.card : "transparent", fontFamily: "var(--font-manrope), 'Manrope', sans-serif", boxShadow: feedTab === t ? "0 2px 8px rgba(43,47,49,0.06)" : "none", transition: "all 0.15s" }}>
                       {t === "week" ? "This week" : t === "all" ? "All" : "Today"}
                     </button>
                   ))}
@@ -323,7 +323,7 @@ export default function DashboardPage() {
           <div style={{ ...cardStyle, overflow: "hidden" }}>
             <div style={{ background: "#faf8f0", padding: "20px 20px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Quick Note</span>
+                <span style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Quick Note</span>
                 <Link href="/dashboard/mission-board" style={{ fontSize: 12, fontWeight: 600, color: v.orange, textDecoration: "none" }}>All notes →</Link>
               </div>
               <textarea
@@ -331,11 +331,11 @@ export default function DashboardPage() {
                 onChange={e => setNoteInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && e.metaKey) saveQuickNote(); }}
                 placeholder="Write a note..."
-                style={{ width: "100%", minHeight: 72, background: "transparent", border: "none", outline: "none", fontSize: 14, lineHeight: 1.65, color: v.black, resize: "none", fontFamily: "'Inter', sans-serif", boxSizing: "border-box" }}
+                style={{ width: "100%", minHeight: 72, background: "transparent", border: "none", outline: "none", fontSize: 14, lineHeight: 1.65, color: v.black, resize: "none", fontFamily: "var(--font-manrope), 'Manrope', sans-serif", boxSizing: "border-box" }}
               />
               {noteInput.trim() && (
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                  <button onClick={saveQuickNote} disabled={noteSaving} className="signature-gradient" style={{ padding: "6px 16px", borderRadius: 8, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: noteSaving ? "not-allowed" : "pointer", opacity: noteSaving ? 0.5 : 1, fontFamily: "'Inter', sans-serif" }}>
+                  <button onClick={saveQuickNote} disabled={noteSaving} className="signature-gradient" style={{ padding: "6px 16px", borderRadius: 8, border: "none", color: "#fff", fontSize: 12, fontWeight: 600, cursor: noteSaving ? "not-allowed" : "pointer", opacity: noteSaving ? 0.5 : 1, fontFamily: "var(--font-manrope), 'Manrope', sans-serif" }}>
                     {noteSaving ? "Saving..." : "Save note"}
                   </button>
                 </div>
@@ -353,7 +353,7 @@ export default function DashboardPage() {
           {/* Recent Outputs */}
           <div style={{ ...cardStyle, padding: 20 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Recent Outputs</span>
+              <span style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Recent Outputs</span>
               <Link href="/dashboard/copy-architect" style={{ fontSize: 12, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View all →</Link>
             </div>
             {[
@@ -377,7 +377,7 @@ export default function DashboardPage() {
           {/* Brand Pulse — Dark Card */}
           <div style={{ background: "#0c0f10", borderRadius: 24, padding: 32, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "relative", zIndex: 1 }}>
-              <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Brand Pulse</h2>
+              <h2 style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Brand Pulse</h2>
               <p style={{ fontSize: 13, color: "#9b9d9e", marginBottom: 24, maxWidth: 200, lineHeight: 1.55 }}>Your brand readiness overview.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 11, color: "#9b9d9e", width: 80, flexShrink: 0 }}>{item.name}</span>
                     <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 99, background: item.pct >= 100 ? "#556072" : `linear-gradient(90deg, ${v.orange}, #ff7949)`, width: `${item.pct}%` }} />
+                      <div style={{ height: "100%", borderRadius: 99, background: item.pct >= 100 ? "#556072" : `linear-gradient(135deg, #ec5c36, #d34520)`, width: `${item.pct}%` }} />
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 700, color: item.pct > 0 ? "#fff" : "#555", width: 28, textAlign: "right" }}>{item.pct}%</span>
                   </div>

@@ -265,50 +265,50 @@ export default function ImageArchitectPage() {
   /* ================================================================ */
 
   return (
-    <div className="flex flex-col flex-1 h-full">
+    <div className="flex flex-col flex-1 h-full bg-background">
       {/* Header */}
-      <div className="px-8 pt-7 pb-4 border-b border-light shrink-0">
-        <div className="flex items-center gap-2 mb-1">
-          <Link href="/dashboard/brand-library" className="text-muted hover:text-ink text-[0.75rem]">← Brand Library</Link>
+      <div className="px-8 pt-8 pb-5 shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <Link href="/dashboard/brand-library" className="text-on-surface-variant hover:text-primary text-sm font-body">← Brand Library</Link>
         </div>
-        <h1 className="font-semibold text-[1.5rem] text-ink tracking-tight mb-1">Create from Reference</h1>
-        <p className="text-[0.78rem] text-muted">Upload reference images and describe what you need. Gemini generates a new image matched to your style.</p>
+        <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Image Architect</h1>
+        <p className="text-on-surface-variant font-body font-medium text-sm leading-relaxed max-w-lg">Upload reference images and describe what you need. Gemini generates a new image matched to your style.</p>
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="max-w-3xl">
+      <div className="flex-1 overflow-y-auto px-8 py-8">
+        <div className="max-w-2xl mx-auto space-y-8">
           {!genResult ? (
             <>
               {/* Reference images */}
               <FieldSection label="Reference Images">
                 <p className="text-[0.72rem] text-muted mb-3">Upload or choose from your asset library. 1-3 images, Gemini will match the style.</p>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   {/* Upload zone */}
                   <div
                     onDragOver={(e) => { e.preventDefault(); setRefDragOver(true); }}
                     onDragLeave={() => setRefDragOver(false)}
                     onDrop={handleRefDrop}
                     onClick={() => refInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all py-6 ${refDragOver ? "border-brand-orange bg-brand-orange-pale" : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"}`}
+                    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer transition-all py-10 ${refDragOver ? "border-primary bg-primary-container/30" : "border-outline-variant/40 bg-surface-container-low hover:bg-surface-container-high/50"}`}
                   >
                     <input ref={refInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleRefFileChange} />
-                    <svg className="h-6 w-6 text-muted mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-7 w-7 text-on-surface-variant/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.595H6.75z" />
                     </svg>
-                    <span className="font-mono text-[0.58rem] tracking-wide uppercase text-muted">Upload images</span>
+                    <span className="font-body text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Upload images</span>
                   </div>
 
                   {/* Library picker button */}
                   <button
                     onClick={() => setShowLibrary(!showLibrary)}
-                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-all py-6 ${showLibrary ? "border-brand-orange bg-brand-orange-pale" : "border-light bg-pale/40 hover:border-brand-orange hover:bg-brand-orange-pale/40"}`}
+                    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer transition-all py-10 ${showLibrary ? "border-primary bg-primary-container/30" : "border-outline-variant/40 bg-surface-container-low hover:bg-surface-container-high/50"}`}
                   >
-                    <svg className="h-6 w-6 text-muted mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-7 w-7 text-on-surface-variant/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
                     </svg>
-                    <span className="font-mono text-[0.58rem] tracking-wide uppercase text-muted">Choose from library</span>
+                    <span className="font-body text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Choose from library</span>
                   </button>
                 </div>
 
@@ -422,14 +422,14 @@ export default function ImageArchitectPage() {
               <button
                 onClick={generateImage}
                 disabled={!subject.trim() || refs.length === 0 || generating}
-                className="w-full py-4 rounded-lg bg-brand-orange text-white font-medium text-[0.9rem] hover:bg-brand-orange-hover disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-5 rounded-2xl bg-primary text-white font-headline font-extrabold text-base shadow-primary-glow disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97] flex items-center justify-center gap-2.5"
               >
                 {generating ? (
                   <>
                     <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Generating image…
+                    Generating image...
                   </>
-                ) : "Generate image →"}
+                ) : "Generate Architect Vision"}
               </button>
 
               {/* Loading placeholder */}
@@ -475,18 +475,19 @@ export default function ImageArchitectPage() {
       <style jsx global>{`
         .form-input {
           width: 100%;
-          border: 1px solid #E5E5E5;
-          border-radius: 0.5rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.82rem;
-          color: #1A1A1A;
-          background: white;
+          border: 2px solid transparent;
+          border-radius: 1rem;
+          padding: 1rem 1.25rem;
+          font-size: 0.875rem;
+          color: #1a1c1e;
+          background: #f3f6fc;
           outline: none;
-          transition: border-color 0.15s;
-          font-family: var(--font-dm-sans), sans-serif;
+          transition: all 0.2s;
+          font-family: var(--font-manrope), Manrope, var(--font-dm-sans), sans-serif;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
-        .form-input:focus { border-color: #E16C00; }
-        .form-input::placeholder { color: #9A9A9A; }
+        .form-input:focus { background: #fff; border-color: rgba(236, 92, 54, 0.3); }
+        .form-input::placeholder { color: rgba(68, 71, 78, 0.4); }
       `}</style>
     </div>
   );
@@ -498,9 +499,10 @@ export default function ImageArchitectPage() {
 
 function FieldSection({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <div className="mb-5">
-      <label className="font-mono text-[0.58rem] tracking-[0.1em] uppercase text-muted block mb-1.5">
-        {label}{required && <span className="text-brand-orange ml-0.5">*</span>}
+    <div className="space-y-3">
+      <label className="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+        {label}
+        {required && <span className="text-primary text-[10px] font-bold uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full">Required</span>}
       </label>
       {children}
     </div>
@@ -511,8 +513,10 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className={`px-3.5 py-[5px] rounded-full font-mono text-[0.62rem] tracking-wide border transition-all ${
-        active ? "bg-brand-orange text-white border-brand-orange" : "bg-white text-muted border-light hover:border-muted hover:text-ink"
+      className={`px-5 py-3 rounded-2xl font-body font-bold text-xs transition-all active:scale-95 ${
+        active
+          ? "bg-primary text-white shadow-lg shadow-primary/20"
+          : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
       }`}
     >
       {label}

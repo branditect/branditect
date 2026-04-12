@@ -155,17 +155,17 @@ export default function DashboardPage() {
   // Latest note
   const latestNote = notes.find(n => !n.is_draft);
 
-  // CSS vars inline — editorial design system
+  // CSS vars inline — v3 coral + blue-tinted surfaces
   const v = {
-    bg: "#ffffff", card: "#fff", border: "rgba(170,174,176,0.15)", borderSoft: "#e5e9eb",
-    orange: "#a63300", orangePale: "#fff0e6", orangeMid: "#ffcaa7",
-    black: "#2b2f31", g800: "#2b2f31", g600: "#5a6062", g500: "#5a6062", g400: "#767c7e",
-    g200: "#e5e9eb", g100: "#edf1f3",
-    green: "#2b2f31", greenPale: "#edf1f3",
-    blue: "#2b2f31", bluePale: "#edf1f3",
-    purple: "#2b2f31", purplePale: "#edf1f3",
-    red: "#a63300", redPale: "#fff0e6",
-    amber: "#767c7e", amberPale: "#edf1f3",
+    bg: "#fcfcff", card: "#fff", border: "rgba(225,191,182,0.15)", borderSoft: "#e1e2e8",
+    orange: "#ec5c36", orangePale: "#ffdbd1", orangeMid: "#ffb4a1",
+    black: "#1a1c1e", g800: "#1a1c1e", g600: "#44474e", g500: "#44474e", g400: "#8d7169",
+    g200: "#e1e2e8", g100: "#f3f6fc",
+    green: "#1a1c1e", greenPale: "#f3f6fc",
+    blue: "#00647c", bluePale: "#b7eaff",
+    purple: "#1a1c1e", purplePale: "#f3f6fc",
+    red: "#ba1a1a", redPale: "#ffdad6",
+    amber: "#8d7169", amberPale: "#f3f6fc",
   };
 
   if (brandLoading || loading) {

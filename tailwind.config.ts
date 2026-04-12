@@ -90,12 +90,11 @@ const config: Config = {
 
       /* ── Font Family: exact values from DESIGN.md ── */
       fontFamily: {
-        headline: ["Manrope"],
-        body: ["Inter"],
-        label: ["Inter"],
-        display: ["Manrope"],
-        // Compat aliases
-        sans: ["Inter", "var(--font-inter)", "DM Sans", "sans-serif"],
+        headline: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        body: ["var(--font-inter)", "Inter", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        label: ["var(--font-inter)", "Inter", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        display: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
         mono: ["var(--font-dm-mono)", "monospace"],
       },
 

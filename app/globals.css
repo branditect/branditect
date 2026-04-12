@@ -105,7 +105,7 @@
 .btn-primary {
   background: linear-gradient(45deg, var(--primary), var(--primary-container));
   color: var(--on-primary);
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-weight: 700;
   border: none;
   border-radius: var(--radius-md);
@@ -139,34 +139,34 @@
 
 /* ── Typography Utility Classes ── */
 .text-display-lg {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-size: var(--text-display-lg);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
 .text-display-md {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-size: var(--text-display-md);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
 .text-headline-lg {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-size: var(--text-headline-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
 .text-headline-md {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-size: var(--text-headline-md);
   font-weight: 700;
   line-height: 1.25;
 }
 .text-headline-sm {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), 'Manrope', var(--font-dm-sans), 'DM Sans', sans-serif;
   font-size: var(--text-headline-sm);
   font-weight: 700;
   line-height: 1.3;

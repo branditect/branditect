@@ -50,6 +50,10 @@ export async function POST(req: NextRequest) {
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
+      // If primary logo, also update brands.logo_url so sidebar/topbar show it
+      if (slot === 'primary') {
+        await supabase.from('brands').update({ logo_url: publicUrl }).eq('brand_id', brandId)
+      }
       return NextResponse.json({ success: true, url: publicUrl })
     }
 

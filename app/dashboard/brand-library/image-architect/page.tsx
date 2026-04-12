@@ -200,7 +200,12 @@ export default function ImageArchitectPage() {
           dna: null,
         }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch {
+        setGenError({ error: "api_error", message: `Server error: ${text.slice(0, 100)}` });
+        return;
+      }
       if (!res.ok || data.error) {
         setGenError({ error: data.error || "api_error", message: data.message || "Image generation failed" });
         return;

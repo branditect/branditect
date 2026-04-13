@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     .from('brand_strategies')
     .select('*')
     .eq('brand_id', brandId)
-    .eq('source', 'social')
+    .eq('category', 'social')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -153,13 +153,14 @@ Use ${plats} as platforms. Make content pillars, ideas, and tactics highly speci
         .from('brand_strategies')
         .delete()
         .eq('brand_id', brandId)
-        .eq('source', 'social')
+        .eq('category', 'social')
 
       await supabase
         .from('brand_strategies')
         .insert({
           brand_id: brandId,
-          source: 'social',
+          source: 'questionnaire',
+          category: 'social',
           answers: JSON.stringify(answers),
           generated_strategy: JSON.stringify(data),
           status: 'complete',

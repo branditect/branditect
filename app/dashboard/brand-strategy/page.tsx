@@ -632,10 +632,24 @@ export default function BrandStrategyPage() {
           setStrategySections(sections);
           setScreen("view");
         } else {
-          setScreen("output");
+          // Save failed but we still have the strategy — try to show view
+          const sections = parseStrategySections(strategyJson);
+          if (sections.length > 0) {
+            setStrategySections(sections);
+            setScreen("view");
+          } else {
+            setScreen("output");
+          }
         }
       } catch {
-        setScreen("output");
+        // Parse/save error — still try to show the strategy
+        const sections = parseStrategySections(strategyJson);
+        if (sections.length > 0) {
+          setStrategySections(sections);
+          setScreen("view");
+        } else {
+          setScreen("output");
+        }
       }
     } catch (err: unknown) {
       const message =

@@ -28,15 +28,82 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ data })
 }
 
+// Fetch full brand context from all sources
+async function getBrandContext(brandId: string): Promise<string> {
+  const [brandRes, strategyRes, toneRes, productsRes, docsRes] = await Promise.all([
+    supabase.from('brands').select('brand_name, website, industry, strategy_text').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).not('source', 'eq', 'social').maybeSingle(),
+    supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, currency, type').eq('brand_id', brandId).limit(10),
+    supabase.from('brand_documents').select('file_name, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(5),
+  ])
+
+  let ctx = ''
+
+  if (brandRes.data) {
+    const b = brandRes.data
+    ctx += `BRAND: ${b.brand_name}`
+    if (b.website) ctx += ` | Website: ${b.website}`
+    if (b.industry) ctx += ` | Industry: ${b.industry}`
+    ctx += '\n'
+    if (b.strategy_text) ctx += `BRAND SUMMARY: ${b.strategy_text.slice(0, 500)}\n`
+  }
+
+  if (strategyRes.data?.generated_strategy) {
+    const s = typeof strategyRes.data.generated_strategy === 'string'
+      ? strategyRes.data.generated_strategy : JSON.stringify(strategyRes.data.generated_strategy)
+    ctx += `\nBRAND STRATEGY:\n${s.slice(0, 3000)}\n`
+  }
+
+  if (toneRes.data) {
+    const { id: _i, user_id: _u, brand_id: _b, created_at: _c, updated_at: _up, ...tone } = toneRes.data
+    void _i; void _u; void _b; void _c; void _up
+    ctx += `\nTONE OF VOICE:\n${JSON.stringify(tone).slice(0, 1500)}\n`
+  }
+
+  if (productsRes.data?.length) {
+    ctx += `\nPRODUCTS (${productsRes.data.length}):\n`
+    productsRes.data.forEach((p: Record<string, unknown>) => {
+      ctx += `- ${p.name} (${p.type})`
+      const price = p.price_rrp || p.price_monthly
+      if (price) ctx += ` — ${p.currency || 'EUR'} ${price}${p.price_monthly ? '/mo' : ''}`
+      ctx += '\n'
+      if (p.description) ctx += `  ${(p.description as string).slice(0, 150)}\n`
+    })
+  }
+
+  if (docsRes.data?.length) {
+    ctx += `\nKNOWLEDGE VAULT (${docsRes.data.length} docs):\n`
+    let budget = 3000
+    for (const doc of docsRes.data) {
+      if (budget <= 0) break
+      const text = (doc as Record<string, string>).extracted_text
+      if (!text) continue
+      const chunk = text.slice(0, Math.min(budget, 1000))
+      ctx += `--- ${(doc as Record<string, string>).file_name} ---\n${chunk}\n\n`
+      budget -= chunk.length
+    }
+  }
+
+  return ctx
+}
+
 // POST — generate + save social strategy
 export async function POST(req: NextRequest) {
   const { answers, brandId } = await req.json()
 
+  // Fetch brand context
+  let brandContext = ''
+  if (brandId) {
+    try { brandContext = await getBrandContext(brandId) } catch {}
+  }
+
   const plats = answers.platforms?.length ? answers.platforms.join(', ') : 'Instagram, TikTok, LinkedIn'
 
   const prompt = `You are a senior social media strategist inside Branditect, an AI brand operating system.
-Build a comprehensive, platform-specific social media strategy from this brand's questionnaire answers.
+Build a comprehensive, platform-specific social media strategy from this brand's questionnaire answers AND existing brand knowledge.
 
+${brandContext ? `=== EXISTING BRAND KNOWLEDGE ===\n${brandContext}\n=== END BRAND KNOWLEDGE ===\n\n` : ''}QUESTIONNAIRE ANSWERS:
 GOALS: ${answers.goals || 'Brand awareness and community growth'}
 AUDIENCE: ${answers.audience || 'Young adults interested in tech and culture'}
 BRAND VOICE: ${(answers.voice || []).join(', ') || 'Friendly, Authentic'}
@@ -45,6 +112,8 @@ COMPETITORS: ${answers.competitors || 'Not specified'}
 CURRENT PRESENCE: ${answers.current || 'Starting fresh'}
 RESOURCES: ${(answers.resources || []).join(', ') || 'Small team'}
 PLATFORMS: ${plats}
+
+IMPORTANT: Use the brand knowledge above to make the strategy deeply specific to this brand. Reference actual products, brand values, tone of voice, and business context. Do not generate generic advice.
 
 Return ONLY valid JSON (no markdown, no code fences) matching this structure:
 {

@@ -47,6 +47,7 @@ export default function DashboardPage() {
   const [feedTab, setFeedTab] = useState<"today" | "week" | "all">("today");
   const [noteInput, setNoteInput] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
+  const [contentIdeas, setContentIdeas] = useState<{ platform: string; format: string; idea: string; pillar: string }[]>([]);
 
   // Check onboarding
   useEffect(() => {
@@ -65,14 +66,22 @@ export default function DashboardPage() {
   useEffect(() => {
     if (brandLoading || brandId === "default") return;
     async function load() {
-      const [g, t, n] = await Promise.all([
+      const [g, t, n, s] = await Promise.all([
         fetch(`/api/mission-board/goals?brandId=${brandId}`).then(r => r.json()),
         fetch(`/api/mission-board/tasks?brandId=${brandId}`).then(r => r.json()),
         fetch(`/api/mission-board/notes?brandId=${brandId}`).then(r => r.json()),
+        fetch(`/api/social-strategy?brandId=${brandId}`).then(r => r.json()).catch(() => ({ data: null })),
       ]);
       setGoals(g.data || []);
       setTasks(t.data || []);
       setNotes(n.data || []);
+      // Extract content ideas from social strategy
+      if (s.data?.generated_strategy) {
+        try {
+          const strat = typeof s.data.generated_strategy === 'string' ? JSON.parse(s.data.generated_strategy) : s.data.generated_strategy;
+          if (strat.content_ideas?.length) setContentIdeas(strat.content_ideas.slice(0, 4));
+        } catch {}
+      }
       setLoading(false);
     }
     load();
@@ -373,6 +382,28 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+
+          {/* Content Ideas */}
+          {contentIdeas.length > 0 && (
+            <div style={{ ...cardStyle, padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <span style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: v.g400 }}>Content Ideas</span>
+                <Link href="/dashboard/brand-strategy/social" style={{ fontSize: 12, fontWeight: 600, color: v.orange, textDecoration: "none" }}>View all &rarr;</Link>
+              </div>
+              {contentIdeas.map((idea, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, padding: "12px 0", alignItems: "flex-start" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: v.g100, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 10, fontWeight: 700, color: v.g500 }}>{idea.platform.slice(0, 2)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", gap: 5, marginBottom: 4, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 3, background: v.orangePale, color: v.orange, textTransform: "uppercase", letterSpacing: "0.05em" }}>{idea.format}</span>
+                      <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 3, background: v.g100, color: v.g500 }}>{idea.pillar}</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: v.black, lineHeight: 1.4 }}>{idea.idea}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Brand Pulse — Dark Card */}
           <div style={{ background: "#0c0f10", borderRadius: 24, padding: 32, position: "relative", overflow: "hidden" }}>

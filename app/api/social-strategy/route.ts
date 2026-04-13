@@ -1,12 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 
 export const maxDuration = 60
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://alzqwhkkntfritasizzx.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+)
 
+// GET — load existing social strategy
+export async function GET(req: NextRequest) {
+  const brandId = req.nextUrl.searchParams.get('brandId')
+  if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
+
+  const { data, error } = await supabase
+    .from('brand_strategies')
+    .select('*')
+    .eq('brand_id', brandId)
+    .eq('source', 'social')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
+}
+
+// POST — generate + save social strategy
 export async function POST(req: NextRequest) {
-  const { answers } = await req.json()
+  const { answers, brandId } = await req.json()
 
   const plats = answers.platforms?.length ? answers.platforms.join(', ') : 'Instagram, TikTok, LinkedIn'
 
@@ -52,6 +76,27 @@ Use ${plats} as platforms. Make content pillars, ideas, and tactics highly speci
       .trim()
 
     const data = JSON.parse(txt)
+
+    // Save to Supabase
+    if (brandId) {
+      // Upsert: delete old social strategy, insert new one
+      await supabase
+        .from('brand_strategies')
+        .delete()
+        .eq('brand_id', brandId)
+        .eq('source', 'social')
+
+      await supabase
+        .from('brand_strategies')
+        .insert({
+          brand_id: brandId,
+          source: 'social',
+          answers: JSON.stringify(answers),
+          generated_strategy: JSON.stringify(data),
+          status: 'complete',
+        })
+    }
+
     return NextResponse.json(data)
   } catch (err: unknown) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Generation failed' }, { status: 500 })

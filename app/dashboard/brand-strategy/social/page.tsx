@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useBrand } from '@/lib/useBrand'
 
@@ -60,6 +60,37 @@ export default function SocialStrategyPage() {
   const [strategy, setStrategy] = useState<Strategy | null>(null)
   const [activeSection, setActiveSection] = useState(0)
   const [refreshingIdeas, setRefreshingIdeas] = useState(false)
+  const [loadingExisting, setLoadingExisting] = useState(true)
+
+  // ── Load existing strategy on mount ─────────────────────────────────
+
+  useEffect(() => {
+    if (!brandId || brandId === 'default') { setLoadingExisting(false); return }
+    fetch(`/api/social-strategy?brandId=${brandId}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.data?.generated_strategy) {
+          try {
+            const parsed = typeof res.data.generated_strategy === 'string'
+              ? JSON.parse(res.data.generated_strategy)
+              : res.data.generated_strategy
+            setStrategy(parsed)
+            setPhase('strategy')
+            // Restore answers if available
+            if (res.data.answers) {
+              try {
+                const savedAnswers = typeof res.data.answers === 'string'
+                  ? JSON.parse(res.data.answers)
+                  : res.data.answers
+                setAnswers(savedAnswers)
+              } catch {}
+            }
+          } catch {}
+        }
+        setLoadingExisting(false)
+      })
+      .catch(() => setLoadingExisting(false))
+  }, [brandId])
 
   // ── Question logic ────────────────────────────────────────────────────
 
@@ -157,8 +188,14 @@ export default function SocialStrategyPage() {
   return (
     <div style={{ minHeight: '100%', background: '#fcfcff', fontFamily: "var(--font-manrope), 'Manrope', sans-serif" }}>
 
+      {loadingExisting && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 54px)' }}>
+          <div style={{ width: 24, height: 24, border: '2px solid #ec5c36', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
+        </div>
+      )}
+
       {/* ═══ PHASE 1: QUESTIONS ═══ */}
-      {phase === 'questions' && (
+      {!loadingExisting && phase === 'questions' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 54px)', padding: 32 }}>
           <div style={{ maxWidth: 580, width: '100%' }}>
             {/* Intro */}
@@ -240,7 +277,7 @@ export default function SocialStrategyPage() {
       )}
 
       {/* ═══ PHASE 2: GENERATING ═══ */}
-      {phase === 'generating' && (
+      {!loadingExisting && phase === 'generating' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 54px)', padding: 32 }}>
           <div style={{ background: '#fff', borderRadius: 20, padding: '52px 44px', maxWidth: 440, width: '100%', textAlign: 'center', boxShadow: '0 6px 28px rgba(0,0,0,0.08)' }}>
             {/* Spinner */}
@@ -263,7 +300,7 @@ export default function SocialStrategyPage() {
       )}
 
       {/* ═══ PHASE 3: STRATEGY DASHBOARD ═══ */}
-      {phase === 'strategy' && strategy && (
+      {!loadingExisting && phase === 'strategy' && strategy && (
         <div style={{ padding: 32, maxWidth: 960, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ marginBottom: 28 }}>

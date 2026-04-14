@@ -58,6 +58,8 @@ export default function MissionBoardPage() {
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskGoalId, setNewTaskGoalId] = useState<number | null>(null)
   const [newTaskDue, setNewTaskDue] = useState('')
+  const [contentIdeas, setContentIdeas] = useState<{ platform: string; format: string; idea: string; pillar: string }[]>([])
+
 
   function showToast(msg: string) {
     setToast(msg); setToastVisible(true)
@@ -70,14 +72,21 @@ export default function MissionBoardPage() {
     if (brandLoading || brandId === 'default') return
 
     async function load() {
-      const [goalsRes, tasksRes, notesRes] = await Promise.all([
+      const [goalsRes, tasksRes, notesRes, socialRes] = await Promise.all([
         fetch(`/api/mission-board/goals?brandId=${brandId}`).then(r => r.json()),
         fetch(`/api/mission-board/tasks?brandId=${brandId}`).then(r => r.json()),
         fetch(`/api/mission-board/notes?brandId=${brandId}`).then(r => r.json()),
+        fetch(`/api/social-strategy?brandId=${brandId}`).then(r => r.json()).catch(() => ({ data: null })),
       ])
       setGoals(goalsRes.data || [])
       setTasks(tasksRes.data || [])
       setNotes(notesRes.data || [])
+      if (socialRes.data?.generated_strategy) {
+        try {
+          const strat = typeof socialRes.data.generated_strategy === 'string' ? JSON.parse(socialRes.data.generated_strategy) : socialRes.data.generated_strategy
+          if (strat.content_ideas?.length) setContentIdeas(strat.content_ideas.slice(0, 4))
+        } catch {}
+      }
       setLoading(false)
     }
     load()
@@ -323,7 +332,7 @@ export default function MissionBoardPage() {
       <div style={{ padding: '0 32px 32px', maxWidth: 1100 }}>
 
         {/* ═══ GOALS & TASKS TAB ═══ */}
-        {tab === 'goals' && (
+        {tab === 'goals' && (<>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'start' }}>
 
             {/* Left: Goals */}
@@ -500,7 +509,30 @@ export default function MissionBoardPage() {
               })()}
             </div>
           </div>
-        )}
+          {/* Content Ideas from Social Strategy */}
+          {contentIdeas.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 700, color: '#1a1c1e' }}>Content Ideas This Week</div>
+                <a href="/dashboard/brand-strategy/social" style={{ fontSize: 12, fontWeight: 700, color: '#ec5c36', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>View strategy</a>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {contentIdeas.map((idea, i) => (
+                  <div key={i} style={{ ...card, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f3f6fc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700, color: '#44474e' }}>{idea.platform.slice(0, 2)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: 5, marginBottom: 5, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 3, background: '#ffdbd1', color: '#ec5c36', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{idea.format}</span>
+                        <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 3, background: '#f3f6fc', color: '#44474e' }}>{idea.pillar}</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1c1e', lineHeight: 1.45 }}>{idea.idea}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>)}
 
         {/* ═══ NOTES TAB ═══ */}
         {tab === 'notes' && (

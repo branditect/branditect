@@ -27,13 +27,13 @@ const NAV_ITEMS = [
   {
     key: 'other', label: 'Other',
     title: 'Other copy',
-    subtitle: 'Ad copy, video hooks, bios, press releases, SMS — whatever you need.',
-    dropdownLabel: 'Type',
-    dropdownOptions: ['Ad copy', 'Video hooks', 'Bio / Profile', 'Press release', 'SMS / Push notification'],
-    topicLabel: "What are you writing?",
-    topicPlaceholder: 'The message, announcement, or content you need.',
+    subtitle: 'Describe what you need and we will write it.',
+    dropdownLabel: '',
+    dropdownOptions: [],
+    topicLabel: "Describe what you are looking to write",
+    topicPlaceholder: 'e.g. An ad for Meta about our new product launch, a bio for our CEO, a press release about our partnership, video hook ideas for TikTok...',
     configCat: 'other',
-    subMap: { 'Ad copy': 'ad', 'Video hooks': 'videohooks', 'Bio / Profile': 'bio', 'Press release': 'press', 'SMS / Push notification': 'sms' } as Record<string, string>,
+    subMap: {} as Record<string, string>,
   },
   {
     key: 'email', label: 'Email',
@@ -128,9 +128,27 @@ export default function CopyArchitectPage() {
     setResult(null)
     setPrimaryPicks({})
 
-    // Map to config
+    // Map to config — fill all required fields from our simplified inputs
     const configCat = activeNav.configCat
-    const subKey = activeNav.subMap[dropdown] || Object.keys(COPY_CONFIG[configCat]?.subs || {})[0] || 'instagram'
+    const subKey = (activeNav.subMap[dropdown]) || Object.keys(COPY_CONFIG[configCat]?.subs || {})[0] || 'ad'
+    const subConfig = COPY_CONFIG[configCat]?.subs?.[subKey]
+
+    // Build fields object that satisfies all required fields
+    const fields: Record<string, string> = { topic, notes, goal: dropdown }
+    if (subConfig) {
+      for (const f of subConfig.fields) {
+        if (!fields[f.id]) {
+          // Map our simplified inputs to whatever the config expects
+          if (f.id === 'topic' || f.id === 'message' || f.id === 'news' || f.id === 'offer' || f.id === 'page' || f.id === 'product' || f.id === 'keyword' || f.id === 'person' || f.id === 'video concept') {
+            fields[f.id] = topic
+          } else if (f.id === 'platform' || f.id === 'format' || f.id === 'type' || f.id === 'goal' || f.id === 'intent' || f.id === 'style') {
+            fields[f.id] = dropdown
+          } else if (f.id === 'notes' || f.id === 'secondary' || f.id === 'angle' || f.id === 'usp' || f.id === 'features' || f.id === 'audience' || f.id === 'brand') {
+            fields[f.id] = notes || topic
+          }
+        }
+      }
+    }
 
     try {
       const res = await fetch('/api/copy-architect', {
@@ -139,7 +157,7 @@ export default function CopyArchitectPage() {
         body: JSON.stringify({
           category: configCat,
           subType: subKey,
-          fields: { topic, notes, goal: dropdown },
+          fields,
           brand_id: brandId,
         }),
       })
@@ -211,21 +229,23 @@ export default function CopyArchitectPage() {
             <h1 className="font-headline font-bold text-headline-md text-on-surface mb-2">{activeNav.title}</h1>
             <p className="text-body-md text-on-surface-variant mb-10">{activeNav.subtitle}</p>
 
-            {/* Dropdown */}
-            <div className="mb-6">
-              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
-                {activeNav.dropdownLabel}
-              </label>
-              <select
-                value={dropdown}
-                onChange={e => setDropdown(e.target.value)}
-                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)]"
-              >
-                {activeNav.dropdownOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
+            {/* Dropdown — hidden for categories with no options */}
+            {activeNav.dropdownOptions.length > 0 && (
+              <div className="mb-6">
+                <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
+                  {activeNav.dropdownLabel}
+                </label>
+                <select
+                  value={dropdown}
+                  onChange={e => setDropdown(e.target.value)}
+                  className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)]"
+                >
+                  {activeNav.dropdownOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Topic textarea */}
             <div className="mb-6">

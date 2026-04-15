@@ -14,7 +14,7 @@ const tabs = [
 export default function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { brand, brandName } = useBrand();
+  const { brand } = useBrand();
 
   async function handleLogout() {
     clearBrandCache();
@@ -24,24 +24,9 @@ export default function Topbar() {
 
   return (
     <header className="h-topbar bg-surface-lowest flex items-center px-6 shrink-0 z-50 ambient-shadow-sm">
-      <span className="font-headline font-bold text-[16px] text-primary tracking-tight shrink-0">
-        Branditect
-      </span>
-
-      {brandName && (
-        <>
-          <span className="text-[12px] text-outline px-2.5 shrink-0">for</span>
-          <div className="flex items-center gap-1.5 bg-surface-low rounded-lg px-2.5 py-1 shrink-0">
-            {brand?.logo_url && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={brand.logo_url} alt="" className="w-4 h-4 object-contain" />
-            )}
-            <span className="font-headline text-[11px] font-bold tracking-wider text-on-surface uppercase">
-              {brandName}
-            </span>
-          </div>
-        </>
-      )}
+      {/* Branditect logo */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/branditect-logo.svg" alt="Branditect" className="h-5 shrink-0" />
 
       <div className="w-px h-4 bg-surface-high mx-5 shrink-0" />
 
@@ -77,8 +62,14 @@ export default function Topbar() {
         >
           + Create
         </Link>
-        <div className="w-7 h-7 rounded-full signature-gradient flex items-center justify-center font-bold text-[10px] text-white cursor-pointer ml-0.5">
-          SM
+        {/* User avatar with client brand logo */}
+        <div className="w-8 h-8 rounded-full overflow-hidden cursor-pointer ml-0.5 bg-surface-container-high flex items-center justify-center">
+          {brand?.logo_url ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={brand.logo_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="font-bold text-[10px] text-on-surface-variant">U</span>
+          )}
         </div>
       </div>
     </header>

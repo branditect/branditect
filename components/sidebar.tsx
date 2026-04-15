@@ -82,20 +82,10 @@ export default function Sidebar() {
 
   return (
     <aside className="w-sidebar bg-surface-low flex flex-col shrink-0 overflow-y-auto">
-      {/* Brand header */}
-      <div className="p-5 pb-4 flex items-center gap-3">
-        {logoUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={logoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-contain shrink-0" />
-        ) : (
-          <div className="w-8 h-8 signature-gradient rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white text-[10px] font-bold font-headline">{initials}</span>
-          </div>
-        )}
-        <div>
-          <div className="font-headline text-[13px] font-bold text-on-surface">{brandName || "Workspace"}</div>
-          <div className="text-[11px] text-outline">Branditect</div>
-        </div>
+      {/* Branditect logo */}
+      <div className="p-5 pb-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/branditect-logo.svg" alt="Branditect" className="h-5" />
       </div>
 
       <NavSection label="" items={dashboardItems} pathname={pathname} />
@@ -106,11 +96,30 @@ export default function Sidebar() {
       <div className="h-px bg-surface-high mx-5 my-1" />
       <NavSection label="Tools" items={toolItems} pathname={pathname} />
 
-      {/* User */}
+      {/* Client brand + User */}
       <div className="mt-auto p-4">
+        {/* Client brand logo + name */}
+        <div className="flex items-center gap-2.5 p-2.5 mb-2">
+          {logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={logoUrl} alt={brandName} className="w-7 h-7 rounded-lg object-contain shrink-0" />
+          ) : (
+            <div className="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold font-headline text-on-surface-variant">{initials}</span>
+            </div>
+          )}
+          <div className="font-headline text-[12px] font-bold text-on-surface">{brandName || "Workspace"}</div>
+        </div>
+
+        {/* User */}
         <div className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-surface-lowest/60 transition-all cursor-pointer">
-          <div className="w-7 h-7 rounded-full signature-gradient flex items-center justify-center font-bold text-[10px] text-white shrink-0">
-            S
+          <div className="w-7 h-7 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center shrink-0">
+            {logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-bold text-[10px] text-on-surface-variant">S</span>
+            )}
           </div>
           <div>
             <div className="text-[12px] font-semibold text-on-surface font-body">Saara Muuari</div>

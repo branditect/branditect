@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     .from('brand_strategies')
     .select('*')
     .eq('brand_id', brandId)
-    .eq('category', 'social')
+    .eq('section_positioning', 'social')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 async function getBrandContext(brandId: string): Promise<string> {
   const [brandRes, strategyRes, toneRes, productsRes, docsRes] = await Promise.all([
     supabase.from('brands').select('brand_name, website, industry, strategy_text').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).not('source', 'eq', 'social').maybeSingle(),
+    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).is('section_positioning', null).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, currency, type').eq('brand_id', brandId).limit(10),
     supabase.from('brand_documents').select('file_name, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(5),
@@ -153,14 +153,14 @@ Use ${plats} as platforms. Make content pillars, ideas, and tactics highly speci
         .from('brand_strategies')
         .delete()
         .eq('brand_id', brandId)
-        .eq('category', 'social')
+        .eq('section_positioning', 'social')
 
       await supabase
         .from('brand_strategies')
         .insert({
           brand_id: brandId,
           source: 'questionnaire',
-          category: 'social',
+          section_positioning: 'social',
           answers: JSON.stringify(answers),
           generated_strategy: JSON.stringify(data),
           status: 'complete',

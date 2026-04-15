@@ -13,7 +13,7 @@ interface NavItem {
 const dashboardItems: NavItem[] = [
   { icon: "⌂", label: "Dashboard", href: "/dashboard" },
   { icon: "◎", label: "Mission Board", href: "/dashboard/mission-board" },
-  { icon: "◩", label: "Draft Pad", href: "/dashboard/draft-pad" },
+  { icon: "◩", label: "Notes", href: "/dashboard/draft-pad" },
 ];
 
 const createItems: NavItem[] = [

@@ -24,12 +24,6 @@ export default function Topbar() {
 
   return (
     <header className="h-topbar bg-surface-lowest flex items-center px-6 shrink-0 z-50 ambient-shadow-sm">
-      {/* Branditect logo */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/branditect-logo.svg" alt="Branditect" className="h-5 shrink-0" />
-
-      <div className="w-px h-4 bg-surface-high mx-5 shrink-0" />
-
       <nav className="flex flex-1 gap-0">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;

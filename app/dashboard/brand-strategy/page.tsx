@@ -115,56 +115,38 @@ interface BrandStrategy {
 /* ------------------------------------------------------------------ */
 
 const QUESTIONS: QuestionDef[] = [
-  // Founding Vision (5)
-  { section: "Founding Vision", question: "What is the founding story behind your brand? What moment or experience sparked it?", placeholder: "Tell us the origin story..." },
-  { section: "Founding Vision", question: "What core problem does your brand exist to solve?", placeholder: "Describe the problem in one or two sentences..." },
+  // Founding Vision (3)
+  { section: "Founding Vision", question: "What core problem does your brand exist to solve, and what personal experience sparked you to take it on?", placeholder: "The problem + your origin story..." },
   { section: "Founding Vision", question: "If your brand fully succeeds, what does the world look like in 10 years?", placeholder: "Paint the vision..." },
-  { section: "Founding Vision", question: "What is your personal connection to this problem or space?", placeholder: "Why does this matter to you personally..." },
   { section: "Founding Vision", question: "Beyond profit, what is the deeper motivation driving this brand?", placeholder: "What keeps you going on hard days..." },
 
-  // Your Offering (9)
-  { section: "Your Offering", question: "Describe what you offer in exactly 7 words.", placeholder: "Seven words, no more, no less..." },
-  { section: "Your Offering", question: "Now describe it in one full sentence.", placeholder: "One clear sentence..." },
-  { section: "Your Offering", question: "Complete this: 'We are the first to...'", placeholder: "We are the first to..." },
-  { section: "Your Offering", question: "Complete this: 'We are the only ones who...'", placeholder: "We are the only ones who..." },
-  { section: "Your Offering", question: "Give your 30-second elevator pitch.", placeholder: "Imagine you're in a lift with your dream investor..." },
-  { section: "Your Offering", question: "What are the unique features or capabilities of your offering?", placeholder: "List the features that matter most..." },
-  { section: "Your Offering", question: "What is your single strongest competitive advantage?", placeholder: "The one thing nobody can match..." },
-  { section: "Your Offering", question: "How does your delivery or experience differ from competitors?", placeholder: "Describe what feels different..." },
+  // Your Offering (4)
+  { section: "Your Offering", question: "Describe what you offer in one clear sentence, then complete: 'We are the only ones who...'", placeholder: "Sentence one: ...\nWe are the only ones who..." },
+  { section: "Your Offering", question: "What is your single strongest competitive advantage — the one thing nobody can match?", placeholder: "The one thing..." },
+  { section: "Your Offering", question: "How does your delivery, product, or experience feel different from competitors?", placeholder: "Describe what feels different..." },
   { section: "Your Offering", question: "What are your non-negotiables — things you will never compromise on?", placeholder: "The lines you will not cross..." },
 
-  // Competitive Landscape (4)
+  // Competitive Landscape (3)
   { section: "Competitive Landscape", question: "Who are your top 3 competitors and what is each one's biggest weakness?", placeholder: "Competitor 1: ...\nCompetitor 2: ...\nCompetitor 3: ..." },
-  { section: "Competitive Landscape", question: "What unique assets or capabilities do you have that competitors don't?", placeholder: "Your unfair advantages..." },
   { section: "Competitive Landscape", question: "What are the most common complaints customers have about your category?", placeholder: "The frustrations people have with existing options..." },
   { section: "Competitive Landscape", question: "How does your brand challenge the norms or conventions of your industry?", placeholder: "Where you break the rules..." },
 
-  // Your Audience (5)
-  { section: "Your Audience", question: "Describe your ideal customer in vivid detail — who are they, what do they care about?", placeholder: "Age, role, values, lifestyle, pain points..." },
-  { section: "Your Audience", question: "What beliefs does your ideal customer already hold that make them receptive to your brand?", placeholder: "They already believe that..." },
-  { section: "Your Audience", question: "Describe the before and after transformation your customer experiences.", placeholder: "Before: ...\nAfter: ..." },
+  // Your Audience (3)
+  { section: "Your Audience", question: "Describe your ideal customer in vivid detail — who they are, what they believe, what they care about.", placeholder: "Role, values, lifestyle, beliefs, pain points..." },
+  { section: "Your Audience", question: "Describe the before-and-after transformation your customer experiences, including the emotional shift.", placeholder: "Before: ...\nAfter: ...\nEmotional shift: ..." },
   { section: "Your Audience", question: "Who is explicitly NOT your target customer? Who do you exclude?", placeholder: "We are not for people who..." },
-  { section: "Your Audience", question: "What emotional benefits does your customer get beyond the functional ones?", placeholder: "They feel..." },
 
-  // Brand Identity (7)
-  { section: "Brand Identity", question: "What personality traits should your brand embody?", placeholder: "e.g. Bold, playful, intellectual, warm..." },
-  { section: "Brand Identity", question: "Pick three adjectives that describe how your brand should feel.", placeholder: "Three words..." },
-  { section: "Brand Identity", question: "What emotional response should someone have when they see your visual brand?", placeholder: "They should feel..." },
-  { section: "Brand Identity", question: "How should your visual approach differ from others in your industry?", placeholder: "While others look ..., we look ..." },
-  { section: "Brand Identity", question: "Name 2-3 brands (in any industry) whose identity or aesthetic inspires you and why.", placeholder: "Brand 1: ... because ...\nBrand 2: ... because ..." },
-  { section: "Brand Identity", question: "If your brand were a person at a party, how would they behave?", placeholder: "They would be the one who..." },
-  { section: "Brand Identity", question: "How would your brand-as-person dress?", placeholder: "Describe their style..." },
+  // Brand Identity (3)
+  { section: "Brand Identity", question: "Pick three adjectives that describe how your brand should feel, and the emotional response someone should have when they see it.", placeholder: "Three adjectives + the feeling they evoke..." },
+  { section: "Brand Identity", question: "How should your visual approach differ from others in your industry, and which 2-3 brands inspire your aesthetic?", placeholder: "While others look ..., we look ...\nInspirations: Brand 1, Brand 2..." },
+  { section: "Brand Identity", question: "If your brand were a person at a party, how would they behave and dress?", placeholder: "They would be the one who... wearing..." },
 
-  // Brand Voice (5)
-  { section: "Brand Voice", question: "How does your brand communicate — formal, casual, irreverent, authoritative?", placeholder: "Describe the communication style..." },
-  { section: "Brand Voice", question: "What language or slang does your community use that your brand should speak?", placeholder: "Words, phrases, references they use..." },
-  { section: "Brand Voice", question: "Write a sample social media post in your ideal brand voice.", placeholder: "Write an example post..." },
-  { section: "Brand Voice", question: "What words or phrases should your brand NEVER use?", placeholder: "Banned words and why..." },
-  { section: "Brand Voice", question: "How should the tone shift across channels (website vs social vs email vs support)?", placeholder: "Website: ...\nSocial: ...\nEmail: ...\nSupport: ..." },
+  // Brand Voice (2)
+  { section: "Brand Voice", question: "How does your brand communicate (formal, casual, irreverent, authoritative), and what language or references does your community use?", placeholder: "Communication style + community language..." },
+  { section: "Brand Voice", question: "Write a sample post in your ideal voice, and list any words or phrases your brand should NEVER use.", placeholder: "Sample post: ...\nNever use: ..." },
 
-  // Validation & Risks (3)
-  { section: "Validation & Risks", question: "What evidence do you have that your brand or offering works? (testimonials, data, traction)", placeholder: "Share proof points..." },
-  { section: "Validation & Risks", question: "Beyond revenue, what metrics define success for your brand?", placeholder: "Community size, NPS, cultural impact..." },
+  // Validation & Risks (2)
+  { section: "Validation & Risks", question: "What evidence do you have that your brand works (testimonials, data, traction), and what metrics beyond revenue define success?", placeholder: "Proof points + success metrics..." },
   { section: "Validation & Risks", question: "What are the primary challenges or risks your brand faces in the next 12 months?", placeholder: "The biggest threats..." },
 ];
 

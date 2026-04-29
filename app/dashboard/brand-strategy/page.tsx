@@ -430,8 +430,14 @@ export default function BrandStrategyPage() {
   // JSON view state
   const [activeChannelTab, setActiveChannelTab] = useState<ChannelKey>("linkedin");
 
-  // Load existing strategy on mount
+  // Draft storage key — answers persist locally so a refresh / failed generation
+  // doesn't wipe the user's work.
+  const draftKey = `branditect:strategy-draft:${brandId}`;
+
+  // Load existing strategy (or restore in-progress draft) once brandId resolves
   useEffect(() => {
+    if (!brandId || brandId === "default") return;
+
     const loadStrategy = async () => {
       try {
         const { data, error: dbError } = await supabase
@@ -463,6 +469,29 @@ export default function BrandStrategyPage() {
           }
 
           setScreen("view");
+        } else {
+          // No saved strategy yet — try to restore an in-progress draft
+          try {
+            const draftRaw = localStorage.getItem(draftKey);
+            if (draftRaw) {
+              const draft = JSON.parse(draftRaw);
+              if (draft.answers && typeof draft.answers === "object") {
+                setAnswers(draft.answers);
+              }
+              if (draft.category) setCategory(draft.category);
+              if (typeof draft.currentIndex === "number") {
+                setCurrentIndex(draft.currentIndex);
+              }
+              if (typeof draft.existingText === "string") {
+                setExistingText(draft.existingText);
+              }
+              if (draft.screen === "questions" || draft.screen === "category") {
+                setScreen(draft.screen);
+              }
+            }
+          } catch {
+            // ignore parse / storage errors
+          }
         }
       } catch (err) {
         console.error("Strategy load error:", err);
@@ -472,7 +501,47 @@ export default function BrandStrategyPage() {
       }
     };
     loadStrategy();
-  }, []);
+  }, [brandId, draftKey]);
+
+  // Persist questionnaire progress to localStorage on every change.
+  // Skipped while still loading or once we're viewing a saved strategy.
+  useEffect(() => {
+    if (loadingStrategy) return;
+    if (!brandId || brandId === "default") return;
+    if (screen === "view" || screen === "output") return;
+
+    const hasAnswers = Object.values(answers).some((a) => a?.trim());
+    if (!hasAnswers && !category && !existingText.trim() && currentIndex === 0) {
+      // nothing meaningful to save
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({ answers, category, currentIndex, existingText, screen })
+      );
+    } catch {
+      // storage full / disabled — silent
+    }
+  }, [
+    answers,
+    category,
+    currentIndex,
+    existingText,
+    screen,
+    brandId,
+    draftKey,
+    loadingStrategy,
+  ]);
+
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      // ignore
+    }
+  }, [draftKey]);
 
   // Focus textarea on question change
   useEffect(() => {
@@ -631,6 +700,7 @@ export default function BrandStrategyPage() {
           const sections = parseStrategySections(record.generated_strategy);
           setStrategySections(sections);
           setScreen("view");
+          clearDraft();
         } else {
           // Save failed but we still have the strategy — try to show view
           const sections = parseStrategySections(strategyJson);
@@ -686,6 +756,7 @@ export default function BrandStrategyPage() {
         const sections = parseStrategySections(record.generated_strategy);
         setStrategySections(sections);
         setScreen("view");
+        clearDraft();
       }
     } catch {
       setError("Failed to save. Please try again.");
@@ -1946,6 +2017,7 @@ export default function BrandStrategyPage() {
                       setCategory(null);
                       setCurrentIndex(0);
                       setScreen("entry");
+                      clearDraft();
                     }}
                     className="px-5 py-2 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:brightness-110 transition-colors"
                   >

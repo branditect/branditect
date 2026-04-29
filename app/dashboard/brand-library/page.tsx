@@ -24,9 +24,9 @@ interface Page { id: number; page_number: number; file_url: string; file_name?: 
 
 const LOGO_SLOTS = [
   { id: 'primary', label: 'Primary logo',            bg: '#ffffff', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
-  { id: 'dark',    label: 'Dark background version',  bg: '#315A72', textCol: 'rgba(255,255,255,0.35)', border: 'none' },
+  { id: 'dark',    label: 'Dark background version',  bg: '#1a1a1a', textCol: 'rgba(255,255,255,0.35)', border: 'none' },
   { id: 'icon',    label: 'Icon / mark only',         bg: '#f4f7f9', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
-  { id: 'white',   label: 'White version',            bg: '#87C5EA', textCol: 'rgba(255,255,255,0.4)', border: 'none' },
+  { id: 'white',   label: 'White version',            bg: '#4a4a4a', textCol: 'rgba(255,255,255,0.4)', border: 'none' },
 ]
 
 const FONT_SUGGESTIONS = ['DM Sans', 'Inter', 'Plus Jakarta Sans', 'Syne', 'Space Grotesk', 'Manrope', 'Outfit', 'Cormorant Garamond', 'Playfair Display']

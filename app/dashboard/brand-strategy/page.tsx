@@ -382,6 +382,52 @@ const CHANNEL_TABS = [
 type ChannelKey = (typeof CHANNEL_TABS)[number]["key"];
 
 /* ------------------------------------------------------------------ */
+/*  Editable text — click to edit, blur to save                         */
+/* ------------------------------------------------------------------ */
+
+type Path = (string | number)[];
+
+function setNested<T>(obj: T, path: Path, value: unknown): T {
+  const next = JSON.parse(JSON.stringify(obj));
+  let cur: Record<string | number, unknown> = next;
+  for (let i = 0; i < path.length - 1; i++) {
+    cur = cur[path[i]] as Record<string | number, unknown>;
+  }
+  cur[path[path.length - 1]] = value;
+  return next;
+}
+
+const Editable = ({
+  value,
+  onSave,
+  className = "",
+  multiline = true,
+}: {
+  value: string;
+  onSave: (next: string) => void;
+  className?: string;
+  multiline?: boolean;
+}) => (
+  <div
+    contentEditable
+    suppressContentEditableWarning
+    onBlur={(e) => {
+      const val = (e.currentTarget.textContent || "").trim();
+      if (val !== value) onSave(val);
+    }}
+    onKeyDown={(e) => {
+      if (!multiline && e.key === "Enter") {
+        e.preventDefault();
+        (e.currentTarget as HTMLDivElement).blur();
+      }
+    }}
+    className={`outline-none focus:bg-surface-container-low rounded px-1 -mx-1 transition-colors hover:bg-surface-container-low/40 cursor-text ${className}`}
+  >
+    {value}
+  </div>
+);
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -1379,31 +1425,58 @@ export default function BrandStrategyPage() {
                   )}
                 </div>
 
-                <h1 className="text-[2.5rem] font-semibold text-ink mb-3 leading-tight">
-                  {strategyJSON.brandName} &mdash; Brand Strategy
+                <h1 className="text-[2.5rem] font-semibold text-ink mb-3 leading-tight flex flex-wrap items-baseline gap-2">
+                  <Editable
+                    value={strategyJSON.brandName}
+                    onSave={(v) => saveStrategyField(setNested(strategyJSON, ["brandName"], v))}
+                    multiline={false}
+                  />
+                  <span>&mdash; Brand Strategy</span>
                 </h1>
 
-                <p className="text-[0.88rem] text-[#6B6B6B] leading-relaxed max-w-[720px] mb-5">
-                  {strategyJSON.passport.purpose}
-                </p>
+                <Editable
+                  value={strategyJSON.passport.purpose}
+                  onSave={(v) => saveStrategyField(setNested(strategyJSON, ["passport", "purpose"], v))}
+                  className="text-[0.88rem] text-[#6B6B6B] leading-relaxed max-w-[720px] mb-5"
+                />
 
                 {/* Meta row */}
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-[0.75rem]">
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Category</span>
-                    <div className="text-[#1a1c1e] font-medium mt-0.5">{strategyJSON.category}</div>
+                    <Editable
+                      value={strategyJSON.category}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["category"], v))}
+                      multiline={false}
+                      className="text-[#1a1c1e] font-medium mt-0.5"
+                    />
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Stage</span>
-                    <div className="text-[#1a1c1e] font-medium mt-0.5">{strategyJSON.stage}</div>
+                    <Editable
+                      value={strategyJSON.stage}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["stage"], v))}
+                      multiline={false}
+                      className="text-[#1a1c1e] font-medium mt-0.5"
+                    />
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Target</span>
-                    <div className="text-[#1a1c1e] font-medium mt-0.5">{strategyJSON.target}</div>
+                    <Editable
+                      value={strategyJSON.target}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["target"], v))}
+                      multiline={false}
+                      className="text-[#1a1c1e] font-medium mt-0.5"
+                    />
                   </div>
                   <div>
                     <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A9A9A]">Archetype</span>
-                    <div className="text-[#1a1c1e] font-medium mt-0.5">{strategyJSON.archetype}</div>
+                    <Editable
+                      value={strategyJSON.archetype}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["archetype"], v))}
+                      multiline={false}
+                      className="text-[#1a1c1e] font-medium mt-0.5"
+                    />
                   </div>
                 </div>
 
@@ -1458,11 +1531,19 @@ export default function BrandStrategyPage() {
                   <div className="border-t border-[#e1e2e8] pt-5 space-y-4">
                     <div>
                       <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#8d7169] mb-1">Target Group</div>
-                      <div className="text-[0.82rem] text-[#1a1c1e] leading-relaxed">{strategyJSON.passport.targetGroup}</div>
+                      <Editable
+                        value={strategyJSON.passport.targetGroup}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["passport", "targetGroup"], v))}
+                        className="text-[0.82rem] text-[#1a1c1e] leading-relaxed"
+                      />
                     </div>
                     <div>
                       <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#ec5c36] mb-1">Only-We Claim</div>
-                      <div className="text-[0.88rem] text-[#ec5c36] font-semibold leading-relaxed">{strategyJSON.passport.onlyWeClaim}</div>
+                      <Editable
+                        value={strategyJSON.passport.onlyWeClaim}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["passport", "onlyWeClaim"], v))}
+                        className="text-[0.88rem] text-[#ec5c36] font-semibold leading-relaxed"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1473,20 +1554,24 @@ export default function BrandStrategyPage() {
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Pyramid</div>
                 <div className="bg-[#f3f6fc] border border-[#e1e2e8] rounded-2xl py-10 px-6 flex flex-col items-center gap-3">
                   {([
-                    { label: "Essence", value: strategyJSON.pyramid.essence, maxW: "260px", bg: "#ec5c36", text: "white" },
-                    { label: "Behavior", value: strategyJSON.pyramid.behavior, maxW: "390px", bg: "#ffcaa7", text: "#1a1c1e" },
-                    { label: "Why Choose Us", value: strategyJSON.pyramid.whyChooseUs, maxW: "530px", bg: "#315A72", text: "white" },
-                    { label: "Audience", value: strategyJSON.pyramid.audience, maxW: "650px", bg: "#87C5EA", text: "#1a1c1e" },
-                    { label: "Market", value: strategyJSON.pyramid.market, maxW: "760px", bg: "#EBF5FC", text: "#315A72" },
-                    { label: "Context", value: strategyJSON.pyramid.context, maxW: "860px", bg: "#EBEBDF", text: "#44474e" },
-                  ] as const).map((tier) => (
+                    { label: "Essence", key: "essence" as const, maxW: "260px", bg: "#ec5c36", text: "white" },
+                    { label: "Behavior", key: "behavior" as const, maxW: "390px", bg: "#ffcaa7", text: "#1a1c1e" },
+                    { label: "Why Choose Us", key: "whyChooseUs" as const, maxW: "530px", bg: "#315A72", text: "white" },
+                    { label: "Audience", key: "audience" as const, maxW: "650px", bg: "#87C5EA", text: "#1a1c1e" },
+                    { label: "Market", key: "market" as const, maxW: "760px", bg: "#EBF5FC", text: "#315A72" },
+                    { label: "Context", key: "context" as const, maxW: "860px", bg: "#EBEBDF", text: "#44474e" },
+                  ]).map((tier) => (
                     <div
                       key={tier.label}
                       className="w-full rounded-xl px-5 py-4 text-center"
                       style={{ maxWidth: tier.maxW, backgroundColor: tier.bg, color: tier.text }}
                     >
                       <div className="font-mono text-[0.58rem] uppercase tracking-wider opacity-70 mb-1">{tier.label}</div>
-                      <div className="text-[0.8rem] leading-relaxed">{tier.value}</div>
+                      <Editable
+                        value={strategyJSON.pyramid[tier.key]}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["pyramid", tier.key], v))}
+                        className="text-[0.8rem] leading-relaxed"
+                      />
                     </div>
                   ))}
                 </div>
@@ -1498,14 +1583,27 @@ export default function BrandStrategyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                   {strategyJSON.problems.map((p, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
-                      <div className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2">{p.title}</div>
-                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
+                      <Editable
+                        value={p.title}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["problems", i, "title"], v))}
+                        multiline={false}
+                        className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2"
+                      />
+                      <Editable
+                        value={p.text}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["problems", i, "text"], v))}
+                        className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                      />
                     </div>
                   ))}
                 </div>
                 <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-6">
                   <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#ec5c36] mb-2">Our Solution</div>
-                  <div className="text-[0.85rem] text-[#1a1c1e] leading-relaxed">{strategyJSON.solution}</div>
+                  <Editable
+                    value={strategyJSON.solution}
+                    onSave={(v) => saveStrategyField(setNested(strategyJSON, ["solution"], v))}
+                    className="text-[0.85rem] text-[#1a1c1e] leading-relaxed"
+                  />
                 </div>
               </section>
 
@@ -1515,21 +1613,53 @@ export default function BrandStrategyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
                     <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#ec5c36] mb-2">First To</div>
-                    <div className="text-[0.85rem] font-semibold text-[#1a1c1e] mb-1">{strategyJSON.firstTo.claim}</div>
-                    <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.firstTo.explanation}</div>
+                    <Editable
+                      value={strategyJSON.firstTo.claim}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["firstTo", "claim"], v))}
+                      multiline={false}
+                      className="text-[0.85rem] font-semibold text-[#1a1c1e] mb-1"
+                    />
+                    <Editable
+                      value={strategyJSON.firstTo.explanation}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["firstTo", "explanation"], v))}
+                      className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                    />
                   </div>
                   <div className="bg-[#FFF2EE] border border-[#FDDDD4] rounded-xl p-5">
                     <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#ec5c36] mb-2">Only Ones Who</div>
-                    <div className="text-[0.85rem] font-semibold text-[#1a1c1e] mb-1">{strategyJSON.onlyOnesWho.claim}</div>
-                    <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.onlyOnesWho.explanation}</div>
+                    <Editable
+                      value={strategyJSON.onlyOnesWho.claim}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["onlyOnesWho", "claim"], v))}
+                      multiline={false}
+                      className="text-[0.85rem] font-semibold text-[#1a1c1e] mb-1"
+                    />
+                    <Editable
+                      value={strategyJSON.onlyOnesWho.explanation}
+                      onSave={(v) => saveStrategyField(setNested(strategyJSON, ["onlyOnesWho", "explanation"], v))}
+                      className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {strategyJSON.differentiators.map((d, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5">
-                      <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">{d.label}</div>
-                      <div className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2">{d.title}</div>
-                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{d.text}</div>
+                      <Editable
+                        value={d.label}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["differentiators", i, "label"], v))}
+                        multiline={false}
+                        className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1"
+                      />
+                      <Editable
+                        value={d.title}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["differentiators", i, "title"], v))}
+                        multiline={false}
+                        className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2"
+                      />
+                      <Editable
+                        value={d.text}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["differentiators", i, "text"], v))}
+                        className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                      />
                     </div>
                   ))}
                 </div>
@@ -1544,9 +1674,19 @@ export default function BrandStrategyPage() {
                       {/* Persona header */}
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center text-xl">{p.emoji}</div>
-                        <div>
-                          <div className="text-[0.88rem] font-semibold text-[#1a1c1e]">{p.name}</div>
-                          <div className="text-[0.75rem] text-[#6B6B6B]">{p.role}</div>
+                        <div className="flex-1">
+                          <Editable
+                            value={p.name}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "name"], v))}
+                            multiline={false}
+                            className="text-[0.88rem] font-semibold text-[#1a1c1e]"
+                          />
+                          <Editable
+                            value={p.role}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "role"], v))}
+                            multiline={false}
+                            className="text-[0.75rem] text-[#6B6B6B]"
+                          />
                         </div>
                         <span className={`ml-auto text-[0.65rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                           p.type === "primary"
@@ -1558,15 +1698,27 @@ export default function BrandStrategyPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                         <div>
                           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Who</div>
-                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.who}</div>
+                          <Editable
+                            value={p.who}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "who"], v))}
+                            className="text-[0.78rem] text-[#2D2D2D] leading-relaxed"
+                          />
                         </div>
                         <div>
                           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Wants</div>
-                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.wants}</div>
+                          <Editable
+                            value={p.wants}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "wants"], v))}
+                            className="text-[0.78rem] text-[#2D2D2D] leading-relaxed"
+                          />
                         </div>
                         <div>
                           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Frustrations</div>
-                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.frustrations}</div>
+                          <Editable
+                            value={p.frustrations}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "frustrations"], v))}
+                            className="text-[0.78rem] text-[#2D2D2D] leading-relaxed"
+                          />
                         </div>
                         <div>
                           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Channels</div>
@@ -1582,7 +1734,11 @@ export default function BrandStrategyPage() {
                         </div>
                         <div className="md:col-span-2">
                           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-1">Brand Gives</div>
-                          <div className="text-[0.78rem] text-[#2D2D2D] leading-relaxed">{p.brandGives}</div>
+                          <Editable
+                            value={p.brandGives}
+                            onSave={(v) => saveStrategyField(setNested(strategyJSON, ["personas", i, "brandGives"], v))}
+                            className="text-[0.78rem] text-[#2D2D2D] leading-relaxed"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1591,14 +1747,22 @@ export default function BrandStrategyPage() {
                 {/* Exclusions */}
                 <div className="border-2 border-dashed border-[#E5E5E5] rounded-xl p-5">
                   <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#9A9A9A] mb-2">Who We Are NOT For</div>
-                  <div className="text-[0.82rem] text-[#6B6B6B] leading-relaxed">{strategyJSON.exclusions}</div>
+                  <Editable
+                    value={strategyJSON.exclusions}
+                    onSave={(v) => saveStrategyField(setNested(strategyJSON, ["exclusions"], v))}
+                    className="text-[0.82rem] text-[#6B6B6B] leading-relaxed"
+                  />
                 </div>
               </section>
 
               {/* ---------- Competitive Landscape ---------- */}
               <section>
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Competitive Landscape</div>
-                <p className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5">{strategyJSON.competitiveIntro}</p>
+                <Editable
+                  value={strategyJSON.competitiveIntro}
+                  onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitiveIntro"], v))}
+                  className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5"
+                />
                 <div className="overflow-x-auto rounded-xl border border-[#E5E5E5]">
                   <table className="w-full text-[0.78rem]">
                     <thead>
@@ -1614,13 +1778,40 @@ export default function BrandStrategyPage() {
                       {strategyJSON.competitors.map((c, i) => (
                         <tr key={i} className={`border-t border-[#E5E5E5] ${c.isUs ? "bg-[#FFF2EE]" : "bg-white"}`}>
                           <td className="px-4 py-3 font-medium text-[#1a1c1e]">
-                            {c.name}
-                            {c.isUs && <span className="ml-1.5 text-[0.6rem] font-bold text-[#ec5c36] uppercase">(Us)</span>}
+                            <span className="inline-flex items-center gap-1.5">
+                              <Editable
+                                value={c.name}
+                                onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitors", i, "name"], v))}
+                                multiline={false}
+                              />
+                              {c.isUs && <span className="text-[0.6rem] font-bold text-[#ec5c36] uppercase">(Us)</span>}
+                            </span>
                           </td>
-                          <td className="px-4 py-3 text-[#6B6B6B]">{c.type}</td>
-                          <td className="px-4 py-3 text-[#2D2D2D]">{c.doWell}</td>
-                          <td className="px-4 py-3 text-[#2D2D2D]">{c.fail}</td>
-                          <td className="px-4 py-3 text-[#2D2D2D]">{c.vsUs}</td>
+                          <td className="px-4 py-3 text-[#6B6B6B]">
+                            <Editable
+                              value={c.type}
+                              onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitors", i, "type"], v))}
+                              multiline={false}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">
+                            <Editable
+                              value={c.doWell}
+                              onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitors", i, "doWell"], v))}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">
+                            <Editable
+                              value={c.fail}
+                              onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitors", i, "fail"], v))}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-[#2D2D2D]">
+                            <Editable
+                              value={c.vsUs}
+                              onSave={(v) => saveStrategyField(setNested(strategyJSON, ["competitors", i, "vsUs"], v))}
+                            />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1635,8 +1826,17 @@ export default function BrandStrategyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   {strategyJSON.messagingPillars.map((p, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 border-t-[3px] border-t-[#ec5c36]">
-                      <div className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2">{p.title}</div>
-                      <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{p.text}</div>
+                      <Editable
+                        value={p.title}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["messagingPillars", i, "title"], v))}
+                        multiline={false}
+                        className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-2"
+                      />
+                      <Editable
+                        value={p.text}
+                        onSave={(v) => saveStrategyField(setNested(strategyJSON, ["messagingPillars", i, "text"], v))}
+                        className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                      />
                     </div>
                   ))}
                 </div>
@@ -1709,7 +1909,11 @@ export default function BrandStrategyPage() {
               {/* ---------- Brand Voice ---------- */}
               <section>
                 <div className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#9A9A9A] mb-3">Brand Voice</div>
-                <p className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5">{strategyJSON.voiceDescription}</p>
+                <Editable
+                  value={strategyJSON.voiceDescription}
+                  onSave={(v) => saveStrategyField(setNested(strategyJSON, ["voiceDescription"], v))}
+                  className="text-[0.85rem] text-[#2D2D2D] leading-relaxed mb-5"
+                />
 
                 {/* Do / Don't pairs */}
                 <div className="space-y-3 mb-6">
@@ -1717,11 +1921,19 @@ export default function BrandStrategyPage() {
                     <div key={i} className="grid grid-cols-2 gap-3">
                       <div className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-4">
                         <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#315A72] mb-1">Do</div>
-                        <div className="text-[0.78rem] text-[#1a1c1e] leading-relaxed">{pair.do}</div>
+                        <Editable
+                          value={pair.do}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["voiceDoDont", i, "do"], v))}
+                          className="text-[0.78rem] text-[#1a1c1e] leading-relaxed"
+                        />
                       </div>
                       <div className="bg-white border border-[#e1e2e8] rounded-xl p-4">
                         <div className="font-mono text-[0.6rem] uppercase tracking-wider text-[#8d7169] mb-1">Don&apos;t</div>
-                        <div className="text-[0.78rem] text-[#1a1c1e] leading-relaxed">{pair.dont}</div>
+                        <Editable
+                          value={pair.dont}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["voiceDoDont", i, "dont"], v))}
+                          className="text-[0.78rem] text-[#1a1c1e] leading-relaxed"
+                        />
                       </div>
                     </div>
                   ))}
@@ -1756,8 +1968,17 @@ export default function BrandStrategyPage() {
                   <div className="space-y-3">
                     {strategyJSON.risks.map((r, i) => (
                       <div key={i} className="bg-white border border-[#e1e2e8] rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-1">{r.title}</div>
-                        <div className="text-[0.78rem] text-[#44474e] leading-relaxed">{r.text}</div>
+                        <Editable
+                          value={r.title}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["risks", i, "title"], v))}
+                          multiline={false}
+                          className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-1"
+                        />
+                        <Editable
+                          value={r.text}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["risks", i, "text"], v))}
+                          className="text-[0.78rem] text-[#44474e] leading-relaxed"
+                        />
                       </div>
                     ))}
                   </div>
@@ -1765,8 +1986,17 @@ export default function BrandStrategyPage() {
                   <div className="space-y-3">
                     {strategyJSON.opportunities.map((o, i) => (
                       <div key={i} className="bg-[#EBF5FC] border border-[#87C5EA] rounded-xl p-5">
-                        <div className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-1">{o.title}</div>
-                        <div className="text-[0.78rem] text-[#315A72] leading-relaxed">{o.text}</div>
+                        <Editable
+                          value={o.title}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["opportunities", i, "title"], v))}
+                          multiline={false}
+                          className="text-[0.82rem] font-semibold text-[#1a1c1e] mb-1"
+                        />
+                        <Editable
+                          value={o.text}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["opportunities", i, "text"], v))}
+                          className="text-[0.78rem] text-[#315A72] leading-relaxed"
+                        />
                       </div>
                     ))}
                   </div>
@@ -1780,9 +2010,18 @@ export default function BrandStrategyPage() {
                   {strategyJSON.taglines.map((t, i) => (
                     <div key={i} className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex items-start gap-4">
                       <div className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#ec5c36] flex items-center justify-center text-[0.78rem] font-bold shrink-0">{i + 1}</div>
-                      <div>
-                        <div className="text-[1rem] font-semibold text-[#1a1c1e] mb-1">&ldquo;{t.text}&rdquo;</div>
-                        <div className="text-[0.78rem] text-[#6B6B6B] leading-relaxed">{t.rationale}</div>
+                      <div className="flex-1">
+                        <Editable
+                          value={t.text}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["taglines", i, "text"], v))}
+                          multiline={false}
+                          className="text-[1rem] font-semibold text-[#1a1c1e] mb-1"
+                        />
+                        <Editable
+                          value={t.rationale}
+                          onSave={(v) => saveStrategyField(setNested(strategyJSON, ["taglines", i, "rationale"], v))}
+                          className="text-[0.78rem] text-[#6B6B6B] leading-relaxed"
+                        />
                       </div>
                     </div>
                   ))}

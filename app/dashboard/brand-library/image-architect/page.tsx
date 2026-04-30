@@ -177,7 +177,7 @@ export default function ImageArchitectPage() {
   const urlToBase64 = useCallback(async (url: string): Promise<string> => {
     const res = await fetch(url);
     const blob = await res.blob();
-    return resizeBlobToBase64(blob, 600);
+    return resizeBlobToBase64(blob, 512);
   }, []);
 
   const generateImage = useCallback(async () => {
@@ -185,22 +185,21 @@ export default function ImageArchitectPage() {
     setGenerating(true); setGenError(null); setGenResult(null); setSavedToLib(false);
 
     try {
-      const base64Refs = await Promise.all(
-        refs.map(async (ref) => {
-          if (ref.source === "upload" && ref.file) {
-            return resizeImageToBase64(ref.file, 600);
-          } else if (ref.url) {
-            return urlToBase64(ref.url);
-          }
-          return "";
-        })
-      );
+      // The API only uses the first reference image — only encode that one
+      // to keep the payload well under Vercel's 4.5MB function body limit.
+      const firstRef = refs[0];
+      let firstBase64 = "";
+      if (firstRef.source === "upload" && firstRef.file) {
+        firstBase64 = await resizeImageToBase64(firstRef.file, 512);
+      } else if (firstRef.url) {
+        firstBase64 = await urlToBase64(firstRef.url);
+      }
 
       const res = await fetch("/api/brand/generate-from-reference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          images: base64Refs.filter(Boolean),
+          images: firstBase64 ? [firstBase64] : [],
           brief: { subject, format, colour, mode, other },
           dna: null,
         }),

@@ -14,6 +14,7 @@ CRITICAL RULES:
 2. Fill every field with specific content — no empty strings or placeholders
 3. Keep descriptions concise (1-3 sentences each) to stay within token limits
 4. Generate exactly: 2 personas, 3 competitors, 3 messaging pillars, 3 voice do/dont pairs, 3 taglines, 3 risks, 3 opportunities, 3 problems, 3 differentiators
+5. PRESERVE EXISTING BRAND ASSETS: If the founder lists existing taglines, mission statements, values, or manifesto lines they want to keep, use them verbatim in the strategy — do not rewrite or replace them. Build the rest of the strategy around these fixed points. Include their existing tagline as the first entry in the taglines array.
 
 Return this JSON structure:
 

@@ -115,10 +115,11 @@ interface BrandStrategy {
 /* ------------------------------------------------------------------ */
 
 const QUESTIONS: QuestionDef[] = [
-  // Founding Vision (3)
+  // Founding Vision (4)
   { section: "Founding Vision", question: "What core problem does your brand exist to solve, and what personal experience sparked you to take it on?", placeholder: "The problem + your origin story..." },
   { section: "Founding Vision", question: "If your brand fully succeeds, what does the world look like in 10 years?", placeholder: "Paint the vision..." },
   { section: "Founding Vision", question: "Beyond profit, what is the deeper motivation driving this brand?", placeholder: "What keeps you going on hard days..." },
+  { section: "Founding Vision", question: "Are there any existing brand elements you want to KEEP and build the strategy around — taglines, mission statement, values, manifesto lines, naming conventions?", placeholder: "Tagline: ...\nMission: ...\nValues: ...\n(Leave blank if starting fresh)" },
 
   // Your Offering (4)
   { section: "Your Offering", question: "Describe what you offer in one clear sentence, then complete: 'We are the only ones who...'", placeholder: "Sentence one: ...\nWe are the only ones who..." },

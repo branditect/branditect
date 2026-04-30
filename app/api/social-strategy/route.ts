@@ -29,7 +29,7 @@ interface BrandContextSummary {
 async function getBrandContextSummary(brandId: string): Promise<BrandContextSummary> {
   const [brandRes, stratRes, toneRes, productsRes] = await Promise.all([
     supabase.from('brands').select('brand_name').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).is('section_positioning', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('brand_tone').select('id').eq('brand_id', brandId).maybeSingle(),
     supabase.from('catalog_products').select('name').eq('brand_id', brandId).limit(3),
   ])

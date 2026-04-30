@@ -1,174 +1,181 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 
-export const maxDuration = 60
+export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://alzqwhkkntfritasizzx.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-// GET — load existing social strategy
+/* ------------------------------------------------------------------ */
+/*  Brand context summary — what we already know about the brand.      */
+/*  Used by the entry screen so the user sees what Branditect will     */
+/*  pull from before answering only the gap-filling questions.         */
+/* ------------------------------------------------------------------ */
+
+interface BrandContextSummary {
+  brandName: string | null
+  hasStrategy: boolean
+  hasTone: boolean
+  archetype: string | null
+  voiceDescription: string | null
+  personasCount: number
+  productsCount: number
+  topProducts: string[]
+  competitorsCount: number
+}
+
+async function getBrandContextSummary(brandId: string): Promise<BrandContextSummary> {
+  const [brandRes, stratRes, toneRes, productsRes] = await Promise.all([
+    supabase.from('brands').select('brand_name').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).is('section_positioning', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('brand_tone').select('id').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('catalog_products').select('name').eq('brand_id', brandId).limit(3),
+  ])
+
+  let archetype: string | null = null
+  let voiceDescription: string | null = null
+  let personasCount = 0
+  let competitorsCount = 0
+
+  if (stratRes.data?.generated_strategy) {
+    try {
+      const raw = stratRes.data.generated_strategy
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+      archetype = parsed?.archetype ?? null
+      voiceDescription = parsed?.voiceDescription ?? null
+      personasCount = Array.isArray(parsed?.personas) ? parsed.personas.length : 0
+      competitorsCount = Array.isArray(parsed?.competitors) ? parsed.competitors.length : 0
+    } catch {
+      // Legacy markdown format — leave fields null
+    }
+  }
+
+  const products = productsRes.data || []
+
+  return {
+    brandName: brandRes.data?.brand_name ?? null,
+    hasStrategy: !!stratRes.data,
+    hasTone: !!toneRes.data,
+    archetype,
+    voiceDescription,
+    personasCount,
+    productsCount: products.length,
+    topProducts: products.map((p: { name: string }) => p.name).filter(Boolean),
+    competitorsCount,
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  GET — load existing record + brand context summary                 */
+/* ------------------------------------------------------------------ */
+
 export async function GET(req: NextRequest) {
   const brandId = req.nextUrl.searchParams.get('brandId')
   if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
 
-  const { data, error } = await supabase
-    .from('brand_strategies')
-    .select('*')
-    .eq('brand_id', brandId)
-    .eq('section_positioning', 'social')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data })
-}
-
-// Fetch full brand context from all sources
-async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes, productsRes, docsRes] = await Promise.all([
-    supabase.from('brands').select('brand_name, website, industry, strategy_text').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).is('section_positioning', null).maybeSingle(),
-    supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, currency, type').eq('brand_id', brandId).limit(10),
-    supabase.from('brand_documents').select('file_name, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(5),
+  const [recordRes, ctx] = await Promise.all([
+    supabase
+      .from('social_strategy')
+      .select('*')
+      .eq('brand_id', brandId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getBrandContextSummary(brandId).catch(() => null),
   ])
 
-  let ctx = ''
-
-  if (brandRes.data) {
-    const b = brandRes.data
-    ctx += `BRAND: ${b.brand_name}`
-    if (b.website) ctx += ` | Website: ${b.website}`
-    if (b.industry) ctx += ` | Industry: ${b.industry}`
-    ctx += '\n'
-    if (b.strategy_text) ctx += `BRAND SUMMARY: ${b.strategy_text.slice(0, 500)}\n`
+  if (recordRes.error && recordRes.error.code !== 'PGRST116') {
+    return NextResponse.json({ error: recordRes.error.message }, { status: 500 })
   }
 
-  if (strategyRes.data?.generated_strategy) {
-    const s = typeof strategyRes.data.generated_strategy === 'string'
-      ? strategyRes.data.generated_strategy : JSON.stringify(strategyRes.data.generated_strategy)
-    ctx += `\nBRAND STRATEGY:\n${s.slice(0, 3000)}\n`
-  }
-
-  if (toneRes.data) {
-    const { id: _i, user_id: _u, brand_id: _b, created_at: _c, updated_at: _up, ...tone } = toneRes.data
-    void _i; void _u; void _b; void _c; void _up
-    ctx += `\nTONE OF VOICE:\n${JSON.stringify(tone).slice(0, 1500)}\n`
-  }
-
-  if (productsRes.data?.length) {
-    ctx += `\nPRODUCTS (${productsRes.data.length}):\n`
-    productsRes.data.forEach((p: Record<string, unknown>) => {
-      ctx += `- ${p.name} (${p.type})`
-      const price = p.price_rrp || p.price_monthly
-      if (price) ctx += ` — ${p.currency || 'EUR'} ${price}${p.price_monthly ? '/mo' : ''}`
-      ctx += '\n'
-      if (p.description) ctx += `  ${(p.description as string).slice(0, 150)}\n`
-    })
-  }
-
-  if (docsRes.data?.length) {
-    ctx += `\nKNOWLEDGE VAULT (${docsRes.data.length} docs):\n`
-    let budget = 3000
-    for (const doc of docsRes.data) {
-      if (budget <= 0) break
-      const text = (doc as Record<string, string>).extracted_text
-      if (!text) continue
-      const chunk = text.slice(0, Math.min(budget, 1000))
-      ctx += `--- ${(doc as Record<string, string>).file_name} ---\n${chunk}\n\n`
-      budget -= chunk.length
-    }
-  }
-
-  return ctx
+  return NextResponse.json({
+    record: recordRes.data || null,
+    context: ctx,
+  })
 }
 
-// POST — generate + save social strategy
+/* ------------------------------------------------------------------ */
+/*  POST — single endpoint with action discriminator                   */
+/*    { action: 'start',    brandId }                  → create row    */
+/*    { action: 'answer',   id, field, value }         → update field  */
+/*    { action: 'reset',    id }                       → discard row   */
+/*    { action: 'generate', id }                       → step 2 (stub) */
+/* ------------------------------------------------------------------ */
+
+const ALLOWED_FIELDS = new Set([
+  'channels',
+  'primary_goal',
+  'secondary_goal',
+  'capacity_volume',
+  'production_setup',
+  'reference_accounts',
+  'anti_patterns',
+])
+
 export async function POST(req: NextRequest) {
-  const { answers, brandId } = await req.json()
+  const body = await req.json()
+  const action = body.action
 
-  // Fetch brand context
-  let brandContext = ''
-  if (brandId) {
-    try { brandContext = await getBrandContext(brandId) } catch {}
+  if (action === 'start') {
+    const { brandId } = body
+    if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
+
+    const { data, error } = await supabase
+      .from('social_strategy')
+      .insert({ brand_id: brandId, status: 'in_progress' })
+      .select()
+      .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ id: data.id })
   }
 
-  const plats = answers.platforms?.length ? answers.platforms.join(', ') : 'Instagram, TikTok, LinkedIn'
-
-  const prompt = `You are a senior social media strategist inside Branditect, an AI brand operating system.
-Build a comprehensive, platform-specific social media strategy from this brand's questionnaire answers AND existing brand knowledge.
-
-${brandContext ? `=== EXISTING BRAND KNOWLEDGE ===\n${brandContext}\n=== END BRAND KNOWLEDGE ===\n\n` : ''}QUESTIONNAIRE ANSWERS:
-GOALS: ${answers.goals || 'Brand awareness and community growth'}
-AUDIENCE: ${answers.audience || 'Young adults interested in tech and culture'}
-BRAND VOICE: ${(answers.voice || []).join(', ') || 'Friendly, Authentic'}
-CONTENT THEMES: ${answers.pillars || 'Brand, Community, Education'}
-COMPETITORS: ${answers.competitors || 'Not specified'}
-CURRENT PRESENCE: ${answers.current || 'Starting fresh'}
-RESOURCES: ${(answers.resources || []).join(', ') || 'Small team'}
-PLATFORMS: ${plats}
-
-IMPORTANT: Use the brand knowledge above to make the strategy deeply specific to this brand. Reference actual products, brand values, tone of voice, and business context. Do not generate generic advice.
-
-Return ONLY valid JSON (no markdown, no code fences) matching this structure:
-{
-  "brand_summary": "One sentence describing the brand's social media opportunity",
-  "content_pillars": [{"name":"","description":"","example_topics":["","",""],"mix_type":"educational"}],
-  "platforms": [{"name":"","cadence":"","best_times":"","primary_formats":["",""],"content_mix":{"educational":25,"entertaining":35,"promotional":15,"community":25},"kpis":{"follower_growth":"","engagement_rate":"","primary_metric":""}}],
-  "engagement_playbook":{"comment_strategy":"","dm_workflow":"","ugc":"","community_ritual":""},
-  "growth_tactics":{"hashtags":"","collaborations":"","paid_boost":"","cross_promotion":""},
-  "content_ideas":[{"platform":"","format":"","idea":"","pillar":""},{"platform":"","format":"","idea":"","pillar":""},{"platform":"","format":"","idea":"","pillar":""},{"platform":"","format":"","idea":"","pillar":""}],
-  "action_plan":[{"day":1,"task":"","type":"setup"},{"day":2,"task":"","type":"content"},{"day":3,"task":"","type":"engage"},{"day":4,"task":"","type":"content"},{"day":5,"task":"","type":"content"},{"day":6,"task":"","type":"engage"},{"day":7,"task":"","type":"review"},{"day":8,"task":"","type":"setup"},{"day":9,"task":"","type":"content"},{"day":10,"task":"","type":"content"},{"day":11,"task":"","type":"engage"},{"day":12,"task":"","type":"content"},{"day":13,"task":"","type":"content"},{"day":14,"task":"","type":"review"}],
-  "inspirational_brands":["","",""]
-}
-
-Use ${plats} as platforms. Make content pillars, ideas, and tactics highly specific. All 14 days required.`
-
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      system: 'Return ONLY valid JSON. No markdown. No code fences. No preamble.',
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const txt = response.content
-      .map(c => c.type === 'text' ? c.text : '')
-      .join('')
-      .trim()
-      .replace(/```json|```/g, '')
-      .trim()
-
-    const data = JSON.parse(txt)
-
-    // Save to Supabase
-    if (brandId) {
-      // Upsert: delete old social strategy, insert new one
-      await supabase
-        .from('brand_strategies')
-        .delete()
-        .eq('brand_id', brandId)
-        .eq('section_positioning', 'social')
-
-      await supabase
-        .from('brand_strategies')
-        .insert({
-          brand_id: brandId,
-          source: 'questionnaire',
-          section_positioning: 'social',
-          answers: JSON.stringify(answers),
-          generated_strategy: JSON.stringify(data),
-          status: 'complete',
-        })
+  if (action === 'answer') {
+    const { id, field, value } = body
+    if (!id || !field) return NextResponse.json({ error: 'Missing id or field' }, { status: 400 })
+    if (!ALLOWED_FIELDS.has(field)) {
+      return NextResponse.json({ error: 'Field not editable' }, { status: 400 })
     }
 
-    return NextResponse.json(data)
-  } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Generation failed' }, { status: 500 })
+    const patch: Record<string, unknown> = {
+      [field]: value,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await supabase
+      .from('social_strategy')
+      .update(patch)
+      .eq('id', id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
   }
+
+  if (action === 'reset') {
+    const { id } = body
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    const { error } = await supabase.from('social_strategy').delete().eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (action === 'generate') {
+    // Step 2 will implement the full Claude synthesis.
+    // For now we just record the answers and return a placeholder.
+    const { id } = body
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    await supabase
+      .from('social_strategy')
+      .update({ status: 'awaiting_synthesis', updated_at: new Date().toISOString() })
+      .eq('id', id)
+    return NextResponse.json({
+      ok: true,
+      pending: true,
+      message: 'Synthesis layer ships in step 2 — your answers are saved.',
+    })
+  }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }

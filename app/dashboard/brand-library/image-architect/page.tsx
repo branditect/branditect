@@ -47,9 +47,10 @@ const MODE_OPTIONS = [
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function resizeImageToBase64(file: File, maxSize: number): Promise<string> {
+function resizeBlobToBase64(blob: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(blob);
     img.onload = () => {
       const canvas = document.createElement("canvas");
       let w = img.width, h = img.height;
@@ -58,11 +59,19 @@ function resizeImageToBase64(file: File, maxSize: number): Promise<string> {
       canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(objectUrl);
       resolve(canvas.toDataURL("image/jpeg", 0.85).split(",")[1]);
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror = (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    };
+    img.src = objectUrl;
   });
+}
+
+function resizeImageToBase64(file: File, maxSize: number): Promise<string> {
+  return resizeBlobToBase64(file, maxSize);
 }
 
 function getAspectClass(format: string): string {
@@ -168,11 +177,7 @@ export default function ImageArchitectPage() {
   const urlToBase64 = useCallback(async (url: string): Promise<string> => {
     const res = await fetch(url);
     const blob = await res.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string).split(",")[1]);
-      reader.readAsDataURL(blob);
-    });
+    return resizeBlobToBase64(blob, 600);
   }, []);
 
   const generateImage = useCallback(async () => {

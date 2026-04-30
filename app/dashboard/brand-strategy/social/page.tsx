@@ -3,21 +3,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useBrand } from '@/lib/useBrand'
+import { supabase } from '@/lib/supabase'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
 interface ContextSummary {
-  brandName: string | null
   hasStrategy: boolean
   hasTone: boolean
   archetype: string | null
   voiceDescription: string | null
-  personasCount: number
-  productsCount: number
-  topProducts: string[]
-  competitorsCount: number
 }
 
 interface SocialStrategyRecord {
@@ -123,34 +119,87 @@ export default function SocialStrategyPage() {
       return
     }
 
-    fetch(`/api/social-strategy?brandId=${brandId}`)
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.context) setContext(res.context)
-        if (res.record) {
-          const r = res.record as SocialStrategyRecord
-          setRecord(r)
-          setChannels(r.channels || [])
-          setPrimaryGoal(r.primary_goal || '')
-          setSecondaryGoal(r.secondary_goal || '')
-          setVolume(r.capacity_volume || '')
-          setSetup(r.production_setup || '')
-          setRefsText((r.reference_accounts || []).join('\n'))
-          setAntiText('')
-          setAntiChips(r.anti_patterns || [])
-          if (r.status === 'active') {
-            setPhase('active')
-          } else {
-            // Resume at the first un-answered question
-            const idx = firstMissing(r)
-            setQIdx(idx)
-            setPhase(idx === -1 ? 'entry' : 'questions')
-          }
+    let cancelled = false
+
+    async function loadAll() {
+      // Pull context client-side from supabase directly — same pattern other
+      // pages use, so RLS / service-role behaviour is the same as elsewhere.
+      const [stratRes, toneRes, recordRes] = await Promise.all([
+        supabase
+          .from('brand_strategies')
+          .select('generated_strategy')
+          .eq('brand_id', brandId)
+          .order('created_at', { ascending: false })
+          .limit(1),
+        supabase.from('brand_tone').select('id, expression_text').eq('brand_id', brandId).limit(1),
+        supabase
+          .from('social_strategy')
+          .select('*')
+          .eq('brand_id', brandId)
+          .order('created_at', { ascending: false })
+          .limit(1),
+      ])
+
+      if (cancelled) return
+
+      const stratRow = stratRes.data?.[0]
+      let archetype: string | null = null
+      let voiceDescription: string | null = null
+      if (stratRow?.generated_strategy) {
+        try {
+          const parsed =
+            typeof stratRow.generated_strategy === 'string'
+              ? JSON.parse(stratRow.generated_strategy)
+              : stratRow.generated_strategy
+          archetype = parsed?.archetype ?? null
+          voiceDescription = parsed?.voiceDescription ?? null
+        } catch {
+          // legacy markdown — leave null but still treat as set up
+        }
+      }
+
+      const toneRow = toneRes.data?.[0]
+      // Prefer tone-of-voice's expression_text if it exists, otherwise fall back
+      // to the strategy's voice description.
+      const voiceText = toneRow?.expression_text || voiceDescription || null
+
+      setContext({
+        hasStrategy: !!stratRow,
+        hasTone: !!toneRow,
+        archetype,
+        voiceDescription: voiceText,
+      })
+
+      const r = recordRes.data?.[0] as SocialStrategyRecord | undefined
+      if (r) {
+        setRecord(r)
+        setChannels(r.channels || [])
+        setPrimaryGoal(r.primary_goal || '')
+        setSecondaryGoal(r.secondary_goal || '')
+        setVolume(r.capacity_volume || '')
+        setSetup(r.production_setup || '')
+        setRefsText((r.reference_accounts || []).join('\n'))
+        setAntiText('')
+        setAntiChips(r.anti_patterns || [])
+        if (r.status === 'active') {
+          setPhase('active')
         } else {
+          const idx = firstMissing(r)
+          setQIdx(idx === -1 ? 0 : idx)
           setPhase('entry')
         }
-      })
-      .catch(() => setPhase('entry'))
+      } else {
+        setPhase('entry')
+      }
+    }
+
+    loadAll().catch(() => {
+      if (!cancelled) setPhase('entry')
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [brandId, brandLoading])
 
   function firstMissing(r: SocialStrategyRecord): number {
@@ -406,11 +455,28 @@ export default function SocialStrategyPage() {
             What we&apos;re pulling from your library
           </div>
           <ul className="space-y-2.5">
-            <ContextRow ok={!!context?.hasStrategy} label="Brand Strategy" detail={context?.archetype ? `archetype: ${context.archetype}` : context?.hasStrategy ? 'positioning, audience, competitors' : 'not set up yet'} />
-            <ContextRow ok={!!context?.hasTone} label="Tone of Voice" detail={context?.voiceDescription ? truncate(context.voiceDescription, 80) : context?.hasTone ? 'voice rules, vocab' : 'not set up yet'} />
-            <ContextRow ok={(context?.personasCount ?? 0) > 0} label="Audience personas" detail={context?.personasCount ? `${context.personasCount} personas` : 'no personas yet'} />
-            <ContextRow ok={(context?.productsCount ?? 0) > 0} label="Product catalog" detail={context?.topProducts.length ? context.topProducts.slice(0, 3).join(', ') : 'no products yet'} />
-            <ContextRow ok={(context?.competitorsCount ?? 0) > 0} label="Competitive frame" detail={context?.competitorsCount ? `${context.competitorsCount} competitors` : 'no competitors mapped'} />
+            <ContextRow
+              ok={!!context?.hasStrategy}
+              label="Brand Strategy"
+              detail={
+                context?.archetype
+                  ? `archetype: ${context.archetype}`
+                  : context?.hasStrategy
+                  ? 'positioning, audience, competitors, personas'
+                  : 'not set up yet'
+              }
+            />
+            <ContextRow
+              ok={!!context?.hasTone}
+              label="Tone of Voice"
+              detail={
+                context?.voiceDescription
+                  ? truncate(context.voiceDescription, 80)
+                  : context?.hasTone
+                  ? 'voice rules, vocab'
+                  : 'not set up yet'
+              }
+            />
           </ul>
           {(!context?.hasStrategy || !context?.hasTone) && (
             <p className="text-[0.78rem] text-muted mt-4 pt-4 border-t border-outline-variant/15">

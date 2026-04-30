@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, memo } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
@@ -397,35 +397,57 @@ function setNested<T>(obj: T, path: Path, value: unknown): T {
   return next;
 }
 
-const Editable = ({
-  value,
-  onSave,
-  className = "",
-  multiline = true,
-}: {
+type EditableProps = {
   value: string;
   onSave: (next: string) => void;
   className?: string;
   multiline?: boolean;
-}) => (
-  <div
-    contentEditable
-    suppressContentEditableWarning
-    onBlur={(e) => {
-      const val = (e.currentTarget.textContent || "").trim();
-      if (val !== value) onSave(val);
-    }}
-    onKeyDown={(e) => {
-      if (!multiline && e.key === "Enter") {
-        e.preventDefault();
-        (e.currentTarget as HTMLDivElement).blur();
-      }
-    }}
-    className={`outline-none focus:bg-surface-container-low rounded px-1 -mx-1 transition-colors hover:bg-surface-container-low/40 cursor-text ${className}`}
-  >
-    {value}
-  </div>
-);
+};
+
+// Robust contentEditable: writes the value into the DOM via a ref so that
+// parent re-renders (triggered by other fields saving) never overwrite
+// in-progress user input. lastSyncedValue tracks the last value we
+// reflected into the DOM so we know when the prop actually changed.
+const Editable = memo(function Editable({
+  value,
+  onSave,
+  className = "",
+  multiline = true,
+}: EditableProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const lastSyncedValue = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (ref.current && lastSyncedValue.current !== value) {
+      ref.current.textContent = value;
+      lastSyncedValue.current = value;
+    }
+  }, [value]);
+
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      role="textbox"
+      tabIndex={0}
+      onBlur={(e) => {
+        const val = (e.currentTarget.textContent || "").trim();
+        if (val !== value) {
+          lastSyncedValue.current = val;
+          onSave(val);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (!multiline && e.key === "Enter") {
+          e.preventDefault();
+          (e.currentTarget as HTMLDivElement).blur();
+        }
+      }}
+      className={`outline-none rounded-md px-1.5 -mx-1.5 py-0.5 transition-colors cursor-text hover:bg-[#FFF2EE] focus:bg-[#FFF2EE] focus:ring-2 focus:ring-[#ec5c36]/40 ${className}`}
+    />
+  );
+});
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */

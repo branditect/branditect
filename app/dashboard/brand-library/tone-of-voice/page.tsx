@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
+import { supabase } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -227,6 +228,74 @@ export default function ToneOfVoicePage() {
   };
 
   /* ---------------------------------------------------------------- */
+  /*  Entry: Pull from saved brand strategy                            */
+  /* ---------------------------------------------------------------- */
+
+  const handlePullFromStrategy = async () => {
+    if (!brandId) return;
+    setGenerating(true);
+    setGenProgress("Loading your brand strategy...");
+    try {
+      const { data, error } = await supabase
+        .from("brand_strategies")
+        .select("generated_strategy")
+        .eq("brand_id", brandId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error || !data || data.length === 0) {
+        setGenProgress("No saved brand strategy yet. Generate one in Brand Strategy first.");
+        return;
+      }
+
+      let strategy: Record<string, unknown>;
+      try {
+        strategy = JSON.parse(data[0].generated_strategy);
+      } catch {
+        setGenProgress("Your saved strategy isn't in the new JSON format. Re-generate it from Brand Strategy.");
+        return;
+      }
+
+      type Pair = { do?: string; dont?: string };
+      type StrategyPillar = { title?: string; text?: string };
+
+      const pillars: Pillar[] = ((strategy.messagingPillars as StrategyPillar[]) || []).map((p) => ({
+        icon: "◆",
+        name: p.title || "",
+        desc: p.text || "",
+        bullets: ["", "", ""],
+      }));
+
+      const voiceDoDont = (strategy.voiceDoDont as Pair[]) || [];
+
+      const tone: ToneData = {
+        ...EMPTY_TONE,
+        brand_id: brandId,
+        setup_complete: true,
+        expression_label: (strategy.archetype as string) || "",
+        expression_text: (strategy.voiceDescription as string) || "",
+        pillars,
+        dos: voiceDoDont.map((p) => p.do || "").filter(Boolean),
+        donts: voiceDoDont.map((p) => p.dont || "").filter(Boolean),
+        vocab_yes: (strategy.alwaysUse as string[]) || [],
+        vocab_no: (strategy.neverUse as string[]) || [],
+        touchpoints: [],
+        checklist: DEFAULT_CHECKLIST,
+      };
+
+      setGenProgress("Pulling tone guidelines from your strategy...");
+      await saveTone(tone);
+      setToneData(tone);
+      setShowEntry(false);
+    } catch (e) {
+      console.error("Pull-from-strategy failed:", e);
+      setGenProgress("Failed to pull from brand strategy. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  /* ---------------------------------------------------------------- */
   /*  Open edit modal                                                  */
   /* ---------------------------------------------------------------- */
 
@@ -321,8 +390,9 @@ export default function ToneOfVoicePage() {
 
                 {/* Option B */}
                 <button
-                  onClick={() => alert("Coming soon")}
-                  className="flex items-start gap-4 text-left border border-outline-variant/15 rounded-xl p-4 hover:border-primary hover:bg-primary-fixed/30 transition-colors"
+                  onClick={handlePullFromStrategy}
+                  disabled={generating}
+                  className="flex items-start gap-4 text-left border border-outline-variant/15 rounded-xl p-4 hover:border-primary hover:bg-primary-fixed/30 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <span className="text-primary text-xl mt-0.5">◇</span>
                   <div>
@@ -332,6 +402,9 @@ export default function ToneOfVoicePage() {
                     </p>
                   </div>
                 </button>
+                {entryMode === "menu" && genProgress && (
+                  <p className="text-xs text-primary font-mono mt-1">{genProgress}</p>
+                )}
 
                 {/* Option C */}
                 <button

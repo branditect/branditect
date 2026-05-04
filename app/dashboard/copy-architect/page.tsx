@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import { useBrand } from '@/lib/useBrand'
 
@@ -9,6 +9,11 @@ import { useBrand } from '@/lib/useBrand'
 interface CopyOption { id: string; type: string; text: string; rationale: string }
 interface CopySection { label: string; options: CopyOption[] }
 interface CopyResult { sections: CopySection[]; qualityChecks: string[]; placeholders: string[]; toneMatch: string }
+interface RefImage { id: string; dataUrl: string; mediaType: string; name: string }
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB — Anthropic vision limit
+const MAX_IMAGES = 4
 
 /* ── Simplified nav categories ──────────────────────────────────────────────── */
 
@@ -99,6 +104,8 @@ export default function CopyArchitectPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [primaryPicks, setPrimaryPicks] = useState<Record<number, number>>({})
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set())
+  const [images, setImages] = useState<RefImage[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function switchNav(item: typeof NAV_ITEMS[0]) {
     setActiveNav(item)
@@ -108,6 +115,53 @@ export default function CopyArchitectPage() {
     setResult(null)
     setError('')
     setPrimaryPicks({})
+    setImages([])
+  }
+
+  function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function handleImageFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    setError('')
+    const accepted: RefImage[] = []
+    for (const file of Array.from(files)) {
+      if (images.length + accepted.length >= MAX_IMAGES) {
+        setError(`Up to ${MAX_IMAGES} images at a time.`)
+        break
+      }
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        setError(`${file.name}: unsupported type. Use JPG, PNG, WEBP, or GIF.`)
+        continue
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        setError(`${file.name}: over 5 MB. Please resize.`)
+        continue
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file)
+        accepted.push({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          dataUrl,
+          mediaType: file.type,
+          name: file.name,
+        })
+      } catch {
+        setError(`${file.name}: failed to read.`)
+      }
+    }
+    if (accepted.length) setImages(prev => [...prev, ...accepted])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  function removeImage(id: string) {
+    setImages(prev => prev.filter(img => img.id !== id))
   }
 
   const canGenerate = useMemo(() => topic.trim().length > 0, [topic])
@@ -159,6 +213,11 @@ export default function CopyArchitectPage() {
           subType: subKey,
           fields,
           brand_id: brandId,
+          images: images.map(img => ({
+            mediaType: img.mediaType,
+            // strip the "data:<type>;base64," prefix — API wants raw base64
+            data: img.dataUrl.split(',')[1] || '',
+          })),
         }),
       })
       const data = await res.json()
@@ -172,7 +231,7 @@ export default function CopyArchitectPage() {
     } finally {
       setGenerating(false)
     }
-  }, [activeNav, dropdown, topic, notes, brandId])
+  }, [activeNav, dropdown, topic, notes, brandId, images])
 
   const handleCopy = useCallback(async (text: string, id: string) => {
     try { await navigator.clipboard.writeText(text); setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) } catch {}
@@ -262,7 +321,7 @@ export default function CopyArchitectPage() {
             </div>
 
             {/* Notes textarea */}
-            <div className="mb-8">
+            <div className="mb-6">
               <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
                 Notes
               </label>
@@ -273,6 +332,58 @@ export default function CopyArchitectPage() {
                 rows={2}
                 className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body resize-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)] placeholder:text-outline-variant"
               />
+            </div>
+
+            {/* Reference images */}
+            <div className="mb-8">
+              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
+                Reference images
+              </label>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                multiple
+                className="hidden"
+                onChange={e => handleImageFiles(e.target.files)}
+              />
+
+              <div className="flex flex-wrap items-center gap-3">
+                {images.map(img => (
+                  <div key={img.id} className="relative group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.dataUrl}
+                      alt={img.name}
+                      className="w-20 h-20 object-cover rounded-lg bg-surface-container-low"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.id)}
+                      aria-label={`Remove ${img.name}`}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-surface-container-lowest text-on-surface text-label-sm font-semibold shadow-ambient-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {images.length < MAX_IMAGES && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-20 h-20 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors flex flex-col items-center justify-center gap-1"
+                  >
+                    <span className="text-xl leading-none">+</span>
+                    <span className="text-label-sm">Add image</span>
+                  </button>
+                )}
+              </div>
+
+              <p className="text-label-sm text-on-surface-variant mt-2">
+                The AI will read these images for context — product shots, mood boards, screenshots. JPG/PNG/WEBP/GIF, up to 5 MB each, max {MAX_IMAGES}.
+              </p>
             </div>
 
             {/* Error */}

@@ -91,11 +91,12 @@ ${fullBrandContext || `Brand: ${brandName}\n(No additional brand data has been a
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { category, subType, fields, brand_id } = body as {
+    const { category, subType, fields, brand_id, images } = body as {
       category: string
       subType: string
       fields: Record<string, string>
       brand_id?: string
+      images?: Array<{ mediaType: string; data: string }>
     }
 
     if (!category || !subType) {
@@ -132,18 +133,39 @@ export async function POST(req: NextRequest) {
       .map(f => `${f.label}: ${fields[f.id].trim()}`)
       .join('\n')
 
+    const validImages = (images || []).filter(
+      img => img && typeof img.data === 'string' && img.data.length > 0 &&
+        ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(img.mediaType)
+    )
+
+    const imageNote = validImages.length
+      ? `\n\nThe user has attached ${validImages.length} reference image${validImages.length > 1 ? 's' : ''}. Read them carefully — they may show the product, a mood/visual reference, a screenshot, or competitor work. Use what you see (colors, objects, text in image, layout, mood) as additional context for the copy.`
+      : ''
+
     const userPrompt = `Create: ${subConfig.title}
 
-${fieldLines}
+${fieldLines}${imageNote}
 
 Write the copy now. Return only the JSON.`
+
+    const userContent: Anthropic.ContentBlockParam[] = [
+      ...validImages.map((img): Anthropic.ImageBlockParam => ({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: img.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
+          data: img.data,
+        },
+      })),
+      { type: 'text', text: userPrompt },
+    ]
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
       system: buildSystemPrompt(subConfig.deliverable, brandName, fullBrandContext),
       messages: [
-        { role: 'user', content: userPrompt },
+        { role: 'user', content: userContent },
       ],
     })
 

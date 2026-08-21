@@ -1,9 +1,16 @@
 /**
- * The Branditect icon set — 19 filled icons, `fill="currentColor"`.
+ * The Branditect icon set — 19 icons, all drawn in `currentColor`.
  *
- * Stand-ins for the MingCute filled set used in Figma. They match the real
- * set's size, weight and colour behaviour, so swapping in the licensed
- * exports is a paths-only change and nothing else has to move.
+ * Nine are the real Branditect icons, exported from the brand icon set and
+ * converted so their baked-in #F0562A became `currentColor` — without that
+ * they could not go white on the orange hero.
+ *
+ * The remaining ten are still filled stand-ins awaiting real exports:
+ * search, bell, doc, img, bag, pres, link, check, arrow, send.
+ *
+ * The two styles differ: the real icons are stroked (`outline: true`), the
+ * stand-ins are filled. Mixing them is visible — the five Brand Knowledge
+ * tiles on the Home hero are stand-ins sitting beside a stroked sidebar.
  *
  * One mechanism, not two: every icon in the app comes from here.
  */
@@ -13,45 +20,81 @@ export type IconName =
   | "search" | "bell" | "doc" | "img" | "bag" | "pres" | "link"
   | "target" | "upload" | "check" | "plus" | "arrow" | "send";
 
-const PATHS: Record<IconName, { d: React.ReactNode; viewBox?: string }> = {
+interface IconSpec {
+  d: React.ReactNode;
+  viewBox?: string;
+  /**
+   * True for the real Branditect icons, which are drawn as strokes. The
+   * legacy stand-ins are filled shapes. The root `fill` differs between the
+   * two, so each icon declares which it is.
+   */
+  outline?: boolean;
+}
+
+const PATHS: Record<IconName, IconSpec> = {
   home: {
-    d: <path d="M11.02 2.6a1.5 1.5 0 0 1 1.96 0l8 6.93c.33.29.52.7.52 1.13V20a2 2 0 0 1-2 2h-4.25a.75.75 0 0 1-.75-.75V16a1.5 1.5 0 0 0-1.5-1.5h-2A1.5 1.5 0 0 0 9.5 16v5.25a.75.75 0 0 1-.75.75H4.5a2 2 0 0 1-2-2v-9.34c0-.43.19-.84.52-1.13z" />,
+    d: (
+      <>
+        <path d="M5.625 14.3546C5.625 12.8271 5.625 12.0633 5.93377 11.392C6.24254 10.7207 6.82241 10.2236 7.98216 9.22957L9.10716 8.26528C11.2034 6.46851 12.2515 5.57013 13.5 5.57013C14.7485 5.57013 15.7966 6.46851 17.8928 8.26528L19.0178 9.22957C20.1776 10.2236 20.7575 10.7207 21.0662 11.392C21.375 12.0633 21.375 12.8271 21.375 14.3546V19.125C21.375 21.2463 21.375 22.307 20.716 22.966C20.057 23.625 18.9963 23.625 16.875 23.625H10.125C8.00368 23.625 6.94302 23.625 6.28401 22.966C5.625 22.307 5.625 21.2463 5.625 19.125V14.3546Z" stroke="currentColor" strokeWidth="2" />
+        <path d="M16.3125 23.625V17.875C16.3125 17.3227 15.8648 16.875 15.3125 16.875H11.6875C11.1352 16.875 10.6875 17.3227 10.6875 17.875V23.625" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    viewBox: "0 0 27 27",
+    outline: true,
   },
   brand: {
     d: (
       <>
-        <path d="M11.32 2.3a1.5 1.5 0 0 1 1.36 0l8.2 4.25c.83.43.83 1.62 0 2.05l-8.2 4.25a1.5 1.5 0 0 1-1.36 0L3.12 8.6c-.83-.43-.83-1.62 0-2.05z" />
-        <path d="M2.9 12.03a1.2 1.2 0 0 1 1.6-.53l7.5 3.83 7.5-3.83a1.2 1.2 0 1 1 1.1 2.13l-8.05 4.11a1.2 1.2 0 0 1-1.1 0L3.4 13.63a1.2 1.2 0 0 1-.5-1.6z" opacity=".5" />
+        <path d="M21 7V12L14 16L3 12V7L10 3L21 7ZM3 7L14 11L21 7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M3 12V17L14 21L21 17V12" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       </>
     ),
+    viewBox: "0 0 24 24",
+    outline: true,
   },
   know: {
     d: (
       <>
-        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H11a.5.5 0 0 1 .5.5v19a.5.5 0 0 1-.72.45l-1.9-.95a2 2 0 0 0-1.79 0l-1.9.95A.5.5 0 0 1 4 21.5z" />
-        <path d="M12.5 2.5A.5.5 0 0 1 13 2h4.5A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5H13a.5.5 0 0 1-.5-.5z" opacity=".5" />
+        <path d="M4 9.65685C4 8.83935 4 8.4306 4.15224 8.06306C4.30448 7.69552 4.59351 7.40649 5.17157 6.82843L5.82843 6.17157C6.40649 5.59351 6.69552 5.30448 7.06306 5.15224C7.4306 5 7.83935 5 8.65685 5H15.3431C16.1606 5 16.5694 5 16.9369 5.15224C17.3045 5.30448 17.5935 5.59351 18.1716 6.17157L18.8284 6.82843C19.4065 7.40649 19.6955 7.69552 19.8478 8.06306C20 8.4306 20 8.83935 20 9.65685V16C20 17.8856 20 18.8284 19.4142 19.4142C18.8284 20 17.8856 20 16 20H8C6.11438 20 5.17157 20 4.58579 19.4142C4 18.8284 4 17.8856 4 16V9.65685Z" stroke="currentColor" strokeWidth="2" />
+        <path d="M4 10H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path d="M14.8332 9L9.1665 9C8.9308 9 8.81295 9 8.73973 9.07322C8.6665 9.14645 8.6665 9.2643 8.6665 9.5L8.6665 13.6667C8.6665 14.4315 8.6665 14.8139 8.76541 15.0194C8.98621 15.4782 9.51649 15.6979 9.99705 15.5296C10.2123 15.4542 10.4827 15.1838 11.0235 14.643C11.274 14.3925 11.3992 14.2673 11.5324 14.1969C11.8248 14.0422 12.1748 14.0422 12.4673 14.1969C12.6004 14.2673 12.7257 14.3925 12.9761 14.643C13.517 15.1838 13.7874 15.4542 14.0026 15.5296C14.4832 15.6979 15.0135 15.4782 15.2343 15.0194C15.3332 14.8139 15.3332 14.4315 15.3332 13.6667V9.5C15.3332 9.2643 15.3332 9.14645 15.2599 9.07322C15.1867 9 15.0689 9 14.8332 9Z" fill="currentColor" />
       </>
     ),
+    viewBox: "0 0 24 24",
+    outline: true,
   },
   studio: {
     d: (
       <>
-        <path d="M16.4 2.9a2.9 2.9 0 0 1 4.1 4.1l-1.3 1.3-4.1-4.1z" />
-        <path d="M13.7 5.6l4.1 4.1-8.4 8.4a2 2 0 0 1-.9.5l-4.6 1.3a.8.8 0 0 1-1-1l1.3-4.6a2 2 0 0 1 .5-.9z" />
+        <path d="M14.5622 5.17383C14.9867 5.21921 15.3254 5.41391 15.5944 5.61914C15.8786 5.83606 16.1835 6.14377 16.4967 6.45703L16.5426 6.50391C16.856 6.81725 17.1636 7.12193 17.3805 7.40625C17.615 7.71364 17.8356 8.11136 17.8356 8.625C17.8356 9.13864 17.615 9.53636 17.3805 9.84375C17.1636 10.1281 16.856 10.4328 16.5426 10.7461L9.72427 17.5654C9.56716 17.7225 9.36299 17.9386 9.09927 18.0879C8.83559 18.2372 8.54527 18.3006 8.32974 18.3545L5.88834 18.9648L5.88638 18.9658L5.84244 18.9766C5.69457 19.0135 5.47316 19.0718 5.27896 19.0908C5.07233 19.111 4.62033 19.1175 4.25162 18.749C3.88311 18.3805 3.88964 17.9286 3.90982 17.7217C3.92883 17.5273 3.9871 17.3051 4.02408 17.1572L4.64517 14.6699C4.69906 14.4544 4.76344 14.1641 4.91275 13.9004L5.03482 13.7139C5.16571 13.5381 5.31645 13.3941 5.43423 13.2764L12.2536 6.45703C12.5669 6.14369 12.8716 5.83607 13.1559 5.61914C13.4632 5.38466 13.8612 5.16416 14.3747 5.16406L14.5622 5.17383Z" stroke="currentColor" strokeWidth="2" />
+        <path d="M11.9792 7.18748L14.8542 5.27081L17.7292 8.14581L15.8125 11.0208L11.9792 7.18748Z" fill="currentColor" />
       </>
     ),
+    viewBox: "0 0 23 23",
+    outline: true,
   },
   numbers: {
     d: (
       <>
-        <rect x="3" y="12" width="4.4" height="9" rx="1.6" />
-        <rect x="9.8" y="4" width="4.4" height="17" rx="1.6" />
-        <rect x="16.6" y="9" width="4.4" height="12" rx="1.6" opacity=".5" />
+        <path d="M7.33334 9.16669L7.33334 14.6667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M11 11V14.6667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14.6667 7.33331V14.6666" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.75" y="3.66669" width="16.5" height="14.6667" rx="2" stroke="currentColor" strokeWidth="2" />
       </>
     ),
+    viewBox: "0 0 22 22",
+    outline: true,
   },
   chat: {
-    d: <path d="M12 3c5.2 0 9.4 3.5 9.4 7.9s-4.2 7.9-9.4 7.9a11 11 0 0 1-2.3-.24l-4.3 2.3a.7.7 0 0 1-1.03-.72l.66-3.5C3.5 15.2 2.6 13.2 2.6 10.9 2.6 6.5 6.8 3 12 3" />,
+    d: (
+      <>
+        <path d="M4 12C4 7.58172 7.58172 4 12 4V4C16.4183 4 20 7.58172 20 12V17.0909C20 17.9375 20 18.3608 19.8739 18.6989C19.6712 19.2425 19.2425 19.6712 18.6989 19.8739C18.3608 20 17.9375 20 17.0909 20H12C7.58172 20 4 16.4183 4 12V12Z" stroke="currentColor" strokeWidth="2" />
+        <path d="M9 11L15 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 15H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+    viewBox: "0 0 24 24",
+    outline: true,
   },
   search: {
     d: <path d="M11 3a8 8 0 1 0 4.9 14.32l3.39 3.39a1.15 1.15 0 0 0 1.63-1.63l-3.39-3.39A8 8 0 0 0 11 3m0 2.4a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2" />,
@@ -92,24 +135,42 @@ const PATHS: Record<IconName, { d: React.ReactNode; viewBox?: string }> = {
   target: {
     d: (
       <>
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 3.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6" />
-        <circle cx="12" cy="12" r="3.4" />
+        <circle cx="8.5" cy="8.5" r="4.375" stroke="currentColor" strokeWidth="1.25" />
+        <circle cx="8.5" cy="8.5" r="1.25" fill="currentColor" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M8.5 4.125V2.875" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M12.875 8.5L14.125 8.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M8.5 14.125L8.5 12.875" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M2.875 8.5H4.125" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
       </>
     ),
+    viewBox: "0 0 17 17",
+    outline: true,
   },
   upload: {
     d: (
       <>
-        <path d="M11.15 2.87a1.2 1.2 0 0 1 1.7 0l4.4 4.4a1.2 1.2 0 1 1-1.7 1.7l-2.35-2.35V15a1.2 1.2 0 0 1-2.4 0V6.62L8.45 8.97a1.2 1.2 0 0 1-1.7-1.7z" />
-        <path d="M4 15.4a1.2 1.2 0 0 1 1.2 1.2v1.6a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1v-1.6a1.2 1.2 0 1 1 2.4 0v1.6a3.4 3.4 0 0 1-3.4 3.4H6.2a3.4 3.4 0 0 1-3.4-3.4v-1.6A1.2 1.2 0 0 1 4 15.4" opacity=".5" />
+        <path d="M6.375 9.20831L10.625 9.20831" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M6.375 6.375L9.20833 6.375" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M6.375 12.0417L9.20833 12.0417" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M13.4583 9.20833V9.91667C13.4583 11.7464 13.4583 12.6613 13.0726 13.3466C12.8034 13.8248 12.4082 14.2201 11.9299 14.4893C11.2447 14.875 10.3298 14.875 8.49999 14.875C6.67021 14.875 5.75532 14.875 5.07009 14.4893C4.59183 14.2201 4.19658 13.8248 3.92737 13.3466C3.54166 12.6613 3.54166 11.7464 3.54166 9.91667V6.375C3.54166 5.21147 3.54166 4.6297 3.70087 4.16068C4.00066 3.27751 4.69417 2.58401 5.57734 2.28421C6.04635 2.125 6.62812 2.125 7.79166 2.125" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M12.75 2.125L12.75 6.375" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+        <path d="M14.875 4.25L10.625 4.25" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
       </>
     ),
+    viewBox: "0 0 17 17",
+    outline: true,
   },
   check: {
     d: <path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m4.9 6.6a1.2 1.2 0 0 0-1.7.06l-4.6 5-1.85-1.7a1.2 1.2 0 1 0-1.62 1.77l2.74 2.5a1.2 1.2 0 0 0 1.69-.07l5.4-5.87a1.2 1.2 0 0 0-.06-1.7" />,
   },
   plus: {
-    d: <path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 4.6a1.2 1.2 0 0 0-1.2 1.2v3h-3a1.2 1.2 0 1 0 0 2.4h3v3a1.2 1.2 0 1 0 2.4 0v-3h3a1.2 1.2 0 1 0 0-2.4h-3v-3A1.2 1.2 0 0 0 12 6.6" />,
+    d: (
+      <>
+        <path d="M8.5 2.125C12.0208 2.125 14.875 4.97918 14.875 8.5C14.875 12.0208 12.0208 14.875 8.5 14.875C4.97918 14.875 2.125 12.0208 2.125 8.5C2.125 4.97918 4.97918 2.125 8.5 2.125ZM8.5 3.95898C7.94772 3.95898 7.5 4.4067 7.5 4.95898V7.5H4.95801C4.40587 7.50018 3.95801 7.94782 3.95801 8.5C3.95801 9.05218 4.40587 9.49982 4.95801 9.5H7.5V12.042C7.50018 12.5941 7.94782 13.042 8.5 13.042C9.05218 13.042 9.49982 12.5941 9.5 12.042V9.5H12.041C12.5933 9.5 13.041 9.05228 13.041 8.5C13.041 7.94772 12.5933 7.5 12.041 7.5H9.5V4.95898C9.5 4.4067 9.05228 3.95898 8.5 3.95898Z" fill="currentColor" />
+      </>
+    ),
+    viewBox: "0 0 17 17",
+    outline: true,
   },
   arrow: {
     viewBox: "0 0 25 19",
@@ -130,14 +191,14 @@ interface IconProps {
 }
 
 export default function Icon({ name, size = 20, className, label }: IconProps) {
-  const { d, viewBox = "0 0 24 24" } = PATHS[name];
+  const { d, viewBox = "0 0 24 24", outline } = PATHS[name];
   return (
     <svg
       viewBox={viewBox}
       width={size}
       height={size}
       className={className}
-      fill="currentColor"
+      fill={outline ? "none" : "currentColor"}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}

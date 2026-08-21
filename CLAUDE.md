@@ -51,7 +51,9 @@ Icons come from `components/icon.tsx` — one mechanism, not two. Reference mate
 
 The type scale is Airbnb-density: 14px body, 12px meta, 22px section headings, 26px page title. Product UI does not use 40px text.
 
-Icons are filled, 24×24, `fill="currentColor"`, and orange (`--accent`) everywhere except on the orange hero, where they are white.
+Icons live in `components/icon.tsx` and are drawn in `currentColor` — orange (`accent`) everywhere except on the orange hero, where they are white.
+
+The real Branditect icons are **stroked outlines**, not filled; each declares `outline: true`. (An earlier version of this line said "filled" — that described the MingCute stand-ins, not the brand set.) Nine are real; ten are still filled stand-ins — `search`, `bell`, `doc`, `img`, `bag`, `pres`, `link`, `check`, `arrow`, `send` — and read visibly heavier beside the real ones. Replacing them is the open task; when exporting, keep `stroke="currentColor"` rather than a baked-in hex or the icon cannot go white on the hero.
 
 ## Brand Readiness
 

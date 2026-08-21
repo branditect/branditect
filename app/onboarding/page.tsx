@@ -532,7 +532,7 @@ export default function OnboardingPage() {
         </div>
 
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/home")}
           className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-10 py-3.5 text-sm transition-colors"
         >
           Open my workspace →

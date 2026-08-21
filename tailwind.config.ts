@@ -9,6 +9,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ── Branditect v6 tokens (docs/handoff/design) ───────────────────
+        // Single source of truth for new surfaces. Figma WyphBCrLRfCaUkqZb2Fskf,
+        // frame 58:13755. Do not introduce hex values outside this block.
+        ink: { DEFAULT: "#15151b", 2: "#3a3a45", 3: "#3f3f4a" },
+        muted: { DEFAULT: "#6f6f8a", 2: "#8b8b97" },
+        faint: { DEFAULT: "#aeaeb8", 2: "#9a9aa4" },
+        page: "#f4f3f2",
+        card: "#ffffff",
+        tile: { DEFAULT: "#f4f3f2", 2: "#f1f0ee" },
+        rule: { DEFAULT: "#edecea", 2: "#e6e6e6", 3: "#ddddf1" },
+        accent: { DEFAULT: "#f0562a", dark: "#e8481f", line: "#f6b7a0" },
+        // The warm tint ladder — icon tiles step through 1..5 so a vertical
+        // list reads as a set rather than a stripe of identical squares.
+        tint: { 1: "#fef0ea", 2: "#fdede6", 3: "#fdeee7", 4: "#fbe7e2", 5: "#fcedeb" },
+        good: "#2fbf71",
+        navy: "#1d2748",
+        lavender: "#e8dff6",
+        plannote: "#a98a80",
+
+        // ── Legacy palette (pre-v6 pages) ────────────────────────────────
+        // Retained so un-migrated inner pages keep rendering. Remove as each
+        // page moves onto the tokens above.
         // Primary
         primary: { DEFAULT: "#ec5c36", dim: "#891e00", container: "#ffdbd1", fixed: "#ffdbd2", "fixed-dim": "#ffb4a1" },
         "on-primary": { DEFAULT: "#ffffff", container: "#fffbff", fixed: "#3c0800", "fixed-variant": "#891e00" },
@@ -32,11 +54,23 @@ const config: Config = {
         "inverse-on-surface": "#f0f0f3",
         outline: { DEFAULT: "#8d7169", variant: "#e1bfb6" },
         // Semantic aliases
-        ink: "#1a1c1e", dark: "#1a1c1e", mid: "#44474e", muted: "#8d7169", subtle: "#e1bfb6",
+        // `ink` and `muted` intentionally omitted here — they are defined in
+        // the v6 block above and would otherwise be overridden by this one.
+        dark: "#1a1c1e", mid: "#44474e", subtle: "#e1bfb6",
         pale: "#f3f6fc", alabaster: "#eceef4", payne: "#1a1c1e",
         light: "rgba(225, 191, 182, 0.15)",
         brand: { orange: "#ec5c36", "orange-hover": "#d14a22", "orange-pale": "#ffdbd1", "orange-mid": "#ffb4a1" },
         heading: "#1a1c1e",
+      },
+      backgroundImage: {
+        "grad-hero": "linear-gradient(92.52deg, #f16d2c 11.42%, #fe4401 29.59%)",
+        "grad-mark": "linear-gradient(135deg, #f16d2c, #fe4401)",
+        "grad-write": "linear-gradient(116.565deg, rgb(103,139,191) 17.664%, rgb(67,99,148) 79.542%)",
+        "grad-images": "linear-gradient(128.944deg, rgb(237,230,252) 17.382%, rgb(216,201,249) 83.306%)",
+        "grad-numbers": "linear-gradient(127.831deg, rgb(232,239,253) 21.838%, rgb(208,219,247) 94.881%)",
+        "grad-assets": "linear-gradient(123.041deg, rgb(230,244,241) 28.392%, rgb(179,207,203) 83.262%)",
+        "grad-more": "linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%)",
+        "grad-chat": "linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%)",
       },
       borderRadius: {
         DEFAULT: "0.5rem",
@@ -44,16 +78,48 @@ const config: Config = {
         xl: "1rem",
         "2xl": "1.5rem",
         full: "9999px",
+        // v6
+        nav: "10px",
+        tile: "10px",
+        card: "12px",
+        panel: "16px",
+        pill: "50px",
+      },
+      // Applied via `filter`, not box-shadow, so shadows follow the rounded
+      // corners of gradient-filled cards.
+      dropShadow: {
+        panel: ["0 6px 10px rgba(20,20,26,.07)", "0 1px 1px rgba(20,20,26,.04)"],
+        hero: "0 10px 18px rgba(180,50,10,.18)",
+        btn: "0 1px 1px rgba(20,20,26,.05)",
+      },
+      maxWidth: { shell: "1480px" },
+      screens: {
+        // below `chat` the AI Chat rail hides; below `stack` it's one column
+        chat: { max: "1180px" },
+        stack: { max: "900px" },
       },
       fontFamily: {
         headline: ["var(--font-jakarta)", "Plus Jakarta Sans", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
         body: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
         label: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
         display: ["var(--font-jakarta)", "Plus Jakarta Sans", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
-        sans: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        // v6 base font. Body weight is 500, not 400 — 400 is meta only.
+        sans: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
         mono: ["var(--font-dm-mono)", "monospace"],
       },
       fontSize: {
+        // ── v6 scale: Airbnb density. 14px body, 12px meta, 22px section
+        // headings, 26px page title. Product UI does not use 40px text.
+        micro: ["10px", { lineHeight: "14px" }],
+        "2xs": ["11px", { lineHeight: "15px" }],
+        xs: ["12px", { lineHeight: "17px" }],
+        sm: ["13px", { lineHeight: "18px" }],
+        base: ["14px", { lineHeight: "20px" }],
+        h3: ["16px", { lineHeight: "19px", letterSpacing: "-0.2px" }],
+        h2: ["22px", { lineHeight: "26px", letterSpacing: "-0.5px" }],
+        display: ["26px", { lineHeight: "30px", letterSpacing: "-0.7px" }],
+        score: ["46px", { lineHeight: "46px", letterSpacing: "-2px" }],
+
         "display-lg": ["3.5rem", { lineHeight: "1.1", fontWeight: "800" }],
         "display-md": ["2.5rem", { lineHeight: "1.15", fontWeight: "800" }],
         "headline-lg": ["2rem", { lineHeight: "1.2", fontWeight: "700" }],
@@ -76,8 +142,8 @@ const config: Config = {
         "primary-glow": "0 12px 48px rgba(236, 92, 54, 0.35)",
         "ghost": "inset 0 0 0 1px rgba(225, 191, 182, 0.15)",
       },
-      width: { sidebar: "220px" },
-      height: { topbar: "52px" },
+      width: { sidebar: "228px" },
+      spacing: { sidebar: "228px", chatrail: "296px" },
     },
   },
   plugins: [],

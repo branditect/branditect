@@ -1,132 +1,157 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useBrand } from "@/lib/useBrand";
+import { useUser } from "@/lib/useUser";
+import Icon from "@/components/icon";
+import { NAV, sectionFor, type NavItem } from "@/lib/nav";
 
-interface NavItem {
-  icon: string;
-  label: string;
-  href: string;
-}
+function NavRow({
+  item,
+  pathname,
+  expanded,
+  onToggle,
+}: {
+  item: NavItem;
+  pathname: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const isActive = item.children
+    ? pathname.startsWith(item.href)
+    : pathname === item.href;
 
-const dashboardItems: NavItem[] = [
-  { icon: "⌂", label: "Dashboard", href: "/dashboard" },
-  { icon: "◎", label: "Mission Board", href: "/dashboard/mission-board" },
-  { icon: "◩", label: "Notes", href: "/dashboard/draft-pad" },
-];
+  // The icon stays orange in both states — only the label colour changes.
+  const rowClass = `flex h-9 w-full items-center gap-[9px] rounded-nav px-[9px] text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+    isActive ? "bg-tint-1 text-accent" : "text-ink-2 hover:bg-tile"
+  }`;
 
-const createItems: NavItem[] = [
-  { icon: "◻", label: "Image Architect", href: "/dashboard/brand-library/image-architect" },
-  { icon: "¶", label: "Copy Architect", href: "/dashboard/copy-architect" },
-  { icon: "⟨⟩", label: "Code Architect", href: "/dashboard/brand-code-architect" },
-];
+  if (!item.children) {
+    return (
+      <Link
+        href={item.href}
+        className={rowClass}
+        aria-current={isActive ? "page" : undefined}
+      >
+        <span className="shrink-0 text-accent">
+          <Icon name={item.icon} size={20} />
+        </span>
+        {item.label}
+      </Link>
+    );
+  }
 
-const libraryItems: NavItem[] = [
-  { icon: "◇", label: "Brand Strategy", href: "/dashboard/brand-strategy" },
-  { icon: "◇", label: "Social Strategy", href: "/dashboard/brand-strategy/social" },
-  { icon: "◷", label: "Tone of Voice", href: "/dashboard/brand-library/tone-of-voice" },
-  { icon: "◈", label: "Visual Identity", href: "/dashboard/brand-library" },
-  { icon: "▣", label: "Products & Services", href: "/dashboard/catalog" },
-  { icon: "◎", label: "Asset Library", href: "/dashboard/assets" },
-  { icon: "⊞", label: "Knowledge Vault", href: "/dashboard/brand-library/knowledge-vault" },
-  { icon: "⊟", label: "Templates", href: "/dashboard/brand-library/templates" },
-];
-
-const toolItems: NavItem[] = [
-  { icon: "▤", label: "Calculators", href: "/dashboard/tools" },
-  { icon: "◉", label: "Productivity", href: "/dashboard/tools" },
-  { icon: "↗", label: "Growth", href: "/dashboard/growth" },
-  { icon: "$", label: "Finance Rules", href: "/dashboard/finance" },
-];
-
-function NavSection({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
   return (
-    <div className="px-3 pt-5 pb-1">
-      {label && (
-        <div className="font-label text-[10px] font-semibold text-outline tracking-[0.12em] uppercase mb-2 px-3">
-          {label}
+    <>
+      <button type="button" onClick={onToggle} className={rowClass} aria-expanded={expanded}>
+        <span className="shrink-0 text-accent">
+          <Icon name={item.icon} size={20} />
+        </span>
+        {item.label}
+        <span
+          className={`ml-auto text-[8px] text-faint transition-transform duration-200 ${
+            expanded ? "rotate-90" : ""
+          }`}
+          aria-hidden="true"
+        >
+          ▶
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="flex flex-col pb-[5px] pl-[38px] pt-px">
+          {item.children.map((child) => {
+            const childActive = pathname === child.href;
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                aria-current={childActive ? "page" : undefined}
+                className={`flex items-center justify-between gap-2 rounded-lg px-[9px] py-[5px] text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                  childActive ? "bg-tile text-ink" : "text-muted hover:bg-tile hover:text-ink"
+                }`}
+              >
+                {child.label}
+              </Link>
+            );
+          })}
         </div>
       )}
-      {items.map((item) => {
-        const isActive = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-2.5 py-[7px] px-3 rounded-lg mb-0.5 transition-all duration-200 ${
-              isActive
-                ? "bg-surface-lowest text-primary font-medium ambient-shadow-sm"
-                : "text-on-surface-variant hover:bg-surface-lowest/60"
-            }`}
-          >
-            <span className={`text-[11px] w-4 text-center shrink-0 ${isActive ? "text-primary" : "text-outline-variant"}`}>
-              {item.icon}
-            </span>
-            <span className="text-[13px] font-body">
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-    </div>
+    </>
   );
 }
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { brand, brandName } = useBrand();
+  const { user } = useUser();
 
-  const initials = brandName ? brandName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) : "B";
+  // The active section is expanded on load; expansion is UI-only state.
+  const [open, setOpen] = useState<string | null>(() => sectionFor(pathname));
+
+  const initials =
+    user?.initials ??
+    (brandName ? brandName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "B");
   const logoUrl = brand?.logo_url;
 
   return (
-    <aside className="w-sidebar bg-surface-low flex flex-col shrink-0 overflow-y-auto">
-      {/* Branditect logo */}
-      <div className="p-5 pb-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/branditect-logo.svg" alt="Branditect" className="h-5" />
+    <nav
+      aria-label="Primary"
+      className="m-3 mr-0 flex w-sidebar shrink-0 flex-col self-start rounded-panel border border-rule bg-card min-h-[860px] px-3 pb-4 pt-[18px] drop-shadow-panel stack:min-h-0 stack:m-0 stack:w-full stack:rounded-none"
+    >
+      <Link href="/home" className="flex items-center gap-2 px-1.5 pb-5">
+        <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-lg bg-grad-mark text-[13px] font-extrabold text-white">
+          B
+        </span>
+        <span className="text-[17px] font-extrabold tracking-[-0.5px] text-accent">Branditect</span>
+      </Link>
+
+      <div className="flex flex-col gap-px">
+        {NAV.map((item) => (
+          <NavRow
+            key={item.href}
+            item={item}
+            pathname={pathname}
+            expanded={open === item.label}
+            onToggle={() => setOpen(open === item.label ? null : item.label)}
+          />
+        ))}
       </div>
 
-      <NavSection label="" items={dashboardItems} pathname={pathname} />
-      <div className="h-px bg-surface-high mx-5 my-1" />
-      <NavSection label="Create" items={createItems} pathname={pathname} />
-      <div className="h-px bg-surface-high mx-5 my-1" />
-      <NavSection label="Brand Library" items={libraryItems} pathname={pathname} />
-      <div className="h-px bg-surface-high mx-5 my-1" />
-      <NavSection label="Tools" items={toolItems} pathname={pathname} />
+      <div className="mt-auto pt-[18px]">
+        <div className="rounded-card bg-tint-1 p-[13px]">
+          <div className="text-xs font-semibold text-ink">Your plan</div>
+          <div className="text-[19px] font-bold leading-[1.35] tracking-[-0.5px] text-accent">Pro</div>
+          <Link
+            href="/settings/plan"
+            className="mt-[9px] block rounded-[9px] bg-white p-[7px] text-center text-xs font-semibold text-accent drop-shadow-btn"
+          >
+            View plan
+          </Link>
+        </div>
 
-      {/* Client brand + User */}
-      <div className="mt-auto p-4">
-        {/* Client brand logo + name */}
-        <div className="flex items-center gap-2.5 p-2.5 mb-2">
+        <div className="mt-3 flex items-center gap-2.5 px-[3px]">
           {logoUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={logoUrl} alt={brandName} className="w-7 h-7 rounded-lg object-contain shrink-0" />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
           ) : (
-            <div className="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-bold font-headline text-on-surface-variant">{initials}</span>
-            </div>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-4 text-2xs font-bold text-accent-dark">
+              {initials}
+            </span>
           )}
-          <div className="font-headline text-[12px] font-bold text-on-surface">{brandName || "Workspace"}</div>
-        </div>
-
-        {/* User */}
-        <div className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-surface-lowest/60 transition-all cursor-pointer">
-          <div className="w-7 h-7 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center shrink-0">
-            {logoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span className="font-bold text-[10px] text-on-surface-variant">S</span>
-            )}
-          </div>
-          <div>
-            <div className="text-[12px] font-semibold text-on-surface font-body">Saara Muuari</div>
-            <div className="text-[10px] text-outline">Admin</div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-bold tracking-[-0.1px]">
+              {user?.fullName ?? user?.email ?? brandName}
+            </div>
+            {/* Only show the brand underneath when it isn't already the line above. */}
+            <div className="truncate text-2xs font-normal text-faint">
+              {user ? brandName : "Workspace"}
+            </div>
           </div>
         </div>
       </div>
-    </aside>
+    </nav>
   );
 }

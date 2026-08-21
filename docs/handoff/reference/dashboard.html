@@ -1,0 +1,497 @@
+<title>Branditect Home</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    /* ---- type scale, matched to Airbnb density ---- */
+    --fs-display:26px;   /* was 40 */
+    --fs-h2:22px;        /* Airbnb "Inspiration for future getaways" */
+    --fs-h3:16px;
+    --fs-body:14px;      /* Airbnb body */
+    --fs-sm:13px;
+    --fs-xs:12px;        /* Airbnb meta */
+    --fs-2xs:11px;
+    --fs-micro:10px;
+    --fs-score:46px;     /* was 68.25 */
+
+    --ink:#15151b; --ink-2:#3a3a45; --ink-3:#3f3f4a;
+    --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8; --faint-2:#9a9aa4;
+    --page:#f4f3f2; --card:#fff; --rule:#edecea; --rule-2:#e6e6e6; --rule-3:#ddddf1;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-2:#fdede6; --tint-3:#fdeee7; --tint-4:#fbe7e2; --tint-5:#fcedeb;
+    --neutral-tile:#f4f3f2; --neutral-tile-2:#f1f0ee;
+    --green:#2fbf71; --navy:#1d2748; --lavender:#e8dff6; --plan-note:#a98a80;
+
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 29.59%);
+    --grad-write:linear-gradient(116.565deg,rgb(103,139,191) 17.664%,rgb(67,99,148) 79.542%);
+    --grad-images:linear-gradient(128.944deg,rgb(237,230,252) 17.382%,rgb(216,201,249) 83.306%);
+    --grad-numbers:linear-gradient(127.831deg,rgb(232,239,253) 21.838%,rgb(208,219,247) 94.881%);
+    --grad-assets:linear-gradient(123.041deg,rgb(230,244,241) 28.392%,rgb(179,207,203) 83.262%);
+    --grad-more:linear-gradient(120deg,rgb(253,243,240) 18%,rgb(251,224,217) 92%);
+    --grad-chat:linear-gradient(180deg,#fdf6f7 0%,#f5f1fc 100%);
+    --grad-mark:linear-gradient(135deg,#f16d2c,#fe4401);
+
+    /* ---- radii, Airbnb-ish ---- */
+    --r-panel:16px; --r-card:12px; --r-tile:10px; --r-nav:10px;
+    --shadow-panel:drop-shadow(0 6px 10px rgba(20,20,26,.07)) drop-shadow(0 1px 1px rgba(20,20,26,.04));
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.4;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,p{margin:0} button{font:inherit} svg{display:block}
+
+  .shell{max-width:1480px;margin:0 auto;padding:18px 16px 48px}
+  .caption{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:0 2px 14px}
+  .caption b{font-size:var(--fs-body);font-weight:800;letter-spacing:-.2px}
+  .caption span{font-size:var(--fs-xs);color:var(--muted-2)}
+  .caption .tag{font-size:var(--fs-micro);font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--accent);background:var(--tint-1);padding:3px 9px;border-radius:50px}
+
+  .app{display:grid;grid-template-columns:228px minmax(0,1fr) 296px;gap:12px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);filter:var(--shadow-panel)}
+
+  /* ============ SIDEBAR ============ */
+  .side{padding:18px 12px 16px;display:flex;flex-direction:column;min-height:860px}
+  .logo{display:flex;align-items:center;gap:8px;padding:0 6px 20px}
+  .logo .mark{width:26px;height:26px;border-radius:8px;background:var(--grad-mark);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0}
+  .logo .word{font-size:17px;font-weight:800;letter-spacing:-.5px;color:var(--accent)}
+
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .nav > button{
+    all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;
+    height:36px;padding:0 9px;border-radius:var(--r-nav);
+    font-size:var(--fs-body);font-weight:600;color:var(--ink-2);
+  }
+  .nav > button:hover{background:var(--neutral-tile)}
+  .nav > button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .nav > button[aria-current="true"]{background:var(--tint-1);color:var(--accent)}
+  .nav > button svg{width:20px;height:20px;fill:var(--accent);flex-shrink:0}
+  .nav .chev{margin-left:auto;color:var(--faint);font-size:8px;transition:transform .18s ease}
+  .nav > button[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .sub{display:none;flex-direction:column;padding:1px 0 5px 38px}
+  .sub.open{display:flex}
+  .sub a{text-decoration:none;color:var(--muted);font-size:var(--fs-sm);font-weight:500;padding:5px 9px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .sub a:hover{color:var(--ink);background:var(--neutral-tile)}
+  .sub a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .sub .d{width:5px;height:5px;border-radius:50%;background:var(--rule-3);flex-shrink:0}
+  .sub .d.on{background:var(--accent)}
+
+  .side-foot{margin-top:auto;padding-top:18px}
+  .plan{background:var(--tint-1);border-radius:var(--r-card);padding:13px}
+  .plan .k{font-size:var(--fs-xs);font-weight:600;color:var(--ink)}
+  .plan .v{font-size:19px;font-weight:700;color:var(--accent);letter-spacing:-.5px;line-height:1.35}
+  .plan .r{font-size:var(--fs-2xs);font-weight:400;color:var(--plan-note);margin-top:1px}
+  .plan .btn{display:block;text-align:center;margin-top:9px;background:#fff;border-radius:9px;padding:7px;font-size:var(--fs-xs);font-weight:600;color:var(--accent);filter:drop-shadow(0 1px 1px rgba(20,20,26,.05))}
+  .user{display:flex;align-items:center;gap:10px;margin-top:12px;padding:0 3px}
+  .user .av{width:32px;height:32px;border-radius:50%;background:var(--tint-4);flex-shrink:0;display:grid;place-items:center;font-size:var(--fs-2xs);font-weight:700;color:var(--accent-dark)}
+  .user .n{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.1px}
+  .user .s{font-size:var(--fs-2xs);font-weight:400;color:var(--faint)}
+  .user .c{margin-left:auto;color:var(--faint);font-size:10px}
+
+  /* ============ MAIN ============ */
+  .main{display:flex;flex-direction:column;gap:18px;min-width:0;padding-top:4px}
+  .head{display:flex;align-items:flex-start;gap:16px}
+  .head .hello{font-size:var(--fs-display);font-weight:700;letter-spacing:-.7px;line-height:1.15}
+  .head .sub{font-size:var(--fs-body);font-weight:400;color:var(--muted-2);margin-top:3px}
+  .head .sub b{color:var(--ink-2);font-weight:600}
+  .tools{margin-left:auto;display:flex;gap:8px;flex-shrink:0}
+  .tools button{all:unset;box-sizing:border-box;cursor:pointer;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;position:relative}
+  .tools button:hover{background:var(--tint-1)}
+  .tools button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tools svg{width:18px;height:18px;fill:var(--accent)}
+  .tools .dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:2px solid var(--page)}
+
+  .row1{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:12px;align-items:stretch}
+
+  /* ---- hero ---- */
+  .hero{position:relative;overflow:hidden;border-radius:var(--r-panel);background:var(--grad-hero);color:#fff;padding:22px 22px 20px;filter:drop-shadow(0 10px 18px rgba(180,50,10,.18))}
+  .hero .tile{
+    position:absolute;right:24px;top:24px;width:112px;height:94px;background:#fff;border-radius:var(--r-card);
+    transform:rotate(-6deg);box-shadow:0 14px 26px -14px rgba(60,12,0,.55);padding:12px;
+  }
+  .hero .tile .ap{font-size:5.5px;font-weight:400;letter-spacing:.85px;text-transform:uppercase;color:var(--faint-2)}
+  .hero .tile .bm{margin-top:11px;font-size:17px;font-weight:700;letter-spacing:-.6px;line-height:17.5px;color:var(--ink)}
+  .hero .arc{position:absolute;right:-24px;top:-32px;width:150px;height:100px;border:1.2px solid rgba(255,255,255,.25);border-radius:50%;pointer-events:none}
+  .hero > *{position:relative;z-index:2}
+
+  .hero .kicker{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.1px}
+  .hero .figure{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .hero .num{font-size:var(--fs-score);font-weight:700;letter-spacing:-2px;line-height:1}
+  .hero .pill{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.28);border-radius:50px;padding:5px 14px;font-size:var(--fs-sm);font-weight:700;backdrop-filter:blur(2px);white-space:nowrap}
+  .hero .say{font-size:var(--fs-xs);font-weight:600;line-height:1.5;color:rgba(255,255,255,.94);margin-top:10px;max-width:34em}
+
+  .kh{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.1px;margin-top:18px;margin-bottom:9px}
+  .ktiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .ktile{border:1.2px solid rgba(255,255,255,.4);border-radius:var(--r-tile);padding:9px 6px 10px;text-align:center}
+  .ktile svg{width:16px;height:16px;fill:#fff;margin:0 auto}
+  .ktile .kl{font-size:var(--fs-micro);font-weight:500;color:rgba(255,255,255,.82);margin-top:6px}
+  .ktile .kv{font-size:18px;font-weight:700;letter-spacing:-.5px;line-height:1.25;font-variant-numeric:tabular-nums}
+  .hero .explore{display:inline-block;margin-top:12px;color:#fff;font-size:var(--fs-micro);font-weight:700;letter-spacing:.4px;text-decoration:underline;text-underline-offset:3px}
+
+  /* ---- what's next ---- */
+  .next{display:flex;flex-direction:column}
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 15px 0}
+  .card-head h3{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.2px}
+  .card-head a{font-size:var(--fs-xs);font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .nlist{padding:4px 15px 14px;display:flex;flex-direction:column;flex:1}
+  .nitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule)}
+  .nitem:last-of-type{border-bottom:none}
+  .ni{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+  .ni svg{width:17px;height:17px;fill:var(--accent)}
+  .ni.t1{background:var(--tint-1)} .ni.t2{background:var(--tint-2)} .ni.t3{background:var(--tint-3)} .ni.t4{background:var(--tint-4)} .ni.t5{background:var(--neutral-tile)}
+  .nitem .nt{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.1px}
+  .nitem .ns{font-size:var(--fs-2xs);font-weight:500;color:var(--muted);margin-top:1px}
+  .nitem .na{margin-left:auto;font-size:var(--fs-xs);font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .nitem .na:hover{text-decoration:underline}
+  .nitem .ok{margin-left:auto;font-size:var(--fs-xs);font-weight:700;color:var(--green);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+  .nitem .ok svg{width:13px;height:13px;fill:var(--green)}
+  .nscore{margin-top:auto;background:var(--tint-1);border-radius:var(--r-tile);padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:var(--fs-xs);font-weight:600;color:var(--accent-dark)}
+  .nscore b{font-weight:800}
+  .nscore .q{margin-left:auto;font-size:var(--fs-2xs);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+
+  /* ---- studio ---- */
+  .sect{font-size:var(--fs-h2);font-weight:700;letter-spacing:-.5px}
+  .sect small{font-size:var(--fs-sm);font-weight:500;color:var(--muted-2);margin-left:9px;letter-spacing:0}
+  .studio{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+  .ct{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;height:148px;border-radius:var(--r-card);padding:15px 15px;display:block}
+  .ct:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .ct h3{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.3px;line-height:1.2}
+  .ct p{font-size:var(--fs-xs);font-weight:500;line-height:1.42;margin-top:6px}
+  .ct .arw{position:absolute;right:13px;bottom:12px;width:26px;height:20px;display:grid;place-items:center}
+  .ct .arw svg{width:19px;height:14px;fill:currentColor}
+  .ct:hover .arw{transform:translateX(3px)}
+  .ct .art{position:absolute;pointer-events:none}
+
+  .ct.write{background:var(--grad-write);color:#fff}
+  .ct.write p{color:rgba(255,255,255,.84)}
+  .ct.write .art{left:0;bottom:0;width:140px;height:90px}
+  .ct.write .art .w1,.ct.write .art .w2{position:absolute;left:2px;width:96px;height:28px;border-bottom:1.6px solid rgba(255,255,255,.32);border-radius:0 0 62% 62%}
+  .ct.write .art .w1{bottom:24px}
+  .ct.write .art .w2{bottom:6px;left:8px;width:84px;border-color:rgba(255,255,255,.2)}
+  .ct.write .art .pen{position:absolute;left:72px;bottom:24px;width:10px;height:46px;border-radius:2px;background:#fff;transform:rotate(38deg);box-shadow:0 8px 14px -8px rgba(0,0,0,.55)}
+  .ct.write .art .pen::after{content:"";position:absolute;bottom:-9px;left:0;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:10px solid #fff}
+
+  .ct.images{background:var(--grad-images);color:#2b2340}
+  .ct.images p{color:#5b5175}
+  .ct.images .art{left:14px;bottom:12px;width:84px;height:48px}
+  .ct.images .art i{position:absolute;display:block;width:74px;height:47px;border-radius:9px;background:linear-gradient(140deg,#9a79e0,#5f4bb0);filter:drop-shadow(0 8px 8px rgba(80,50,140,.5))}
+  .ct.images .art i::before{content:"";position:absolute;left:9px;top:9px;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.8)}
+  .ct.images .art i::after{content:"";position:absolute;left:8px;bottom:8px;width:58px;height:16px;border-radius:5px;background:rgba(255,255,255,.36)}
+
+  .ct.numbers{background:var(--grad-numbers);color:#22304d}
+  .ct.numbers p{color:#4d5c7a}
+  .ct.numbers .art{left:14px;bottom:10px;width:92px;height:46px}
+  .ct.numbers .art i{position:absolute;bottom:0;display:block;border-radius:5px;box-shadow:0 5px 10px -6px rgba(20,30,60,.45)}
+  .ct.numbers .art i:nth-child(1){left:0;width:27px;height:38px;background:linear-gradient(160deg,#f6875c,#ef5a2f)}
+  .ct.numbers .art i:nth-child(2){left:32px;width:26px;height:32px;background:linear-gradient(160deg,#7fa4d8,#4a6ea8)}
+  .ct.numbers .art i:nth-child(3){left:62px;width:26px;height:42px;background:linear-gradient(160deg,#9b83d8,#6b53ac)}
+
+  .ct.assets{background:var(--grad-assets);color:#1d3b36}
+  .ct.assets p{color:#41615c}
+  .ct.assets .art{left:15px;bottom:12px;width:100px;height:42px;display:flex;gap:5px;align-items:flex-end}
+  .ct.assets .art i{display:block;width:19px;border-radius:5px;box-shadow:0 5px 10px -6px rgba(20,50,45,.45)}
+  .ct.assets .art i:nth-child(1){height:25px;background:var(--navy)}
+  .ct.assets .art i:nth-child(2){height:34px;background:var(--accent)}
+  .ct.assets .art i:nth-child(3){height:29px;background:#5b8fd0}
+  .ct.assets .art i:nth-child(4){height:38px;background:#7b5ea7}
+
+  .ct.more{background:var(--grad-more);color:#7a3a26}
+  .ct.more p{color:#a4685a}
+  .ct.more .art{left:13px;bottom:16px;width:88px;height:30px;border-bottom:2px solid rgba(240,86,42,.35);border-radius:0 0 60% 60%}
+
+  /* ---- activity ---- */
+  .acts{padding:4px 15px 12px}
+  .act{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule)}
+  .act:last-child{border-bottom:none}
+  .act .ico{width:28px;height:28px;border-radius:9px;background:var(--tint-1);display:grid;place-items:center;flex-shrink:0}
+  .act .ico svg{width:15px;height:15px;fill:var(--accent)}
+  .act .t{font-size:var(--fs-sm);font-weight:600;letter-spacing:-.05px}
+  .act .ts{margin-left:auto;font-size:var(--fs-xs);font-weight:400;color:var(--faint);white-space:nowrap}
+
+  /* ============ AI CHAT ============ */
+  .chat{background:var(--grad-chat);border:1px solid var(--rule);border-radius:var(--r-panel);box-shadow:0 6px 18px -12px rgba(20,20,26,.1),0 1px 2px rgba(20,20,26,.04);padding:18px 16px 16px;display:flex;flex-direction:column;min-height:860px;position:relative;overflow:hidden}
+  .chat::after{content:"";position:absolute;left:-80px;bottom:-140px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgba(216,201,249,.5),rgba(216,201,249,0) 70%);pointer-events:none}
+  .chat > *{position:relative;z-index:1}
+  .chat-h{display:flex;align-items:center;gap:7px}
+  .chat-h h3{font-size:18px;font-weight:700;letter-spacing:-.4px}
+  .chat-h .spark{color:#8b6bd8;font-size:13px}
+  .trained{display:flex;align-items:center;gap:6px;margin-top:11px}
+  .trained i{width:6px;height:6px;border-radius:50%;background:var(--green);display:block}
+  .trained span{font-size:var(--fs-micro);font-weight:700;letter-spacing:1px;color:var(--ink-3)}
+  .chat-note{font-size:var(--fs-xs);font-weight:400;color:var(--muted-2);margin-top:7px;line-height:1.45}
+  .sugg{display:flex;flex-direction:column;gap:7px;margin-top:16px}
+  .sugg button{all:unset;box-sizing:border-box;cursor:pointer;background:rgba(255,255,255,.9);border:1px solid var(--rule);border-radius:var(--r-tile);padding:10px 12px;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2)}
+  .sugg button:first-child{border-color:var(--accent-line);color:var(--accent)}
+  .sugg button:hover{border-color:var(--accent-line);color:var(--accent)}
+  .sugg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .bubble{align-self:flex-end;max-width:230px;margin-top:18px;background:var(--navy);color:#fff;border-radius:13px 13px 4px 13px;padding:11px 13px 9px;filter:drop-shadow(0 8px 6px rgba(29,39,72,.13));font-size:var(--fs-xs);font-weight:400;line-height:1.45}
+  .bubble .time{display:block;margin-top:7px;font-size:var(--fs-micro);color:rgba(255,255,255,.55);text-align:right}
+  .ans-l{margin-top:18px;font-size:var(--fs-micro);font-weight:700;letter-spacing:1px;color:var(--accent)}
+  .ans{margin-top:7px;font-size:var(--fs-xs);font-weight:400;line-height:1.6;color:var(--ink-2)}
+  .ans b{font-weight:700;color:var(--ink)}
+  .chip{margin-top:12px;background:var(--lavender);border:1px solid var(--rule-2);border-radius:var(--r-tile);padding:9px 11px;display:flex;align-items:center;gap:8px;font-size:var(--fs-2xs);font-weight:500;color:#4a3d63}
+  .chip svg{width:13px;height:13px;fill:#7b5ea7;flex-shrink:0}
+  .composer{margin-top:auto;padding-top:18px}
+  .composer .box{background:#fff;border:1px solid var(--rule);border-radius:13px;padding:7px 7px 7px 14px;display:flex;align-items:center;gap:8px;filter:drop-shadow(0 5px 8px rgba(20,20,26,.16))}
+  .composer .box span{font-size:var(--fs-xs);font-weight:400;color:var(--faint)}
+  .composer .send{margin-left:auto;width:34px;height:34px;border-radius:10px;background:var(--grad-mark);display:grid;place-items:center;color:#fff;flex-shrink:0;filter:drop-shadow(0 5px 6px rgba(232,73,32,.55))}
+  .composer .send svg{width:16px;height:16px;fill:currentColor}
+
+  /* ---- maths ---- */
+  .maths{margin-top:20px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:16px 18px}
+  .maths h4{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.2px;margin-bottom:3px}
+  .maths .lead{font-size:var(--fs-xs);color:var(--muted-2);margin-bottom:11px}
+  .maths table{width:100%;border-collapse:collapse;font-size:var(--fs-xs)}
+  .maths th{text-align:left;font-size:var(--fs-micro);font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);padding:0 0 7px;border-bottom:1px solid var(--rule)}
+  .maths th:last-child,.maths td:last-child{text-align:right}
+  .maths td{padding:7px 0;border-bottom:1px solid var(--rule);font-weight:500;color:var(--ink-2)}
+  .maths tr:last-child td{border-bottom:none;font-weight:700;color:var(--ink)}
+  .maths .y{color:var(--green);font-weight:700}
+  .maths .n{color:var(--accent);font-weight:700}
+  .maths .note{margin-top:11px;font-size:var(--fs-xs);color:var(--muted-2);line-height:1.55}
+  .maths .note b{color:var(--ink)}
+
+  @media (max-width:1180px){.app{grid-template-columns:228px minmax(0,1fr)} .chat{display:none}}
+  @media (max-width:900px){
+    .row1{grid-template-columns:1fr}
+    .app{grid-template-columns:1fr} .side{min-height:0}
+    .ktiles{grid-template-columns:repeat(3,1fr)} .hero .tile{display:none}
+    .head .hello{font-size:22px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M11.02 2.6a1.5 1.5 0 0 1 1.96 0l8 6.93c.33.29.52.7.52 1.13V20a2 2 0 0 1-2 2h-4.25a.75.75 0 0 1-.75-.75V16a1.5 1.5 0 0 0-1.5-1.5h-2A1.5 1.5 0 0 0 9.5 16v5.25a.75.75 0 0 1-.75.75H4.5a2 2 0 0 1-2-2v-9.34c0-.43.19-.84.52-1.13z"/></symbol>
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="M11.32 2.3a1.5 1.5 0 0 1 1.36 0l8.2 4.25c.83.43.83 1.62 0 2.05l-8.2 4.25a1.5 1.5 0 0 1-1.36 0L3.12 8.6c-.83-.43-.83-1.62 0-2.05z"/><path d="M2.9 12.03a1.2 1.2 0 0 1 1.6-.53l7.5 3.83 7.5-3.83a1.2 1.2 0 1 1 1.1 2.13l-8.05 4.11a1.2 1.2 0 0 1-1.1 0L3.4 13.63a1.2 1.2 0 0 1-.5-1.6z" opacity=".5"/></symbol>
+  <symbol id="i-know" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H11a.5.5 0 0 1 .5.5v19a.5.5 0 0 1-.72.45l-1.9-.95a2 2 0 0 0-1.79 0l-1.9.95A.5.5 0 0 1 4 21.5z"/><path d="M12.5 2.5A.5.5 0 0 1 13 2h4.5A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5H13a.5.5 0 0 1-.5-.5z" opacity=".5"/></symbol>
+  <symbol id="i-studio" viewBox="0 0 24 24"><path d="M16.4 2.9a2.9 2.9 0 0 1 4.1 4.1l-1.3 1.3-4.1-4.1zM13.7 5.6l4.1 4.1-8.4 8.4a2 2 0 0 1-.9.5l-4.6 1.3a.8.8 0 0 1-1-1l1.3-4.6a2 2 0 0 1 .5-.9z"/></symbol>
+  <symbol id="i-numbers" viewBox="0 0 24 24"><rect x="3" y="12" width="4.4" height="9" rx="1.6"/><rect x="9.8" y="4" width="4.4" height="17" rx="1.6"/><rect x="16.6" y="9" width="4.4" height="12" rx="1.6" opacity=".5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M12 3c5.2 0 9.4 3.5 9.4 7.9s-4.2 7.9-9.4 7.9a11 11 0 0 1-2.3-.24l-4.3 2.3a.7.7 0 0 1-1.03-.72l.66-3.5C3.5 15.2 2.6 13.2 2.6 10.9 2.6 6.5 6.8 3 12 3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 3a8 8 0 1 0 4.9 14.32l3.39 3.39a1.15 1.15 0 0 0 1.63-1.63l-3.39-3.39A8 8 0 0 0 11 3m0 2.4a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 2a6.6 6.6 0 0 1 6.6 6.6v3.05l1.5 2.63A1.3 1.3 0 0 1 18.97 16H5.03a1.3 1.3 0 0 1-1.13-1.72l1.5-2.63V8.6A6.6 6.6 0 0 1 12 2"/><path d="M9.4 17.6h5.2a2.6 2.6 0 0 1-5.2 0" opacity=".5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2h5.26a.5.5 0 0 1 .35.15l6.24 6.24a.5.5 0 0 1 .15.35V19.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 19.5z"/><path d="M13.6 2.4 19.6 8.4h-5a1 1 0 0 1-1-1z" opacity=".45"/></symbol>
+  <symbol id="i-img" viewBox="0 0 24 24"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5zm5.6 1.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8m9.9 9.8-4.3-5.1a.9.9 0 0 0-1.36-.02l-2.5 2.85-1.1-1.05a.9.9 0 0 0-1.3.06L5.4 17.7z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M8.4 6V5.4a3.6 3.6 0 0 1 7.2 0V6h2.3a2 2 0 0 1 2 1.86l.7 11A2 2 0 0 1 18.6 21H5.4a2 2 0 0 1-2-2.14l.7-11A2 2 0 0 1 6.1 6zm1.9 0h3.4v-.6a1.7 1.7 0 1 0-3.4 0z"/></symbol>
+  <symbol id="i-pres" viewBox="0 0 24 24"><path d="M3 4.6A1.6 1.6 0 0 1 4.6 3h14.8A1.6 1.6 0 0 1 21 4.6v10.2a1.6 1.6 0 0 1-1.6 1.6h-5.5l2.4 3.1a1.1 1.1 0 0 1-1.74 1.35L12 17.9l-2.56 2.95A1.1 1.1 0 0 1 7.7 19.5l2.4-3.1H4.6A1.6 1.6 0 0 1 3 14.8z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M9.9 6.5a4.6 4.6 0 0 1 6.5 6.5l-2.1 2.1a1.2 1.2 0 0 1-1.7-1.7l2.1-2.1a2.2 2.2 0 1 0-3.1-3.1L9.5 10.3a1.2 1.2 0 1 1-1.7-1.7z"/><path d="M14.1 17.5a4.6 4.6 0 0 1-6.5-6.5l2.1-2.1a1.2 1.2 0 1 1 1.7 1.7l-2.1 2.1a2.2 2.2 0 1 0 3.1 3.1l2.1-2.1a1.2 1.2 0 1 1 1.7 1.7z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 3.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6"/><circle cx="12" cy="12" r="3.4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M11.15 2.87a1.2 1.2 0 0 1 1.7 0l4.4 4.4a1.2 1.2 0 1 1-1.7 1.7l-2.35-2.35V15a1.2 1.2 0 0 1-2.4 0V6.62L8.45 8.97a1.2 1.2 0 0 1-1.7-1.7z"/><path d="M4 15.4a1.2 1.2 0 0 1 1.2 1.2v1.6a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1v-1.6a1.2 1.2 0 1 1 2.4 0v1.6a3.4 3.4 0 0 1-3.4 3.4H6.2a3.4 3.4 0 0 1-3.4-3.4v-1.6A1.2 1.2 0 0 1 4 15.4" opacity=".5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m4.9 6.6a1.2 1.2 0 0 0-1.7.06l-4.6 5-1.85-1.7a1.2 1.2 0 1 0-1.62 1.77l2.74 2.5a1.2 1.2 0 0 0 1.69-.07l5.4-5.87a1.2 1.2 0 0 0-.06-1.7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 4.6a1.2 1.2 0 0 0-1.2 1.2v3h-3a1.2 1.2 0 1 0 0 2.4h3v3a1.2 1.2 0 1 0 2.4 0v-3h3a1.2 1.2 0 1 0 0-2.4h-3v-3A1.2 1.2 0 0 0 12 6.6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 25 19"><path d="M15.1.9a1.3 1.3 0 0 0-1.8 1.85l4.5 4.5H1.6a1.3 1.3 0 1 0 0 2.6h16.2l-4.5 4.5a1.3 1.3 0 1 0 1.84 1.84l6.7-6.72a1.3 1.3 0 0 0 0-1.84z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M13.1 3.9a1.4 1.4 0 0 0-2 2l4.7 4.7H4.3a1.4 1.4 0 1 0 0 2.8h11.5l-4.7 4.7a1.4 1.4 0 0 0 2 2l7.1-7.1a1.4 1.4 0 0 0 0-2z"/></symbol>
+</defs></svg>
+
+<div class="shell">
+
+  <div class="caption">
+    <b>Branditect — Home</b>
+    <span class="tag">v6 · Airbnb density</span>
+    <span>14px body · 22px section headings · 12px meta · 36px nav rows · 12–16px radii · fits 1280px</span>
+  </div>
+
+  <div class="app">
+
+    <nav class="panel side" aria-label="Primary">
+      <div class="logo"><span class="mark">B</span><span class="word">Branditect</span></div>
+      <div class="nav">
+        <button type="button" aria-current="true"><svg><use href="#i-home"></use></svg>Home</button>
+        <button type="button" data-toggle="s-brand" aria-expanded="false"><svg><use href="#i-brand"></use></svg>Brand<span class="chev">▶</span></button>
+        <div class="sub" id="s-brand">
+          <a href="#"><span>Strategy</span><span class="d on"></span></a>
+          <a href="#"><span>Tone of voice</span><span class="d on"></span></a>
+          <a href="#"><span>Visual identity</span><span class="d"></span></a>
+          <a href="#"><span>Products</span><span class="d on"></span></a>
+        </div>
+        <button type="button" data-toggle="s-know" aria-expanded="false"><svg><use href="#i-know"></use></svg>Knowledge<span class="chev">▶</span></button>
+        <div class="sub" id="s-know">
+          <a href="#"><span>Documents</span><span></span></a>
+          <a href="#"><span>Images</span><span></span></a>
+          <a href="#"><span>Presentations</span><span></span></a>
+          <a href="#"><span>Links</span><span></span></a>
+        </div>
+        <button type="button" data-toggle="s-studio" aria-expanded="false"><svg><use href="#i-studio"></use></svg>Studio<span class="chev">▶</span></button>
+        <div class="sub" id="s-studio">
+          <a href="#"><span>Write</span><span></span></a>
+          <a href="#"><span>Create images</span><span></span></a>
+          <a href="#"><span>Brand assets</span><span></span></a>
+        </div>
+        <button type="button" data-toggle="s-num" aria-expanded="false"><svg><use href="#i-numbers"></use></svg>Numbers<span class="chev">▶</span></button>
+        <div class="sub" id="s-num">
+          <a href="#"><span>Profitability</span><span></span></a>
+          <a href="#"><span>Product costs</span><span></span></a>
+          <a href="#"><span>Pricing &amp; offers</span><span></span></a>
+        </div>
+        <button type="button"><svg><use href="#i-chat"></use></svg>AI Chat</button>
+      </div>
+
+      <div class="side-foot">
+        <div class="plan">
+          <div class="k">Your plan</div><div class="v">Pro</div>
+          <div class="r">Renews 12 May 2027</div>
+          <span class="btn">View plan</span>
+        </div>
+        <div class="user">
+          <span class="av">AM</span>
+          <div><div class="n">Alexis Morgan</div><div class="s">Deklan Hairdryers</div></div>
+          <span class="c">▾</span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main">
+
+      <div class="head">
+        <div>
+          <h1 class="hello">Good morning, Alex 👋</h1>
+          <p class="sub">One check left — <b>upload your brand guideline</b> to reach 100%.</p>
+        </div>
+        <div class="tools">
+          <button type="button" aria-label="Search"><svg><use href="#i-search"></use></svg></button>
+          <button type="button" aria-label="Notifications"><svg><use href="#i-bell"></use></svg><span class="dot"></span></button>
+        </div>
+      </div>
+
+      <div class="row1">
+        <section class="hero" aria-label="Brand Readiness">
+          <span class="arc" aria-hidden="true"></span>
+          <div class="tile" aria-hidden="true"><div class="ap">Apex Performance</div><div class="bm">BUILT<br>FOR<br>MORE.</div></div>
+          <div class="kicker">Brand Readiness</div>
+          <div class="figure"><span class="num">75%</span><span class="pill">Good</span></div>
+          <p class="say">Three of four checks done. Your brand guideline is the last one — it's what teaches Branditect your visual rules.</p>
+          <div class="kh">Brand Knowledge</div>
+          <div class="ktiles">
+            <div class="ktile"><svg><use href="#i-doc"></use></svg><div class="kl">Documents</div><div class="kv">124</div></div>
+            <div class="ktile"><svg><use href="#i-img"></use></svg><div class="kl">Images</div><div class="kv">356</div></div>
+            <div class="ktile"><svg><use href="#i-bag"></use></svg><div class="kl">Products</div><div class="kv">18</div></div>
+            <div class="ktile"><svg><use href="#i-pres"></use></svg><div class="kl">Presentations</div><div class="kv">12</div></div>
+            <div class="ktile"><svg><use href="#i-link"></use></svg><div class="kl">Links</div><div class="kv">24</div></div>
+          </div>
+          <a class="explore" href="#">Explore knowledge →</a>
+        </section>
+
+        <section class="panel next" aria-label="What's next">
+          <div class="card-head"><h3>What's next</h3><a href="#">View all</a></div>
+          <div class="nlist">
+            <div class="nitem">
+              <span class="ni t1"><svg><use href="#i-target"></use></svg></span>
+              <div><div class="nt">Strategy questionnaire</div><div class="ns">All 20 questions answered</div></div>
+              <span class="ok"><svg><use href="#i-check"></use></svg>Done</span>
+            </div>
+            <div class="nitem">
+              <span class="ni t2"><svg><use href="#i-doc"></use></svg></span>
+              <div><div class="nt">Files in Knowledge</div><div class="ns">124 of 6 required</div></div>
+              <span class="ok"><svg><use href="#i-check"></use></svg>Done</span>
+            </div>
+            <div class="nitem">
+              <span class="ni t3"><svg><use href="#i-img"></use></svg></span>
+              <div><div class="nt">Product &amp; brand images</div><div class="ns">356 of 7 required</div></div>
+              <span class="ok"><svg><use href="#i-check"></use></svg>Done</span>
+            </div>
+            <div class="nitem">
+              <span class="ni t4"><svg><use href="#i-upload"></use></svg></span>
+              <div><div class="nt">Brand guideline</div><div class="ns">Not uploaded yet</div></div>
+              <a class="na" href="#">Upload →</a>
+            </div>
+            <div class="nitem">
+              <span class="ni t5"><svg><use href="#i-plus"></use></svg></span>
+              <div><div class="nt">Add more</div><div class="ns">Explore more actions</div></div>
+              <a class="na" href="#">→</a>
+            </div>
+            <div class="nscore"><span>Each check is worth <b>25%</b></span><span class="q">3 / 4 · 75%</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div><h2 class="sect">Studio<small>Create with your brand</small></h2></div>
+      <div class="studio">
+        <button class="ct write" type="button">
+          <h3>Write</h3><p>On brand, on strategy, on the facts.</p>
+          <span class="art" aria-hidden="true"><span class="w1"></span><span class="w2"></span><span class="pen"></span></span>
+          <span class="arw"><svg><use href="#i-arrow"></use></svg></span>
+        </button>
+        <button class="ct images" type="button">
+          <h3>Create images</h3><p>New images based on your products and style.</p>
+          <span class="art" aria-hidden="true"><i></i></span>
+          <span class="arw"><svg><use href="#i-arrow"></use></svg></span>
+        </button>
+        <button class="ct numbers" type="button">
+          <h3>Do the numbers</h3><p>Profitability, pricing structure and offers.</p>
+          <span class="art" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="arw"><svg><use href="#i-arrow"></use></svg></span>
+        </button>
+        <button class="ct assets" type="button">
+          <h3>Brand Assets</h3><p>Your logos, colors and brand guidelines.</p>
+          <span class="art" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="arw"><svg><use href="#i-arrow"></use></svg></span>
+        </button>
+        <button class="ct more" type="button">
+          <h3>More</h3><p>Explore all studio tools.</p>
+          <span class="art" aria-hidden="true"></span>
+          <span class="arw"><svg><use href="#i-arrow"></use></svg></span>
+        </button>
+      </div>
+
+      <div class="panel">
+        <div class="card-head"><h3>Recent activity</h3><a href="#">View all</a></div>
+        <div class="acts">
+          <div class="act"><span class="ico"><svg><use href="#i-target"></use></svg></span><span class="t">Brand strategy updated</span><span class="ts">2h ago</span></div>
+          <div class="act"><span class="ico"><svg><use href="#i-doc"></use></svg></span><span class="t">Product Guide.pdf added to Knowledge</span><span class="ts">Yesterday</span></div>
+          <div class="act"><span class="ico"><svg><use href="#i-studio"></use></svg></span><span class="t">Summer Campaign created</span><span class="ts">3 days ago</span></div>
+          <div class="act"><span class="ico"><svg><use href="#i-chat"></use></svg></span><span class="t">You asked in AI Chat about positioning</span><span class="ts">3 days ago</span></div>
+        </div>
+      </div>
+
+    </main>
+
+    <aside class="chat" aria-label="AI Chat">
+      <div class="chat-h"><h3>AI Chat</h3><span class="spark" aria-hidden="true">✦</span></div>
+      <div class="trained"><i></i><span>TRAINED</span></div>
+      <p class="chat-note">Reads your Brand, your Numbers and everything in Knowledge. 41 files indexed.</p>
+      <div class="sugg">
+        <button type="button">Write a caption for the Baby Mode angle</button>
+        <button type="button">What's the deepest discount I can run?</button>
+        <button type="button">What's missing from my brand?</button>
+      </div>
+      <div class="bubble">What are the six modes on the hair dryer, and what does it retail for?<span class="time">10:24 AM</span></div>
+      <div class="ans-l">BRANDITECT</div>
+      <p class="ans">Six custom modes: Long Hair, Short Hair, Alternating Warm &amp; Cold, Isothermal, <b>Baby</b> and <b>Pet</b>. Retail is €149, positioned against Dyson at €400–500.</p>
+      <div class="chip"><svg><use href="#i-doc"></use></svg><span>technical deklan hair dryer details.pdf</span></div>
+      <div class="composer">
+        <div class="box"><span>Ask about Deklan…</span><span class="send"><svg><use href="#i-send"></use></svg></span></div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="maths">
+    <h4>How Brand Readiness is calculated</h4>
+    <p class="lead">Four checks, 25% each. This is the whole formula — nothing hidden.</p>
+    <table>
+      <thead><tr><th>Check</th><th>Rule</th><th>State</th><th>Score</th></tr></thead>
+      <tbody>
+        <tr><td>Strategy questionnaire</td><td>All 20 answered</td><td class="y">Pass</td><td>25%</td></tr>
+        <tr><td>Files in Knowledge</td><td>6 or more</td><td class="y">124 · Pass</td><td>25%</td></tr>
+        <tr><td>Product &amp; brand images</td><td>7 or more</td><td class="y">356 · Pass</td><td>25%</td></tr>
+        <tr><td>Brand guideline</td><td>1 uploaded</td><td class="n">Missing</td><td>0%</td></tr>
+        <tr><td>Brand Readiness</td><td>Sum of four</td><td>Good</td><td>75%</td></tr>
+      </tbody>
+    </table>
+    <p class="note"><b>Why not 87%.</b> Four equal checks can only land on 0, 25, 50, 75 or 100. Partial credit on the count-based checks would give continuous numbers, but the score would then creep up from uploading almost anything. Keep the quarters — a score a founder can predict beats one that looks precise.</p>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll("[data-toggle]").forEach(function(b){
+    b.addEventListener("click",function(){
+      var p=document.getElementById(b.getAttribute("data-toggle"));
+      var o=p.classList.toggle("open");
+      b.setAttribute("aria-expanded",o?"true":"false");
+    });
+  });
+</script>

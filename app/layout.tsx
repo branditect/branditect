@@ -22,9 +22,11 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
+// The v6 base font. Body runs at 500 and meta at 400, so the full range is
+// needed — loading 700/800 only silently faked every lighter weight.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-jakarta",
 });
 

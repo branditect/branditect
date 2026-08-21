@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import Icon from "@/components/icon";
+import createImagesArt from "@/public/studio/create-images.png";
 
 export type StudioVariant = "write" | "images" | "numbers" | "assets" | "more";
 
@@ -12,9 +14,15 @@ const VARIANTS: Record<StudioVariant, { bg: string; title: string; body: string 
 };
 
 /**
- * The artwork is CSS shapes standing in for the Figma PNG exports. It's
- * decorative and aria-hidden, so swapping in the real images changes nothing
- * else about the card.
+ * Card artwork. Decorative and aria-hidden throughout.
+ *
+ * `images` uses the real export; the other four are still CSS shapes standing
+ * in for Figma PNGs, so swapping those in changes nothing else about the card.
+ *
+ * NOTE: create-images.png is a 1x asset at 69×44. It is drawn at native size
+ * so it stays sharp, which makes it slightly smaller than the CSS shape it
+ * replaced. A 2x export would let it fill the intended 84×48 slot and survive
+ * retina displays.
  */
 function Art({ variant }: { variant: StudioVariant }) {
   switch (variant) {
@@ -27,10 +35,17 @@ function Art({ variant }: { variant: StudioVariant }) {
         </span>
       );
     case "images":
+      // The real export, not a CSS stand-in. Native size is 69×44, so it is
+      // drawn at 1:1 rather than upscaled — see the note in Art below.
       return (
-        <span aria-hidden="true" className="pointer-events-none absolute bottom-3 left-3.5 h-12 w-[84px]">
-          <span className="absolute block h-[47px] w-[74px] rounded-[9px] bg-[linear-gradient(140deg,#9a79e0,#5f4bb0)] drop-shadow-[0_8px_8px_rgba(80,50,140,.5)] before:absolute before:left-2 before:top-2 before:h-2.5 before:w-2.5 before:rounded-full before:bg-white/80 before:content-[''] after:absolute after:bottom-2 after:left-2 after:h-4 after:w-[58px] after:rounded-[5px] after:bg-white/[.36] after:content-['']" />
-        </span>
+        <Image
+          src={createImagesArt}
+          alt=""
+          aria-hidden="true"
+          // No drop-shadow here: the export already carries its own.
+          className="pointer-events-none absolute bottom-3 left-3.5 h-auto w-[69px]"
+          unoptimized
+        />
       );
     case "numbers":
       return (

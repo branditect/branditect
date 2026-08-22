@@ -19,8 +19,8 @@ Auth routes and their rules are in `spec/auth.md`. Summary:
 /brand/strategy                Strategy (strip the duplicated voice section from the bottom)
 /brand/tone-of-voice           Tone of voice — the single home for tone
 /brand/visual-identity         Visual identity — logos, colour, type, brand guideline upload
-/knowledge/products                Products — list + drawer, see spec/products.md
-/knowledge/products/:id            Deep link to one product (opens the drawer, or a full
+/brand/products                Products — list + drawer, see spec/products.md
+/brand/products/:id            Deep link to one product (opens the drawer, or a full
                                page below 1280px where the drawer is hidden)
 
 /knowledge                     → redirect to /knowledge/documents
@@ -34,10 +34,16 @@ Auth routes and their rules are in `spec/auth.md`. Summary:
 /studio/create-images          Create images
 /studio/brand-assets           Brand assets
 
-/numbers                       → redirect to /numbers/profitability
-/numbers/profitability         Profitability
-/numbers/product-costs         Product costs
-/numbers/pricing               Pricing & offers
+/numbers                       Numbers landing — profile, calculators, running costs
+                               (see spec/numbers.md; this is a real page, not a redirect)
+/numbers/cost                  1 · True cost per unit / Cost to serve one customer
+/numbers/pricing               2 · Pricing & margin
+/numbers/offers                3 · Offers & discounts
+/numbers/recurring             4 · Recurring revenue (only when charges = recurring)
+/numbers/running-costs         5 · Running costs & break-even
+
+  Each accepts ?product=:id to prefill. Without it, the calculator runs in
+  quick-calculation mode with no Apply to product action.
 
 /chat                          AI Chat
 ```
@@ -53,7 +59,7 @@ Permanent (301). Every one of these is live now — bookmarks and any links alre
 | `/dashboard/brand-strategy/social` | `/brand/channels` *(see note)* |
 | `/dashboard/brand-library/tone-of-voice` | `/brand/tone-of-voice` |
 | `/dashboard/brand-library` | `/brand/visual-identity` |
-| `/dashboard/catalog` | `/knowledge/products` |
+| `/dashboard/catalog` | `/brand/products` |
 | `/dashboard/brand-library/knowledge-vault` | `/knowledge/documents` |
 | `/dashboard/assets` | `/knowledge/images` |
 | `/dashboard/brand-library/templates` | `/knowledge/links` |

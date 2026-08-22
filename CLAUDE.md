@@ -57,6 +57,20 @@ Icons live in `components/icon.tsx` and are drawn in `currentColor` — orange (
 
 The real Branditect icons are **stroked outlines**, not filled; each declares `outline: true`. (An earlier version of this line said "filled" — that described the MingCute stand-ins, not the brand set.) Nine are real; ten are still filled stand-ins — `search`, `bell`, `doc`, `img`, `bag`, `pres`, `link`, `check`, `arrow`, `send` — and read visibly heavier beside the real ones. Replacing them is the open task; when exporting, keep `stroke="currentColor"` rather than a baked-in hex or the icon cannot go white on the hero.
 
+## Numbers
+
+**Calculators are a sandbox.** They read from a product to prefill and never write back. The only bridge is one explicit **Apply to product** action, which pre-fills the product form for the user to confirm and save. Do not add auto-save or sync.
+
+**The product card is the live version.** There is no live/draft state, nothing to promote, and Studio's guardrails read the product record — never a calculator session.
+
+**Per sale and per month stay apart.** Calculators 1–4 are variable costs; running costs are fixed. Mixing altitudes is how someone ends up subtracting rent from a unit price.
+
+**Margins are always net of tax, against landed cost.** Factory cost against gross price overstates by about five points. The formulas live in `lib/numbers.ts` (tests in `lib/numbers.test.ts`) — ported from `docs/handoff/spec/numbers.md`, not rewritten.
+
+**Guardrails are per product.** A £6 clip can't carry a £99 floor. And the floor price is the higher of two tests: minimum margin, and covering overhead at your volume.
+
+**Do not allocate overhead per unit.** It makes every product's margin depend on how many of everything else sold. Contribution plus a break-even figure gives the same insight without the instability.
+
 ## Brand Readiness
 
 Four checks, 25% each, defined in `lib/readiness.ts` (tests in `lib/readiness.test.ts`, run with `npm test`). The score is computed, never stored as a number. Do not add partial credit without a product decision — the reason for equal quarters is that a founder can predict the score, which a continuous number destroys.

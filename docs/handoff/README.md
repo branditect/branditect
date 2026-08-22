@@ -13,6 +13,7 @@ reference/
   dashboard.html      ← approved Home design, self-contained, open it in a browser
   login.html          ← approved login / sign-up design, both states in one file
   products.html       ← approved Brand ▸ Products: list + detail drawer
+  numbers.html        ← approved Numbers landing: profile, calculators, running costs
   ia-audit.md         ← what's wrong with the current app and why the new IA fixes it
 design/
   tokens.css          ← CSS custom properties: colour, type scale, radii, shadows, controls
@@ -22,15 +23,18 @@ spec/
   routes.md           ← app route map + the redirects the old URLs need
   auth.md             ← login, sign-up, error copy, security floor, first-run sequence
   products.md         ← Products data model, the margin formula, scope boundary
+  numbers.md          ← the sandbox architecture, business profile, formulas, guardrails
   readiness.ts        ← Brand Readiness scoring: types + pure function + tests
   components.md       ← component inventory with props and states
 assets/icons/         ← 19 SVGs, 24×24, currentColor
 CLAUDE.md             ← drop this at the repo root before starting
 ```
 
-## Two independent tracks
+## Four independent tracks
 
-Login and Home don't block each other. If two people are working, one takes `spec/auth.md` and the other takes phases 1–5 of `IMPLEMENTATION.md`. They meet at the tokens, which should land first.
+Home, Products, Numbers and Auth don't block each other. They meet only at the tokens, which should land first (phase 3). If more than one person is building, that's the split.
+
+Numbers and Products do share one contract: **the product card owns the numbers, calculators only propose.** Read `spec/numbers.md` before touching either.
 
 ## The one-line summary
 

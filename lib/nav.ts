@@ -59,9 +59,10 @@ export const NAV: NavItem[] = [
     href: "/numbers",
     icon: "numbers",
     children: [
-      { label: "Profitability", href: "/numbers/profitability" },
-      { label: "Product costs", href: "/numbers/product-costs" },
-      { label: "Pricing & offers", href: "/numbers/pricing" },
+      { label: "True cost", href: "/numbers/cost" },
+      { label: "Pricing & margin", href: "/numbers/pricing" },
+      { label: "Offers & discounts", href: "/numbers/offers" },
+      { label: "Running costs", href: "/numbers/running-costs" },
     ],
   },
   { label: "AI Chat", href: "/chat", icon: "chat" },

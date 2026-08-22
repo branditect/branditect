@@ -46,13 +46,14 @@ const nextConfig = {
 
       // Numbers
       { source: '/dashboard/tools', destination: '/numbers/profitability', permanent: true },
+      // /numbers is a real landing page now, not a redirect to a child.
+      { source: '/numbers/product-costs', destination: '/numbers/cost', permanent: true },
       { source: '/dashboard/tools/:path*', destination: '/numbers/profitability/:path*', permanent: true },
 
       // Section roots land on their first child.
       { source: '/brand', destination: '/brand/strategy', permanent: false },
-      { source: '/knowledge', destination: '/knowledge/documents', permanent: false },
+      { source: '/knowledge', destination: '/knowledge/products', permanent: false },
       { source: '/studio', destination: '/studio/write', permanent: false },
-      { source: '/numbers', destination: '/numbers/profitability', permanent: false },
     ]
   },
 

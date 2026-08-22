@@ -99,6 +99,22 @@ Independent of Home. Depends only on phase 3, the tokens. Full spec in `spec/pro
 
 ---
 
+## Parallel track — Numbers
+
+Depends on phase 3 (tokens) and on Products existing enough to read from. Full spec in `spec/numbers.md`; design in `reference/numbers.html`.
+
+- **Build it as a sandbox.** Calculators read from a product to prefill and never write back. The single bridge is **Apply to product**, which opens the product card pre-filled for the user to confirm and save. Do not add auto-save, sync, or a live/draft state — the product card *is* live.
+- Store the business profile (`sells` / `charges` / `channels`) on the **workspace**, not this page. Two single-choice axes and one multi-select; channels are additive because a brand can be direct *and* wholesale.
+- Compose the cost lines from the profile. Highlight the ones a channel added, so the user can see their answers building the model.
+- Port the formulas verbatim. `floorPrice` takes the **higher** of the margin floor and the break-even floor — without running costs, the floor is only half a floor.
+- Keep the two altitudes visually separate: calculators are per sale, running costs are per month. Never put them in the same card row.
+- Card 4 (recurring revenue) is removed from the DOM when `charges !== 'recurring'`, not disabled.
+- Support **quick calculation** with no product selected. Someone pricing a product they haven't added yet is a first-session case; don't force product creation first.
+
+**Done when:** switching the profile toggles rewrites card titles and cost chips without a reload; a contribution of zero renders "never breaks even at this price" rather than `∞`; and Apply to product lands on the product form with the changed field flagged and *unsaved*.
+
+---
+
 ## Parallel track — login and first run
 
 Independent of phases 1–5. Only dependency is phase 3, the tokens. If two people are working, this is the clean split.

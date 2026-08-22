@@ -3,10 +3,10 @@ import NotBuiltYet from "@/components/not-built-yet";
 export default function Page() {
   return (
     <NotBuiltYet
-      icon="numbers"
-      title="Pricing & offers"
-      description="Floor price, maximum discount and minimum margin. These are the rules that let Studio refuse to write a promotion that kills your margin — the piece that makes this brand infrastructure rather than a spreadsheet. Not built yet."
-      cta={{ label: "Open Profitability", href: "/numbers/profitability" }}
+      icon="target"
+      title="Pricing & margin"
+      description="Set a price and see the margin, or set a margin and see the price — worked from either end, always net of tax and against landed cost. Not built yet. The margin itself is live on every product card today."
+      cta={{ label: "Open Products", href: "/knowledge/products" }}
     />
   );
 }

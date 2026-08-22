@@ -2,7 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   breakEvenUnits, contribution, costLines, floorPrice, floorPriceBasis,
-  marginPct, netPrice, operatingProfit, profileSentence, totalRunningCosts,
+  marginPct, maxDiscountPct, netPrice, operatingProfit, priceForMargin, profileSentence,
+  recurring, totalRunningCosts,
   type BusinessProfile,
 } from "./numbers.ts";
 
@@ -135,5 +136,59 @@ describe("running costs", () => {
       totalRunningCosts({ rent: 3000, salaries: null, software: 400, marketing: null, other: null }),
       3400,
     );
+  });
+});
+
+describe("recurring", () => {
+  const base = { arpu: 20, churnPct: 5, cac: 60, grossMarginPct: 80 };
+
+  it("computes lifetime from churn", () => {
+    assert.equal(recurring(base)!.lifetimeMonths, 20); // 100 / 5
+  });
+
+  it("bases LTV on gross profit, not revenue", () => {
+    const r = recurring(base)!;
+    // 20 * 0.8 * 20 months = 320, not 20 * 20 = 400
+    assert.equal(r.ltv, 320);
+    assert.ok(r.ltv < base.arpu * r.lifetimeMonths, "LTV must not be computed on revenue");
+  });
+
+  it("payback is in months of margin, not months of revenue", () => {
+    assert.equal(recurring(base)!.paybackMonths.toFixed(2), "3.75"); // 60 / 16
+  });
+
+  it("returns null at zero churn rather than an infinite lifetime", () => {
+    assert.equal(recurring({ ...base, churnPct: 0 }), null);
+  });
+
+  it("flags when a customer costs more than they are worth", () => {
+    const bad = recurring({ ...base, cac: 500 })!;
+    assert.ok(bad.ltvToCac < 1);
+  });
+});
+
+describe("maxDiscountPct", () => {
+  const base = { retailGross: 149, taxRatePct: 20, variableCost: 22.1, minMarginPct: 60 };
+
+  it("finds the deepest discount that still clears the margin", () => {
+    const d = maxDiscountPct(base);
+    // floor net = 22.10 / 0.4 = 55.25; net = 124.17
+    assert.equal(d.toFixed(1), "55.5");
+  });
+
+  it("is 0 when the price is already at the floor, never negative", () => {
+    // A negative discount is a price rise; offering it as a discount is absurd.
+    assert.equal(maxDiscountPct({ ...base, minMarginPct: 90 }), 0);
+  });
+});
+
+describe("priceForMargin", () => {
+  it("returns a gross price for a target margin", () => {
+    const p = priceForMargin({ variableCost: 22.1, taxRatePct: 20, targetMarginPct: 82.2 })!;
+    assert.equal(p.toFixed(0), "149"); // round-trips the Pro 5000
+  });
+
+  it("returns null for an unreachable 100% margin", () => {
+    assert.equal(priceForMargin({ variableCost: 22.1, taxRatePct: 20, targetMarginPct: 100 }), null);
   });
 });

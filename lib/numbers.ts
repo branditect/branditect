@@ -221,3 +221,76 @@ export function totalRunningCosts(c: RunningCosts): number {
 export function runningCostsUnset(c: RunningCosts): boolean {
   return RUNNING_COST_LINES.every((l) => c[l.key] == null);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Recurring revenue                                                  */
+/* ------------------------------------------------------------------ */
+
+export interface Recurring {
+  /** Average revenue per customer per month, net of tax. */
+  arpu: number;
+  /** Monthly churn as a percentage. */
+  churnPct: number;
+  /** Cost to acquire one customer. */
+  cac: number;
+  /** Gross margin on the recurring revenue, as a percentage. */
+  grossMarginPct: number;
+}
+
+export interface RecurringResult {
+  /** Average months a customer stays. */
+  lifetimeMonths: number;
+  /** Lifetime value, on gross profit rather than revenue. */
+  ltv: number;
+  /** Months of margin needed to earn back acquisition cost. */
+  paybackMonths: number;
+  /** LTV against CAC. Below 1 means every customer loses money. */
+  ltvToCac: number;
+}
+
+/**
+ * Lifetime value on GROSS PROFIT, not revenue.
+ *
+ * LTV computed on revenue ignores the cost of serving the customer and
+ * overstates what they are worth — the same class of error as computing
+ * margin on factory cost. Returns null when churn is zero, because an
+ * infinite lifetime is not a number to put in front of someone.
+ */
+export function recurring(r: Recurring): RecurringResult | null {
+  if (r.churnPct <= 0) return null;
+  const lifetimeMonths = 100 / r.churnPct;
+  const monthlyGross = r.arpu * (r.grossMarginPct / 100);
+  const ltv = monthlyGross * lifetimeMonths;
+  return {
+    lifetimeMonths,
+    ltv,
+    paybackMonths: monthlyGross <= 0 ? Infinity : r.cac / monthlyGross,
+    ltvToCac: r.cac <= 0 ? Infinity : ltv / r.cac,
+  };
+}
+
+/**
+ * The deepest discount a price can carry and still clear a minimum margin.
+ *
+ * Returns 0 when the price is already at or below the floor — a negative
+ * "discount" is a price rise, and offering it as a discount would be absurd.
+ */
+export function maxDiscountPct(opts: {
+  retailGross: number; taxRatePct: number; variableCost: number; minMarginPct: number;
+}): number {
+  const net = netPrice(opts.retailGross, opts.taxRatePct);
+  if (net <= 0) return 0;
+  // The lowest net price that still leaves minMarginPct.
+  const floorNet = opts.variableCost / (1 - opts.minMarginPct / 100);
+  if (floorNet >= net) return 0;
+  return ((net - floorNet) / net) * 100;
+}
+
+/** The price implied by a target margin. Returns gross, so it's comparable to retail. */
+export function priceForMargin(opts: {
+  variableCost: number; taxRatePct: number; targetMarginPct: number;
+}): number | null {
+  if (opts.targetMarginPct >= 100) return null; // unreachable: no cost can be 0% of price
+  const net = opts.variableCost / (1 - opts.targetMarginPct / 100);
+  return net * (1 + opts.taxRatePct / 100);
+}

@@ -12,37 +12,102 @@ import {
   type BusinessProfile, type Channel, type RunningCosts,
 } from "@/lib/numbers";
 
+/**
+ * Each calculator owns a colour. It is not decoration: it is what lets someone
+ * glance at the running-costs panel and know it is a different altitude from
+ * the three per-sale cards above it.
+ */
+const TONES = {
+  green: {
+    tile: "bg-green-wash text-green-ink", num: "bg-good",
+    promise: "text-green-ink",
+    go: "bg-green-wash text-green-ink border border-green-line hover:bg-[#ddf0e5]",
+  },
+  lavender: {
+    tile: "bg-lavender text-lav-ink", num: "bg-[#7b5ea7]",
+    promise: "text-lav-ink",
+    go: "bg-grad-mark text-white drop-shadow-[0_5px_10px_rgba(232,73,32,.3)] hover:brightness-[1.03]",
+  },
+  orange: {
+    tile: "bg-tint-2 text-accent-dark", num: "bg-accent",
+    promise: "text-accent-dark",
+    go: "bg-tint-1 text-accent-dark border border-accent-line hover:bg-tint-2",
+  },
+  blue: {
+    tile: "bg-blue-wash text-blue-ink", num: "bg-[#4a72b8]",
+    promise: "text-blue-ink",
+    go: "bg-blue-wash text-blue-ink border border-blue-line hover:bg-[#dde8fb]",
+  },
+} as const;
+
 const CALCULATORS: {
-  n: number; key: string; icon: IconName; href: string;
-  title?: string; promise: string; desc: string; needs: string[];
+  n: number; key: string; icon: IconName; href: string; tone: keyof typeof TONES;
+  title?: string; promise: string; desc: string;
+  /** Always needed, whatever the profile. */
+  needs: string[];
+  /** Needed only because of a channel — highlighted so the profile visibly
+   *  builds the cost model rather than silently changing it. */
+  addedBy?: Partial<Record<Channel | "recurring", string[]>>;
   recurringOnly?: boolean;
 }[] = [
   {
-    n: 1, key: "cost", icon: "bag", href: "/numbers/cost",
-    promise: "Everything one sale actually costs you.",
-    desc: "Production, freight, packaging, fees and the cost of a return — added up once so every other number here has something honest to stand on.",
-    needs: ["Factory cost", "Freight & duty", "Packaging", "Payment fees"],
+    n: 1, key: "cost", icon: "bag", href: "/numbers/cost", tone: "green",
+    promise: "Know what every sale really costs.",
+    desc: "Everything it takes to put one unit in a customer's hands, and what happens when a cost moves.",
+    needs: ["Production cost", "Freight & duty", "Packaging"],
+    addedBy: {
+      direct: ["Shipping", "Returns rate", "Payment fees", "Ad cost per sale"],
+      trade: ["Carton / pallet", "Payment terms"],
+      store: ["Store commission %"],
+    },
   },
   {
-    n: 2, key: "pricing", icon: "target", href: "/numbers/pricing",
-    title: "Pricing & margin", promise: "Work it from either end.",
-    desc: "Set a price and see the margin, or set a margin and see the price. Always net of tax, always against landed cost.",
-    needs: ["Cost per sale", "Target margin", "Tax rate"],
+    n: 2, key: "pricing", icon: "target", href: "/numbers/pricing", tone: "lavender",
+    title: "Pricing & margin", promise: "Find the price that gives you the margin you want.",
+    desc: "Set a target margin and get the price to hit it — or type a price and see what you'd actually keep after tax and fees.",
+    needs: ["Target margin", "Tax rate", "Cost per unit"],
   },
   {
-    n: 3, key: "offers", icon: "pct" as IconName, href: "/numbers/offers",
-    title: "Offers & discounts", promise: "What you can give away before it hurts.",
-    desc: "The deepest discount that still clears your floor — which becomes the limit Studio writes inside.",
-    needs: ["Price", "Cost per sale", "Minimum margin"],
+    n: 3, key: "offers", icon: "numbers", href: "/numbers/offers", tone: "orange",
+    title: "Offers & discounts", promise: "Know what you can give away before it hurts.",
+    desc: "Model the offers you actually run, and find where each one stops being worth it.",
+    needs: ["Discount ceiling", "Expected volume"],
+    addedBy: { direct: ["Free-ship threshold", "Average basket"] },
   },
   {
-    n: 4, key: "recurring", icon: "numbers", href: "/numbers/recurring",
+    n: 4, key: "recurring", icon: "numbers", href: "/numbers/recurring", tone: "blue",
     title: "Recurring revenue", promise: "See what a customer is worth over time.",
     desc: "MRR, churn and lifetime value, and how long it takes to earn back what you spent acquiring someone.",
     needs: ["Monthly price", "Churn rate", "Cost to acquire"],
     recurringOnly: true,
   },
 ];
+
+type Portfolio = {
+  priced: number; total: number;
+  lowest: { p: Product; m: NonNullable<ReturnType<typeof margin>> } | null;
+  best: { p: Product; m: NonNullable<ReturnType<typeof margin>> } | null;
+};
+
+/**
+ * The line above each calculator's button. Reports what the product cards
+ * already hold, so the card says whether there is anything to work from.
+ */
+const CARD_STATE: Record<
+  string,
+  (p: Portfolio, currency: string) => { label: string; done: boolean }
+> = {
+  cost: (p, currency) =>
+    p.best?.p.landedCost != null
+      ? { label: `${p.best.p.name} currently ${formatMoney(p.best.p.landedCost, currency)}`, done: true }
+      : { label: "No landed cost recorded yet", done: false },
+  pricing: (p, currency) =>
+    p.best?.p.retailPrice != null
+      ? { label: `${p.best.p.name} currently ${formatMoney(p.best.p.retailPrice, currency)}`, done: true }
+      : { label: "No price recorded yet", done: false },
+  offers: () => ({ label: "Uses the price you set in here", done: false }),
+  recurring: () => ({ label: "Shown because you charge a subscription", done: false }),
+};
 
 function Badge({ tone, children }: { tone: "sale" | "month" | "sandbox"; children: React.ReactNode }) {
   const styles = {
@@ -221,40 +286,40 @@ export default function NumbersPage() {
           </div>
         </section>
 
-        <section aria-label="How you sell" className="flex flex-col rounded-panel border border-rule bg-card drop-shadow-panel">
+        <section aria-label="How you sell" className="flex flex-col rounded-panel border border-lav-line bg-grad-setup drop-shadow-panel">
           <div className="flex items-baseline justify-between gap-2.5 px-[15px] pt-4">
-            <h3 className="text-h3 font-bold">How you sell</h3>
-            <span className="text-2xs font-semibold text-muted-2">Set once</span>
+            <h3 className="text-h3 font-bold text-[#2f2545]">How you sell</h3>
+            <span className="text-2xs font-semibold text-[#8b7bab]">Set once</span>
           </div>
           <div className="flex flex-col gap-3.5 px-[15px] pb-4 pt-3">
             <div>
-              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-muted">What you sell</div>
+              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">What you sell</div>
               <div role="radiogroup" aria-label="What you sell" className="flex gap-1.5">
                 {([["physical", "Physical goods"], ["digital", "Digital & access"]] as const).map(([v, label]) => (
                   <button key={v} type="button" role="radio" aria-checked={profile.sells === v}
                     onClick={() => setSells(v)}
                     className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.sells === v ? "border-accent-line bg-tint-1 text-accent" : "border-rule-2 text-ink-2 hover:bg-tile"
+                      profile.sells === v ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
                     }`}>{label}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-muted">How you charge</div>
+              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">How you charge</div>
               <div role="radiogroup" aria-label="How you charge" className="flex gap-1.5">
                 {([["oneoff", "One-off"], ["recurring", "Subscription"]] as const).map(([v, label]) => (
                   <button key={v} type="button" role="radio" aria-checked={profile.charges === v}
                     onClick={() => setCharges(v)}
                     className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.charges === v ? "border-accent-line bg-tint-1 text-accent" : "border-rule-2 text-ink-2 hover:bg-tile"
+                      profile.charges === v ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
                     }`}>{label}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-muted">
+              <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">
                 Where you sell <span className="font-medium normal-case tracking-normal">— all that apply</span>
               </div>
               <div role="group" aria-label="Where you sell" className="flex gap-1.5">
@@ -262,15 +327,15 @@ export default function NumbersPage() {
                   <button key={v} type="button" aria-pressed={profile.channels.includes(v)}
                     onClick={() => toggleChannel(v)}
                     className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.channels.includes(v) ? "border-accent-line bg-tint-1 text-accent" : "border-rule-2 text-ink-2 hover:bg-tile"
+                      profile.channels.includes(v) ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
                     }`}>{label}</button>
                 ))}
               </div>
             </div>
 
-            <p aria-live="polite" className="mt-auto rounded-tile bg-tile px-3 py-2.5 text-2xs font-medium leading-[1.5] text-ink-2">
+            <p aria-live="polite" className="mt-auto rounded-tile border border-[#ded0f4] bg-white/75 px-3 py-2.5 text-2xs font-medium leading-[1.5] text-[#5d5080]">
               {profileSentence(profile)}{" "}
-              <span className="text-muted">
+              <span className="opacity-75">
                 That means {costLines(profile).length} cost lines per sale.
               </span>
             </p>
@@ -285,39 +350,67 @@ export default function NumbersPage() {
         <small className="text-sm font-medium text-muted-2">Costs that move with volume.</small>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3">
-        {cards.map((c) => (
-          <Link key={c.key} href={c.href}
-            className="group flex flex-col rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel hover:border-accent-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-            <div className="flex items-start gap-2.5">
-              <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-tile bg-tint-1 text-accent">
-                <Icon name={c.icon === ("pct" as IconName) ? "numbers" : c.icon} size={18} />
-                <span className="absolute -left-1 -top-1 grid h-[18px] w-[18px] place-items-center rounded-full bg-accent text-micro font-bold text-white">
-                  {c.n}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-3">
+        {cards.map((c) => {
+          const tone = TONES[c.tone];
+          // Chips the chosen channels added, so the profile visibly builds the
+          // cost model instead of silently changing it.
+          const added = Object.entries(c.addedBy ?? {})
+            .filter(([k]) => k === "recurring"
+              ? profile.charges === "recurring"
+              : profile.channels.includes(k as Channel))
+            .flatMap(([, v]) => v ?? []);
+          const state = CARD_STATE[c.key]?.(portfolio, currency) ?? null;
+
+          return (
+            <div key={c.key} className="flex flex-col rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel">
+              <div className="flex items-start gap-2.5">
+                <span className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-tile ${tone.tile}`}>
+                  <Icon name={c.icon} size={18} />
+                  <span className={`absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full text-micro font-bold text-white ${tone.num}`}>
+                    {c.n}
+                  </span>
                 </span>
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-h3 font-bold">{c.title ?? costCalculatorTitle(profile)}</h3>
-                <div className="mt-0.5 text-2xs font-semibold text-accent">{c.promise}</div>
+                <div className="min-w-0">
+                  <h3 className="text-h3 font-bold">{c.title ?? costCalculatorTitle(profile)}</h3>
+                  <div className={`mt-0.5 text-2xs font-bold ${tone.promise}`}>{c.promise}</div>
+                </div>
+              </div>
+
+              <p className="mt-2.5 text-xs font-medium leading-[1.55] text-muted">{c.desc}</p>
+
+              <div className="mt-3 border-t border-rule pt-3">
+                <h4 className="text-micro font-bold uppercase tracking-[0.7px] text-muted-2">
+                  What you&apos;ll need
+                </h4>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {c.needs.map((n) => (
+                    <span key={n} className="rounded-pill border border-rule bg-tile px-2 py-0.5 text-micro font-semibold text-ink-2">
+                      {n}
+                    </span>
+                  ))}
+                  {added.map((n) => (
+                    <span key={n} className="rounded-pill border border-accent-line bg-tint-1 px-2 py-0.5 text-micro font-semibold text-accent-dark">
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-auto pt-3.5">
+                <div className={`flex min-h-4 items-center gap-1.5 text-micro font-bold ${state?.done ? "text-green-ink" : "text-muted-2"}`}>
+                  {state?.done && <Icon name="check" size={12} />}
+                  {state?.label ?? ""}
+                </div>
+                <Link href={c.href}
+                  className={`mt-2 flex items-center justify-center gap-[7px] rounded-tile px-4 py-2.5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${tone.go}`}>
+                  Open calculator
+                  <Icon name="arrow" size={14} />
+                </Link>
               </div>
             </div>
-            <p className="mt-2.5 text-xs font-medium leading-[1.55] text-muted">{c.desc}</p>
-            <div className="mt-3">
-              <h4 className="text-micro font-bold uppercase tracking-[0.7px] text-muted-2">What you&apos;ll need</h4>
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                {c.needs.map((n) => (
-                  <span key={n} className="rounded-pill border border-rule bg-tile px-2 py-0.5 text-micro font-semibold text-ink-2">{n}</span>
-                ))}
-              </div>
-            </div>
-            <div className="mt-auto flex items-center gap-2 pt-3.5 text-2xs font-bold text-accent">
-              Open calculator
-              <span className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
-                <Icon name="arrow" size={14} />
-              </span>
-            </div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap items-baseline gap-2.5">
@@ -331,13 +424,13 @@ export default function NumbersPage() {
       <section className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel stack:grid-cols-1">
         <div>
           <div className="flex items-start gap-2.5">
-            <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-tile bg-tint-1 text-accent">
+            <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-tile bg-blue-wash text-blue-ink">
               <Icon name="numbers" size={18} />
-              <span className="absolute -left-1 -top-1 grid h-[18px] w-[18px] place-items-center rounded-full bg-accent text-micro font-bold text-white">5</span>
+              <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#4a72b8] text-micro font-bold text-white">5</span>
             </span>
             <div>
               <h3 className="text-h3 font-bold">Running costs &amp; break-even</h3>
-              <div className="mt-0.5 text-2xs font-semibold text-accent">
+              <div className="mt-0.5 text-2xs font-bold text-blue-ink">
                 What you must sell each month to keep the lights on.
               </div>
             </div>
@@ -359,25 +452,25 @@ export default function NumbersPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 rounded-card bg-tile p-3.5">
-          <div className="flex items-center gap-2 text-xs font-semibold text-ink-2">
+        <div className="flex flex-col gap-2 self-start rounded-tile border border-blue-line bg-blue-wash p-3.5">
+          <div className="flex items-baseline gap-2.5 text-xs font-semibold text-blue-ink">
             Running costs
-            <b className="ml-auto tabular-nums">
+            <b className="ml-auto font-extrabold tabular-nums">
               {noCosts ? "—" : `${formatMoney(opEx, currency)} / mo`}
             </b>
           </div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-ink-2">
+          <div className="flex items-baseline gap-2.5 text-xs font-semibold text-blue-ink">
             Best contribution per sale
-            <b className="ml-auto tabular-nums">
+            <b className="ml-auto font-extrabold tabular-nums">
               {bestContribution == null ? "—" : formatMoney(bestContribution, currency)}
             </b>
           </div>
-          <div className="mt-1 rounded-tile bg-white px-3 py-2.5">
-            <div className="text-micro font-bold uppercase tracking-[0.7px] text-muted">Break-even</div>
+          <div className="mt-0.5 border-t border-blue-line pt-2.5">
+            <div className="text-micro font-extrabold uppercase tracking-[0.8px] text-blue-ink opacity-75">Break-even</div>
             {be === null ? (
               <>
-                <div className="text-[22px] font-bold tracking-[-0.5px] text-faint">—</div>
-                <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
+                <div className="text-[24px] font-bold tracking-[-0.7px] text-blue-ink opacity-50">—</div>
+                <p className="mt-1 text-micro font-medium leading-[1.45] text-blue-ink opacity-80">
                   {noCosts
                     ? "Add your running costs and this becomes a real number. Without them the floor price is only half a floor."
                     : "No product has both a price and a cost yet."}
@@ -385,23 +478,23 @@ export default function NumbersPage() {
               </>
             ) : be === Infinity ? (
               <>
-                <div className="text-[22px] font-bold tracking-[-0.5px] text-accent">Never</div>
-                <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
+                <div className="text-[24px] font-bold tracking-[-0.7px] text-accent">Never</div>
+                <p className="mt-1 text-micro font-medium leading-[1.45] text-blue-ink opacity-80">
                   Every sale loses money at these prices, so no volume covers the overhead. Fix the
                   price or the cost first.
                 </p>
               </>
             ) : (
               <>
-                <div className="text-[22px] font-bold tracking-[-0.5px] tabular-nums">
+                <div className="text-[24px] font-bold leading-[1.15] tracking-[-0.7px] tabular-nums text-blue-ink">
                   {be} {unitNoun(profile)} / mo
                 </div>
-                <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
+                <p className="mt-1 text-micro font-medium leading-[1.45] text-blue-ink opacity-80">
                   Below this you lose money however healthy the margin looks.
                   {volume != null && bestContribution != null && (
                     <>
                       {" "}At {volume} a month, operating profit is{" "}
-                      <b className="text-ink-2">
+                      <b className="font-extrabold">
                         {formatMoney(operatingProfit(volume, bestContribution, opEx), currency)}
                       </b>
                       .
@@ -412,20 +505,35 @@ export default function NumbersPage() {
             )}
           </div>
           <Link href="/numbers/running-costs"
-            className="mt-1 rounded-tile bg-grad-mark px-4 py-2.5 text-center text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)]">
+            className="mt-1.5 flex items-center justify-center gap-[7px] rounded-tile border border-blue-line bg-white px-4 py-2.5 text-sm font-bold text-blue-ink hover:bg-[#eef4fe] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
             {noCosts ? "Add running costs" : "Open calculator"}
+            <Icon name="arrow" size={14} />
           </Link>
         </div>
       </section>
 
-      <p className="flex flex-wrap items-center justify-center gap-2 rounded-panel border border-rule bg-card px-4 py-3.5 text-xs font-medium text-muted drop-shadow-panel">
-        <em className="not-italic font-semibold text-ink-2">Revenue</em> −
-        <em className="not-italic font-semibold text-ink-2">cost of each sale</em> =
-        <em className="not-italic font-bold text-green-ink">gross profit</em>
+      <div className="flex flex-wrap items-center gap-[7px] px-0.5 text-xs font-semibold text-muted">
+        <em className="rounded-pill border border-rule bg-white px-[11px] py-[5px] not-italic text-ink-2">Revenue</em>
+        <span className="text-faint">−</span>
+        <em className="rounded-pill border border-rule bg-white px-[11px] py-[5px] not-italic text-ink-2">cost of each sale</em>
+        <span className="text-faint">=</span>
+        <em className="rounded-pill border border-green-line bg-green-wash px-[11px] py-[5px] not-italic text-green-ink">gross profit</em>
         <span className="px-1 text-faint">·</span>
-        <em className="not-italic font-bold text-green-ink">gross profit</em> −
-        <em className="not-italic font-semibold text-ink-2">running costs</em> =
-        <em className="not-italic font-bold text-blue-ink">operating profit</em>
+        <em className="rounded-pill border border-green-line bg-green-wash px-[11px] py-[5px] not-italic text-green-ink">gross profit</em>
+        <span className="text-faint">−</span>
+        <em className="rounded-pill border border-rule bg-white px-[11px] py-[5px] not-italic text-ink-2">running costs</em>
+        <span className="text-faint">=</span>
+        <em className="rounded-pill border border-blue-line bg-blue-wash px-[11px] py-[5px] not-italic text-blue-ink">operating profit</em>
+      </div>
+
+      {/* Says plainly what these numbers are, and are not. */}
+      <p className="flex items-start gap-2.5 rounded-panel border border-rule bg-card px-4 py-3.5 text-xs font-medium leading-[1.55] text-muted drop-shadow-panel">
+        <span className="mt-px shrink-0 text-faint">
+          <Icon name="check" size={14} />
+        </span>
+        These are calculations from the figures you enter, not advice. Check them against your own
+        accounts before you change a price — tax treatment and platform fees vary by market and can
+        move a margin by several points.
       </p>
     </div>
   );

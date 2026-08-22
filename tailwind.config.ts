@@ -42,6 +42,11 @@ const config: Config = {
         "blue-ink": "#3c5a8f",
         amber: "#b8791a",
         "amber-wash": "#fbf1de",
+        // Border companions for the washes. Each calculator owns a colour, so
+        // a wash without a matching line reads as an unfinished card.
+        "green-line": "#bfe6cf",
+        "blue-line": "#c3d4f2",
+        "lav-line": "#d3c2ee",
 
         // ── Legacy palette (pre-v6 pages) ────────────────────────────────
         // Retained so un-migrated inner pages keep rendering. Remove as each
@@ -86,6 +91,9 @@ const config: Config = {
         "grad-assets": "linear-gradient(123.041deg, rgb(230,244,241) 28.392%, rgb(179,207,203) 83.262%)",
         "grad-more": "linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%)",
         "grad-chat": "linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%)",
+        // The "How you sell" panel. Lilac so the setup reads as configuration
+        // sitting beside the orange hero, not as another result card.
+        "grad-setup": "linear-gradient(150deg, #f8f4fe 0%, #ece3f9 100%)",
       },
       borderRadius: {
         DEFAULT: "0.5rem",

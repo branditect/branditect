@@ -111,12 +111,12 @@ const CARD_STATE: Record<
 
 function Badge({ tone, children }: { tone: "sale" | "month" | "sandbox"; children: React.ReactNode }) {
   const styles = {
-    sale: "bg-blue-wash text-blue-ink",
-    month: "bg-green-wash text-green-ink",
-    sandbox: "bg-tint-1 text-accent",
+    sale: "bg-tint-1 text-accent",
+    month: "bg-blue-wash text-blue-ink",
+    sandbox: "bg-lavender text-lav-ink",
   } as const;
   return (
-    <span className={`rounded-pill px-2.5 py-1 text-micro font-bold uppercase tracking-[0.7px] ${styles[tone]}`}>
+    <span className={`rounded-pill px-2.5 py-[3px] text-micro font-extrabold uppercase tracking-[0.9px] ${styles[tone]}`}>
       {children}
     </span>
   );
@@ -239,19 +239,19 @@ export default function NumbersPage() {
       <div className="grid grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] items-stretch gap-3 stack:grid-cols-1">
         <section
           aria-label="What Numbers does"
-          className="relative overflow-hidden rounded-panel bg-grad-hero px-[22px] pb-5 pt-[22px] text-white drop-shadow-hero"
+          className="relative flex flex-col overflow-hidden rounded-panel bg-grad-hero px-[22px] pb-5 pt-[22px] text-white drop-shadow-hero"
         >
           <span aria-hidden="true" className="pointer-events-none absolute -right-6 -top-8 h-[100px] w-[150px] rounded-full border-[1.2px] border-white/25" />
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-1 flex-col">
             <div className="text-sm font-bold tracking-[-0.1px]">What Numbers does</div>
-            <p className="mt-2 max-w-[46em] text-xs font-semibold leading-[1.5] text-white/[.94]">
+            <p className="mt-2.5 max-w-[40ch] text-base font-semibold leading-[1.5] text-white/[.94]">
               Work out what you really make on every sale, set prices that hit your target margin,
               and build offers that don&apos;t quietly cost you money — then{" "}
               <b>Studio writes inside those limits.</b>
             </p>
 
-            <div className="mt-[18px] grid grid-cols-3 gap-2 stack:grid-cols-1">
-              <div className="rounded-tile border-[1.2px] border-white/40 px-3 py-2.5">
+            <div className="mt-auto grid grid-cols-3 gap-2 pt-[18px] stack:grid-cols-1">
+              <div className="rounded-tile border-[1.2px] border-white/40 px-[11px] pb-[11px] pt-2.5">
                 <div className="text-micro font-medium text-white/[.82]">Products priced</div>
                 <div className="text-[18px] font-bold tabular-nums">
                   {portfolio.priced} / {portfolio.total}
@@ -260,7 +260,7 @@ export default function NumbersPage() {
                   {missing > 0 ? `${missing} missing costs` : "all costed"}
                 </div>
               </div>
-              <div className="rounded-tile border-[1.2px] border-white/40 px-3 py-2.5">
+              <div className="rounded-tile border-[1.2px] border-white/40 px-[11px] pb-[11px] pt-2.5">
                 <div className="text-micro font-medium text-white/[.82]">Lowest margin</div>
                 <div className="text-[18px] font-bold tabular-nums">
                   {portfolio.lowest ? `${portfolio.lowest.m.pct.toFixed(0)}%` : "—"}
@@ -269,7 +269,7 @@ export default function NumbersPage() {
                   {portfolio.lowest?.p.name ?? "no costed products"}
                 </div>
               </div>
-              <div className="rounded-tile border-[1.2px] border-white/40 px-3 py-2.5">
+              <div className="rounded-tile border-[1.2px] border-white/40 px-[11px] pb-[11px] pt-2.5">
                 <div className="text-micro font-medium text-white/[.82]">Break-even</div>
                 <div className="text-[18px] font-bold tabular-nums">
                   {be === null ? "—" : be === Infinity ? "never" : `${be} / mo`}
@@ -350,7 +350,7 @@ export default function NumbersPage() {
         <small className="text-sm font-medium text-muted-2">Costs that move with volume.</small>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] items-stretch gap-3">
         {cards.map((c) => {
           const tone = TONES[c.tone];
           // Chips the chosen channels added, so the profile visibly builds the
@@ -363,8 +363,8 @@ export default function NumbersPage() {
           const state = CARD_STATE[c.key]?.(portfolio, currency) ?? null;
 
           return (
-            <div key={c.key} className="flex flex-col rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel">
-              <div className="flex items-start gap-2.5">
+            <div key={c.key} className="flex flex-col rounded-card border border-rule-2 bg-card p-4">
+              <div className="flex items-start gap-[11px]">
                 <span className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-tile ${tone.tile}`}>
                   <Icon name={c.icon} size={18} />
                   <span className={`absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full text-micro font-bold text-white ${tone.num}`}>
@@ -373,14 +373,14 @@ export default function NumbersPage() {
                 </span>
                 <div className="min-w-0">
                   <h3 className="text-h3 font-bold">{c.title ?? costCalculatorTitle(profile)}</h3>
-                  <div className={`mt-0.5 text-2xs font-bold ${tone.promise}`}>{c.promise}</div>
+                  <div className={`mt-1 text-xs font-bold leading-[1.35] ${tone.promise}`}>{c.promise}</div>
                 </div>
               </div>
 
-              <p className="mt-2.5 text-xs font-medium leading-[1.55] text-muted">{c.desc}</p>
+              <p className="mt-[11px] text-xs font-medium leading-[1.5] text-muted">{c.desc}</p>
 
-              <div className="mt-3 border-t border-rule pt-3">
-                <h4 className="text-micro font-bold uppercase tracking-[0.7px] text-muted-2">
+              <div className="mt-[11px] border-t border-rule pt-[11px]">
+                <h4 className="text-micro font-extrabold uppercase tracking-[0.8px] text-muted-2">
                   What you&apos;ll need
                 </h4>
                 <div className="mt-1.5 flex flex-wrap gap-1">
@@ -397,13 +397,13 @@ export default function NumbersPage() {
                 </div>
               </div>
 
-              <div className="mt-auto pt-3.5">
+              <div className="mt-auto pt-3">
                 <div className={`flex min-h-4 items-center gap-1.5 text-micro font-bold ${state?.done ? "text-green-ink" : "text-muted-2"}`}>
                   {state?.done && <Icon name="check" size={12} />}
                   {state?.label ?? ""}
                 </div>
                 <Link href={c.href}
-                  className={`mt-2 flex items-center justify-center gap-[7px] rounded-tile px-4 py-2.5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${tone.go}`}>
+                  className={`mt-[9px] flex items-center justify-center gap-[7px] rounded-tile p-2.5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${tone.go}`}>
                   Open calculator
                   <Icon name="arrow" size={14} />
                 </Link>
@@ -421,26 +421,26 @@ export default function NumbersPage() {
         </small>
       </div>
 
-      <section className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-4 rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel stack:grid-cols-1">
+      <section className="grid grid-cols-[minmax(0,1fr)_minmax(220px,280px)] gap-[18px] rounded-panel border border-rule bg-card px-[18px] pb-[18px] pt-4 drop-shadow-panel stack:grid-cols-1">
         <div>
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-[11px]">
             <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-tile bg-blue-wash text-blue-ink">
               <Icon name="numbers" size={18} />
               <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#4a72b8] text-micro font-bold text-white">5</span>
             </span>
             <div>
               <h3 className="text-h3 font-bold">Running costs &amp; break-even</h3>
-              <div className="mt-0.5 text-2xs font-bold text-blue-ink">
+              <div className="mt-1 text-xs font-bold leading-[1.35] text-blue-ink">
                 What you must sell each month to keep the lights on.
               </div>
             </div>
           </div>
-          <p className="mt-2.5 text-xs font-medium leading-[1.55] text-muted">
+          <p className="mt-[11px] max-w-[54ch] text-xs font-medium leading-[1.5] text-muted">
             Rent, salaries, software and marketing don&apos;t care how much you sell. Add them up
             once — shared across every product — and Branditect works out the volume that covers
             them, and what your real floor price is.
           </p>
-          <h4 className="mt-3 text-micro font-bold uppercase tracking-[0.7px] text-muted-2">
+          <h4 className="mt-[11px] border-t border-rule pt-[11px] text-micro font-extrabold uppercase tracking-[0.8px] text-muted-2">
             What you&apos;ll need — monthly totals, not receipts
           </h4>
           <div className="mt-1.5 flex flex-wrap gap-1">

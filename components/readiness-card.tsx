@@ -6,7 +6,7 @@ import type { KnowledgeCounts } from "@/lib/useReadiness";
 const TILES: { key: keyof KnowledgeCounts; label: string; icon: IconName; href: string }[] = [
   { key: "documents", label: "Documents", icon: "doc", href: "/knowledge/documents" },
   { key: "images", label: "Images", icon: "img", href: "/knowledge/images" },
-  { key: "products", label: "Products", icon: "bag", href: "/brand/products" },
+  { key: "products", label: "Products", icon: "bag", href: "/knowledge/products" },
   { key: "presentations", label: "Presentations", icon: "pres", href: "/knowledge/presentations" },
   { key: "links", label: "Links", icon: "link", href: "/knowledge/links" },
 ];

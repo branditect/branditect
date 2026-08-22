@@ -19,8 +19,8 @@ Auth routes and their rules are in `spec/auth.md`. Summary:
 /brand/strategy                Strategy (strip the duplicated voice section from the bottom)
 /brand/tone-of-voice           Tone of voice — the single home for tone
 /brand/visual-identity         Visual identity — logos, colour, type, brand guideline upload
-/brand/products                Products — list + drawer, see spec/products.md
-/brand/products/:id            Deep link to one product (opens the drawer, or a full
+/knowledge/products                Products — list + drawer, see spec/products.md
+/knowledge/products/:id            Deep link to one product (opens the drawer, or a full
                                page below 1280px where the drawer is hidden)
 
 /knowledge                     → redirect to /knowledge/documents
@@ -53,7 +53,7 @@ Permanent (301). Every one of these is live now — bookmarks and any links alre
 | `/dashboard/brand-strategy/social` | `/brand/channels` *(see note)* |
 | `/dashboard/brand-library/tone-of-voice` | `/brand/tone-of-voice` |
 | `/dashboard/brand-library` | `/brand/visual-identity` |
-| `/dashboard/catalog` | `/brand/products` |
+| `/dashboard/catalog` | `/knowledge/products` |
 | `/dashboard/brand-library/knowledge-vault` | `/knowledge/documents` |
 | `/dashboard/assets` | `/knowledge/images` |
 | `/dashboard/brand-library/templates` | `/knowledge/links` |

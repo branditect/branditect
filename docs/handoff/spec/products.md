@@ -1,6 +1,6 @@
 # Products
 
-Route: `/brand/products`. Design: `reference/products.html`.
+Route: `/knowledge/products`. Design: `reference/products.html`.
 
 A master list with a slide-over detail drawer. The reference shows four rows because those four cover every state the list can be in — four categories, in-stock and low-stock, one row selected and three not. There are 128 in the real data.
 

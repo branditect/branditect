@@ -133,13 +133,13 @@ export default function ProductsPage() {
               />
             </label>
             <Link
-              href="/brand/products/import"
+              href="/knowledge/products/import"
               className="grid h-9 place-items-center rounded-tile border border-rule-2 px-3 text-sm font-semibold text-ink-2 hover:bg-tile"
             >
               Import
             </Link>
             <Link
-              href="/brand/products/import"
+              href="/knowledge/products/import"
               className="inline-flex h-9 items-center gap-[7px] rounded-tile bg-grad-mark px-[15px] text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)]"
             >
               <Icon name="plus" size={14} />
@@ -159,13 +159,13 @@ export default function ProductsPage() {
             </p>
             <div className="mt-4 flex gap-2.5">
               <Link
-                href="/brand/products/import"
+                href="/knowledge/products/import"
                 className="rounded-tile bg-grad-mark px-4 py-2.5 text-sm font-bold text-white"
               >
                 Add product
               </Link>
               <Link
-                href="/brand/products/import"
+                href="/knowledge/products/import"
                 className="rounded-tile border border-rule-2 bg-white px-4 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile"
               >
                 Import

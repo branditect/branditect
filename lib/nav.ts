@@ -29,7 +29,6 @@ export const NAV: NavItem[] = [
       { label: "Strategy", href: "/brand/strategy" },
       { label: "Tone of voice", href: "/brand/tone-of-voice" },
       { label: "Visual identity", href: "/brand/visual-identity" },
-      { label: "Products", href: "/brand/products" },
       { label: "Channels", href: "/brand/channels" },
     ],
   },
@@ -38,6 +37,7 @@ export const NAV: NavItem[] = [
     href: "/knowledge",
     icon: "know",
     children: [
+      { label: "Products", href: "/knowledge/products" },
       { label: "Documents", href: "/knowledge/documents" },
       { label: "Images", href: "/knowledge/images" },
       { label: "Presentations", href: "/knowledge/presentations" },

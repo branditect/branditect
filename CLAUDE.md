@@ -10,8 +10,8 @@ Every screen belongs to exactly one of those. Anything that belongs to none of t
 
 ```
 Home        the landing screen: readiness, then what to make
-Brand       define · Strategy · Tone of voice · Visual identity · Products
-Knowledge   feed   · Documents · Images · Presentations · Links
+Brand       define · Strategy · Tone of voice · Visual identity · Channels
+Knowledge   feed   · Products · Documents · Images · Presentations · Links
 Studio      make   · Write · Create images · Brand assets
 Numbers     define · Profitability · Product costs · Pricing & offers
 AI Chat     the brand-trained assistant
@@ -31,7 +31,9 @@ Nav labels are plain nouns a user already knows. Keep "Architect" for page title
 
 Words that mean one thing each:
 
-- **Knowledge** — the files you feed it. Not "Vault", not "Library", not "Assets".
+- **Knowledge** — everything you feed the brain: products, files, images, links. Not "Vault", not "Library", not "Assets".
+
+**Products lives under Knowledge, not Brand** (moved 2026-08-22). Apply the Define → Feed → Make test: a product is something the brain *learns about*, not something that defines the brand's identity. The Products spec says it itself — "Products is where the brand brain learns what you sell." Brand holds the things you decide; Knowledge holds the things you feed it.
 - **Library** — reserved for saved outputs inside Studio. Do not use it for inputs.
 - **Numbers** — costs, margins, pricing rules. Never "Finance": that promises invoicing and VAT, which this app does not do.
 

@@ -17,7 +17,11 @@ const nextConfig = {
       { source: '/dashboard/brand-strategy/social', destination: '/brand/channels', permanent: true },
       { source: '/dashboard/brand-library/tone-of-voice', destination: '/brand/tone-of-voice', permanent: true },
       { source: '/dashboard/brand-library', destination: '/brand/visual-identity', permanent: true },
-      { source: '/dashboard/catalog', destination: '/brand/products', permanent: true },
+      { source: '/dashboard/catalog', destination: '/knowledge/products', permanent: true },
+      // Products moved from Brand to Knowledge. It shipped at /brand/products,
+      // so that URL has to keep resolving.
+      { source: '/brand/products', destination: '/knowledge/products', permanent: true },
+      { source: '/brand/products/:path*', destination: '/knowledge/products/:path*', permanent: true },
 
       // Knowledge
       { source: '/dashboard/brand-library/knowledge-vault', destination: '/knowledge/documents', permanent: true },

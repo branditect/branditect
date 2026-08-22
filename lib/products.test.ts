@@ -65,7 +65,7 @@ describe("margin", () => {
 
 function product(over: Partial<Product>): Product {
   return {
-    id: "x", name: "x", description: "", category: "", sku: "", tags: [],
+    id: "x", name: "x", description: "", category: "", sku: "", tags: [], imageUrl: null,
     retailPrice: 100, taxRatePct: 0, landedCost: 50, currency: "GBP",
     stockStatus: null, indexed: false, sourceFileCount: 0, imageCount: 0,
     usedInOutputCount: 0, ...over,

@@ -241,12 +241,22 @@ export default function ProductsPage() {
                       >
                         <td className={`px-2.5 py-3 align-middle ${isSelected ? "shadow-[inset_3px_0_0_#f0562a]" : ""}`}>
                           <div className="flex min-w-0 items-center gap-3">
-                            <span
-                              aria-hidden="true"
-                              className={`grid h-[52px] w-[52px] shrink-0 place-items-center rounded-tile ${categoryStyle(p.category)}`}
-                            >
-                              <Icon name="bag" size={24} />
-                            </span>
+                            {p.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={p.imageUrl}
+                                alt=""
+                                aria-hidden="true"
+                                className="h-[52px] w-[52px] shrink-0 rounded-tile border border-rule object-cover"
+                              />
+                            ) : (
+                              <span
+                                aria-hidden="true"
+                                className={`grid h-[52px] w-[52px] shrink-0 place-items-center rounded-tile ${categoryStyle(p.category)}`}
+                              >
+                                <Icon name="bag" size={24} />
+                              </span>
+                            )}
                             <div className="min-w-0">
                               <div className="text-sm font-bold tracking-[-0.1px]">{p.name}</div>
                               <div className="mt-0.5 max-w-[34ch] truncate text-xs font-normal leading-[1.35] text-muted-2">
@@ -383,7 +393,13 @@ export default function ProductsPage() {
         <div className="hidden xl:block">
           <ProductDrawer
             product={selected}
+            brandId={brandId}
             onClose={() => setSelectedId(null)}
+            onSaved={(updated) =>
+              setProducts((list) =>
+                (list ?? []).map((p) => (p.id === updated.id ? updated : p)),
+              )
+            }
             returnFocusTo={rowRefs.current[selected.id]}
           />
         </div>

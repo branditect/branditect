@@ -19,6 +19,9 @@ ALTER TABLE catalog_products
   -- identity
   ADD COLUMN IF NOT EXISTS barcode TEXT,
   ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}',
+  -- The product's own shot, picked from brand_images. Stored as a URL rather
+  -- than an image id so the thumbnail survives an image being re-uploaded.
+  ADD COLUMN IF NOT EXISTS image_url TEXT,
 
   -- guardrails Studio obeys when writing offers
   ADD COLUMN IF NOT EXISTS floor_price NUMERIC,

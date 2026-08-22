@@ -18,6 +18,8 @@ export interface Product {
   sku: string;
   barcode?: string;
   tags: string[];
+  /** Chosen from the brand image library. Null renders the category glyph. */
+  imageUrl: string | null;
 
   // money — read by Numbers and by every offer Studio writes
   retailPrice: number | null;
@@ -214,6 +216,7 @@ export function fromRow(row: any): Product {
     sku: row.sku ?? "",
     barcode: row.barcode ?? undefined,
     tags: Array.isArray(row.tags) ? row.tags : [],
+    imageUrl: row.image_url ?? null,
 
     retailPrice: num(row.price_retail) ?? num(row.price_rrp),
     rrp: num(row.price_rrp),

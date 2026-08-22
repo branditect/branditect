@@ -5,6 +5,10 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // lib/ holds class maps (e.g. CATEGORY_STYLES in lib/products.ts). Without
+    // this glob those classes are never scanned and silently render unstyled —
+    // which is invisible until one category has no pill colour.
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -25,8 +29,19 @@ const config: Config = {
         tint: { 1: "#fef0ea", 2: "#fdede6", 3: "#fdeee7", 4: "#fbe7e2", 5: "#fcedeb" },
         good: "#2fbf71",
         navy: "#1d2748",
-        lavender: "#e8dff6",
         plannote: "#a98a80",
+
+        // Category / status washes (products.html). Each pairs a wash with an
+        // ink dark enough to carry text on it — never use a wash as a text
+        // colour or an ink as a background.
+        lavender: "#e8dff6",
+        "lav-ink": "#5b4a80",
+        "green-wash": "#e8f6ee",
+        "green-ink": "#1c7a48",
+        "blue-wash": "#e8effd",
+        "blue-ink": "#3c5a8f",
+        amber: "#b8791a",
+        "amber-wash": "#fbf1de",
 
         // ── Legacy palette (pre-v6 pages) ────────────────────────────────
         // Retained so un-migrated inner pages keep rendering. Remove as each
@@ -99,12 +114,14 @@ const config: Config = {
         stack: { max: "900px" },
       },
       fontFamily: {
-        headline: ["var(--font-jakarta)", "Plus Jakarta Sans", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
-        body: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
-        label: ["var(--font-manrope)", "Manrope", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
-        display: ["var(--font-jakarta)", "Plus Jakarta Sans", "var(--font-dm-sans)", "DM Sans", "sans-serif"],
-        // v6 base font. Body weight is 500, not 400 — 400 is meta only.
+        // One typeface. `font-body` used to resolve to Manrope and, being a
+        // class on <body>, overrode the base-layer rule — so the whole app
+        // rendered in Manrope while claiming Plus Jakarta Sans.
         sans: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+        headline: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        body: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        label: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        display: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
         mono: ["var(--font-dm-mono)", "monospace"],
       },
       fontSize: {

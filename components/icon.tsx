@@ -1,12 +1,13 @@
 /**
- * The Branditect icon set — 19 icons, all drawn in `currentColor`.
+ * The Branditect icon set — 25 icons, all drawn in `currentColor`.
  *
  * Nine are the real Branditect icons, exported from the brand icon set and
  * converted so their baked-in #F0562A became `currentColor` — without that
  * they could not go white on the orange hero.
  *
  * The remaining ten are still filled stand-ins awaiting real exports:
- * search, bell, doc, img, bag, pres, link, check, arrow, send.
+ * search, bell, doc, img, bag, pres, link, check, arrow, send, filter,
+ * close, trash, pen, chevronRight, chevronLeft.
  *
  * The two styles differ: the real icons are stroked (`outline: true`), the
  * stand-ins are filled. Mixing them is visible — the five Brand Knowledge
@@ -18,7 +19,9 @@
 export type IconName =
   | "home" | "brand" | "know" | "studio" | "numbers" | "chat"
   | "search" | "bell" | "doc" | "img" | "bag" | "pres" | "link"
-  | "target" | "upload" | "check" | "plus" | "arrow" | "send";
+  | "target" | "upload" | "check" | "plus" | "arrow" | "send"
+  // Products
+  | "filter" | "close" | "trash" | "pen" | "chevronRight" | "chevronLeft";
 
 interface IconSpec {
   d: React.ReactNode;
@@ -175,6 +178,24 @@ const PATHS: Record<IconName, IconSpec> = {
   arrow: {
     viewBox: "0 0 25 19",
     d: <path d="M15.1.9a1.3 1.3 0 0 0-1.8 1.85l4.5 4.5H1.6a1.3 1.3 0 1 0 0 2.6h16.2l-4.5 4.5a1.3 1.3 0 1 0 1.84 1.84l6.7-6.72a1.3 1.3 0 0 0 0-1.84z" />,
+  },
+  filter: {
+    d: <path d="M3.5 5.4A1.4 1.4 0 0 1 4.9 4h14.2a1.4 1.4 0 0 1 1.07 2.3l-5.27 6.3V19a1 1 0 0 1-1.45.9l-2.8-1.4a1 1 0 0 1-.55-.9v-4l-5.27-6.3a1.4 1.4 0 0 1-.33-.9" />,
+  },
+  close: {
+    d: <path d="M5.7 4.3a1 1 0 0 0-1.4 1.4l6.3 6.3-6.3 6.3a1 1 0 1 0 1.4 1.4l6.3-6.3 6.3 6.3a1 1 0 0 0 1.4-1.4L13.4 12l6.3-6.3a1 1 0 0 0-1.4-1.4L12 10.6z" />,
+  },
+  trash: {
+    d: <path d="M9.4 2.6h5.2a1.4 1.4 0 0 1 1.4 1.4v.9h4a1.1 1.1 0 1 1 0 2.2h-.55l-.83 12.1A2.6 2.6 0 0 1 16.03 21.6H7.97a2.6 2.6 0 0 1-2.59-2.4L4.55 7.1H4a1.1 1.1 0 0 1 0-2.2h4v-.9a1.4 1.4 0 0 1 1.4-1.4" />,
+  },
+  pen: {
+    d: <path d="M16.4 2.9a2.9 2.9 0 0 1 4.1 4.1l-1.3 1.3-4.1-4.1zM13.7 5.6l4.1 4.1-8.4 8.4a2 2 0 0 1-.9.5l-4.6 1.3a.8.8 0 0 1-1-1l1.3-4.6a2 2 0 0 1 .5-.9z" />,
+  },
+  chevronRight: {
+    d: <path d="M9.1 4.4a1.3 1.3 0 0 0 0 1.84L14.86 12 9.1 17.76a1.3 1.3 0 1 0 1.84 1.84l6.68-6.68a1.3 1.3 0 0 0 0-1.84L10.94 4.4a1.3 1.3 0 0 0-1.84 0" />,
+  },
+  chevronLeft: {
+    d: <path d="M14.9 4.4a1.3 1.3 0 0 1 0 1.84L9.14 12l5.76 5.76a1.3 1.3 0 1 1-1.84 1.84l-6.68-6.68a1.3 1.3 0 0 1 0-1.84L13.06 4.4a1.3 1.3 0 0 1 1.84 0" />,
   },
   send: {
     d: <path d="M13.1 3.9a1.4 1.4 0 0 0-2 2l4.7 4.7H4.3a1.4 1.4 0 1 0 0 2.8h11.5l-4.7 4.7a1.4 1.4 0 0 0 2 2l7.1-7.1a1.4 1.4 0 0 0 0-2z" />,

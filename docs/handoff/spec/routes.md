@@ -2,15 +2,26 @@
 
 ## Target map
 
+Auth routes and their rules are in `spec/auth.md`. Summary:
+
+```
+/login  /signup  /forgot-password  /reset-password  /verify-email  /logout
+```
+
+## App map
+
 ```
 /                              → redirect to /home (authed) or /login
 /home                          Home
+/onboarding                    First run — 4 full-screen gates, see spec/auth.md
 
 /brand                         → redirect to /brand/strategy
 /brand/strategy                Strategy (strip the duplicated voice section from the bottom)
 /brand/tone-of-voice           Tone of voice — the single home for tone
 /brand/visual-identity         Visual identity — logos, colour, type, brand guideline upload
-/brand/products                Products & pricing
+/brand/products                Products — list + drawer, see spec/products.md
+/brand/products/:id            Deep link to one product (opens the drawer, or a full
+                               page below 1280px where the drawer is hidden)
 
 /knowledge                     → redirect to /knowledge/documents
 /knowledge/documents           Documents

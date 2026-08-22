@@ -82,6 +82,40 @@ Both components read the **same** `Readiness` object. `WhatsNextPanel` renders `
 
 ---
 
+---
+
+## Parallel track — Brand ▸ Products
+
+Independent of Home. Depends only on phase 3, the tokens. Full spec in `spec/products.md`; design in `reference/products.html`.
+
+- Build the list as a real `<table>`, with a 400px slide-over drawer. Below 1280px, a row click routes to a full page instead of opening the drawer.
+- **Default sort is margin ascending.** Worst-margin products first is the most useful thing this page can say on load.
+- Port the `margin()` function from `spec/products.md` verbatim. The obvious calculation — factory cost against gross price — overstates by roughly five points, and a max-discount rule built on it eats the difference on every promotion. Net price after tax, against landed cost.
+- Build the "use this product" row: Write about it · Make images · Ask about it, each opening the matching Studio surface pre-loaded. This row is why the page exists.
+- Guardrails (floor price, deepest discount, minimum margin) are **displayed** in the Pricing tab and **edited** in Numbers ▸ Pricing & offers. One home, two places it shows.
+- Hold the scope line: stock *status* stays, stock *management* doesn't. No reorder point, supplier or lead time.
+
+**Done when:** a product with no landed cost shows `—` for margin rather than a number derived from factory cost, and the three "use this" actions each land in Studio with the product already selected.
+
+---
+
+## Parallel track — login and first run
+
+Independent of phases 1–5. Only dependency is phase 3, the tokens. If two people are working, this is the clean split.
+
+Full spec in `spec/auth.md`; design in `reference/login.html`.
+
+- Build `<AuthLayout>` once, then thin `/login` and `/signup` pages on top of it. **Two routes, not a client-side tab** — the tabs in the reference exist so you can see both states in one file.
+- Add `/forgot-password`, `/reset-password`, `/verify-email`, and a **POST-only** `/logout`.
+- Take the error copy verbatim from `spec/auth.md`. Two of those strings are security decisions, not preferences: wrong-password and unknown-email must return the **same** message, and the reset confirmation must be non-committal. Different messages let anyone enumerate your users.
+- Validate the `next` parameter as same-origin before redirecting. An unchecked `next` is an open redirect.
+- Decide on Google OAuth. If it isn't shipping, **delete the button and the divider** — a dead SSO button is the worst possible first interaction.
+- Build the four onboarding gates. Full-screen and sequential, never a modal over the dashboard. Steps 1 and 2 are required; 3 and 4 are skippable via an explicit link, and whatever gets skipped shows up as a failing Brand Readiness check.
+
+**Done when:** a new account goes sign-up → 20 questions → strategy document → upload → first output → `/home`, without ever seeing a modal; and a returning user with an incomplete questionnaire lands on `/onboarding` rather than a half-empty Home.
+
+---
+
 ## What is deliberately NOT in this plan
 
 **Mission Board, Strategic Goals, Today's Focus.** Cut, or reduced to one collapsible strip on Home. It's the least brand-specific surface in the app and it's where the product starts looking like a worse Monday. Bringing it back is a product decision, not a scope oversight.

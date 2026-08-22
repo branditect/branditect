@@ -294,26 +294,32 @@ export default function NumbersPage() {
           <div className="flex flex-col gap-3.5 px-[15px] pb-4 pt-3">
             <div>
               <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">What you sell</div>
-              <div role="radiogroup" aria-label="What you sell" className="flex gap-1.5">
-                {([["physical", "Physical goods"], ["digital", "Digital & access"]] as const).map(([v, label]) => (
+              <div role="radiogroup" aria-label="What you sell" className="flex flex-wrap gap-1.5">
+                {([["physical", "Physical goods", "box"], ["digital", "Digital & access", "cloud"]] as const).map(([v, label, icon]) => (
                   <button key={v} type="button" role="radio" aria-checked={profile.sells === v}
                     onClick={() => setSells(v)}
-                    className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.sells === v ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
-                    }`}>{label}</button>
+                    className={`inline-flex items-center gap-[7px] rounded-pill border px-3 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                      profile.sells === v ? "border-accent bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
+                    }`}>
+                    <Icon name={icon} size={13} />
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
 
             <div>
               <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">How you charge</div>
-              <div role="radiogroup" aria-label="How you charge" className="flex gap-1.5">
-                {([["oneoff", "One-off"], ["recurring", "Subscription"]] as const).map(([v, label]) => (
+              <div role="radiogroup" aria-label="How you charge" className="flex flex-wrap gap-1.5">
+                {([["oneoff", "One-off", "once"], ["recurring", "Subscription", "repeat"]] as const).map(([v, label, icon]) => (
                   <button key={v} type="button" role="radio" aria-checked={profile.charges === v}
                     onClick={() => setCharges(v)}
-                    className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.charges === v ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
-                    }`}>{label}</button>
+                    className={`inline-flex items-center gap-[7px] rounded-pill border px-3 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                      profile.charges === v ? "border-accent bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
+                    }`}>
+                    <Icon name={icon} size={13} />
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -322,14 +328,25 @@ export default function NumbersPage() {
               <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">
                 Where you sell <span className="font-medium normal-case tracking-normal">— all that apply</span>
               </div>
-              <div role="group" aria-label="Where you sell" className="flex gap-1.5">
-                {([["direct", "Own site"], ["trade", "Wholesale"], ["store", "App store"]] as const).map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={profile.channels.includes(v)}
-                    onClick={() => toggleChannel(v)}
-                    className={`flex-1 rounded-tile border px-2 py-2 text-2xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      profile.channels.includes(v) ? "border-accent-line bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
-                    }`}>{label}</button>
-                ))}
+              <div role="group" aria-label="Where you sell" className="flex flex-wrap gap-1.5">
+                {([["direct", "Own site"], ["trade", "Wholesale"], ["store", "App store"]] as const).map(([v, label]) => {
+                  const on = profile.channels.includes(v);
+                  return (
+                    <button key={v} type="button" aria-pressed={on}
+                      onClick={() => toggleChannel(v)}
+                      className={`inline-flex items-center gap-[7px] rounded-pill border px-3 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                        on ? "border-accent bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
+                      }`}>
+                      {/* A real tick box, so "all that apply" is legible as multi-select. */}
+                      <span className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[4px] border ${
+                        on ? "border-accent bg-accent text-white" : "border-[#cfc0ea]"
+                      }`}>
+                        {on && <Icon name="tick" size={9} />}
+                      </span>
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

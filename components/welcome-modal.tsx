@@ -28,7 +28,7 @@ const STEPS = [
   {
     title: 'Step 4: Numbers',
     desc: 'Add costs and pricing so Studio never writes past your margins.',
-    href: '/numbers/profitability',
+    href: '/numbers',
   },
 ]
 

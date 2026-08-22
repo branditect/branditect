@@ -45,10 +45,14 @@ const nextConfig = {
       { source: '/dashboard/mission-board', destination: '/home', permanent: true },
 
       // Numbers
-      { source: '/dashboard/tools', destination: '/numbers/profitability', permanent: true },
       // /numbers is a real landing page now, not a redirect to a child.
       { source: '/numbers/product-costs', destination: '/numbers/cost', permanent: true },
-      { source: '/dashboard/tools/:path*', destination: '/numbers/profitability/:path*', permanent: true },
+      // The old app's Business Tools. Its calculators are superseded by the
+      // five on /numbers, so every old path lands on the new hub.
+      { source: '/numbers/profitability', destination: '/numbers', permanent: true },
+      { source: '/numbers/profitability/:path*', destination: '/numbers', permanent: true },
+      { source: '/dashboard/tools', destination: '/numbers', permanent: true },
+      { source: '/dashboard/tools/:path*', destination: '/numbers', permanent: true },
 
       // Section roots land on their first child.
       { source: '/brand', destination: '/brand/strategy', permanent: false },

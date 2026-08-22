@@ -29,7 +29,7 @@ const STUDIO: { title: string; description: string; href: string; variant: Studi
   {
     title: "Do the numbers",
     description: "Profitability, pricing structure and offers.",
-    href: "/numbers/profitability",
+    href: "/numbers",
     variant: "numbers",
   },
   {

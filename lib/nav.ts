@@ -54,17 +54,9 @@ export const NAV: NavItem[] = [
       { label: "Brand assets", href: "/studio/brand-assets" },
     ],
   },
-  {
-    label: "Numbers",
-    href: "/numbers",
-    icon: "numbers",
-    children: [
-      { label: "True cost", href: "/numbers/cost" },
-      { label: "Pricing & margin", href: "/numbers/pricing" },
-      { label: "Offers & discounts", href: "/numbers/offers" },
-      { label: "Running costs", href: "/numbers/running-costs" },
-    ],
-  },
+  // No children: /numbers is a real landing page that already lists every
+  // calculator as a card, so a sub-menu would be the same links twice.
+  { label: "Numbers", href: "/numbers", icon: "numbers" },
   { label: "AI Chat", href: "/chat", icon: "chat" },
 ];
 

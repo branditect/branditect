@@ -85,7 +85,11 @@ Other requests: ${inputs.other || "none"}`;
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
+        // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+        // max_tokens caps thinking + text together — these calls would
+        // truncate. None of them need reasoning tokens.
+        thinking: { type: "disabled" },
         max_tokens: 1200,
         system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],

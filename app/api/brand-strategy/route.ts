@@ -110,7 +110,11 @@ export async function POST(req: NextRequest) {
 
     // Use streaming to avoid Vercel timeout
     const stream = await client.messages.stream({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-5",
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+      // max_tokens caps thinking + text together — these calls would
+      // truncate. None of them need reasoning tokens.
+      thinking: { type: "disabled" },
       max_tokens: 6000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: contentBlocks }],

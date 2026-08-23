@@ -92,7 +92,11 @@ export async function POST(req: NextRequest) {
       }
 
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
+        // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+        // max_tokens caps thinking + text together — these calls would
+        // truncate. None of them need reasoning tokens.
+        thinking: { type: "disabled" },
         max_tokens: 4000,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: messageContent }],

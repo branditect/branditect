@@ -12,17 +12,23 @@ const supabase = createClient(
 )
 
 async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes] = await Promise.all([
+  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes, answersRes, imagesRes] = await Promise.all([
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('catalog_products').select('name, description, price_rrp, price_monthly, price_wholesale, price_cogs, currency, type, category').eq('brand_id', brandId).limit(10),
+    supabase.from('catalog_products').select('name, description, sku, price_rrp, price_retail, price_monthly, price_wholesale, price_cogs, landed_cost, tax_rate_pct, floor_price, max_discount_pct, min_margin_pct, stock_status, stock_units, currency, type, category, tags').eq('brand_id', brandId),
     supabase.from('brands').select('strategy_text, colors').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_book_colors').select('hex, name').eq('brand_id', brandId).limit(20),
     supabase.from('brand_logos').select('slot, file_url, file_name').eq('brand_id', brandId),
     supabase.from('brand_fonts').select('name, role, google_font_url').eq('brand_id', brandId),
     supabase.from('brand_visual').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_documents').select('file_name, category, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).limit(10),
+    supabase.from('brand_documents').select('file_name, category, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }),
+    // The questionnaire answers, not just the generated summary. Nothing is
+    // stored here yet — the strategy page has never written a row — so this
+    // resolves empty today and starts working the moment it does.
+    supabase.from('brand_strategies').select('answers, generated_strategy, category').eq('brand_id', brandId).maybeSingle(),
+    // What imagery exists, so the chat can answer "what shots do we have?"
+    supabase.from('brand_images').select('file_name, category, format, tags, campaign_name, title').eq('brand_id', brandId),
   ])
 
   const brand = brandRes.data
@@ -43,25 +49,26 @@ async function getBrandContext(brandId: string): Promise<string> {
     const stratText = typeof strategy.generated_strategy === 'string'
       ? strategy.generated_strategy
       : JSON.stringify(strategy.generated_strategy)
-    ctx += `\nBRAND STRATEGY (generated):\n${stratText.slice(0, 4000)}\n`
+    ctx += `\nBRAND STRATEGY (generated):\n${stratText}\n`
   }
 
   // Strategy text from brands table (onboarding)
   if (brandStrat?.strategy_text) {
-    ctx += `\nBRAND STRATEGY (summary):\n${brandStrat.strategy_text.slice(0, 2000)}\n`
+    ctx += `\nBRAND STRATEGY (summary):\n${brandStrat.strategy_text}\n`
   }
 
   if (tone) {
     const { id: _i, user_id: _u, brand_id: _b, created_at: _c, updated_at: _up, ...toneFields } = tone
     void _i; void _u; void _b; void _c; void _up;
-    ctx += `\nBRAND TONE OF VOICE:\n${JSON.stringify(toneFields, null, 2).slice(0, 2000)}\n`
+    // Tone runs past 4k characters; slicing it cut the do/don't lists in half.
+    ctx += `\nBRAND TONE OF VOICE:\n${JSON.stringify(toneFields, null, 2)}\n`
   }
 
   if (products && products.length > 0) {
     ctx += `\nPRODUCTS & SERVICES (${products.length} items):\n`
     products.forEach((p: Record<string, unknown>) => {
       ctx += `- ${p.name} (${p.type})`
-      const price = p.price_rrp || p.price_monthly || p.price_wholesale
+      const price = p.price_retail || p.price_rrp || p.price_monthly || p.price_wholesale
       const cur = (p.currency as string) || 'EUR'
       if (price) {
         const priceLabel = p.price_monthly ? `${cur} ${p.price_monthly}/mo` : `${cur} ${price}`
@@ -70,7 +77,18 @@ async function getBrandContext(brandId: string): Promise<string> {
       if (p.price_cogs) ctx += ` (COGS: ${cur} ${p.price_cogs})`
       if (p.category) ctx += ` [${p.category}]`
       ctx += `\n`
-      if (p.description) ctx += `  ${(p.description as string).slice(0, 200)}\n`
+      if (p.sku) ctx += `  SKU: ${p.sku}\n`
+      if (p.landed_cost) ctx += `  Landed cost: ${cur} ${p.landed_cost}`
+      if (p.tax_rate_pct != null) ctx += ` | Tax: ${p.tax_rate_pct}%`
+      if (p.landed_cost || p.tax_rate_pct != null) ctx += `\n`
+      if (p.floor_price || p.max_discount_pct || p.min_margin_pct) {
+        ctx += `  Guardrails — floor ${p.floor_price ?? 'unset'}, max discount ${p.max_discount_pct ?? 'unset'}%, min margin ${p.min_margin_pct ?? 'unset'}%\n`
+      }
+      if (p.stock_status) ctx += `  Stock: ${p.stock_status}${p.stock_units != null ? ` (${p.stock_units} units)` : ''}\n`
+      if (Array.isArray(p.tags) && p.tags.length) ctx += `  Tags: ${(p.tags as string[]).join(', ')}\n`
+      // Full description — this is the copywriter's source of truth, and
+      // truncating it at 200 chars was cutting most product detail.
+      if (p.description) ctx += `  ${p.description as string}\n`
     })
   }
 
@@ -116,7 +134,7 @@ async function getBrandContext(brandId: string): Promise<string> {
     void _vi; void _vu; void _vb; void _vc; void _vup;
     const vJson = JSON.stringify(visualFields)
     if (vJson.length > 10) {
-      ctx += `\nVISUAL IDENTITY — ADDITIONAL:\n${vJson.slice(0, 1500)}\n`
+      ctx += `\nVISUAL IDENTITY — ADDITIONAL:\n${vJson}\n`
     }
   }
 
@@ -125,22 +143,69 @@ async function getBrandContext(brandId: string): Promise<string> {
   if (docs && docs.length > 0) {
     ctx += `\nKNOWLEDGE VAULT (${docs.length} documents):\n`
     ctx += `These are uploaded brand documents with extracted text. Use this information to answer questions accurately.\n\n`
-    let charBudget = 8000 // allocate up to 8k chars for vault docs
+    // 120k characters, and no per-document cap. Whole documents beat the
+    // first 2000 characters of several — a truncated document usually loses
+    // exactly the specifics someone is asking about.
+    let charBudget = 120000
+    const empty: string[] = []
     for (const doc of docs) {
-      if (charBudget <= 0) break
-      const text = (doc as Record<string, string>).extracted_text
-      if (!text) {
-        ctx += `--- Document: ${(doc as Record<string, string>).file_name} [no text extracted] ---\n\n`
+      const d = doc as Record<string, string>
+      const text = d.extracted_text
+      if (!text) { empty.push(d.file_name); continue }
+      if (charBudget <= 0) {
+        ctx += `--- Document: ${d.file_name} [omitted, context budget spent] ---\n\n`
         continue
       }
-      const chunk = text.slice(0, Math.min(charBudget, 2000))
-      ctx += `--- Document: ${(doc as Record<string, string>).file_name} ---\n`
-      ctx += chunk
-      if (text.length > chunk.length) ctx += `\n[...truncated, ${text.length} chars total]`
+      const chunk = text.slice(0, charBudget)
+      ctx += `--- Document: ${d.file_name} ---\n${chunk}`
+      if (text.length > chunk.length) ctx += `\n[...truncated at context budget, ${text.length} chars total]`
       ctx += `\n\n`
       charBudget -= chunk.length
     }
+    // Naming these matters: a document that extracted to nothing is invisible
+    // to the model, and the user needs to know why it can't answer from it.
+    if (empty.length) {
+      ctx += `NOTE: these documents are uploaded but no text could be extracted, so their contents are unavailable: ${empty.join(', ')}. If asked about them, say the file could not be read rather than guessing.\n\n`
+    }
   }
+
+  // Strategy questionnaire — the raw answers, which are richer than the summary
+  const answers = answersRes.data?.answers as Record<string, string> | null | undefined
+  if (answers && Object.keys(answers).length > 0) {
+    ctx += `\nSTRATEGY QUESTIONNAIRE (the founder's own words):\n`
+    for (const [key, value] of Object.entries(answers)) {
+      if (!value?.trim()) continue
+      const [section, question] = key.split('|')
+      ctx += `[${section}] ${question}\n${value}\n\n`
+    }
+  }
+
+  // Image library — what imagery exists to work from
+  const images = imagesRes.data
+  if (images && images.length > 0) {
+    ctx += `\nIMAGE LIBRARY (${images.length} images):\n`
+    for (const img of images as Record<string, unknown>[]) {
+      const bits = [img.category, img.format].filter(Boolean).join(', ')
+      ctx += `- ${img.file_name}`
+      if (img.title) ctx += ` — ${img.title}`
+      if (bits) ctx += ` [${bits}]`
+      if (img.campaign_name) ctx += ` (campaign: ${img.campaign_name})`
+      if (Array.isArray(img.tags) && img.tags.length) ctx += ` tags: ${(img.tags as string[]).join(', ')}`
+      ctx += `\n`
+    }
+  }
+
+  // How much actually reached the model, and from where.
+  console.log('[andy] brand context', JSON.stringify({
+    brandId,
+    totalChars: ctx.length,
+    products: products?.length ?? 0,
+    documents: docs?.length ?? 0,
+    documentChars: (docs ?? []).reduce((n: number, d: Record<string, string>) => n + (d.extracted_text?.length ?? 0), 0),
+    images: images?.length ?? 0,
+    questionnaireAnswers: answers ? Object.keys(answers).length : 0,
+    brandRowFound: Boolean(brand),
+  }))
 
   return ctx
 }
@@ -174,7 +239,11 @@ RULES:
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+      // max_tokens caps thinking + text together — these calls would
+      // truncate. None of them need reasoning tokens.
+      thinking: { type: 'disabled' },
       max_tokens: 1000,
       system: systemPrompt,
       messages: messages.map((m: { role: string; content: string }) => ({

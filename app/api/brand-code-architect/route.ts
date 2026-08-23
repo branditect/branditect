@@ -55,7 +55,11 @@ New feature to build: ${featureDescription}${existingCode ? `\n\nExisting code/t
 Extract the design system and generate a complete, self-contained HTML file that matches the visual style exactly. Return only valid JSON as specified.`
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+      // max_tokens caps thinking + text together — these calls would
+      // truncate. None of them need reasoning tokens.
+      thinking: { type: 'disabled' },
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [

@@ -86,16 +86,11 @@ function NavRow({
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { brand, brandName } = useBrand();
+  const { brandName } = useBrand();
   const { user } = useUser();
 
   // The active section is expanded on load; expansion is UI-only state.
   const [open, setOpen] = useState<string | null>(() => sectionFor(pathname));
-
-  const initials =
-    user?.initials ??
-    (brandName ? brandName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "B");
-  const logoUrl = brand?.logo_url;
 
   return (
     <nav
@@ -131,14 +126,7 @@ export default function Sidebar() {
         </div>
 
         <div className="mt-3 flex items-center gap-2.5 px-[3px]">
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-tint-4 text-2xs font-bold text-accent-dark">
-              {initials}
-            </span>
-          )}
+          <Logo variant="mark" height={32} className="shrink-0" />
           <div className="min-w-0">
             <div className="truncate text-sm font-bold tracking-[-0.1px]">
               {user?.fullName ?? user?.email ?? brandName}

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useBrand } from '@/lib/useBrand'
+import { useBrandChat } from '@/lib/useBrandChat'
 
 interface Msg { role: 'user' | 'assistant'; content: string }
 interface SavedNote { id: number; content: string; ts: string }
@@ -21,16 +22,21 @@ const BUBBLE = (
 )
 
 export default function AndyPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { brandId, brandName } = useBrand()
+  const { brandName } = useBrand()
 
   const [tab, setTab] = useState<'chat' | 'saved'>('chat')
-  const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  // Same conversation loop as the Home rail — see lib/useBrandChat.
+  const { messages, setMessages, loading, send: sendChat } =
+    useBrandChat((all) => saveConversation(all, currentConvIdRef.current))
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([])
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConvId, setCurrentConvId] = useState<string>('')
+  // The hook's reply callback is created once, so read the id through a ref
+  // rather than closing over a value that goes stale on conversation switch.
+  const currentConvIdRef = useRef(currentConvId)
+  currentConvIdRef.current = currentConvId
   const [historyOpen, setHistoryOpen] = useState(false)
 
   const msgsRef = useRef<HTMLDivElement>(null)
@@ -82,28 +88,9 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
   }
 
   async function send() {
-    if (!input.trim() || loading) return
-    const userMsg: Msg = { role: 'user', content: input.trim() }
-    const newMsgs = [...messages, userMsg]
-    setMessages(newMsgs)
+    const text = input
     setInput('')
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/andy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMsgs, brandId }),
-      })
-      const data = await res.json()
-      const reply = data.reply || 'Something went wrong.'
-      const finalMsgs = [...newMsgs, { role: 'assistant' as const, content: reply }]
-      setMessages(finalMsgs)
-      saveConversation(finalMsgs, currentConvId)
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Connection issue — please try again.' }])
-    }
-    setLoading(false)
+    await sendChat(text)
   }
 
   function saveNote(content: string, idx: number) {

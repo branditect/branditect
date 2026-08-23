@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useBrand } from "@/lib/useBrand";
 import { useUser } from "@/lib/useUser";
 import Icon from "@/components/icon";
+import Logo from "@/components/logo";
 import { NAV, sectionFor, type NavItem } from "@/lib/nav";
 
 function NavRow({
@@ -102,10 +103,7 @@ export default function Sidebar() {
       className="m-3 mr-0 flex w-sidebar shrink-0 flex-col self-start rounded-panel border border-rule bg-card min-h-[860px] px-3 pb-4 pt-[18px] drop-shadow-panel stack:min-h-0 stack:m-0 stack:w-full stack:rounded-none"
     >
       <Link href="/home" className="flex items-center gap-2 px-1.5 pb-5">
-        <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-lg bg-grad-mark text-[13px] font-extrabold text-white">
-          B
-        </span>
-        <span className="text-[17px] font-extrabold tracking-[-0.5px] text-accent">Branditect</span>
+        <Logo height={26} />
       </Link>
 
       <div className="flex flex-col gap-px">

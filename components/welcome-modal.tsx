@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Logo from '@/components/logo'
 
 const C = {
   or: '#a63300', orl: '#fff0e6', blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e',
@@ -58,11 +59,8 @@ export default function WelcomeModal() {
         <div style={{ width: '40%', padding: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRight: `1px solid ${C.bd}`, flexShrink: 0 }}>
           <div>
             {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, #a63300, #ff7949)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21V3h18v18H3zm2-2h14V5H5v14zm3-3h8v-2H8v2zm0-4h8V10H8v2z" fill="white"/></svg>
-              </div>
-              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 20, color: C.or, letterSpacing: '-0.3px' }}>Branditect</span>
+            <div style={{ marginBottom: 32 }}>
+              <Logo height={36} />
             </div>
 
             {/* Headline */}

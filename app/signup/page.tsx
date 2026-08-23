@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/logo";
 import { supabase } from "@/lib/supabase";
 
 export default function SignUpPage() {
@@ -34,8 +35,8 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold tracking-tight text-brand-orange">
-            Branditect
+          <h1 className="flex justify-center">
+            <Logo height={44} />
           </h1>
           <p className="mt-2 text-sm text-muted">
             Create your account

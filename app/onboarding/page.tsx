@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/logo";
 import { supabase } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
@@ -550,12 +551,7 @@ export default function OnboardingPage() {
       {/* Left sidebar — step nav */}
       <aside className="w-72 bg-white border-r border-light flex flex-col shrink-0">
         <div className="px-6 pt-8 pb-6 border-b border-light">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-brand-orange flex items-center justify-center text-white font-semibold text-xs">
-              B
-            </div>
-            <span className="font-semibold text-lg text-ink tracking-tight">Branditect</span>
-          </div>
+          <Logo height={28} />
         </div>
 
         <nav className="flex-1 px-6 py-6">

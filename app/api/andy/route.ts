@@ -12,7 +12,7 @@ const supabase = createClient(
 )
 
 async function getBrandContext(brandId: string): Promise<string> {
-  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes, answersRes, imagesRes] = await Promise.all([
+  const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes, answersRes, imagesRes, guidelineRes] = await Promise.all([
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
@@ -29,6 +29,7 @@ async function getBrandContext(brandId: string): Promise<string> {
     supabase.from('brand_strategies').select('answers, generated_strategy, category').eq('brand_id', brandId).maybeSingle(),
     // What imagery exists, so the chat can answer "what shots do we have?"
     supabase.from('brand_images').select('file_name, category, format, tags, campaign_name, title').eq('brand_id', brandId),
+    supabase.from('brand_guideline').select('summary, colors, typography, logo, voice, source_name, status').eq('brand_id', brandId).maybeSingle(),
   ])
 
   const brand = brandRes.data
@@ -55,6 +56,25 @@ async function getBrandContext(brandId: string): Promise<string> {
   // Strategy text from brands table (onboarding)
   if (brandStrat?.strategy_text) {
     ctx += `\nBRAND STRATEGY (summary):\n${brandStrat.strategy_text}\n`
+  }
+
+  const guideline = guidelineRes.data as Record<string, unknown> | null
+
+  // The guideline is the brand's own rulebook — it outranks anything inferred
+  // from other documents, so it goes in above them and says so.
+  if (guideline && guideline.status === 'ready' && guideline.summary) {
+    ctx += `\nBRAND GUIDELINE (${guideline.source_name ?? 'uploaded guideline'}) — this is the authoritative source. Where it conflicts with anything below, follow it.\n`
+    ctx += `${guideline.summary}\n`
+    const g = guideline as { colors?: { hex?: string; name?: string; usage?: string }[] }
+    if (Array.isArray(g.colors) && g.colors.length) {
+      ctx += `\nGUIDELINE COLOURS (exact hex values, never approximate these):\n`
+      g.colors.forEach((c) => {
+        ctx += `- ${c.hex ?? '?'} ${c.name ?? ''}${c.usage ? ` — ${c.usage}` : ''}\n`
+      })
+    }
+    if (guideline.typography) ctx += `\nGUIDELINE TYPOGRAPHY:\n${JSON.stringify(guideline.typography, null, 2)}\n`
+    if (guideline.logo) ctx += `\nGUIDELINE LOGO RULES:\n${JSON.stringify(guideline.logo, null, 2)}\n`
+    if (guideline.voice) ctx += `\nGUIDELINE VOICE RULES:\n${JSON.stringify(guideline.voice, null, 2)}\n`
   }
 
   if (tone) {
@@ -204,6 +224,7 @@ async function getBrandContext(brandId: string): Promise<string> {
     documentChars: (docs ?? []).reduce((n: number, d: Record<string, string>) => n + (d.extracted_text?.length ?? 0), 0),
     images: images?.length ?? 0,
     questionnaireAnswers: answers ? Object.keys(answers).length : 0,
+    guidelineChars: (guideline?.summary as string | undefined)?.length ?? 0,
     brandRowFound: Boolean(brand),
   }))
 

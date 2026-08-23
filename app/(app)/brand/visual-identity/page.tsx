@@ -185,8 +185,10 @@ export default function VisualIdentityPage() {
 
     // Expand PDFs into individual page images
     const allFiles: File[] = []
+    const sourcePdfs: File[] = []
     for (const f of Array.from(files)) {
       if (f.type === 'application/pdf') {
+        sourcePdfs.push(f)
         try {
           setPageProgress('Processing PDF...')
           const pdfjs = await getPdfjs()
@@ -230,12 +232,80 @@ export default function VisualIdentityPage() {
       } catch {}
     }
 
-    setPageUploading(false)
-    setPageProgress('')
     if (uploaded > 0) {
       // Jump to first newly uploaded page
       setCurPage(pages.length)
       showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
+    }
+
+    // Uploading pages only stored pictures. Indexing is what makes the brain
+    // able to answer from the guideline, so it runs as part of the upload
+    // rather than behind a separate button nobody presses.
+    await indexGuideline(sourcePdfs, allFiles)
+
+    setPageUploading(false)
+    setPageProgress('')
+  }
+
+  async function indexGuideline(sourcePdfs: File[], pageImages: File[]) {
+    try {
+      setPageProgress('Reading the guideline...')
+      let body: Record<string, unknown>
+
+      if (sourcePdfs.length) {
+        // Send the PDF itself. Claude reads PDFs natively, and one document
+        // block is far smaller than forty page PNGs — which would blow the
+        // 32MB request ceiling on any real guideline.
+        const pdf = sourcePdfs[0]
+        const safe = pdf.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const path = `${brandId}/guideline_${Date.now()}_${safe}`
+        const { error } = await supabase.storage
+          .from('brand-documents')
+          .upload(path, pdf, { contentType: 'application/pdf', upsert: true })
+        if (error) throw new Error(error.message)
+        body = { brandId, storagePath: path, sourceName: pdf.name }
+      } else {
+        // Image-only guideline. Cap the page count — past this the request
+        // exceeds the API ceiling and fails after a long wait.
+        const MAX_PAGES = 20
+        const capped = pageImages.slice(0, MAX_PAGES)
+        if (!capped.length) return
+        if (pageImages.length > MAX_PAGES) {
+          showToast(`Indexing the first ${MAX_PAGES} of ${pageImages.length} pages`)
+        }
+        const images = await Promise.all(
+          capped.map(
+            f =>
+              new Promise<{ data: string; type: string }>((resolve, reject) => {
+                const r = new FileReader()
+                r.onload = e => {
+                  const result = e.target?.result as string
+                  resolve({ data: result.split(',')[1], type: f.type || 'image/png' })
+                }
+                r.onerror = () => reject(new Error(`Could not read ${f.name}`))
+                r.readAsDataURL(f)
+              })
+          )
+        )
+        body = { brandId, images, sourceName: capped[0].name }
+      }
+
+      const res = await fetch('/api/brand-guideline/index', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+
+      if (!res.ok || json.error) {
+        showToast(`Pages saved, but indexing failed: ${json.error ?? res.status}`)
+        return
+      }
+
+      const found = Array.isArray(json.colors) ? json.colors.length : 0
+      showToast(found ? `Guideline indexed — ${found} colours read` : 'Guideline indexed')
+    } catch (err) {
+      showToast(`Pages saved, but indexing failed: ${err instanceof Error ? err.message : 'unknown error'}`)
     }
   }
 

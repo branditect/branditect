@@ -1,0 +1,293 @@
+/* Auth surface — ported from branditect-ui/reference/login.html.
+ *
+ * Every colour that exists in the v6 token set is pulled straight out of
+ * tailwind.config.ts with theme(), so there is one source of truth and no
+ * hex literal drifts out of sync with the rest of the app.
+ *
+ * The block below is the exception: values the reference introduces that the
+ * v6 set has no token for — the background wash, the frosted card, the SSO
+ * chrome, and the miniature Studio cards. They are copied verbatim from the
+ * reference rather than invented here. If any of them earns a name later it
+ * belongs in tailwind.config.ts, not in a second copy of this list.
+ */
+.screen {
+  --auth-wash-1: #ffd0ad;
+  --auth-wash-2: #fde3d4;
+  --auth-wash-3: #fceee9;
+  --auth-wash-4: #f7f0f7;
+  --auth-blob: #fb5c1f;
+  --auth-bloom-lav: rgba(219, 204, 246, .5);
+  --auth-card-top: rgba(255, 255, 255, .94);
+  --auth-card-bottom: rgba(244, 240, 253, .92);
+  --auth-card-edge: rgba(255, 255, 255, .85);
+  --auth-orb: rgba(216, 201, 249, .6);
+  --auth-line: #e6e2ef;
+  --auth-line-sso: #eceaf2;
+  --auth-divider: #e3dfec;
+  --auth-tag-bg: #f4f1fa;
+  --auth-tag-edge: #e9e5f3;
+  --auth-ph: #e9e7ea;
+  --auth-ph-glyph: #b9b5bd;
+  --auth-grid: #f1eff2;
+  --auth-radius-card: 26px;
+}
+
+/* ---------- background ---------- */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+      background: linear-gradient(128deg, var(--auth-wash-1) 0%, var(--auth-wash-2) 26%, var(--auth-wash-3) 52%, var(--auth-wash-4) 100%); }
+.bg i { position: absolute; display: block; border-radius: 50%; }
+.b1 { width: 760px; height: 640px; left: -320px; top: -360px; background: var(--auth-blob);
+      border-radius: 0 0 62% 46% / 0 0 58% 54%; }
+.b2 { width: 520px; height: 520px; left: -260px; bottom: -220px;
+      background: radial-gradient(circle at 40% 40%, rgba(251,92,31,.85), rgba(251,92,31,0) 68%); }
+.b3 { width: 640px; height: 640px; right: -180px; top: -200px;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.7), rgba(255,255,255,0) 66%); }
+.b4 { width: 720px; height: 720px; right: 8%; bottom: -360px;
+      background: radial-gradient(circle at 50% 50%, var(--auth-bloom-lav), rgba(219,204,246,0) 66%); }
+
+/* ---------- layout: two full-height halves, each centring its own content ---------- */
+.screen { position: relative; z-index: 1; min-height: 100vh;
+          display: grid; grid-template-columns: minmax(430px, 42%) minmax(0, 1fr);
+          color: theme('colors.ink.DEFAULT'); }
+
+.loginwrap { display: flex; align-items: center; justify-content: center; padding: 32px 40px; min-width: 0; }
+.loginwrap > .login { width: 100%; max-width: 404px; }
+
+.login { position: relative; overflow: hidden;
+         background: linear-gradient(160deg, var(--auth-card-top) 0%, var(--auth-card-bottom) 100%);
+         border: 1px solid var(--auth-card-edge);
+         border-radius: var(--auth-radius-card); padding: 28px 30px 26px;
+         box-shadow: 0 30px 60px -30px rgba(90,40,20,.35), 0 2px 6px rgba(90,40,20,.06);
+         backdrop-filter: blur(10px); }
+.orb { position: absolute; right: -70px; top: -40px; width: 250px; height: 250px; border-radius: 50%;
+       background: radial-gradient(circle at 40% 40%, var(--auth-orb), rgba(216,201,249,0) 68%); pointer-events: none; }
+.login > * { position: relative; z-index: 2; }
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+.title { font-size: 26px; font-weight: 700; letter-spacing: -.8px; line-height: 1.15; }
+.sub { font-size: 13px; font-weight: 400; color: theme('colors.muted.2'); margin-top: 4px; }
+
+/* ---------- SSO ---------- */
+.sso { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+.ssoBtn { all: unset; box-sizing: border-box; cursor: pointer; position: relative;
+          height: 46px; border-radius: theme('borderRadius.card'); background: theme('colors.card');
+          border: 1px solid var(--auth-line-sso);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 13.5px; font-weight: 600; color: theme('colors.ink.2');
+          box-shadow: 0 1px 2px rgba(30,20,40,.04); }
+.ssoBtn:hover { border-color: theme('colors.accent.line'); }
+.ssoBtn:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outline-offset: 2px; }
+.ssoBtn .g { position: absolute; left: 18px; width: 22px; height: 22px; display: grid; place-items: center; }
+.ssoBtn .g svg { width: 20px; height: 20px; }
+
+/* Demo state — the provider is not wired. Deliberately not `disabled`: a
+   disabled button takes no focus, fires no events, and cannot explain itself. */
+.demo { cursor: default; }
+.demo .g svg { opacity: .55; }
+.demo .lbl { color: theme('colors.muted.2'); }
+.demo:hover { border-color: var(--auth-line); }
+
+.tag { position: absolute; right: 14px; font-size: 10px; font-weight: 700; letter-spacing: .4px;
+       text-transform: uppercase; color: theme('colors.muted.2'); background: var(--auth-tag-bg);
+       border: 1px solid var(--auth-tag-edge); border-radius: 5px; padding: 2px 6px; line-height: 1.4; }
+
+.tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px);
+       background: theme('colors.ink.DEFAULT'); color: theme('colors.card');
+       font-size: 11.5px; font-weight: 600; letter-spacing: -.1px;
+       white-space: nowrap; padding: 6px 10px; border-radius: 7px;
+       opacity: 0; pointer-events: none; transition: opacity .14s, transform .14s; z-index: 5;
+       box-shadow: 0 6px 18px rgba(30,20,40,.18); }
+.tip::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+              border: 5px solid transparent; border-top-color: theme('colors.ink.DEFAULT'); }
+.ssoBtn:hover .tip, .ssoBtn:focus-visible .tip { opacity: 1; transform: translate(-50%, 0); }
+
+.ssonote { display: flex; align-items: center; gap: 7px; margin-top: 10px;
+           font-size: 12px; font-weight: 600; color: theme('colors.accent.DEFAULT');
+           background: theme('colors.tint.1'); border: 1px solid theme('colors.accent.line');
+           border-radius: 8px; padding: 8px 11px;
+           opacity: 0; transform: translateY(-3px); transition: opacity .18s, transform .18s; }
+.ssonote svg { width: 14px; height: 14px; flex: none; fill: currentColor; }
+.show { opacity: 1; transform: translateY(0); }
+
+.or { display: flex; align-items: center; gap: 12px; margin: 16px 0 14px;
+      color: theme('colors.muted.2'); font-size: 12px; font-weight: 500; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--auth-divider); }
+
+/* ---------- fields ---------- */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 13px; }
+.field label { font-size: 12.5px; font-weight: 600; color: theme('colors.ink.2'); }
+.inp { position: relative; display: flex; align-items: center; }
+.inp input { width: 100%; height: 46px; border: 1px solid var(--auth-line);
+             border-radius: theme('borderRadius.card'); padding: 0 44px 0 15px;
+             font: inherit; font-size: 13.5px; font-weight: 500; color: theme('colors.ink.DEFAULT');
+             background: theme('colors.card'); transition: border-color .15s, box-shadow .15s; }
+.inp input::placeholder { color: theme('colors.faint.DEFAULT'); font-weight: 400; }
+.inp input:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+                   box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+.ic { position: absolute; right: 16px; color: theme('colors.faint.DEFAULT'); pointer-events: none; }
+.ic svg { width: 18px; height: 18px; fill: currentColor; }
+
+.eye { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; right: 8px;
+       width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
+       color: theme('colors.faint.DEFAULT'); }
+.eye:hover { background: theme('colors.tile.DEFAULT'); color: theme('colors.ink.2'); }
+.eye:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outline-offset: 1px; }
+.eye svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* Field-level error, tied to its input with aria-describedby. */
+.fieldError { font-size: 12px; font-weight: 600; color: theme('colors.accent.dark'); }
+
+/* Form-level error. Same tinted treatment as the SSO note so the card has one
+   error language rather than two. */
+.formError { display: flex; align-items: flex-start; gap: 7px; margin: 2px 0 14px;
+             font-size: 12.5px; font-weight: 600; color: theme('colors.accent.dark');
+             background: theme('colors.tint.1'); border: 1px solid theme('colors.accent.line');
+             border-radius: 8px; padding: 9px 11px; }
+.formError svg { width: 14px; height: 14px; flex: none; fill: currentColor; margin-top: 1px; }
+.formError a { font-weight: 700; text-decoration: underline; }
+
+/* Holds the gap the Remember me / Forgot password row used to occupy. */
+.spacer { height: 3px; }
+
+.submit { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; height: 50px;
+          border-radius: theme('borderRadius.card'); background: theme('backgroundImage.grad-mark');
+          color: theme('colors.card'); font-size: 14.5px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; gap: 10px; position: relative;
+          box-shadow: 0 12px 22px -12px rgba(232,73,32,.75); }
+.submit:hover { filter: brightness(1.04); }
+.submit:focus-visible { outline: 2px solid theme('colors.accent.DEFAULT'); outline-offset: 3px; }
+.submit svg { width: 17px; height: 17px; fill: currentColor; position: absolute; right: 22px; }
+.submit[aria-busy="true"] { cursor: progress; filter: saturate(.85); }
+
+.swap { text-align: center; margin-top: 16px; font-size: 13px; font-weight: 500; color: theme('colors.muted.2'); }
+.swap a { font-weight: 700; color: theme('colors.accent.DEFAULT'); }
+
+/* ---------- right half ---------- */
+.right { position: relative; display: flex; flex-direction: column; justify-content: center;
+         padding: 32px 40px 32px 0; min-width: 0; }
+.pitch { font-size: clamp(24px, 2.4vw, 32px); font-weight: 700; letter-spacing: -1px;
+         line-height: 1.18; max-width: 14ch; }
+.pitch em { font-style: normal; color: theme('colors.accent.DEFAULT'); }
+
+.rightgrid { display: grid; grid-template-columns: 206px minmax(0, 1fr); gap: 24px;
+             margin-top: 22px; align-items: start; }
+
+.feats { display: flex; flex-direction: column; gap: 9px; }
+.feat { background: rgba(255,255,255,.82); border: 1px solid rgba(255,255,255,.9);
+        border-radius: theme('borderRadius.card'); padding: 11px 14px;
+        box-shadow: 0 8px 20px -14px rgba(90,40,20,.3); }
+.feat b { display: block; font-size: 13px; font-weight: 700; letter-spacing: -.2px; }
+.feat span { display: block; font-size: 11.5px; font-weight: 500;
+             color: theme('colors.muted.2'); line-height: 1.45; margin-top: 3px; }
+
+/* ---------- floating showcase panels ---------- */
+.shots { position: relative; height: 600px; min-width: 400px; }
+.shot { position: absolute; background: theme('colors.card'); border-radius: theme('borderRadius.card');
+        box-shadow: 0 22px 42px -26px rgba(60,30,20,.42), 0 2px 6px rgba(60,30,20,.05);
+        border: 1px solid rgba(255,255,255,.9); padding: 13px; }
+.sh { display: flex; align-items: baseline; gap: 8px; }
+.sh h4 { font-size: 12px; font-weight: 700; letter-spacing: -.2px; }
+.sh a { margin-left: auto; font-size: 10px; font-weight: 600; color: theme('colors.accent.DEFAULT'); }
+.cnt { font-size: 9px; font-weight: 700; color: theme('colors.accent.DEFAULT');
+       background: theme('colors.tint.1'); border-radius: theme('borderRadius.pill'); padding: 2px 7px; }
+.shotSub { font-size: 9.5px; font-weight: 500; color: theme('colors.muted.2'); margin-top: 2px; }
+
+.sHealth { width: 292px; right: 0; top: 0; }
+.big { font-size: 28px; font-weight: 700; color: theme('colors.accent.DEFAULT'); letter-spacing: -1.1px; line-height: 1.05; }
+.hrow { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
+.pill { background: theme('colors.tint.1'); color: theme('colors.accent.dark');
+        border-radius: theme('borderRadius.pill'); padding: 3px 9px; font-size: 10px; font-weight: 700; }
+.delta { font-size: 9.5px; font-weight: 600; color: theme('colors.green-ink'); margin-top: 4px; }
+.chartwrap { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 5px; margin-top: 9px; }
+.yax { display: flex; flex-direction: column; justify-content: space-between; font-size: 7.5px;
+       font-weight: 600; color: theme('colors.faint.DEFAULT'); height: 62px; text-align: right; }
+.xax { display: flex; justify-content: space-between; font-size: 7.5px; font-weight: 600;
+       color: theme('colors.faint.DEFAULT'); margin-top: 4px; grid-column: 2; }
+.grid { stroke: var(--auth-grid); }
+
+.sProd { width: 404px; right: 16px; top: 172px; }
+.ptable { margin-top: 9px; }
+.pthead, .ptr { display: grid; grid-template-columns: minmax(0,1fr) 70px 56px 50px; gap: 8px; }
+.pthead { font-size: 8px; font-weight: 700; color: theme('colors.muted.2');
+          padding-bottom: 6px; border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
+.ptr { align-items: center; padding: 8px 0; border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
+.ptr:last-child { border-bottom: none; }
+.pname { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Product thumbnails are the one deliberate placeholder on this screen. */
+.thumb { width: 28px; height: 28px; border-radius: 7px; background: var(--auth-ph);
+         flex-shrink: 0; display: grid; place-items: center; }
+.thumb svg { width: 12px; height: 12px; fill: var(--auth-ph-glyph); }
+.pname b { font-size: 9.5px; font-weight: 700; line-height: 1.3; }
+.tagp { border-radius: theme('borderRadius.pill'); padding: 2px 7px; font-size: 8px;
+        font-weight: 700; justify-self: start; white-space: nowrap; }
+.tagpA { background: theme('colors.lavender'); color: theme('colors.lav-ink'); }
+.tagpB { background: theme('colors.blue-wash'); color: theme('colors.blue-ink'); }
+.pprice { font-size: 10px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.pmarg { text-align: right; }
+.pmarg b { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pmarg b sup { color: theme('colors.accent.DEFAULT'); font-size: 8px; }
+.pmarg span { display: block; font-size: 8px; font-weight: 600;
+              color: theme('colors.muted.2'); font-variant-numeric: tabular-nums; }
+
+.sStudio { width: 436px; right: 0; top: 320px; padding: 12px; }
+.sStudio .sh h4 small { font-size: 9px; font-weight: 500; color: theme('colors.muted.2'); margin-left: 6px; }
+.mini { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; margin-top: 9px; }
+.mcard { border-radius: 9px; padding: 8px; height: 88px; position: relative;
+         overflow: hidden; display: flex; flex-direction: column; }
+.mcard b { font-size: 8.5px; font-weight: 700; letter-spacing: -.1px; }
+.mcard > span { font-size: 7px; font-weight: 500; line-height: 1.35; margin-top: 3px; opacity: .85; }
+.arw { position: absolute; right: 6px; bottom: 5px; font-size: 9px; opacity: .7; }
+/* The five Studio cards reuse the app's own card gradients. */
+.m1 { background: theme('backgroundImage.grad-write'); }
+.m2 { background: theme('backgroundImage.grad-images'); }
+.m3 { background: theme('backgroundImage.grad-numbers'); }
+.m4 { background: theme('backgroundImage.grad-assets'); }
+.m5 { background: theme('backgroundImage.grad-more'); }
+/* Text colours mirror components/studio-card.tsx exactly, so the miniature
+   cards read the same as the real ones. grad-write is a full-strength dark
+   blue — it takes white, not ink. */
+.m1 { color: theme('colors.card'); }
+.m2 { color: #2b2340; }
+.m3 { color: #22304d; }
+.m4 { color: #1d3b36; }
+.m5 { color: #7a3a26; }
+/* The default rule tint is near-invisible on the one dark card. */
+.m1 .mline { background: rgba(255, 255, 255, .3); }
+.mart { margin-top: auto; display: flex; gap: 3px; align-items: flex-end; }
+.mart i { display: block; border-radius: 3px; }
+.mline { margin-top: auto; height: 4px; border-radius: 3px; background: rgba(0,0,0,.07); }
+.mline + .mline { margin-top: 4px; width: 62%; }
+.mimg { margin-top: auto; width: 38px; height: 27px; border-radius: 6px;
+        background: linear-gradient(140deg, #9a79e0, #5f4bb0); box-shadow: 0 5px 8px -5px rgba(80,50,140,.6); }
+
+.sChat { width: 272px; right: 62px; top: 456px; }
+.spark { color: theme('colors.lav-ink'); font-size: 10px; margin-left: 4px; }
+.sug { display: flex; flex-direction: column; gap: 6px; margin-top: 9px; }
+.sug div { border: 1px solid theme('colors.rule.DEFAULT'); border-radius: 9px; padding: 8px 11px;
+           font-size: 9.5px; font-weight: 600; color: theme('colors.ink.2'); }
+.sug div:first-child { border-color: theme('colors.accent.line'); color: theme('colors.accent.DEFAULT'); }
+
+/* ---------- responsive ---------- */
+@media (max-height: 840px) {
+  .loginwrap, .right { padding-top: 20px; padding-bottom: 20px; }
+  .shots { transform: scale(.88); transform-origin: center right; }
+}
+@media (max-width: 1360px) { .shots { transform: scale(.84); transform-origin: center right; } }
+@media (max-width: 1180px) {
+  .shots { display: none; }
+  .rightgrid { grid-template-columns: 1fr; }
+  .feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+}
+/* Below 900 the order flips: a first-time visitor needs the pitch, and a
+   returning one scrolls past it in half a second. */
+@media (max-width: 900px) {
+  .screen { grid-template-columns: 1fr; min-height: 0; }
+  .loginwrap { order: 2; padding: 0 20px 40px; }
+  .right { order: 1; padding: 34px 20px 26px; text-align: center; }
+  .pitch { max-width: none; margin: 0 auto; }
+}
+/* CSS Modules require every selector to carry a local class, so this is
+   scoped to the auth subtree rather than written as a bare `*`. */
+@media (prefers-reduced-motion: reduce) {
+  .screen, .screen * { transition: none !important; }
+}

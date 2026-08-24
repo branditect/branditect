@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/logo";
+import AuthLayout from "@/components/auth/auth-layout";
+import AuthForm, { type AuthValues } from "@/components/auth/auth-form";
+import { mapAuthError, type AuthError } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AuthError | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSignUp({ email, password }: AuthValues) {
     setError(null);
     setLoading(true);
 
@@ -23,7 +22,7 @@ export default function SignUpPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(mapAuthError(error));
       setLoading(false);
       return;
     }
@@ -32,71 +31,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="flex justify-center">
-            <Logo height={44} />
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            Create your account
-          </p>
-        </div>
-
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#2d2d2d] mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-[#D0D3DA] px-4 py-2.5 text-sm text-[#111111] placeholder-[#888888] focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange"
-              placeholder="you@company.com"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#2d2d2d] mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-[#D0D3DA] px-4 py-2.5 text-sm text-[#111111] placeholder-[#888888] focus:border-brand-orange focus:outline-none focus:ring-1 focus:ring-brand-orange"
-              placeholder="At least 6 characters"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-xs text-muted">
-          Already have an account?{" "}
-          <a href="/login" className="text-brand-orange hover:underline">
-            Sign in
-          </a>
-        </p>
-      </div>
-    </div>
+    <AuthLayout>
+      <AuthForm mode="signup" onSubmit={handleSignUp} error={error} pending={loading} />
+    </AuthLayout>
   );
 }

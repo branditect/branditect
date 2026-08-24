@@ -48,7 +48,7 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
   return (
     <aside
       aria-label="AI Chat"
-      className="relative m-3 ml-0 flex min-h-[860px] w-chatrail shrink-0 flex-col self-start overflow-hidden rounded-panel border border-rule bg-grad-chat px-4 pb-4 pt-[18px] shadow-[0_6px_18px_-12px_rgba(20,20,26,.10),0_1px_2px_rgba(20,20,26,.04)] chat:hidden"
+      className="sticky top-3 m-3 ml-0 flex h-[calc(100dvh-24px)] w-chatrail shrink-0 flex-col overflow-hidden rounded-panel border border-rule bg-grad-chat px-4 pb-4 pt-[18px] shadow-[0_6px_18px_-12px_rgba(20,20,26,.10),0_1px_2px_rgba(20,20,26,.04)] chat:hidden"
     >
       <span
         aria-hidden="true"

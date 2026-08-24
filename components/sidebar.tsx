@@ -105,13 +105,13 @@ export default function Sidebar() {
   return (
     <nav
       aria-label="Primary"
-      className="m-3 mr-0 flex w-sidebar shrink-0 flex-col self-start rounded-panel border border-rule bg-card min-h-[860px] px-3 pb-4 pt-[18px] drop-shadow-panel stack:min-h-0 stack:m-0 stack:w-full stack:rounded-none"
+      className="m-3 mr-0 flex h-[calc(100dvh-24px)] w-sidebar shrink-0 flex-col rounded-panel border border-rule bg-card px-3 pb-4 pt-[18px] drop-shadow-panel stack:h-auto stack:min-h-0 stack:m-0 stack:w-full stack:rounded-none"
     >
       <Link href="/home" className="flex items-center gap-2 px-1.5 pb-5">
         <Logo height={26} />
       </Link>
 
-      <div className="flex flex-col gap-px">
+      <div className="flex min-h-0 flex-1 flex-col gap-px overflow-y-auto">
         {NAV.map((item) => (
           <NavRow
             key={item.href}
@@ -123,7 +123,7 @@ export default function Sidebar() {
         ))}
       </div>
 
-      <div className="mt-auto pt-[18px]">
+      <div className="mt-auto shrink-0 pt-[18px]">
         <div className="rounded-card bg-tint-1 p-[13px]">
           <div className="text-xs font-semibold text-ink">Your plan</div>
           <div className="text-[19px] font-bold leading-[1.35] tracking-[-0.5px] text-accent">Pro</div>

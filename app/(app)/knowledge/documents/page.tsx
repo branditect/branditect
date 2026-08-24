@@ -202,7 +202,13 @@ export default function KnowledgeVaultPage() {
 
   // Load documents
   const loadDocuments = useCallback(async () => {
-    if (!brandId || brandId === "default") return;
+    // Same trap as /brand/strategy: brandId is the string "default", never
+    // undefined, so returning without clearing the flag leaves the page on a
+    // spinner that never resolves.
+    if (!brandId || brandId === "default") {
+      setPageLoading(false);
+      return;
+    }
     setPageLoading(true);
     const { data, error: fetchErr } = await supabase
       .from("brand_documents")

@@ -474,7 +474,13 @@ export default function CatalogPage() {
 
   // Load on mount
   useEffect(() => {
-    if (brandLoading || brandId === "default") return;
+    if (brandLoading) return;
+    // Resolved with no brand row — stop loading rather than leaving the flag
+    // set, which the finally below would otherwise never clear.
+    if (brandId === "default") {
+      setLoading(false);
+      return;
+    }
     fetch(`/api/catalog?brand_id=${brandId}`)
       .then(r => r.json())
       .then(json => {

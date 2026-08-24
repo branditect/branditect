@@ -414,7 +414,7 @@ const Editable = memo(function Editable({
 /* ------------------------------------------------------------------ */
 
 export default function BrandStrategyPage() {
-  const { brandId, brandName } = useBrand();
+  const { brandId, brandName, loading: brandLoading } = useBrand();
   const [screen, setScreen] = useState<Screen>("entry");
   const [category, setCategory] = useState<Category | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -447,7 +447,18 @@ export default function BrandStrategyPage() {
 
   // Load existing strategy (or restore in-progress draft) once brandId resolves
   useEffect(() => {
-    if (!brandId || brandId === "default") return;
+    // Still resolving which brand this is — the spinner is correct for now.
+    if (brandLoading) return;
+
+    // Resolved, but there is no brand row. useBrand() returns the string
+    // "default" rather than undefined in that case, so this fires for every
+    // user while the brands table is empty. Clearing the flag is what keeps
+    // the questionnaire reachable: without it loadingStrategy stays true
+    // forever, because the finally below is never reached.
+    if (!brandId || brandId === "default") {
+      setLoadingStrategy(false);
+      return;
+    }
 
     const loadStrategy = async () => {
       try {
@@ -512,7 +523,7 @@ export default function BrandStrategyPage() {
       }
     };
     loadStrategy();
-  }, [brandId, draftKey]);
+  }, [brandId, brandLoading, draftKey]);
 
   // Persist questionnaire progress to localStorage on every change.
   // Skipped while still loading or once we're viewing a saved strategy.

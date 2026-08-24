@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { parseStrategy, strategyPromptContext } from '@/lib/strategy'
 
 export const maxDuration = 30
 
@@ -50,7 +51,17 @@ async function getBrandContext(brandId: string): Promise<string> {
     const stratText = typeof strategy.generated_strategy === 'string'
       ? strategy.generated_strategy
       : JSON.stringify(strategy.generated_strategy)
-    ctx += `\nBRAND STRATEGY (generated):\n${stratText}\n`
+
+    // The structured view of the same record. Boundaries, proof points and the
+    // "not for" exclusion are constraints the model can act on — a named
+    // mistake is far easier to avoid than inferred taste — so they go in as
+    // explicit rules rather than being left inside a JSON blob to interpret.
+    const structured = strategyPromptContext(parseStrategy(stratText))
+    if (structured) {
+      ctx += `\nBRAND STRATEGY — RULES YOU MUST FOLLOW:\n${structured}\n`
+    } else {
+      ctx += `\nBRAND STRATEGY (generated):\n${stratText}\n`
+    }
   }
 
   // Strategy text from brands table (onboarding)

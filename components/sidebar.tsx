@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useBrand } from "@/lib/useBrand";
+import { usePathname } from "next/navigation";
+import { useBrand, clearBrandCache } from "@/lib/useBrand";
 import { useUser } from "@/lib/useUser";
 import Icon from "@/components/icon";
 import Logo from "@/components/logo";
@@ -88,15 +88,22 @@ function NavRow({
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { brandName } = useBrand();
   const { user } = useUser();
 
-  // replace, not push — with push the back button returns to a rendered app
-  // shell showing stale data until the auth guard catches up.
+  // A full document load, not a client navigation.
+  //
+  // router.replace() keeps the JS context alive, and this app caches the brand
+  // in a module-level variable — so the next person to log in on the same
+  // browser was handed the previous user's brand. useBrand now keys that cache
+  // by user id and clears it on auth changes, but the load below is the
+  // belt-and-braces: a new document cannot inherit any module state at all.
+  //
+  // location.replace rather than assign, so back does not return to the shell.
   async function handleSignOut() {
+    clearBrandCache();
     await supabase.auth.signOut();
-    router.replace("/login");
+    window.location.replace("/login");
   }
 
   // The active section is expanded on load; expansion is UI-only state.

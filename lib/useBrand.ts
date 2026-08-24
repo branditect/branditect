@@ -20,21 +20,55 @@ interface UseBrandReturn {
   loading: boolean;
 }
 
-let cachedBrand: Brand | null = null;
+/**
+ * The cache is keyed by user id.
+ *
+ * It used to be a bare module-level `cachedBrand`. A module survives a
+ * client-side navigation, and sign-out was exactly that — signOut() followed by
+ * router.replace() — so the next person to log in on the same browser was
+ * handed the previous user's brand. Keying by user id means a cache entry can
+ * never be read by anyone else; the auth listener below then discards it
+ * outright rather than leaving it to sit in memory.
+ */
+let cache: { userId: string; brand: Brand } | null = null;
 const logoListeners = new Set<(url: string | null) => void>();
+
+function cachedFor(userId: string | null | undefined): Brand | null {
+  return userId && cache?.userId === userId ? cache.brand : null;
+}
+
+export function clearBrandCache() {
+  cache = null;
+}
 
 // Call this after updating the primary logo in Brand Library.
 // Updates the in-memory cache and re-renders all useBrand consumers (e.g. sidebar).
 export function updateBrandLogo(url: string | null) {
-  if (cachedBrand) {
-    cachedBrand = { ...cachedBrand, logo_url: url };
+  if (cache) {
+    cache = { ...cache, brand: { ...cache.brand, logo_url: url } };
     logoListeners.forEach(fn => fn(url));
   }
 }
 
+/**
+ * Drop the cache the moment the session changes. SIGNED_OUT clears it, and so
+ * does a SIGNED_IN for anyone other than the user it was built for — which is
+ * the case that leaked.
+ */
+if (typeof window !== "undefined") {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") { clearBrandCache(); return; }
+    const uid = session?.user?.id ?? null;
+    if (cache && cache.userId !== uid) clearBrandCache();
+  });
+}
+
 export function useBrand(): UseBrandReturn {
-  const [brand, setBrand] = useState<Brand | null>(cachedBrand);
-  const [loading, setLoading] = useState(!cachedBrand);
+  // Never seeded from the cache synchronously: the current user is not known
+  // until getUser() resolves, and seeding first is what showed one user another
+  // user's brand for a frame.
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Subscribe to logo updates pushed from other parts of the app
   useEffect(() => {
@@ -46,16 +80,16 @@ export function useBrand(): UseBrandReturn {
   }, []);
 
   useEffect(() => {
-    if (cachedBrand) {
-      setBrand(cachedBrand);
-      setLoading(false);
-      return;
-    }
+    let alive = true;
 
     async function load() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLoading(false); return; }
+        if (!user) { clearBrandCache(); if (alive) setLoading(false); return; }
+
+        // A hit is only a hit for this user.
+        const hit = cachedFor(user.id);
+        if (hit) { if (alive) { setBrand(hit); setLoading(false); } return; }
 
         const { data } = await supabase
           .from("brands")
@@ -66,16 +100,17 @@ export function useBrand(): UseBrandReturn {
           .maybeSingle();
 
         if (data) {
-          cachedBrand = data as Brand;
-          setBrand(cachedBrand);
+          cache = { userId: user.id, brand: data as Brand };
+          if (alive) setBrand(cache.brand);
         }
       } catch {
         // silent
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     }
     load();
+    return () => { alive = false; };
   }, []);
 
   return {
@@ -86,7 +121,4 @@ export function useBrand(): UseBrandReturn {
   };
 }
 
-// For clearing cache on logout or brand switch
-export function clearBrandCache() {
-  cachedBrand = null;
-}
+

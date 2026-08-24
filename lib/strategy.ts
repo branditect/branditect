@@ -19,7 +19,7 @@ export interface Segment {
   wants: string;
   frustratedBy: string;
   caresAbout: string[];
-  channels: { label: string; stage: Stage }[];
+  channels: { label: string; stage: Stage | null }[];
 }
 
 export interface Pillar {
@@ -30,7 +30,9 @@ export interface Pillar {
   icon: string;
 }
 
-export interface Message { text: string; stage: Stage }
+/** stage is null for content migrated from the legacy shape, which had no
+ *  funnel tagging. Unassigned is the truth; guessing a stage is not. */
+export interface Message { text: string; stage: Stage | null }
 
 export interface Competitor {
   name: string;
@@ -261,4 +263,138 @@ export function strategyPromptContext(s: BrandStrategy): string {
   if (b.neverCompromise.length) add("NEVER COMPROMISE ON", b.neverCompromise.join(", "));
 
   return L.length ? L.join("\n") : "";
+}
+
+/* ── Legacy migration ───────────────────────────────────────────────────── */
+
+/**
+ * The shape /brand/strategy stored before the redesign. Kept here rather than
+ * in the page so the page can stop declaring its own BrandStrategy.
+ */
+export interface LegacyStrategy {
+  brandName?: string; category?: string; stage?: string; target?: string; archetype?: string;
+  passport?: { signature?: string; purpose?: string; promise?: string; philosophy?: string;
+               values?: string; insight?: string; targetGroup?: string; onlyWeClaim?: string };
+  pyramid?: { essence?: string; behavior?: string; whyChooseUs?: string; audience?: string };
+  problems?: { title: string; text: string }[];
+  solution?: string;
+  firstTo?: { claim?: string; explanation?: string };
+  onlyOnesWho?: { claim?: string; explanation?: string };
+  differentiators?: { label?: string; title?: string; text?: string }[];
+  personas?: { name?: string; role?: string; who?: string; wants?: string;
+               frustrations?: string; channels?: string[]; brandGives?: string }[];
+  exclusions?: string;
+  competitiveIntro?: string;
+  competitors?: { name?: string; type?: string; doWell?: string; fail?: string;
+                  vsUs?: string; isUs?: boolean }[];
+  messagingPillars?: { title?: string; text?: string }[];
+  voiceDescription?: string;
+  voiceDoDont?: { do: string; dont: string }[];
+  alwaysUse?: string[]; neverUse?: string[];
+  taglines?: { text?: string; rationale?: string }[];
+}
+
+/** A record written before the redesign, recognised by keys the new shape lacks. */
+export function isLegacyStrategy(raw: unknown): raw is LegacyStrategy {
+  if (!raw || typeof raw !== "object") return false;
+  const o = raw as Record<string, unknown>;
+  if ("core" in o || "positioning" in o || "boundaries" in o) return false;
+  return "brandName" in o || "passport" in o || "differentiators" in o;
+}
+
+/**
+ * One-way map from the legacy shape onto the spec's.
+ *
+ * Content carries over; fields the legacy shape never had arrive empty and
+ * surface as the spec's section prompts. Nothing is invented — in particular
+ * every migrated pillar has an empty `proof`, which is exactly the finding the
+ * spec wants shown rather than hidden.
+ *
+ * Deliberately not carried: voiceDescription and voiceDoDont, which belong to
+ * Tone of Voice and have their own route; and risks, opportunities and
+ * channelMessages, which the new model has no home for.
+ */
+export function migrateLegacyStrategy(l: LegacyStrategy, updatedAt?: string | null): BrandStrategy {
+  const p = l.passport ?? {};
+  const pick = (...v: (string | undefined)[]) => v.find((x) => x && x.trim()) ?? "";
+
+  return {
+    updatedAt: updatedAt ?? null,
+    core: {
+      whoWeAre: pick(p.signature, l.brandName),
+      whatWeDo: pick(l.solution),
+      whyWeExist: pick(p.purpose),
+      promise: pick(p.promise),
+    },
+    positioning: {
+      weAre: pick(l.category),
+      forWhom: pick(p.targetGroup, l.target),
+      unlike: pick(l.competitiveIntro),
+      because: pick(l.firstTo?.explanation, l.onlyOnesWho?.explanation),
+      // The hero headline. onlyWeClaim is the closest thing the legacy shape had.
+      difference: pick(p.onlyWeClaim, l.onlyOnesWho?.claim, l.firstTo?.claim),
+      notFor: pick(l.exclusions),
+    },
+    pyramid: {
+      essence: pick(l.pyramid?.essence),
+      personality: [],
+      benefits: pick(l.pyramid?.whyChooseUs),
+      attributes: [],
+    },
+    audience: (l.personas ?? []).map((x, i) => ({
+      name: pick(x.name),
+      role: pick(x.role),
+      detail: pick(x.who),
+      // Exactly one primary. The legacy shape had no flag, so the first wins.
+      isPrimary: i === 0,
+      wants: pick(x.wants),
+      frustratedBy: pick(x.frustrations),
+      caresAbout: x.brandGives ? [x.brandGives] : [],
+      channels: (x.channels ?? []).map((c) => ({ label: c, stage: null })),
+    })),
+    competitors: (l.competitors ?? []).map((c) => ({
+      name: pick(c.name),
+      description: pick(c.doWell, c.type),
+      price: "",
+      isUs: Boolean(c.isUs),
+      map: { x: 50, y: 50 },
+    })),
+    pillars: (l.differentiators ?? []).map((d) => ({
+      title: pick(d.title, d.label),
+      body: pick(d.text),
+      proof: "",
+      icon: "",
+    })),
+    messages: {
+      tagline: pick(l.taglines?.[0]?.text),
+      supporting: (l.messagingPillars ?? []).map((m) => ({
+        text: pick(m.text, m.title),
+        stage: null,
+      })),
+    },
+    principles: [
+      ...(p.philosophy?.trim() ? [{ title: "Philosophy", body: p.philosophy }] : []),
+      ...(p.values?.trim() ? [{ title: "Values", body: p.values }] : []),
+    ],
+    boundaries: {
+      never: [],
+      always: [],
+      wordsUsed: l.alwaysUse ?? [],
+      wordsAvoided: l.neverUse ?? [],
+      neverCompromise: [],
+    },
+    focus: { goal: "", priorities: [] },
+  };
+}
+
+/** Reads either shape. Legacy records are migrated on read and never written back. */
+export function readStrategy(raw: string | null | undefined, updatedAt?: string | null): BrandStrategy {
+  if (!raw) return { ...EMPTY_STRATEGY, updatedAt: updatedAt ?? null };
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (isLegacyStrategy(parsed)) return migrateLegacyStrategy(parsed, updatedAt);
+  } catch {
+    /* fall through to parseStrategy, which handles prose */
+  }
+  return parseStrategy(raw, updatedAt);
 }

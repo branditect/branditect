@@ -11,6 +11,7 @@ import {
   EMPTY_STRATEGY, SECTIONS, completeness, firstIncompleteSection,
   pillarsMissingProof, derivePyramid, generateSummary, summaryText,
   parseStrategy, strategyPromptContext, primarySegment,
+  isLegacyStrategy, migrateLegacyStrategy, readStrategy,
   type BrandStrategy,
 } from "./strategy.ts";
 
@@ -166,5 +167,97 @@ describe("strategyPromptContext", () => {
 
   it("is empty for an empty strategy, so nothing meaningless is sent", () => {
     assert.equal(strategyPromptContext(EMPTY_STRATEGY), "");
+  });
+});
+
+describe("migrateLegacyStrategy", () => {
+  const legacy = {
+    brandName: "Deklan",
+    category: "Beauty-Tech Hair Tools",
+    passport: { signature: "Deklan makes precision hair tools", purpose: "so styling stops damaging hair",
+                promise: "salon results without the heat damage", onlyWeClaim: "the only dryer with plasma ion at 110,000 RPM",
+                philosophy: "Design for the everyday", values: "Honest, exacting", targetGroup: "Aspirational optimizers" },
+    pyramid: { essence: "Precision", whyChooseUs: "It just works" },
+    solution: "Plasma-ion tools",
+    exclusions: "salons buying trade equipment",
+    differentiators: [{ label: "01", title: "Plasma ion", text: "Neutralises static" }],
+    personas: [{ name: "Aspirational Optimizer", role: "Consumer", who: "18-80",
+                 wants: "salon results", frustrations: "heat damage",
+                 channels: ["Instagram", "TikTok"], brandGives: "confidence" },
+               { name: "Second", role: "Pro" }],
+    competitors: [{ name: "Dyson", type: "Premium", doWell: "Brand", isUs: false },
+                  { name: "Deklan", doWell: "Precision", isUs: true }],
+    messagingPillars: [{ title: "Precision", text: "Every degree measured" }],
+    taglines: [{ text: "Precision, styled." }, { text: "second" }],
+    alwaysUse: ["precise", "considered"],
+    neverUse: ["luxury", "revolutionary"],
+    voiceDescription: "Warm but exacting",
+    voiceDoDont: [{ do: "Be direct", dont: "Never gush" }],
+  };
+
+  it("recognises the legacy shape and not the new one", () => {
+    assert.ok(isLegacyStrategy(legacy));
+    assert.ok(!isLegacyStrategy({ core: {}, positioning: {} }));
+    assert.ok(!isLegacyStrategy(null));
+  });
+
+  it("puts onlyWeClaim in the hero headline slot", () => {
+    const m = migrateLegacyStrategy(legacy);
+    assert.equal(m.positioning.difference, "the only dryer with plasma ion at 110,000 RPM");
+  });
+
+  it("carries the exclusion, which the new positioning needs", () => {
+    assert.equal(migrateLegacyStrategy(legacy).positioning.notFor, "salons buying trade equipment");
+  });
+
+  it("leaves every migrated pillar without proof, so the gap is surfaced", () => {
+    const m = migrateLegacyStrategy(legacy);
+    assert.equal(m.pillars.length, 1);
+    assert.equal(m.pillars[0].proof, "");
+    assert.deepEqual(pillarsMissingProof(m), ["Plasma ion"]);
+  });
+
+  it("flags exactly one primary segment", () => {
+    const m = migrateLegacyStrategy(legacy);
+    assert.equal(m.audience.filter((a) => a.isPrimary).length, 1);
+    assert.equal(primarySegment(m)?.name, "Aspirational Optimizer");
+  });
+
+  it("keeps channels but marks them unstaged rather than inventing a stage", () => {
+    const m = migrateLegacyStrategy(legacy);
+    assert.deepEqual(m.audience[0].channels, [
+      { label: "Instagram", stage: null }, { label: "TikTok", stage: null },
+    ]);
+    assert.equal(m.messages.supporting[0].stage, null);
+  });
+
+  it("maps the word lists into boundaries but invents no rules", () => {
+    const b = migrateLegacyStrategy(legacy).boundaries;
+    assert.deepEqual(b.wordsUsed, ["precise", "considered"]);
+    assert.deepEqual(b.wordsAvoided, ["luxury", "revolutionary"]);
+    assert.deepEqual(b.never, []);
+    assert.deepEqual(b.always, []);
+  });
+
+  it("does not carry tone of voice, which has its own route", () => {
+    const m = migrateLegacyStrategy(legacy) as unknown as Record<string, unknown>;
+    assert.equal(m.voiceDescription, undefined);
+    assert.ok(!JSON.stringify(m).includes("Never gush"));
+  });
+
+  it("takes only the first tagline", () => {
+    assert.equal(migrateLegacyStrategy(legacy).messages.tagline, "Precision, styled.");
+  });
+
+  it("readStrategy routes a legacy record through the migration", () => {
+    const s = readStrategy(JSON.stringify(legacy), "2026-04-10T15:09:39Z");
+    assert.equal(s.positioning.difference, "the only dryer with plasma ion at 110,000 RPM");
+    assert.equal(s.updatedAt, "2026-04-10T15:09:39Z");
+  });
+
+  it("readStrategy leaves a new-shape record alone", () => {
+    const s = readStrategy(JSON.stringify({ core: { whoWeAre: "X" }, positioning: { difference: "D" } }));
+    assert.equal(s.core.whoWeAre, "X");
+    assert.equal(s.positioning.difference, "D");
   });
 });

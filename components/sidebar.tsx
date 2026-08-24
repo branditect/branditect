@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useBrand } from "@/lib/useBrand";
 import { useUser } from "@/lib/useUser";
 import Icon from "@/components/icon";
 import Logo from "@/components/logo";
+import AccountMenu from "@/components/account-menu";
+import { supabase } from "@/lib/supabase";
 import { NAV, sectionFor, type NavItem } from "@/lib/nav";
 
 function NavRow({
@@ -86,8 +88,16 @@ function NavRow({
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { brandName } = useBrand();
   const { user } = useUser();
+
+  // replace, not push — with push the back button returns to a rendered app
+  // shell showing stale data until the auth guard catches up.
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  }
 
   // The active section is expanded on load; expansion is UI-only state.
   const [open, setOpen] = useState<string | null>(() => sectionFor(pathname));
@@ -125,18 +135,13 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        <div className="mt-3 flex items-center gap-2.5 px-[3px]">
-          <Logo variant="mark" height={32} className="shrink-0" />
-          <div className="min-w-0">
-            <div className="truncate text-sm font-bold tracking-[-0.1px]">
-              {user?.fullName ?? user?.email ?? brandName}
-            </div>
-            {/* Only show the brand underneath when it isn't already the line above. */}
-            <div className="truncate text-2xs font-normal text-faint">
-              {user ? brandName : "Workspace"}
-            </div>
-          </div>
-        </div>
+        <AccountMenu
+          name={user?.fullName ?? user?.email ?? brandName}
+          /* Only show the brand underneath when it isn't already the line above. */
+          org={user ? brandName : "Workspace"}
+          avatar={<Logo variant="mark" height={32} className="shrink-0" />}
+          onSignOut={handleSignOut}
+        />
       </div>
     </nav>
   );

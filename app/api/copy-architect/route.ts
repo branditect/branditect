@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import { buildBrandContext } from '@/lib/brandContext'
+import { requireEnv } from "@/lib/env";
 
 export const maxDuration = 30
 
@@ -11,8 +12,8 @@ const anthropic = new Anthropic({
 })
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://alzqwhkkntfritasizzx.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsenF3aGtrbnRmcml0YXNpenp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNDIwMzQsImV4cCI6MjA5MDYxODAzNH0.rnOj0oZ5urAQndVAgaNniUKoith7Zl0X3hag7kS5Jq8'
+  requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+  requireEnv("SUPABASE_SERVICE_ROLE_KEY")
 )
 
 async function getBrandName(brandId: string): Promise<string> {

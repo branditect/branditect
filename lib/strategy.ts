@@ -168,16 +168,21 @@ export type SummaryPart = { text: string; strong?: boolean };
 
 export function generateSummary(s: BrandStrategy): SummaryPart[] {
   const out: SummaryPart[] = [];
-  const push = (text: string, strong?: boolean) => { if (text.trim()) out.push({ text, strong }); };
+  // Guard on truthiness, not trim: the separators between clauses are single
+  // spaces, and a trim guard drops every one of them — "…StandardDeklan…".
+  const push = (text: string, strong?: boolean) => { if (text) out.push({ text, strong }); };
 
   if (has(s.core.whoWeAre)) { push(s.core.whoWeAre, true); push(" "); }
   if (has(s.core.whatWeDo)) { push(s.core.whatWeDo); push(" "); }
   if (has(s.positioning.difference)) { push("What makes it different: "); push(s.positioning.difference, true); push(" "); }
-  if (has(s.positioning.notFor)) { push(`It is deliberately not for ${s.positioning.notFor}. `); }
-  if (has(s.core.promise)) { push("The promise is "); push(s.core.promise, true); push(". "); }
+  // Fields are written as full sentences by the questionnaire, so trim any
+  // trailing stop before adding our own — otherwise the paragraph reads "…results.. ".
+  const stop = (t: string) => t.trim().replace(/[.]+$/, "");
+  if (has(s.positioning.notFor)) { push(`It is deliberately not for ${stop(s.positioning.notFor)}. `); }
+  if (has(s.core.promise)) { push("The promise is "); push(stop(s.core.promise), true); push(". "); }
 
   const proofs = s.pillars.map((p) => p.proof).filter(has);
-  if (proofs.length) { push("Proof: "); push(proofs.join("; "), true); push(". "); }
+  if (proofs.length) { push("Proof: "); push(proofs.map(stop).join("; "), true); push(". "); }
 
   if (s.principles.length) {
     push(`It behaves by ${s.principles.map((p) => p.title.toLowerCase()).join(", ")}. `);

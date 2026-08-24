@@ -261,3 +261,24 @@ describe("migrateLegacyStrategy", () => {
     assert.equal(s.positioning.difference, "D");
   });
 });
+
+describe("generateSummary spacing", () => {
+  it("keeps the separators between clauses", () => {
+    const s = { ...EMPTY_STRATEGY,
+      core: { whoWeAre: "Alpha", whatWeDo: "Beta.", whyWeExist: "", promise: "" },
+      positioning: { ...EMPTY_STRATEGY.positioning, difference: "Gamma" } };
+    const text = summaryText(s);
+    assert.ok(!text.includes("AlphaBeta"), `clauses ran together: ${text}`);
+    assert.ok(text.startsWith("Alpha Beta."), text);
+  });
+});
+
+describe("generateSummary punctuation", () => {
+  it("does not double the full stop when a field already ends in one", () => {
+    const s = { ...EMPTY_STRATEGY,
+      positioning: { ...EMPTY_STRATEGY.positioning, notFor: "bargain hunters." },
+      core: { ...EMPTY_STRATEGY.core, promise: "salon results at home." } };
+    const t = summaryText(s);
+    assert.ok(!t.includes(".."), t);
+  });
+});

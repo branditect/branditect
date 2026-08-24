@@ -377,10 +377,11 @@ export function migrateLegacyStrategy(l: LegacyStrategy, updatedAt?: string | nu
         stage: null,
       })),
     },
-    principles: [
-      ...(p.philosophy?.trim() ? [{ title: "Philosophy", body: p.philosophy }] : []),
-      ...(p.values?.trim() ? [{ title: "Values", body: p.values }] : []),
-    ],
+    // Not migrated: passport.philosophy and passport.values are prose, and
+    // titling them "Philosophy"/"Values" leaked field names straight into the
+    // pyramid's Personality tier. Principles are instructions for how the brand
+    // behaves; an empty section shows its prompt, which is the honest state.
+    principles: [],
     boundaries: {
       never: [],
       always: [],
@@ -402,4 +403,58 @@ export function readStrategy(raw: string | null | undefined, updatedAt?: string 
     /* fall through to parseStrategy, which handles prose */
   }
   return parseStrategy(raw, updatedAt);
+}
+
+/* ── Presentation helpers ───────────────────────────────────────────────── */
+
+/** Truncate on a word boundary. Callers keep the full text for a title attr. */
+export function oneLine(text: string, max = 46): string {
+  const t = (text ?? "").trim().replace(/\s+/g, " ");
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const at = cut.lastIndexOf(" ");
+  return (at > max * 0.5 ? cut.slice(0, at) : cut).replace(/[,;:.]$/, "") + "…";
+}
+
+/**
+ * The hero headline is stored as a full sentence and runs to three lines. Cap
+ * it and move the remainder into the sub rather than shrinking the type.
+ */
+export function splitHeadline(text: string, maxWords = 12): { head: string; rest: string } {
+  const words = (text ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return { head: (text ?? "").trim(), rest: "" };
+  const head = words.slice(0, maxWords).join(" ").replace(/[,;:]$/, "");
+  return { head: head + "…", rest: words.slice(maxWords).join(" ") };
+}
+
+/**
+ * The 2×2 map is only worth drawing when the points differ. The legacy shape
+ * carried no coordinates, so every competitor migrates to 50/50 — plotting that
+ * stacks the whole field on one spot with the labels overprinted. An absent map
+ * beats a wrong one, and the ladder already carries the ranking.
+ */
+export function hasUsableMap(competitors: Competitor[]): boolean {
+  const pts = competitors.map((c) => `${c.map?.x ?? 50},${c.map?.y ?? 50}`);
+  return competitors.length >= 2 && new Set(pts).size >= 2;
+}
+
+/** Returns null when there is no figure to read. */
+export function parsePrice(price: string): number | null {
+  const m = (price ?? "").replace(/[\s,]/g, "").match(/(\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : null;
+}
+
+export function anyPrices(competitors: Competitor[]): boolean {
+  return competitors.some((c) => parsePrice(c.price) !== null);
+}
+
+/** Cheapest first, own brand kept in the list — the gap is the point. */
+export function ladder(competitors: Competitor[]): Competitor[] {
+  return [...competitors].sort((a, b) => {
+    const pa = parsePrice(a.price), pb = parsePrice(b.price);
+    if (pa === null && pb === null) return 0;
+    if (pa === null) return 1;
+    if (pb === null) return -1;
+    return pa - pb;
+  });
 }

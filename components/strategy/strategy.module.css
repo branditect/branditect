@@ -296,3 +296,8 @@
   .sec, .panel, .pil, .crow, .ncard, .usedby { break-inside: avoid; page-break-inside: avoid; }
   .panel { filter: none !important; }
 }
+
+/* Says why something is absent rather than drawing it wrong. */
+.emptyNote { margin-top: 12px; font-size: theme('fontSize.xs[0]'); font-weight: 500;
+  color: theme('colors.muted.2'); line-height: 1.5; background: theme('colors.tile.DEFAULT');
+  border-radius: theme('borderRadius.tile'); padding: 10px 12px; }

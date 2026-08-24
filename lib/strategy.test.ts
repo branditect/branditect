@@ -12,6 +12,7 @@ import {
   pillarsMissingProof, derivePyramid, generateSummary, summaryText,
   parseStrategy, strategyPromptContext, primarySegment,
   isLegacyStrategy, migrateLegacyStrategy, readStrategy,
+  oneLine, splitHeadline, hasUsableMap, anyPrices, ladder,
   type BrandStrategy,
 } from "./strategy.ts";
 
@@ -280,5 +281,77 @@ describe("generateSummary punctuation", () => {
       core: { ...EMPTY_STRATEGY.core, promise: "salon results at home." } };
     const t = summaryText(s);
     assert.ok(!t.includes(".."), t);
+  });
+});
+
+describe("presentation helpers", () => {
+  it("oneLine truncates on a word boundary, never mid-word", () => {
+    const t = oneLine("Rationally, we offer comparable performance to luxury brands at half the price", 40);
+    assert.ok(t.length <= 41, t);
+    assert.ok(t.endsWith("…"));
+    assert.ok(!/\w…$/.test(t.replace(/\s\S*…$/, "")), "cut mid-word");
+  });
+
+  it("oneLine leaves short text alone", () => {
+    assert.equal(oneLine("Elevated Everyday Beauty", 40), "Elevated Everyday Beauty");
+  });
+
+  it("splitHeadline caps the hero and moves the remainder to the sub", () => {
+    const long = "Only we deliver 110,000 RPM performance with plasma ion technology at an accessible price point";
+    const { head, rest } = splitHeadline(long, 12);
+    assert.equal(head.split(/\s+/).length, 12 + 0, head);
+    assert.ok(rest.length > 0, "remainder was dropped instead of moved");
+    assert.ok(!head.includes(rest.split(" ")[0]));
+  });
+
+  it("splitHeadline leaves a short statement whole with no ellipsis", () => {
+    const { head, rest } = splitHeadline("We make boots last", 12);
+    assert.equal(head, "We make boots last");
+    assert.equal(rest, "");
+  });
+
+  it("hasUsableMap is false when every competitor migrated to the same point", () => {
+    const same = [
+      { name: "A", description: "", price: "", map: { x: 50, y: 50 } },
+      { name: "B", description: "", price: "", map: { x: 50, y: 50 } },
+      { name: "Us", description: "", price: "", isUs: true, map: { x: 50, y: 50 } },
+    ];
+    assert.equal(hasUsableMap(same), false);
+    assert.equal(hasUsableMap([...same.slice(0, 2), { ...same[2], map: { x: 70, y: 30 } }]), true);
+  });
+
+  it("hasUsableMap is false with fewer than two competitors", () => {
+    assert.equal(hasUsableMap([{ name: "Us", description: "", price: "", map: { x: 10, y: 90 } }]), false);
+  });
+
+  it("ladder sorts by price and keeps own brand in the list", () => {
+    const c = [
+      { name: "Dyson", description: "", price: "€399", map: { x: 50, y: 50 } },
+      { name: "Deklan", description: "", price: "€150", isUs: true, map: { x: 50, y: 50 } },
+      { name: "Revlon", description: "", price: "€39", map: { x: 50, y: 50 } },
+    ];
+    assert.deepEqual(ladder(c).map((x) => x.name), ["Revlon", "Deklan", "Dyson"]);
+    assert.ok(ladder(c).some((x) => x.isUs));
+  });
+
+  it("ladder puts priceless rows last rather than dropping them", () => {
+    const c = [
+      { name: "NoPrice", description: "", price: "", map: { x: 50, y: 50 } },
+      { name: "Cheap", description: "", price: "€10", map: { x: 50, y: 50 } },
+    ];
+    assert.deepEqual(ladder(c).map((x) => x.name), ["Cheap", "NoPrice"]);
+  });
+
+  it("anyPrices is false when the record carried none", () => {
+    assert.equal(anyPrices([{ name: "A", description: "", price: "", map: { x: 50, y: 50 } }]), false);
+    assert.equal(anyPrices([{ name: "A", description: "", price: "€12.50", map: { x: 50, y: 50 } }]), true);
+  });
+});
+
+describe("migration no longer leaks field names", () => {
+  it("does not turn passport prose into principles named Philosophy/Values", () => {
+    const m = migrateLegacyStrategy({ passport: { philosophy: "Design for the everyday", values: "Honest" } });
+    assert.deepEqual(m.principles, []);
+    assert.ok(!derivePyramid(m).personality.includes("Philosophy"));
   });
 });

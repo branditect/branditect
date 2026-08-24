@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   SECTIONS, completeness, derivePyramid, firstIncompleteSection,
-  generateSummary, primarySegment, type BrandStrategy, type SectionDef,
+  generateSummary, primarySegment, oneLine, splitHeadline, hasUsableMap,
+  anyPrices, ladder, type BrandStrategy, type SectionDef,
 } from "@/lib/strategy";
 import { I, Ico } from "./icons";
 import s from "./strategy.module.css";
@@ -65,6 +66,10 @@ export default function StrategyDocument({
   const summary = generateSummary(strategy);
   const firstGap = firstIncompleteSection(strategy);
   const seg = strategy.audience[activeSeg] ?? primarySegment(strategy);
+  const headline = splitHeadline(strategy.positioning.difference);
+  const rows = ladder(strategy.competitors);
+  const showPrices = anyPrices(strategy.competitors);
+  const showMap = hasUsableMap(strategy.competitors);
   const sec = (id: string) => SECTIONS.find((x) => x.id === id)!;
 
   const updated = strategy.updatedAt
@@ -80,11 +85,14 @@ export default function StrategyDocument({
           <div className={s.kicker}>Brand strategy</div>
           {/* The difference statement headlines, not the page title — it is what
               a new team member needs and what the AI cites most. */}
+          {/* Capped rather than shrunk — the remainder moves into the sub. */}
           <h1 className={s.heroHeadline}>
-            {strategy.positioning.difference || "Your positioning line goes here"}
+            {headline.head || "Your positioning line goes here"}
           </h1>
           {strategy.core.promise && <div className={s.heroLine}>{strategy.core.promise}</div>}
-          {strategy.core.whyWeExist && <p className={s.heroSub}>{strategy.core.whyWeExist}</p>}
+          {(headline.rest || strategy.core.whyWeExist) && (
+            <p className={s.heroSub}>{headline.rest || strategy.core.whyWeExist}</p>
+          )}
 
           <div className={s.metarow}>
             <span className={s.chip}><Ico d={I.clock} size={12} /> Updated {updated}</span>
@@ -96,7 +104,7 @@ export default function StrategyDocument({
           <div className={s.hbtns}>
             <button type="button" className={s.hbtn} onClick={() => onEdit(firstGap?.id ?? "core")}>
               <Ico d={I.pen} size={15} />
-              {firstGap ? `Finish ${firstGap.title}` : "Edit strategy"}
+              {firstGap ? `Finish: ${firstGap.title}` : "Edit strategy"}
             </button>
             <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={onExport}>
               <Ico d={I.dl} size={15} /> Export
@@ -107,22 +115,19 @@ export default function StrategyDocument({
         {/* The narrowing is the argument: many attributes, one idea. */}
         <div>
           <div className={s.pyr}>
-            <div className={`${s.tier} ${s.t1}`}>
-              <div className="t">Essence</div>
-              <div className="v">{pyr.essence || "—"}</div>
-            </div>
-            <div className={`${s.tier} ${s.t2}`}>
-              <div className="t">Personality</div>
-              <div className="v">{pyr.personality.join(" · ") || "—"}</div>
-            </div>
-            <div className={`${s.tier} ${s.t3}`}>
-              <div className="t">Benefits</div>
-              <div className="v">{pyr.benefits || "—"}</div>
-            </div>
-            <div className={`${s.tier} ${s.t4}`}>
-              <div className="t">Attributes</div>
-              <div className="v">{pyr.attributes.join(" · ") || "—"}</div>
-            </div>
+            {/* Each tier is capped to about one line. The narrowing is the
+                argument, and a four-line Benefits block under a two-word
+                Essence inverts it. Full text stays available on hover. */}
+            {([["Essence", pyr.essence, s.t1, 34],
+               ["Personality", pyr.personality.join(" · "), s.t2, 40],
+               ["Benefits", pyr.benefits, s.t3, 52],
+               ["Attributes", pyr.attributes.join(" · "), s.t4, 64]] as const).map(
+              ([label, value, cls, cap]) => (
+                <div key={label} className={`${s.tier} ${cls}`}>
+                  <div className="t">{label}</div>
+                  <div className="v" title={value || undefined}>{value ? oneLine(value, cap) : "—"}</div>
+                </div>
+              ))}
           </div>
           <div className={s.pyrcap}>Derived from your positioning and proof points</div>
         </div>
@@ -262,15 +267,22 @@ export default function StrategyDocument({
           ) : (
             <>
               <div className={s.comp}>
-                {strategy.competitors.map((k, i) => (
+                {rows.map((k, i) => (
                   <div key={k.name + i} className={`${s.crow} ${k.isUs ? s.crowUs : ""}`}>
                     <div className={s.crowNm}>{k.name}</div>
                     <div className={s.crowD}>{k.description}</div>
-                    <div className={s.crowPr}>{k.price || "—"}</div>
+                    {/* A column of em dashes says nothing. Hidden until a price exists. */}
+                    {showPrices && <div className={s.crowPr}>{k.price || "—"}</div>}
                   </div>
                 ))}
               </div>
-              <div className={s.map}>
+              {!showPrices && (
+                <div className={s.emptyNote}>
+                  No prices yet. Add them and your own price sits in this ladder,
+                  which is what makes the gap the point.
+                </div>
+              )}
+              {showMap && <div className={s.map}>
                 <span className={`${s.ax} ${s.axv}`} /><span className={`${s.ax} ${s.axh}`} />
                 <span className={`${s.lb} ${s.lt}`}>Professional</span>
                 <span className={`${s.lb} ${s.lbm}`}>Consumer</span>
@@ -283,7 +295,13 @@ export default function StrategyDocument({
                     {!k.isUs && <i style={{ background: "currentColor" }} />}{k.name}
                   </span>
                 ))}
-              </div>
+              </div>}
+              {!showMap && (
+                <div className={s.emptyNote}>
+                  The 2×2 map needs a position per competitor. Without them every
+                  point lands in the same place, so the ladder above is shown alone.
+                </div>
+              )}
             </>
           )}
         </div>

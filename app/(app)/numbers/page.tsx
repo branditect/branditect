@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import Icon, { type IconName } from "@/components/icon";
-import { formatMoney, fromRow, margin, type Product } from "@/lib/products";
+import { formatMoney, fromRow, margin, type Product, DEFAULT_CURRENCY } from "@/lib/products";
 import {
   breakEvenUnits, contribution, costCalculatorTitle, costLines, DEFAULT_PROFILE,
   EMPTY_RUNNING_COSTS, operatingProfit, profileSentence, RUNNING_COST_LINES,
@@ -201,7 +201,7 @@ export default function NumbersPage() {
 
   const opEx = totalRunningCosts(costs);
   const noCosts = runningCostsUnset(costs);
-  const currency = products[0]?.currency ?? "GBP";
+  const currency = products[0]?.currency ?? DEFAULT_CURRENCY;
 
   // Break-even uses the strongest product's contribution — the optimistic
   // case. Stated as such rather than presented as the whole truth.

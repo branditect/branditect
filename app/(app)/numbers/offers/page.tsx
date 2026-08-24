@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
-import { formatMoney, fromRow, type Product } from "@/lib/products";
+import { formatMoney, fromRow, type Product, DEFAULT_CURRENCY } from "@/lib/products";
 import { marginPct, maxDiscountPct, netPrice } from "@/lib/numbers";
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, numStr, toNum,
@@ -29,7 +29,7 @@ export default function OffersCalculator() {
   }, [brandId]);
 
   const selected = products.find((p) => p.id === productId) ?? null;
-  const currency = selected?.currency ?? products[0]?.currency ?? "GBP";
+  const currency = selected?.currency ?? products[0]?.currency ?? DEFAULT_CURRENCY;
 
   useEffect(() => {
     if (!selected) return;
@@ -119,7 +119,7 @@ export default function OffersCalculator() {
           </ApplyPanel>
 
           <p className="rounded-card border border-rule bg-tile px-3.5 py-3 text-2xs font-medium leading-[1.6] text-muted">
-            Guardrails are per product. A £6 clip cannot carry a £99 floor, so this ceiling belongs
+            Guardrails are per product. A €6 clip cannot carry a €99 floor, so this ceiling belongs
             to this product alone — not to the brand.
           </p>
         </div>

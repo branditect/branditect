@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
-import { formatMoney, fromRow, type Product } from "@/lib/products";
+import { formatMoney, fromRow, type Product, DEFAULT_CURRENCY } from "@/lib/products";
 import { marginPct, netPrice, priceForMargin } from "@/lib/numbers";
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, numStr, toNum,
@@ -31,7 +31,7 @@ export default function PricingCalculator() {
   }, [brandId]);
 
   const selected = products.find((p) => p.id === productId) ?? null;
-  const currency = selected?.currency ?? products[0]?.currency ?? "GBP";
+  const currency = selected?.currency ?? products[0]?.currency ?? DEFAULT_CURRENCY;
 
   useEffect(() => {
     if (!selected) return;

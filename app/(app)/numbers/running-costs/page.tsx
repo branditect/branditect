@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
-import { formatMoney, fromRow, margin, type Product } from "@/lib/products";
+import { formatMoney, fromRow, margin, type Product, DEFAULT_CURRENCY } from "@/lib/products";
 import {
   breakEvenUnits, contribution, DEFAULT_PROFILE, floorPrice,
   floorPriceBasis, operatingProfit, RUNNING_COST_LINES, runningCostsUnset,
@@ -72,7 +72,7 @@ export default function RunningCostsPage() {
   const noCosts = runningCostsUnset(parsed);
   const vol = toNum(volume);
   const selected = products.find((p) => p.id === productId) ?? null;
-  const currency = selected?.currency ?? products[0]?.currency ?? "GBP";
+  const currency = selected?.currency ?? products[0]?.currency ?? DEFAULT_CURRENCY;
 
   const variableCost = selected?.landedCost ?? selected?.factoryCost ?? null;
   const contrib =

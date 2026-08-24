@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatMoney } from "@/lib/products";
+import { formatMoney, DEFAULT_CURRENCY } from "@/lib/products";
 import { recurring } from "@/lib/numbers";
 import { CalcShell, Field, Panel, Readout, toNum } from "@/components/numbers/calc-shell";
 
@@ -10,7 +10,7 @@ export default function RecurringCalculator() {
   const [churn, setChurn] = useState("");
   const [cac, setCac] = useState("");
   const [gm, setGm] = useState("80");
-  const currency = "GBP";
+  const currency = DEFAULT_CURRENCY;
 
   const a = toNum(arpu);
   const ch = toNum(churn);

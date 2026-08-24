@@ -145,6 +145,9 @@ export function marginFootnote(
   return parts.join(" ");
 }
 
+/** Used when a product carries no currency of its own. */
+export const DEFAULT_CURRENCY = "EUR";
+
 export function formatMoney(n: number, currency = "EUR"): string {
   const symbols: Record<string, string> = { GBP: "£", EUR: "€", USD: "$" };
   const symbol = symbols[currency] ?? "";

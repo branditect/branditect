@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
-import { formatMoney, fromRow, type Product } from "@/lib/products";
+import { formatMoney, fromRow, type Product, DEFAULT_CURRENCY } from "@/lib/products";
 import { costCalculatorTitle, costLines, DEFAULT_PROFILE, type BusinessProfile } from "@/lib/numbers";
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, clean, numStr, toNum,
@@ -36,7 +36,7 @@ export default function CostCalculator() {
   }, [brandId]);
 
   const selected = products.find((p) => p.id === productId) ?? null;
-  const currency = selected?.currency ?? products[0]?.currency ?? "GBP";
+  const currency = selected?.currency ?? products[0]?.currency ?? DEFAULT_CURRENCY;
 
   // Prefilling reads from the product; it is not a write. The product's
   // existing landed cost seeds the first line so the total starts somewhere

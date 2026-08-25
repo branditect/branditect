@@ -22,7 +22,7 @@ export type PublicEnvName = keyof typeof PUBLIC;
 
 export function requirePublicEnv(name: PublicEnvName): string {
   const v = PUBLIC[name];
-  if (!v) throw new Error(`${name} is not set. Refusing to fall back to a committed key.`);
+  if (!v) throw new Error(`${name} is not set (public env, inlined at build). Refusing to fall back to a committed key.`);
   return v;
 }
 

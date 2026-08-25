@@ -7,6 +7,13 @@
  * all pass in that state. This is the check that does not.
  *
  * Usage: node scripts/smoke.mjs [baseUrl]
+ *   npm run smoke        local build
+ *   npm run smoke:prod   the deployed site
+ *
+ * Run it against production, not only a local build. Both failures on
+ * 2026-08-25 — the missing service-role key and the hydration crash — existed
+ * only in the deployed environment, and a passing local build is what let two
+ * red deploys sit unnoticed.
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync } from "node:fs";

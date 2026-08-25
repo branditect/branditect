@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { requireEnv } from "@/lib/env";
+import { requirePublicEnv } from "@/lib/env-public";
 
 /**
  * Browser client, constructed lazily.
@@ -14,8 +14,8 @@ let client: SupabaseClient | null = null;
 function get(): SupabaseClient {
   if (!client) {
     client = createClient(
-      requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-      requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+      requirePublicEnv("NEXT_PUBLIC_SUPABASE_URL"),
+      requirePublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     );
   }
   return client;

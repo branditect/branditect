@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { createClient } from "@supabase/supabase-js";
-import { requireEnv } from "@/lib/env";
+import { serviceClient as supabase } from "@/lib/supabase-admin";
 
 // A 40-page image-heavy guideline PDF measured 104s. At the old 60s the
 // function was killed mid-flight, so the row below stayed "processing" with
@@ -11,11 +10,6 @@ import { requireEnv } from "@/lib/env";
 export const maxDuration = 300;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const supabase = createClient(
-  requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  requireEnv("SUPABASE_SERVICE_ROLE_KEY")
-);
 
 const SYSTEM_PROMPT = `You are a brand data extractor. Extract ALL text content from this document — product names, features, pricing, company info, team info, and any other facts. Format as clean readable text. Do not summarise — preserve all specific details, numbers, names, and figures exactly as written.`;
 

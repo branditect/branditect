@@ -1,10 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-import { requireEnv } from "@/lib/env";
-
-const supabase = createClient(
-  requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  requireEnv("SUPABASE_SERVICE_ROLE_KEY")
-);
+import { serviceClient as supabase } from "@/lib/supabase-admin";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

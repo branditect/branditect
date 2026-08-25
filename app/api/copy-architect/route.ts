@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { createClient } from '@supabase/supabase-js'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import { buildBrandContext } from '@/lib/brandContext'
-import { requireEnv } from "@/lib/env";
+import { serviceClient as supabase } from "@/lib/supabase-admin";
 
 export const maxDuration = 30
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
-
-const supabase = createClient(
-  requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  requireEnv("SUPABASE_SERVICE_ROLE_KEY")
-)
 
 async function getBrandName(brandId: string): Promise<string> {
   const { data } = await supabase

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
+    // Runs instrumentation.ts at server start for the env check.
+    instrumentationHook: true,
     serverActions: {
       bodySizeLimit: '10mb',
     },

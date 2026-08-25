@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { createClient } from "@supabase/supabase-js";
+import { serviceClient as supabase } from "@/lib/supabase-admin";
 
 // Image-heavy guideline PDFs are slow: a 40-page one measured 104s. 300 is the
 // Vercel Pro ceiling; on Hobby this is capped at 60 and large PDFs will fail.
 export const maxDuration = 300;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // Anthropic caps a request at 32MB. Base64 inflates by ~37%, so the real
 // ceiling on the file itself is ~23MB — check before spending 100s on a

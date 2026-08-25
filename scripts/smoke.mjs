@@ -65,26 +65,50 @@ await send("Page.enable");
 await send("Runtime.enable");
 
 let failed = 0;
+const lengths = [];
 for (const route of ROUTES) {
   errors = [];
   await send("Page.navigate", { url: BASE + route });
   await sleep(5000);
   const res = await send("Runtime.evaluate", {
-    expression: "JSON.stringify({ len: document.body.innerText.trim().length })",
+    expression: `JSON.stringify({
+      len: document.body.innerText.trim().length,
+      title: document.title,
+      text: document.body.innerText.trim().slice(0, 120),
+    })`,
     returnByValue: true,
   });
-  let len = 0;
-  try { len = JSON.parse(res.result?.result?.value ?? "{}").len ?? 0; } catch { /* keep 0 */ }
+  let len = 0, title = "", text = "";
+  try {
+    const parsed = JSON.parse(res.result?.result?.value ?? "{}");
+    len = parsed.len ?? 0; title = parsed.title ?? ""; text = parsed.text ?? "";
+  } catch { /* keep defaults */ }
+
+  // A non-empty body is not enough. An interstitial — a Vercel security
+  // checkpoint, a WAF challenge, an error page — has plenty of text and would
+  // otherwise pass on every route at once. Nine identical body lengths is the
+  // tell, so treat a known interstitial as a failure outright.
+  const interstitial = /Security Checkpoint|Just a moment|Attention Required|Application error|500: Internal/i;
+  const blocked = interstitial.test(text) || interstitial.test(title);
 
   // Hydration errors are the point of this test, so they fail the route even
   // when the server HTML happened to survive.
   const fatal = errors.filter((e) => !/favicon|net::ERR/i.test(e));
-  const ok = len > 0 && fatal.length === 0;
+  const ok = len > 0 && fatal.length === 0 && !blocked;
   if (!ok) failed++;
-  console.log(`${ok ? "PASS" : "FAIL"}  ${route.padEnd(22)} bodyText=${len}${fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : ""}`);
+  const why = blocked ? `  BLOCKED: ${text.slice(0, 60)}`
+    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : "";
+  console.log(`${ok ? "PASS" : "FAIL"}  ${route.padEnd(22)} bodyText=${len}${why}`);
+  lengths.push(len);
 }
 
 ws.close();
 chrome.kill();
+// Every route returning the same length means one page is being served for
+// all of them, which is an interstitial even when its text is unrecognised.
+if (!failed && lengths.length > 2 && new Set(lengths).size === 1) {
+  console.log(`\nSUSPECT: all ${lengths.length} routes returned an identical body length (${lengths[0]}) — likely one page served for everything.`);
+  failed = lengths.length;
+}
 console.log(failed ? `\n${failed} route(s) failed` : "\nall routes rendered");
 process.exit(failed ? 1 : 0);

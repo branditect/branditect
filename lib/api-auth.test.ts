@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { decideAccess } from "./api-auth.ts";
+import { decideAccess } from "./ownership.ts";
 
 describe("ownership", () => {
   it("lets a user reach their own brand", () => {

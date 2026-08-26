@@ -88,3 +88,28 @@ Four checks, 25% each, defined in `lib/readiness.ts` (tests in `lib/readiness.te
 | Old URL redirects | `next.config.mjs` |
 | Original handoff package | `docs/handoff/` |
 | Superseded design system | `CLAUDE.editorial-architect.md` |
+
+## Testing against real data
+
+**Never run a browser check against a real product, document or brand record.**
+Use the scratch product `ZZ TEST — do not use`
+(`43655187-c36a-445c-ab29-1b485f7e60f5`, brand `sorbify-13t9`). If it is missing,
+insert one directly — never through `POST /api/catalog`, which deletes every
+product for the brand and re-inserts them.
+
+This is not a style preference. Supabase is on the Free plan: **no scheduled
+backups, no point-in-time recovery**, and product data is not in the repo or the
+build. Anything overwritten is gone. SORBIFY OIL's description was lost this way
+on 2026-08-26 — typed over during a browser check that had no business touching
+a real row.
+
+**A UI test that fakes events can report a bug the product does not have.**
+Synthetic `dispatchEvent(new Event('input'))` does not drive React state, so
+fields save empty and the app looks broken when the harness is. Drive the real
+thing: CDP `Input.insertText` after `focus()`. And beware escaping — a
+JSON-encoded `\n` types a literal backslash-n, which then "proves" that
+newlines are being stripped.
+
+**Run `npm test` before every commit.** `server-only` added in b46c701 broke
+`api-auth.test.ts` transitively and the suite stayed red until it was noticed by
+accident two commits later.

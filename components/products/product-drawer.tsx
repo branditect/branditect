@@ -14,6 +14,7 @@ import {
   type Product,
   type StockStatus,
 } from "@/lib/products";
+import { SpecsEditor, DescriptionField, type Spec } from "@/components/products/specs-editor";
 
 const TABS = ["Details", "Pricing", "Inventory", "Media", "History"] as const;
 type Tab = (typeof TABS)[number];
@@ -198,6 +199,28 @@ export default function ProductDrawer({
   returnFocusTo?: HTMLElement | null;
 }) {
   const [tab, setTab] = useState<Tab>("Details");
+
+  // Specs live in their own table, so they load and save alongside the draft
+  // rather than through the product PATCH.
+  const [specs, setSpecs] = useState<Spec[]>([]);
+  const [specsLoaded, setSpecsLoaded] = useState<Spec[]>([]);
+  const [specsLoading, setSpecsLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setSpecsLoading(true);
+    fetch(`/api/catalog/product/specs?product_id=${product.id}&brand_id=${brandId}`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive) return;
+        const rows: Spec[] = (j.specs ?? []).map((r: Spec) => ({ id: r.id, key: r.key, value: r.value ?? "" }));
+        setSpecs(rows);
+        setSpecsLoaded(rows);
+      })
+      .catch(() => { /* surfaced by the save path if it matters */ })
+      .finally(() => { if (alive) setSpecsLoading(false); });
+    return () => { alive = false; };
+  }, [product.id, brandId]);
   const [draft, setDraft] = useState<Draft>(() => toDraft(product));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,10 +235,15 @@ export default function ProductDrawer({
   }, [product]);
 
   const original = useMemo(() => toDraft(product), [product]);
+  // Specs are compared by content, not identity: a row edited in place has the
+  // same id, and a row just added has none at all.
+  const specsKey = (rows: Spec[]) => JSON.stringify(rows.map((r) => [r.key, r.value]));
+  const specsDirty = specsKey(specs) !== specsKey(specsLoaded);
+
   const dirty = useMemo(
     () => (Object.keys(draft) as (keyof Draft)[]).some((k) => draft[k] !== original[k]),
     [draft, original],
-  );
+  ) || specsDirty;
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -225,6 +253,7 @@ export default function ProductDrawer({
 
   function requestClose() {
     if (dirtyRef.current && !window.confirm("Discard unsaved changes to this product?")) return;
+    setSpecs(specsLoaded);
     onClose();
     returnFocusTo?.focus();
   }
@@ -287,6 +316,21 @@ export default function ProductDrawer({
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Could not save");
+
+      // Same request cycle as the product fields, so one Save covers both and
+      // the footer's dirty/clean state stays honest.
+      const specRes = await fetch("/api/catalog/product/specs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: product.id, brand_id: brandId, specs }),
+      });
+      const specBody = await specRes.json();
+      if (!specRes.ok) throw new Error(specBody.error || "Could not save specifications");
+      const savedSpecs: Spec[] = (specBody.specs ?? []).map(
+        (r: Spec) => ({ id: r.id, key: r.key, value: r.value ?? "" }),
+      );
+      setSpecs(savedSpecs);
+      setSpecsLoaded(savedSpecs);
 
       onSaved({
         ...product,
@@ -449,12 +493,9 @@ export default function ProductDrawer({
                 <Section title="Product information">
                   <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
                     <Field label="Product name" value={draft.name} onChange={(v) => set("name", v)} />
-                    <Field
-                      label="Description"
+                    <DescriptionField
                       value={draft.description}
                       onChange={(v) => set("description", v)}
-                      multiline
-                      placeholder="What it is, in the words a copywriter should reuse"
                     />
                     <Field label="Category" value={draft.category} onChange={(v) => set("category", v)} />
                     <Field label="SKU" value={draft.sku} onChange={(v) => set("sku", v)} />
@@ -469,6 +510,14 @@ export default function ProductDrawer({
                   <p className="mt-2 text-2xs font-medium text-muted">
                     Tags steer tone and angle when Studio writes. Separate them with commas.
                   </p>
+                </Section>
+
+                <Section title="Specifications">
+                  <SpecsEditor
+                    specs={specs}
+                    loading={specsLoading}
+                    onChange={setSpecs}
+                  />
                 </Section>
 
                 <Section title="What Branditect knows">

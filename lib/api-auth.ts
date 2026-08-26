@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 // Relative, with the extension: the test suite runs under Node's native
 // TypeScript, which does not resolve the "@/" alias.
 import { requireEnv } from "./env.ts";
+export { decideAccess } from "./ownership.ts";
 
 /**
  * Ownership checks for /api routes.
@@ -69,11 +70,3 @@ export async function resolveBrand(req: Request, requested?: string | null): Pro
   return { ok: true, userId: user.id, brandId: owned.brand_id };
 }
 
-/** Pure half of the ownership decision, so it can be tested without a network. */
-export function decideAccess(
-  ownedBrandId: string | null, requested: string | null | undefined,
-): { ok: true; brandId: string } | { ok: false; status: 403 } {
-  if (!ownedBrandId) return { ok: false, status: 403 };
-  if (requested && requested !== ownedBrandId) return { ok: false, status: 403 };
-  return { ok: true, brandId: ownedBrandId };
-}

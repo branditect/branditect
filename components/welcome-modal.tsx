@@ -14,7 +14,7 @@ const STEPS = [
   {
     title: 'Step 1: Brand',
     desc: 'Answer the strategy questionnaire and set your tone of voice.',
-    href: '/brand/strategy',
+    href: '/start',
   },
   {
     title: 'Step 2: Knowledge',

@@ -6,6 +6,7 @@ import AuthLayout from "@/components/auth/auth-layout";
 import AuthForm, { type AuthValues } from "@/components/auth/auth-form";
 import { mapAuthError, type AuthError } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
+import { routeAfterAuth } from "@/lib/post-auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +31,9 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/home");
+    // not_started → /start, partial → /start/resume, gated_complete or
+    // complete → /home. spec/onboarding.md.
+    router.push(await routeAfterAuth());
   }
 
   return (

@@ -16,6 +16,7 @@ export const AUTH_COPY = {
   serverError: "Something went wrong at our end. Try again.",
   resetSent: "If that email has an account, a reset link is on its way.",
   resetExpired: "That link has expired. Request a new one.",
+  confirmSent: "Check your email to confirm your address, then sign in. Your questionnaire is waiting.",
 } as const;
 
 /** Minimum password length on sign-up. Length beats composition rules. */

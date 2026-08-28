@@ -609,73 +609,40 @@ export default function BrandStrategyPage() {
         onChange={handleFileChange}
       />
 
-      {/* ---- ENTRY SCREEN ---- */}
+      {/* ---- EMPTY STATE ---- */}
+      {/* This route is the strategy DOCUMENT. The questionnaire lives at
+          /start — twenty questions, five of them needed to open the workspace.
+          The 38-question flow that used to start here is being removed; its
+          screens below are unreachable and go next. */}
       {screen === "entry" && (
         <div className="flex-1 flex items-center justify-center px-8">
-          <div className="max-w-3xl w-full space-y-8">
-            <div className="text-center">
-              <h1 className="text-4xl font-semibold text-ink mb-3">
-                Brand Strategy
+          <div className="w-full max-w-xl">
+            <div className="rounded-panel border border-rule bg-card p-8 drop-shadow-panel">
+              <div className="text-micro font-bold uppercase tracking-[1.4px] text-accent">
+                Brand
+              </div>
+              <h1 className="mt-2 text-display font-bold leading-[1.15] tracking-[-0.7px]">
+                No strategy yet.
               </h1>
-              <p className="text-lg text-muted font-sans">
-                Build a comprehensive, AI-powered brand strategy document.
+              <p className="mt-3 text-base font-normal leading-[1.6] text-muted">
+                It is built from the questionnaire. Twenty questions, five of them
+                needed to open your workspace, about four minutes. This page fills
+                itself in as you answer.
               </p>
-            </div>
 
-            {error && (
-              <div className="px-4 py-3 rounded-xl bg-white border border-[#e1e2e8] text-sm text-[#44474e]">
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="mt-5 rounded-tile border border-rule bg-page px-4 py-3 text-sm text-ink-2">
+                  {error}
+                </div>
+              )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Option A: paste existing */}
-              <div className="rounded-2xl border border-outline-variant/15 bg-surface-container-low p-6 space-y-4">
-                <h2 className="text-lg font-bold text-ink font-sans">
-                  I already have a brand strategy
-                </h2>
-                <p className="text-sm text-muted">
-                  Paste your existing strategy and we will refine, restructure,
-                  and strengthen it.
-                </p>
-                <textarea
-                  value={existingText}
-                  onChange={(e) => setExistingText(e.target.value)}
-                  rows={6}
-                  placeholder="Paste your existing strategy here..."
-                  className="w-full rounded-xl border border-outline-variant/15 bg-white px-4 py-3 text-sm text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-none font-sans"
-                />
-                <button
-                  onClick={() => generate(true)}
-                  disabled={!existingText.trim()}
-                  className="w-full rounded-xl bg-primary text-white font-headline font-bold py-4 shadow-lg shadow-primary/20 text-sm hover:brightness-110 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-sans"
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/start"
+                  className="rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn"
                 >
-                  Generate Strategy
-                </button>
-              </div>
-
-              {/* Option B: build from scratch */}
-              <div className="rounded-2xl border border-outline-variant/15 bg-surface-container-low p-6 space-y-4 flex flex-col justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-ink font-sans">
-                    Build from scratch
-                  </h2>
-                  <p className="text-sm text-muted mt-2">
-                    Answer our guided questionnaire and we will craft a
-                    comprehensive strategy from your answers.
-                  </p>
-                </div>
-                <div>
-                  <div className="text-xs text-muted mb-3 font-mono">
-                    38 questions across 7 sections
-                  </div>
-                  <button
-                    onClick={() => setScreen("category")}
-                    className="w-full rounded-xl bg-primary text-white font-headline font-bold py-4 shadow-lg shadow-primary/20 text-sm hover:brightness-110 transition-colors font-sans"
-                  >
-                    Start Questionnaire
-                  </button>
-                </div>
+                  Start the questionnaire
+                </Link>
               </div>
             </div>
           </div>

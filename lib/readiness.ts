@@ -71,7 +71,9 @@ export function computeReadiness(input: ReadinessInputs): Readiness {
         : "Not finished yet",
       passed: input.questionnaireComplete,
       points: input.questionnaireComplete ? POINTS_PER_CHECK : 0,
-      href: input.questionnaireComplete ? null : "/brand/strategy",
+      // /start, not /brand/strategy. That route is the strategy DOCUMENT; the
+      // questionnaire lives at /start.
+      href: input.questionnaireComplete ? null : "/start",
       action: input.questionnaireComplete ? null : "Continue",
     },
     {

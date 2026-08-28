@@ -110,6 +110,12 @@ thing: CDP `Input.insertText` after `focus()`. And beware escaping — a
 JSON-encoded `\n` types a literal backslash-n, which then "proves" that
 newlines are being stripped.
 
+**Never run `npm run build` while `npm run dev` is up.** The build rewrites
+`.next` underneath the dev server, which then serves 404s for its own JS
+chunks. The page renders from server HTML and never hydrates: forms submit
+natively, putting the password in the URL, and React state is dead. It looks
+exactly like a hydration bug in the app. Stop dev, build, restart dev.
+
 **Run `npm test` before every commit.** `server-only` added in b46c701 broke
 `api-auth.test.ts` transitively and the suite stayed red until it was noticed by
 accident two commits later.

@@ -1,518 +1,441 @@
-'use client'
+"use client";
 
-import { useState, useMemo, useCallback, useRef } from 'react'
-import { COPY_CONFIG } from '@/lib/copy-architect-config'
-import { useBrand } from '@/lib/useBrand'
+/**
+ * Studio ▸ Write — rebuilt from branditect-ui/spec/studio-write.md.
+ *
+ * This renders inside app/(app)/layout.tsx. The sidebar stays; .wrap is 1180px
+ * because that is the space beside it. Do not make this full-screen.
+ *
+ * The brief stays on screen while drafts appear beside it — writing is
+ * iterating on the brief, and a wizard that hides the brief behind the result
+ * forces a back-navigation on every attempt.
+ */
 
-/* ── Types ──────────────────────────────────────────────────────────────────── */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import Icon, { type IconName } from "@/components/icon";
+import { useBrand } from "@/lib/useBrand";
+import {
+  FORMATS,
+  findFormat,
+  isThinBrief,
+  wordCount,
+  type Draft,
+  type FormatId,
+  type Length,
+} from "@/lib/studio-write";
+import s from "@/components/studio/write.module.css";
 
-interface CopyOption { id: string; type: string; text: string; rationale: string }
-interface CopySection { label: string; options: CopyOption[] }
-interface CopyResult { sections: CopySection[]; qualityChecks: string[]; placeholders: string[]; toneMatch: string }
-interface RefImage { id: string; dataUrl: string; mediaType: string; name: string }
+interface Product {
+  id: string;
+  name: string;
+}
 
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB — Anthropic vision limit
-const MAX_IMAGES = 4
+/** A draft in flight, with whatever it already knows about itself. */
+type Slot =
+  | { state: "writing" }
+  | { state: "done"; draft: Draft }
+  | { state: "failed"; reason: string };
 
-/* ── Simplified nav categories ──────────────────────────────────────────────── */
+const LENGTHS: { id: Length; label: string }[] = [
+  { id: "short", label: "Short" },
+  { id: "medium", label: "Medium" },
+  { id: "long", label: "Long" },
+];
 
-const NAV_ITEMS = [
-  {
-    key: 'social', label: 'Social',
-    title: 'Social post',
-    subtitle: 'Hook-first. Platform-optimised. Brand-checked before it leaves.',
-    dropdownLabel: 'Platform',
-    dropdownOptions: ['Instagram caption', 'LinkedIn post', 'X / Twitter post', 'TikTok caption & hook', 'Facebook post'],
-    topicLabel: "What's the post about?",
-    topicPlaceholder: 'Topic, angle, hook idea, product, campaign... anything that gives direction.',
-    configCat: 'social',
-    subMap: { 'Instagram caption': 'instagram', 'LinkedIn post': 'linkedin', 'X / Twitter post': 'x', 'TikTok caption & hook': 'tiktok', 'Facebook post': 'facebook' } as Record<string, string>,
-  },
-  {
-    key: 'other', label: 'Other',
-    title: 'Other copy',
-    subtitle: 'Describe what you need and we will write it.',
-    dropdownLabel: '',
-    dropdownOptions: [],
-    topicLabel: "Describe what you are looking to write",
-    topicPlaceholder: 'e.g. An ad for Meta about our new product launch, a bio for our CEO, a press release about our partnership, video hook ideas for TikTok...',
-    configCat: 'other',
-    subMap: {} as Record<string, string>,
-  },
-  {
-    key: 'email', label: 'Email',
-    title: 'Email',
-    subtitle: 'Subject lines that get opened. Body copy that converts.',
-    dropdownLabel: 'Type',
-    dropdownOptions: ['Newsletter', 'Proposal', 'Cold outreach', 'Other'],
-    topicLabel: "What's this email about?",
-    topicPlaceholder: 'The message, offer, or announcement this email delivers.',
-    configCat: 'email',
-    subMap: { 'Newsletter': 'newsletter_email', 'Proposal': 'proposal', 'Cold outreach': 'cold_outreach', 'Other': 'transactional' } as Record<string, string>,
-  },
-  {
-    key: 'product', label: 'Product Info',
-    title: 'Product copy',
-    subtitle: 'Descriptions, features, pricing — written to sell.',
-    dropdownLabel: 'Type',
-    dropdownOptions: ['Product description', 'Feature list', 'Pricing page', 'Comparison page'],
-    topicLabel: "What product or service?",
-    topicPlaceholder: 'The product, service, or offer you need copy for.',
-    configCat: 'product',
-    subMap: { 'Product description': 'product_desc', 'Feature list': 'feature_list', 'Pricing page': 'pricing', 'Comparison page': 'comparison' } as Record<string, string>,
-  },
-  {
-    key: 'seo', label: 'SEO Content',
-    title: 'SEO content',
-    subtitle: 'Keyword-optimised. Search-intent matched. Rank-ready.',
-    dropdownLabel: 'Type',
-    dropdownOptions: ['SEO blog post', 'SEO product page', 'SEO landing page', 'Meta tags generator', 'Content cluster plan'],
-    topicLabel: "Primary keyword or topic",
-    topicPlaceholder: 'The keyword you want to rank for, or the topic you want to cover.',
-    configCat: 'seo',
-    subMap: { 'SEO blog post': 'blogpost', 'SEO product page': 'productpage', 'SEO landing page': 'landingseo', 'Meta tags generator': 'metatags', 'Content cluster plan': 'pillarcluster' } as Record<string, string>,
-  },
-  {
-    key: 'presentation', label: 'Presentation',
-    title: 'Presentation',
-    subtitle: 'Slide decks, pitch scripts, and talking points.',
-    dropdownLabel: 'Type',
-    dropdownOptions: ['Pitch deck', 'Sales deck', 'Internal presentation', 'Keynote script'],
-    topicLabel: "What's the presentation about?",
-    topicPlaceholder: 'The topic, audience, and goal of this presentation.',
-    configCat: 'presentation',
-    subMap: { 'Pitch deck': 'pitch_deck', 'Sales deck': 'sales_deck', 'Internal presentation': 'internal', 'Keynote script': 'keynote' } as Record<string, string>,
-  },
-]
+export default function WritePage() {
+  const { brandId, loading: brandLoading } = useBrand();
 
-const OPTION_LABELS = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E']
+  // ── the brief
+  const [format, setFormat] = useState<FormatId>("ad");
+  const [formatOther, setFormatOther] = useState("");
+  const [brief, setBrief] = useState("");
+  const [productId, setProductId] = useState("");
+  const [length, setLength] = useState<Length>("medium");
+  const [count, setCount] = useState<1 | 3>(3);
 
-/* ── Component ──────────────────────────────────────────────────────────────── */
+  // ── the output
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [ranAt, setRanAt] = useState<string | null>(null);
+  const [ranWith, setRanWith] = useState<string>("");
+  const [tone, setTone] = useState<string | null>(null);
+  const [missing, setMissing] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState<number | null>(null);
 
-export default function CopyArchitectPage() {
-  const { brandId, brandName } = useBrand()
-  const tonePills = ['Direct', 'Clear', 'On-brand']
+  const [products, setProducts] = useState<Product[]>([]);
+  const otherRef = useRef<HTMLInputElement>(null);
 
-  const [activeNav, setActiveNav] = useState(NAV_ITEMS[0])
-  const [dropdown, setDropdown] = useState(NAV_ITEMS[0].dropdownOptions[0])
-  const [topic, setTopic] = useState('')
-  const [notes, setNotes] = useState('')
-  const [generating, setGenerating] = useState(false)
-  const [result, setResult] = useState<CopyResult | null>(null)
-  const [error, setError] = useState('')
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [primaryPicks, setPrimaryPicks] = useState<Record<number, number>>({})
-  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set())
-  const [images, setImages] = useState<RefImage[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const def = findFormat(format)!;
 
-  function switchNav(item: typeof NAV_ITEMS[0]) {
-    setActiveNav(item)
-    setDropdown(item.dropdownOptions[0])
-    setTopic('')
-    setNotes('')
-    setResult(null)
-    setError('')
-    setPrimaryPicks({})
-    setImages([])
-  }
-
-  function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result))
-      reader.onerror = () => reject(reader.error)
-      reader.readAsDataURL(file)
-    })
-  }
-
-  async function handleImageFiles(files: FileList | null) {
-    if (!files || files.length === 0) return
-    setError('')
-    const accepted: RefImage[] = []
-    for (const file of Array.from(files)) {
-      if (images.length + accepted.length >= MAX_IMAGES) {
-        setError(`Up to ${MAX_IMAGES} images at a time.`)
-        break
-      }
-      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setError(`${file.name}: unsupported type. Use JPG, PNG, WEBP, or GIF.`)
-        continue
-      }
-      if (file.size > MAX_IMAGE_BYTES) {
-        setError(`${file.name}: over 5 MB. Please resize.`)
-        continue
-      }
-      try {
-        const dataUrl = await readFileAsDataUrl(file)
-        accepted.push({
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          dataUrl,
-          mediaType: file.type,
-          name: file.name,
-        })
-      } catch {
-        setError(`${file.name}: failed to read.`)
-      }
-    }
-    if (accepted.length) setImages(prev => [...prev, ...accepted])
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  function removeImage(id: string) {
-    setImages(prev => prev.filter(img => img.id !== id))
-  }
-
-  const canGenerate = useMemo(() => topic.trim().length > 0, [topic])
-
-  async function saveFavorite(text: string, optionId: string, type: string) {
-    if (favoritedIds.has(optionId)) return
-    setFavoritedIds(prev => new Set(prev).add(optionId))
-    await fetch('/api/mission-board/notes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandId, content: text, title: `${type} — Copy Architect`, isDraft: false, isFavorite: true }),
-    })
-  }
-
-  const handleGenerate = useCallback(async () => {
-    setGenerating(true)
-    setError('')
-    setResult(null)
-    setPrimaryPicks({})
-
-    // Map to config — fill all required fields from our simplified inputs
-    const configCat = activeNav.configCat
-    const subKey = (activeNav.subMap[dropdown]) || Object.keys(COPY_CONFIG[configCat]?.subs || {})[0] || 'ad'
-    const subConfig = COPY_CONFIG[configCat]?.subs?.[subKey]
-
-    // Build fields object that satisfies all required fields
-    const fields: Record<string, string> = { topic, notes, goal: dropdown }
-    if (subConfig) {
-      for (const f of subConfig.fields) {
-        if (!fields[f.id]) {
-          // Map our simplified inputs to whatever the config expects
-          if (f.id === 'topic' || f.id === 'message' || f.id === 'news' || f.id === 'offer' || f.id === 'page' || f.id === 'product' || f.id === 'keyword' || f.id === 'person' || f.id === 'video concept') {
-            fields[f.id] = topic
-          } else if (f.id === 'platform' || f.id === 'format' || f.id === 'type' || f.id === 'goal' || f.id === 'intent' || f.id === 'style') {
-            fields[f.id] = dropdown
-          } else if (f.id === 'notes' || f.id === 'secondary' || f.id === 'angle' || f.id === 'usp' || f.id === 'features' || f.id === 'audience' || f.id === 'brand') {
-            fields[f.id] = notes || topic
-          }
-        }
-      }
-    }
-
-    try {
-      const res = await fetch('/api/copy-architect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: configCat,
-          subType: subKey,
-          fields,
-          brand_id: brandId,
-          images: images.map(img => ({
-            mediaType: img.mediaType,
-            // strip the "data:<type>;base64," prefix — API wants raw base64
-            data: img.dataUrl.split(',')[1] || '',
-          })),
-        }),
+  useEffect(() => {
+    if (brandLoading || !brandId || brandId === "default") return;
+    let live = true;
+    fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
+      .then((r) => (r.ok ? r.json() : { products: [] }))
+      .then((d) => {
+        if (!live) return;
+        const rows = Array.isArray(d.products) ? d.products : [];
+        setProducts(rows.map((p: Product) => ({ id: p.id, name: p.name })).filter((p: Product) => p.name));
       })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Generation failed'); return }
-      setResult(data)
-      const picks: Record<number, number> = {}
-      data.sections?.forEach((_: CopySection, i: number) => { picks[i] = 0 })
-      setPrimaryPicks(picks)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error')
-    } finally {
-      setGenerating(false)
-    }
-  }, [activeNav, dropdown, topic, notes, brandId, images])
+      .catch(() => {
+        /* the picker is optional — a missing catalogue is not an error here */
+      });
+    return () => {
+      live = false;
+    };
+  }, [brandId, brandLoading]);
 
-  const handleCopy = useCallback(async (text: string, id: string) => {
-    try { await navigator.clipboard.writeText(text); setCopiedId(id); setTimeout(() => setCopiedId(null), 1500) } catch {}
-  }, [])
+  const productName = useMemo(
+    () => products.find((p) => p.id === productId)?.name ?? null,
+    [products, productId]
+  );
 
-  /* ── Render ──────────────────────────────────────────────────────────────── */
+  const canWrite = brief.trim().length > 0 && (format !== "other" || formatOther.trim().length > 0);
+
+  const generate = useCallback(
+    async (howMany: 1 | 3) => {
+      if (!canWrite || generating) return;
+      setGenerating(true);
+      setMissing("");
+      setSlots(Array.from({ length: howMany }, () => ({ state: "writing" }) as Slot));
+      setRanAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      setRanWith(
+        [format === "other" ? formatOther.trim() : def.label, productName].filter(Boolean).join(" · ")
+      );
+
+      try {
+        const res = await fetch("/api/copy-architect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            brand_id: brandId,
+            format,
+            format_other: formatOther.trim() || null,
+            brief: brief.trim(),
+            product_id: productId || null,
+            length,
+            drafts: howMany,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          const reason = typeof data?.error === "string" ? data.error : "That didn't work.";
+          // The brief is never lost on a failure.
+          setSlots(Array.from({ length: howMany }, () => ({ state: "failed", reason }) as Slot));
+          return;
+        }
+
+        const returned: Draft[] = Array.isArray(data.drafts) ? data.drafts : [];
+        setTone(typeof data.tone === "string" ? data.tone : null);
+        setMissing(typeof data.missing === "string" ? data.missing : "");
+        setSlots(returned.map((draft) => ({ state: "done", draft }) as Slot));
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : "That didn't work.";
+        setSlots(Array.from({ length: howMany }, () => ({ state: "failed", reason }) as Slot));
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [brandId, brief, canWrite, def.label, format, formatOther, generating, length, productId, productName]
+  );
+
+  const copy = useCallback((text: string, i: number) => {
+    navigator.clipboard?.writeText(text).then(
+      () => {
+        setCopied(i);
+        window.setTimeout(() => setCopied(null), 1600);
+      },
+      () => {
+        /* clipboard denied — the body is selectable */
+      }
+    );
+  }, []);
+
+  const hasOutput = slots.length > 0;
 
   return (
-    <div className="flex h-full font-body">
-
-      {/* ── Left Sidebar ── */}
-      <aside className="w-56 bg-surface-container-low shrink-0 flex flex-col">
-        <div className="flex-1 p-4 pt-6">
-          <nav className="space-y-1">
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.key}
-                onClick={() => switchNav(item)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] font-body transition-all ${
-                  activeNav.key === item.key
-                    ? 'bg-surface-container-lowest text-primary font-semibold shadow-ambient-sm'
-                    : 'text-on-surface-variant hover:bg-surface-container-lowest/60'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Brand context footer */}
-        <div className="p-4 pt-0">
-          <div className="bg-surface-container-lowest rounded-xl p-3.5 shadow-ambient-sm">
-            <div className="text-[13px] font-headline font-bold text-on-surface mb-2">{brandName || 'Brand'}</div>
-            <div className="flex flex-wrap gap-1.5">
-              {tonePills.map(pill => (
-                <span key={pill} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
-                  {pill}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Form area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto px-8 py-10">
-
-            {/* Header */}
-            <h1 className="font-headline font-bold text-headline-md text-on-surface mb-2">{activeNav.title}</h1>
-            <p className="text-body-md text-on-surface-variant mb-10">{activeNav.subtitle}</p>
-
-            {/* Dropdown — hidden for categories with no options */}
-            {activeNav.dropdownOptions.length > 0 && (
-              <div className="mb-6">
-                <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
-                  {activeNav.dropdownLabel}
-                </label>
-                <select
-                  value={dropdown}
-                  onChange={e => setDropdown(e.target.value)}
-                  className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)]"
-                >
-                  {activeNav.dropdownOptions.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Topic textarea */}
-            <div className="mb-6">
-              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
-                {activeNav.topicLabel}
-              </label>
-              <textarea
-                value={topic}
-                onChange={e => setTopic(e.target.value)}
-                placeholder={activeNav.topicPlaceholder}
-                rows={4}
-                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body resize-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)] placeholder:text-outline-variant"
-              />
-            </div>
-
-            {/* Notes textarea */}
-            <div className="mb-6">
-              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Specific claims, offers, or things to include (optional)."
-                rows={2}
-                className="w-full bg-surface-container-low text-on-surface text-body-md px-4 py-3 rounded-xl outline-none font-body resize-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(237,98,53,0.2)] placeholder:text-outline-variant"
-              />
-            </div>
-
-            {/* Reference images */}
-            <div className="mb-8">
-              <label className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">
-                Reference images
-              </label>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                multiple
-                className="hidden"
-                onChange={e => handleImageFiles(e.target.files)}
-              />
-
-              <div className="flex flex-wrap items-center gap-3">
-                {images.map(img => (
-                  <div key={img.id} className="relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.dataUrl}
-                      alt={img.name}
-                      className="w-20 h-20 object-cover rounded-lg bg-surface-container-low"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(img.id)}
-                      aria-label={`Remove ${img.name}`}
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-surface-container-lowest text-on-surface text-label-sm font-semibold shadow-ambient-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-
-                {images.length < MAX_IMAGES && (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors flex flex-col items-center justify-center gap-1"
-                  >
-                    <span className="text-xl leading-none">+</span>
-                    <span className="text-label-sm">Add image</span>
-                  </button>
-                )}
-              </div>
-
-              <p className="text-label-sm text-on-surface-variant mt-2">
-                The AI will read these images for context — product shots, mood boards, screenshots. JPG/PNG/WEBP/GIF, up to 5 MB each, max {MAX_IMAGES}.
-              </p>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mb-6 px-4 py-3 rounded-xl bg-error-container/10 text-error text-body-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Generating state */}
-            {generating && (
-              <div className="flex items-center gap-3 mb-8 px-4 py-4 bg-surface-container-low rounded-xl">
-                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="text-body-sm text-on-surface-variant">Generating copy...</span>
-              </div>
-            )}
-
-            {/* Results */}
-            {result && !generating && (
-              <div className="space-y-8">
-                {result.sections.map((section, sIdx) => (
-                  <div key={sIdx}>
-                    <div className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider mb-3">
-                      {section.label}
-                    </div>
-                    <div className="space-y-3">
-                      {section.options.map((option, oIdx) => {
-                        const isPrimary = primaryPicks[sIdx] === oIdx
-                        return (
-                          <div
-                            key={option.id}
-                            className={`bg-surface-container-lowest rounded-xl p-5 transition-all ${
-                              isPrimary ? 'shadow-ambient-sm' : ''
-                            }`}
-                            style={isPrimary ? { boxShadow: 'inset 0 0 0 1.5px #ad3507, 0 2px 20px rgba(45,51,53,0.04)' } : {}}
-                          >
-                            {/* Head */}
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                {isPrimary ? (
-                                  <span className="text-label-sm font-bold text-primary">Selected</span>
-                                ) : (
-                                  <span className="text-label-sm font-medium text-on-surface-variant">{OPTION_LABELS[oIdx] || `Option ${oIdx + 1}`}</span>
-                                )}
-                                <span className="text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
-                                  {option.type}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Copy text */}
-                            <p className="text-body-md text-on-surface leading-relaxed whitespace-pre-wrap mb-4">
-                              {option.text}
-                            </p>
-
-                            {option.rationale && (
-                              <p className="text-body-sm text-on-surface-variant italic mb-4">
-                                {option.rationale}
-                              </p>
-                            )}
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-3 pt-3" style={{ borderTop: '1px solid var(--surface-container-high)' }}>
-                              {!isPrimary && (
-                                <button
-                                  onClick={() => setPrimaryPicks(prev => ({ ...prev, [sIdx]: oIdx }))}
-                                  className="text-label-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-                                >
-                                  Use this
-                                </button>
-                              )}
-                              <span className="text-label-sm text-outline ml-auto">
-                                {option.text.length} chars
-                              </span>
-                              <button
-                                onClick={() => saveFavorite(option.text, option.id, option.type)}
-                                className={`text-label-sm font-medium px-2.5 py-1 rounded-lg transition-colors ${
-                                  favoritedIds.has(option.id)
-                                    ? 'bg-primary-fixed/15 text-primary'
-                                    : 'text-on-surface-variant hover:text-primary'
-                                }`}
-                              >
-                                {favoritedIds.has(option.id) ? 'Saved' : 'Save'}
-                              </button>
-                              <button
-                                onClick={() => handleCopy(option.text, option.id)}
-                                className="text-label-sm font-medium text-on-surface-variant hover:text-primary px-2.5 py-1 rounded-lg transition-colors bg-surface-container-high"
-                              >
-                                {copiedId === option.id ? 'Copied' : 'Copy'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Quality checks */}
-                {result.qualityChecks?.length > 0 && (
-                  <div>
-                    <div className="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider mb-3">Quality checks</div>
-                    <div className="bg-surface-container-lowest rounded-xl p-5 space-y-2">
-                      {result.qualityChecks.map((check, i) => (
-                        <div key={i} className="text-body-sm text-on-surface-variant">{check}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer bar */}
-        <div className="px-8 py-3.5 bg-surface-container-lowest flex items-center justify-between shrink-0" style={{ boxShadow: '0 -2px 20px rgba(45,51,53,0.03)' }}>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#34a853]" />
-            <span className="text-label-sm text-on-surface-variant">Brand context loaded</span>
-          </div>
-          <button
-            onClick={handleGenerate}
-            disabled={!canGenerate || generating}
-            className="signature-gradient text-on-primary font-headline font-bold text-[13px] px-6 py-2.5 rounded-xl disabled:opacity-40 transition-opacity"
-          >
-            {generating ? 'Generating...' : 'Generate'}
-          </button>
+    <div className={s.wrap}>
+      <div className={s.head}>
+        <div>
+          <div className={s.kick}>Studio</div>
+          <h1>Write</h1>
+          <p className={s.sub}>
+            Two answers and you have a draft. Everything it writes obeys your strategy, your tone of
+            voice and your real product facts.
+          </p>
         </div>
       </div>
+
+      <div className={s.cols}>
+        {/* ═══════════ BRIEF ═══════════ */}
+        <aside className={s.brief}>
+          <div className={s.step}>
+            <span className={s.n}>1</span>
+            <h3>What are we writing?</h3>
+          </div>
+
+          <div className={s.fmts}>
+            {FORMATS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={[
+                  s.fmt,
+                  s[f.tone],
+                  f.id === "other" ? s.other : "",
+                  format === f.id ? s.on : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-pressed={format === f.id}
+                onClick={() => {
+                  setFormat(f.id);
+                  if (f.id === "other") window.setTimeout(() => otherRef.current?.focus(), 0);
+                }}
+              >
+                {f.id === "other" ? (
+                  <Icon name={f.icon as IconName} size={14} />
+                ) : (
+                  <span className={s.ic}>
+                    <Icon name={f.icon as IconName} size={14} />
+                  </span>
+                )}
+                <span className={s.t}>{f.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {format === "other" && (
+            <input
+              ref={otherRef}
+              className={s.otherInput}
+              value={formatOther}
+              onChange={(e) => setFormatOther(e.target.value)}
+              placeholder="What are we writing? A press note, a video script…"
+              aria-label="What are we writing?"
+            />
+          )}
+
+          <div className={`${s.step} ${s.stepTop}`}>
+            <span className={s.n}>2</span>
+            <h3>What&rsquo;s it about?</h3>
+          </div>
+          <textarea
+            className={s.ta}
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="One or two lines is enough. Say what happened and who it's for."
+            aria-label="What's it about?"
+          />
+          <div className={s.egs}>
+            {def.examples.map((eg) => (
+              <button key={eg} type="button" className={s.eg} onClick={() => setBrief(eg)}>
+                {eg}
+              </button>
+            ))}
+          </div>
+          <p className={s.eghint}>
+            Tap an example to fill it in, then edit. These change with the format you picked.
+          </p>
+
+          <div className={`${s.step} ${s.stepTop}`}>
+            <span className={s.n}>3</span>
+            <h3>Options</h3>
+            <span className={s.opt}>optional</span>
+          </div>
+          <div className={s.opts}>
+            <div className={s.orow}>
+              <span className={s.k}>About a product</span>
+              <select
+                className={s.sel}
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                aria-label="About a product"
+              >
+                <option value="">No particular product</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={s.orow}>
+              <span className={s.k}>Length</span>
+              <div className={s.seg} role="group" aria-label="Length">
+                {LENGTHS.map((l) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    className={length === l.id ? s.on : undefined}
+                    aria-pressed={length === l.id}
+                    onClick={() => setLength(l.id)}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={s.orow}>
+              <span className={s.k}>Drafts</span>
+              <div className={s.seg} role="group" aria-label="How many drafts">
+                {([1, 3] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={count === c ? s.on : undefined}
+                    aria-pressed={count === c}
+                    onClick={() => setCount(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={s.gen}
+            disabled={!canWrite || generating}
+            onClick={() => generate(count)}
+          >
+            <Icon name="spark" size={17} />
+            {generating ? "Writing…" : "Write it"}
+          </button>
+
+          <div className={s.source}>
+            <Icon name="book" size={14} />
+            <div>
+              Writes from{" "}
+              <b>
+                your strategy, tone of voice, Boundaries and{" "}
+                {products.length === 1 ? "1 product record" : `${products.length} product records`}
+              </b>
+              . It won&rsquo;t invent a fact that isn&rsquo;t in there. If something&rsquo;s missing
+              it says so instead of guessing.
+            </div>
+          </div>
+        </aside>
+
+        {/* ═══════════ DRAFTS ═══════════ */}
+        <main>
+          <div className={s.outhead}>
+            <h2>Drafts</h2>
+            {ranAt && <span className={s.meta}>{[ranWith, ranAt].filter(Boolean).join(" · ")}</span>}
+            {hasOutput && (
+              <button
+                type="button"
+                className={s.re}
+                disabled={generating || !canWrite}
+                onClick={() => generate(count)}
+              >
+                <Icon name="redo" size={13} />
+                Write {count} more
+              </button>
+            )}
+          </div>
+
+          {!hasOutput && (
+            <div className={s.empty}>Pick a format and say what it&rsquo;s about.</div>
+          )}
+
+          {slots.map((slot, i) => (
+            <article
+              key={i}
+              className={[s.draft, slot.state === "failed" ? s.failed : ""].filter(Boolean).join(" ")}
+            >
+              <div className={s.dtop}>
+                <span className={s.dtag}>Draft {i + 1}</span>
+                <span className={s.dlen}>
+                  {slot.state === "done"
+                    ? `${wordCount(slot.draft.body)} words`
+                    : slot.state === "writing"
+                      ? "writing…"
+                      : "didn't finish"}
+                </span>
+                <div className={s.dacts}>
+                  {slot.state === "done" ? (
+                    <>
+                      <button type="button" className={s.act} onClick={() => copy(slot.draft.body, i)}>
+                        <Icon name="copy" size={13} />
+                        {copied === i ? "Copied" : "Copy"}
+                      </button>
+                      <button
+                        type="button"
+                        className={s.act}
+                        disabled={generating}
+                        onClick={() => generate(1)}
+                      >
+                        <Icon name="redo" size={13} />
+                        Again
+                      </button>
+                    </>
+                  ) : slot.state === "failed" ? (
+                    <button
+                      type="button"
+                      className={s.act}
+                      disabled={generating}
+                      onClick={() => generate(count)}
+                    >
+                      <Icon name="redo" size={13} />
+                      Retry
+                    </button>
+                  ) : (
+                    <button type="button" className={s.act} disabled>
+                      <Icon name="copy" size={13} />
+                      Copy
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {slot.state === "done" && <div className={s.body}>{slot.draft.body}</div>}
+
+              {slot.state === "writing" && (
+                <>
+                  <span className={s.sk} style={{ height: 15, width: "72%" }} />
+                  <span className={s.sk} style={{ height: 15, width: "94%", marginTop: 9 }} />
+                  <span className={s.sk} style={{ height: 15, width: "56%", marginTop: 9 }} />
+                </>
+              )}
+
+              {slot.state === "failed" && <div className={s.body}>{slot.reason}</div>}
+
+              <div className={s.dfoot}>
+                {slot.state === "writing" && (
+                  <span className={`${s.chipsrc} ${s.warn}`}>
+                    Checking every claim against your product records…
+                  </span>
+                )}
+                {slot.state === "done" && (
+                  <>
+                    {tone ? (
+                      <span className={s.chipsrc}>Tone: {tone}</span>
+                    ) : (
+                      <span className={`${s.chipsrc} ${s.warn}`}>
+                        No tone of voice yet, using plain, neutral copy.{" "}
+                        <Link href="/brand/tone-of-voice">Set one →</Link>
+                      </span>
+                    )}
+                    {slot.draft.provenance.map((p, j) => (
+                      <span key={j} className={s.chipsrc}>
+                        Fact: {p.claim}, from {p.source}
+                      </span>
+                    ))}
+                    {isThinBrief(brief) && (
+                      <span className={`${s.chipsrc} ${s.warn}`}>A fuller brief gets better copy.</span>
+                    )}
+                    {missing && <span className={`${s.chipsrc} ${s.warn}`}>{missing}</span>}
+                  </>
+                )}
+              </div>
+            </article>
+          ))}
+        </main>
+      </div>
     </div>
-  )
+  );
 }

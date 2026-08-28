@@ -1,5 +1,5 @@
 /**
- * The Branditect icon set — 30 icons, all drawn in `currentColor`.
+ * The Branditect icon set — 39 icons, all drawn in `currentColor`.
  *
  * Nine are the real Branditect icons, exported from the brand icon set and
  * converted so their baked-in #F0562A became `currentColor` — without that
@@ -23,7 +23,10 @@ export type IconName =
   // Products
   | "filter" | "close" | "trash" | "pen" | "chevronRight" | "chevronLeft"
   // Numbers — business profile toggles
-  | "box" | "cloud" | "once" | "repeat" | "tick";
+  | "box" | "cloud" | "once" | "repeat" | "tick"
+  // Studio ▸ Write — format marks and draft actions
+  | "megaphone" | "mail" | "instagram" | "linkedin" | "help"
+  | "spark" | "copy" | "redo" | "book";
 
 interface IconSpec {
   d: React.ReactNode;
@@ -216,6 +219,37 @@ const PATHS: Record<IconName, IconSpec> = {
   },
   send: {
     d: <path d="M13.1 3.9a1.4 1.4 0 0 0-2 2l4.7 4.7H4.3a1.4 1.4 0 1 0 0 2.8h11.5l-4.7 4.7a1.4 1.4 0 0 0 2 2l7.1-7.1a1.4 1.4 0 0 0 0-2z" />,
+  },
+
+  // ── Studio ▸ Write. Stand-ins in the filled style, matching the set above.
+  // Instagram and LinkedIn are third-party marks and are drawn as glyphs, not
+  // as brand icons — they label a destination, they are not Branditect's.
+  megaphone: {
+    d: <path d="M3 10v4h3l5 4V6L6 10zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4M14 2.2v2.1a7.7 7.7 0 0 1 0 15.4v2.1a9.8 9.8 0 0 0 0-19.6" />,
+  },
+  mail: {
+    d: <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5zm2.2-.3 6.8 5 6.8-5z" />,
+  },
+  instagram: {
+    d: <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5m5 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9m0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5M17.8 6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4" />,
+  },
+  linkedin: {
+    d: <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m2.5 2.4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2M5 18h3v-8H5zm5 0h3v-4.4c0-1.2.5-1.8 1.4-1.8s1.3.6 1.3 1.8V18h3v-5c0-2.4-1.2-3.4-2.9-3.4-1.3 0-1.9.7-2.3 1.3V10h-3.5z" />,
+  },
+  help: {
+    d: <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 4z" />,
+  },
+  spark: {
+    d: <path d="m12 2 2.2 6.1L20.5 10l-6.3 2.2L12 18.4 9.8 12.2 3.5 10l6.3-1.9z" />,
+  },
+  copy: {
+    d: <path d="M8 3h10a2 2 0 0 1 2 2v12h-2V5H8zM5 7h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2" />,
+  },
+  redo: {
+    d: <path d="M18.4 7.6A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4z" />,
+  },
+  book: {
+    d: <path d="M9 2a3.5 3.5 0 0 0-3.4 2.7A3.5 3.5 0 0 0 3 8a3.5 3.5 0 0 0 1 2.5A3.5 3.5 0 0 0 3 13a3.5 3.5 0 0 0 2.6 3.4A3.5 3.5 0 0 0 9 22h2V2zm4 0v20h2a3.5 3.5 0 0 0 3.4-2.6A3.5 3.5 0 0 0 21 13a3.5 3.5 0 0 0-1-2.5A3.5 3.5 0 0 0 21 8a3.5 3.5 0 0 0-2.6-3.3A3.5 3.5 0 0 0 15 2z" />,
   },
 };
 

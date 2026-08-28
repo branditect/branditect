@@ -1,173 +1,204 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import { buildBrandContext } from '@/lib/brandContext'
-import { serviceClient as supabase } from "@/lib/supabase-admin";
-import { HOUSE_STYLE } from "@/lib/house-style";
-import { sanitiseDeep } from '@/lib/sanitise-output'
+import { serviceClient as supabase } from '@/lib/supabase-admin'
+import { HOUSE_STYLE } from '@/lib/house-style'
+import { findFormat, normaliseDraft, isThinBrief, type Draft, type Length } from '@/lib/studio-write'
 
-export const maxDuration = 30
+// Three drafts of a long email is a real amount of generation.
+export const maxDuration = 120
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-async function getBrandName(brandId: string): Promise<string> {
-  const { data } = await supabase
-    .from('brands')
-    .select('brand_name')
-    .eq('brand_id', brandId)
-    .maybeSingle()
-  return data?.brand_name || 'Your Brand'
+const LENGTHS: Length[] = ['short', 'medium', 'long']
+
+interface BrandFacts {
+  brandName: string
+  toneLabel: string | null
+  context: string
+  product: Record<string, unknown> | null
 }
 
-function buildSystemPrompt(
-  deliverable: string,
-  brandName: string,
-  fullBrandContext: string
-): string {
-  return `You are the Copy Architect for ${brandName} — an expert brand copywriter who knows this brand inside out.
+async function readBrandFacts(brandId: string, productId: string | null): Promise<BrandFacts> {
+  if (!brandId || brandId === 'default') {
+    return { brandName: 'Your Brand', toneLabel: null, context: '', product: null }
+  }
 
-Before writing anything, you have been given four sources of brand truth:
-- BRAND STRATEGY: the positioning, audience, mission, and messaging pillars
-- BRAND TONE OF VOICE: the personality, language style, and communication rules
-- PRODUCTS & SERVICES CATALOGUE: every product and service with real names, features, and pricing
-- BRAND KNOWLEDGE VAULT: additional documents, presentations, and company information
+  const [brandRes, toneRes, context, productRes] = await Promise.all([
+    supabase.from('brands').select('brand_name').eq('brand_id', brandId).maybeSingle(),
+    supabase.from('brand_tone').select('expression_label').eq('brand_id', brandId).maybeSingle(),
+    buildBrandContext(brandId),
+    productId
+      ? supabase
+          .from('catalog_products')
+          .select('*')
+          .eq('id', productId)
+          .eq('brand_id', brandId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ])
 
-STRICT RULES:
-1. Only use product names, features, prices, and facts that appear in the four sources below. Never invent or assume details.
-2. Write in the exact tone of voice described. Match the personality, sentence style, vocabulary, and energy of the brand — do not default to generic marketing language.
-3. When writing about a specific product, pull all available details from the Products & Services Catalogue and Knowledge Vault first. Use real feature names, real prices, and real positioning — not placeholders.
-4. If a user asks you to write about a product or topic that does not appear in any of the four sources, respond with: "I don't have enough information about this in the brand vault. Please upload a document with the product details and I will write from that."
-5. Never use placeholder text like [insert feature here] or [price]. If you don't have the information, say so.
+  return {
+    brandName: brandRes.data?.brand_name || 'Your Brand',
+    toneLabel: toneRes.data?.expression_label || null,
+    context,
+    product: (productRes.data as Record<string, unknown> | null) ?? null,
+  }
+}
 
-When writing a newsletter, email, social post, ad, or any other copy format:
-- Open by identifying the relevant product or topic in the catalogue
-- Apply the brand's tone of voice throughout — not just in the headline
-- Check the brand strategy for any relevant messaging pillars or audience notes
-- Check the knowledge vault for any supporting facts, stats, or context
-- Deliver complete, ready-to-use copy — not a draft or skeleton
+/**
+ * The product picked in Options is spelled out on its own rather than left to
+ * be found among the whole catalogue — a description of one product should not
+ * depend on the model picking the right row out of forty.
+ */
+function productBlock(product: Record<string, unknown> | null): string {
+  if (!product) return ''
+  const keep = [
+    'name', 'type', 'category', 'description', 'price_rrp', 'price_monthly',
+    'price_model', 'inclusions', 'ideal_client', 'delivery_time',
+  ]
+  const lines = keep
+    .map((k) => {
+      const v = product[k]
+      if (v === null || v === undefined || v === '') return null
+      return `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`
+    })
+    .filter(Boolean)
+  if (!lines.length) return ''
+  return `\n\n=== THE PRODUCT THIS IS ABOUT ===\n${lines.join('\n')}`
+}
 
-ANTI-AI RULES:
-- Never sound like AI. No filler phrases like "In today's fast-paced world" or "Are you ready to".
-- No em-dash abuse. No list-of-three clichés. No "Whether you're X or Y" constructions.
-- Every sentence must earn its spot. If it sounds like it could be in any brand's copy, rewrite it.
-- Write like a human who knows this brand deeply, not a model producing "content".
+function buildSystemPrompt(args: {
+  brandName: string
+  deliverable: string
+  wordTarget: string
+  count: number
+  context: string
+  product: Record<string, unknown> | null
+}): string {
+  const { brandName, deliverable, wordTarget, count, context, product } = args
 
-OUTPUT FORMAT — You MUST return valid JSON only. No markdown, no backticks, no prose outside the JSON.
+  return `You are the copywriter for ${brandName}. You know this brand from the sources below and from nothing else.
 
-Return this exact structure:
+WRITE: ${count} separate draft${count > 1 ? 's' : ''} of ${deliverable}.
+LENGTH: each draft, ${wordTarget}.
+
+${count > 1 ? `The drafts must take genuinely different angles. Three versions of the same sentence is not a choice.\n\n` : ''}THE ONE RULE — no fact that is not in the sources below.
+Product names, features, numbers, prices, dates, names of people: if it is not written
+below, it does not go in the copy. Never write a placeholder such as [feature] or [price].
+If the brief asks for something the sources cannot support, write the draft around what you
+do have and say what is missing in the "missing" field.
+
+PROVENANCE — every hard fact you use must be declared.
+A hard fact is a number, a price, a measurement, a date, a named certification, or a named
+product feature. For each one, give the claim as it appears in your copy and the source it
+came from, named as it appears below (for example "Product range specs" or "Brand strategy").
+An undeclared number is the failure this whole system exists to prevent.
+
+Return valid JSON and nothing else. No backticks, no prose outside the JSON:
 {
-  "sections": [
+  "drafts": [
     {
-      "label": "Section name (e.g. 'Full Caption', 'Subject Lines', 'Hook Alternatives')",
-      "options": [
-        {
-          "id": "unique-id",
-          "type": "primary | alternative | variant",
-          "text": "The actual copy text",
-          "rationale": "One sentence explaining why this works"
-        }
-      ]
+      "body": "the copy itself, plain text, line breaks allowed",
+      "provenance": [{ "claim": "12 times its own weight", "source": "Product range specs" }]
     }
   ],
-  "qualityChecks": ["List of 3-4 checks confirming brand alignment"],
-  "placeholders": ["Any placeholder tokens used, e.g. '[LINK]', '[NAME]'"],
-  "toneMatch": "One sentence confirming how the copy matches the brand tone"
+  "missing": "one sentence naming anything the brief needed that the sources did not have, or an empty string"
 }
 
-DELIVERABLE: ${deliverable}
+Complete the entire JSON including every closing brace. Do not stop mid-output.
 
-IMPORTANT: Complete the entire JSON response including all closing braces. Do not stop mid-output.
+--- BRAND SOURCES BELOW ---
 
---- BRAND CONTEXT BELOW ---
+${context || `Brand: ${brandName}\n(Nothing has been added to this brand yet.)`}${productBlock(product)}${HOUSE_STYLE}`
+}
 
-${fullBrandContext || `Brand: ${brandName}\n(No additional brand data has been added to the vault yet.)`}`
+function parseJson(rawText: string): Record<string, unknown> | null {
+  const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
+
+  try {
+    return JSON.parse(cleaned)
+  } catch {
+    /* fall through */
+  }
+
+  const first = cleaned.indexOf('{')
+  const last = cleaned.lastIndexOf('}')
+  if (first !== -1 && last > first) {
+    try {
+      return JSON.parse(cleaned.slice(first, last + 1))
+    } catch {
+      /* fall through */
+    }
+  }
+  return null
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { category, subType, fields, brand_id, images } = body as {
-      category: string
-      subType: string
-      fields: Record<string, string>
+    const {
+      brand_id: brandId,
+      format,
+      format_other: formatOther,
+      brief,
+      product_id: productId,
+      length,
+      drafts: draftCount,
+    } = body as {
       brand_id?: string
-      images?: Array<{ mediaType: string; data: string }>
+      format?: string
+      format_other?: string
+      brief?: string
+      product_id?: string | null
+      length?: string
+      drafts?: number
     }
 
-    if (!category || !subType) {
-      return NextResponse.json({ error: 'Category and subType are required' }, { status: 400 })
+    const def = findFormat(format)
+    if (!def) {
+      return NextResponse.json({ error: 'Pick a format first.' }, { status: 400 })
+    }
+    if (!brief || !brief.trim()) {
+      return NextResponse.json({ error: "Say what it's about first." }, { status: 400 })
+    }
+    if (def.id === 'other' && !formatOther?.trim()) {
+      return NextResponse.json({ error: 'Tell us what to write.' }, { status: 400 })
     }
 
-    const catConfig = COPY_CONFIG[category]
-    if (!catConfig) {
-      return NextResponse.json({ error: `Unknown category: ${category}` }, { status: 400 })
+    const len: Length = LENGTHS.includes(length as Length) ? (length as Length) : 'medium'
+    const count = draftCount === 1 ? 1 : 3
+    const deliverable = def.id === 'other' ? formatOther!.trim() : def.deliverable
+
+    const facts = await readBrandFacts(brandId || 'default', productId || null)
+
+    const userPrompt = `What it's about: ${brief.trim()}${
+      facts.product ? `\n\nThis is about the product named above.` : ''
+    }${
+      isThinBrief(brief)
+        ? `\n\nThe brief is short. Work from the brand sources for everything it does not say, and do not invent a scenario.`
+        : ''
     }
 
-    const subConfig = catConfig.subs[subType]
-    if (!subConfig) {
-      return NextResponse.json({ error: `Unknown subType: ${subType}` }, { status: 400 })
-    }
-
-    // Check required fields
-    const missingFields = subConfig.fields
-      .filter(f => f.req && (!fields[f.id] || !fields[f.id].trim()))
-      .map(f => f.label)
-
-    if (missingFields.length > 0) {
-      return NextResponse.json({ error: `Missing required fields: ${missingFields.join(', ')}` }, { status: 400 })
-    }
-
-    // Fetch brand name and full vault context in parallel
-    const [brandName, fullBrandContext] = brand_id && brand_id !== 'default'
-      ? await Promise.all([getBrandName(brand_id), buildBrandContext(brand_id)])
-      : ['Your Brand', '']
-
-    // Build user prompt from field values
-    const fieldLines = subConfig.fields
-      .filter(f => fields[f.id]?.trim())
-      .map(f => `${f.label}: ${fields[f.id].trim()}`)
-      .join('\n')
-
-    const validImages = (images || []).filter(
-      img => img && typeof img.data === 'string' && img.data.length > 0 &&
-        ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(img.mediaType)
-    )
-
-    const imageNote = validImages.length
-      ? `\n\nThe user has attached ${validImages.length} reference image${validImages.length > 1 ? 's' : ''}. Read them carefully — they may show the product, a mood/visual reference, a screenshot, or competitor work. Use what you see (colors, objects, text in image, layout, mood) as additional context for the copy.`
-      : ''
-
-    const userPrompt = `Create: ${subConfig.title}
-
-${fieldLines}${imageNote}
-
-Write the copy now. Return only the JSON.`
-
-    const userContent: Anthropic.ContentBlockParam[] = [
-      ...validImages.map((img): Anthropic.ImageBlockParam => ({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: img.mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
-          data: img.data,
-        },
-      })),
-      { type: 'text', text: userPrompt },
-    ]
+Write the ${count} draft${count > 1 ? 's' : ''} now. Return only the JSON.`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-5',
       // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
+      // max_tokens caps thinking + text together — these calls would truncate.
       thinking: { type: 'disabled' },
-      max_tokens: 2000,
-      system: buildSystemPrompt(subConfig.deliverable, brandName, fullBrandContext) + HOUSE_STYLE,
-      messages: [
-        { role: 'user', content: userContent },
-      ],
+      max_tokens: 4000,
+      system: buildSystemPrompt({
+        brandName: facts.brandName,
+        deliverable,
+        wordTarget: def.words[len],
+        count,
+        context: facts.context,
+        product: facts.product,
+      }),
+      messages: [{ role: 'user', content: userPrompt }],
     })
 
     const rawText = response.content
@@ -175,47 +206,29 @@ Write the copy now. Return only the JSON.`
       .map((b) => (b as Anthropic.TextBlock).text)
       .join('')
 
-    // Robust JSON parsing — strip code fences, find JSON object
-    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
-
-    let parsed = null
-
-    // Strategy 1: Direct parse
-    try {
-      parsed = JSON.parse(cleaned)
-    } catch {
-      // Strategy 2: Find JSON object in text
-      const jsonMatch = cleaned.match(/\{[\s\S]*"sections"\s*:\s*\[[\s\S]*\}/)
-      if (jsonMatch) {
-        try {
-          parsed = JSON.parse(jsonMatch[0])
-        } catch {
-          /* continue */
-        }
-      }
-    }
-
-    // Strategy 3: Find from first { to last }
+    const parsed = parseJson(rawText)
     if (!parsed) {
-      const firstBrace = cleaned.indexOf('{')
-      const lastBrace = cleaned.lastIndexOf('}')
-      if (firstBrace !== -1 && lastBrace > firstBrace) {
-        try {
-          parsed = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1))
-        } catch {
-          /* continue */
-        }
-      }
+      console.error('[copy-architect] Could not parse:', rawText.slice(0, 500))
+      return NextResponse.json(
+        { error: 'The model did not return usable copy. Try again.' },
+        { status: 502 }
+      )
     }
 
-    if (!parsed) {
-      console.error('[copy-architect] Could not parse:', cleaned.slice(0, 500))
-      return NextResponse.json({ error: `Failed to parse AI response. Raw start: ${cleaned.slice(0, 200)}` }, { status: 500 })
+    // normaliseDraft runs sanitise-output over every body and every claim.
+    // Criterion 8 — no markdown, no bullets and no em dashes reach the UI.
+    const raw = Array.isArray(parsed.drafts) ? parsed.drafts : []
+    const drafts: Draft[] = raw.map(normaliseDraft).filter((d): d is Draft => d !== null)
+
+    if (!drafts.length) {
+      return NextResponse.json({ error: 'The model returned no copy. Try again.' }, { status: 502 })
     }
 
-    // Sanitised on the parsed object, not the raw text: the structure is never
-    // at risk, and only the generated copy is touched.
-    return NextResponse.json(sanitiseDeep(parsed))
+    return NextResponse.json({
+      drafts,
+      tone: facts.toneLabel,
+      missing: typeof parsed.missing === 'string' ? parsed.missing.trim() : '',
+    })
   } catch (err) {
     console.error('[copy-architect] Error:', err)
     const message = err instanceof Error ? err.message : 'Unexpected error'

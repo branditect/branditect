@@ -1,0 +1,170 @@
+/* Studio ▸ Write — ported from branditect-ui/reference/studio-write.html.
+ * v6 tokens come from tailwind.config.ts via theme(); the block below holds
+ * the reference's own values that have no token yet.
+ *
+ * The reference shows the CONTENT AREA only. This renders inside
+ * app/(app)/layout.tsx — the sidebar stays. .wrap is 1180px because that is
+ * the space beside the 228px sidebar. Do not make this full-screen. */
+.wrap {
+  --w-grad-pink: linear-gradient(126deg, #fdeef3 14%, #f7dbe6 88%);
+  --w-pink-ink: #8f3d60;
+  --w-teal-ink: #2f6b62;
+  --w-purple: #6b53ac;
+  --w-lav-wash: #f5f0fd;
+  --w-warn-bg: #fdf2e6;
+  --w-warn-ink: #9a6a1a;
+  max-width: 1180px; margin: 0 auto; padding: 24px 22px 70px;
+}
+
+/* ============ head ============ */
+.head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 20px; }
+.kick { font-size: theme('fontSize.micro[0]'); font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase; color: theme('colors.accent.DEFAULT'); }
+.head h1 { font-size: 30px; font-weight: 700; letter-spacing: -1px; margin-top: 6px; }
+/* The Library button and the saved-draft treatment arrive with step 4. A
+ * header button that lands on a route which does not exist is worse than a
+ * missing feature. */
+.sub { font-size: theme('fontSize.base[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT');
+  margin-top: 6px; max-width: 62ch; }
+
+/* ============ layout ============ */
+.cols { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: 18px; align-items: start; }
+.brief { position: sticky; top: 20px; background: #fff; border: 1px solid theme('colors.rule.2');
+  border-radius: theme('borderRadius.panel'); padding: 20px; filter: theme('dropShadow.panel'); }
+
+.step { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.stepTop { margin-top: 20px; }
+.step .n { width: 22px; height: 22px; flex: none; border-radius: 7px; background: theme('colors.tint.1');
+  display: grid; place-items: center; font-size: theme('fontSize.2xs[0]'); font-weight: 800;
+  color: theme('colors.accent.DEFAULT'); }
+.step h3 { font-size: theme('fontSize.h3[0]'); font-weight: 700; letter-spacing: -.3px; }
+.step .opt { margin-left: auto; font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.faint.DEFAULT'); }
+
+/* ============ format cards ============ */
+.fmts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fmt { all: unset; box-sizing: border-box; cursor: pointer; border-radius: theme('borderRadius.card');
+  padding: 12px 13px; display: flex; flex-direction: column; gap: 8px; min-height: 74px; position: relative; }
+.fmt:focus-visible { box-shadow: 0 0 0 3px theme('colors.tint.1'), inset 0 0 0 2px theme('colors.accent.DEFAULT'); }
+.fmt .ic { width: 26px; height: 26px; border-radius: 8px; background: rgba(255, 255, 255, .66);
+  display: grid; place-items: center; }
+.fmt .ic svg { width: 14px; height: 14px; }
+.fmt .t { font-size: theme('fontSize.sm[0]'); font-weight: 700; letter-spacing: -.2px; line-height: 1.25; }
+
+.ad { background: theme('backgroundImage.grad-more'); color: theme('colors.accent.dark'); }
+.email { background: theme('backgroundImage.grad-images'); color: var(--w-purple); }
+.instagram { background: var(--w-grad-pink); color: var(--w-pink-ink); }
+.linkedin { background: theme('backgroundImage.grad-numbers'); color: theme('colors.blue-ink'); }
+.product { background: theme('backgroundImage.grad-assets'); color: var(--w-teal-ink); }
+.customer { background: theme('colors.tile.2'); color: theme('colors.muted.DEFAULT'); }
+
+.fmt.on { box-shadow: inset 0 0 0 2px theme('colors.accent.DEFAULT'); }
+.fmt.on::after { content: ""; position: absolute; top: 9px; right: 9px; width: 16px; height: 16px;
+  border-radius: 50%;
+  background: theme('colors.accent.DEFAULT') url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 19 2 12l2.1-2.1L9 14.8 19.9 3.9 22 6z'/%3E%3C/svg%3E") center/9px no-repeat; }
+
+/* The seventh is a real option, not a hidden dropdown. */
+.other { background: #fff; box-shadow: inset 0 0 0 1.5px theme('colors.rule.3');
+  color: theme('colors.muted.DEFAULT'); grid-column: 1 / -1; flex-direction: row; align-items: center;
+  gap: 10px; min-height: 0; padding: 11px 13px; }
+.other .t { font-weight: 600; }
+.other svg { width: 14px; height: 14px; flex: none; }
+.otherInput { width: 100%; margin-top: 8px; border: 1.5px solid theme('colors.rule.2');
+  border-radius: theme('borderRadius.tile'); padding: 10px 13px; font: inherit;
+  font-size: theme('fontSize.sm[0]'); font-weight: 600; color: theme('colors.ink.DEFAULT'); }
+.otherInput::placeholder { color: theme('colors.faint.DEFAULT'); font-weight: 400; }
+.otherInput:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+
+/* ============ what's it about ============ */
+.ta { width: 100%; min-height: 104px; resize: vertical; margin-top: 2px;
+  border: 1.5px solid theme('colors.rule.2'); border-radius: theme('borderRadius.card'); background: #fff;
+  padding: 13px 15px; font: inherit; font-size: theme('fontSize.base[0]'); font-weight: 500;
+  color: theme('colors.ink.DEFAULT'); line-height: 1.55; }
+.ta::placeholder { color: theme('colors.faint.DEFAULT'); font-weight: 400; }
+.ta:focus { outline: none; border-color: theme('colors.accent.DEFAULT'); box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+.egs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.eg { all: unset; box-sizing: border-box; cursor: pointer; background: var(--w-lav-wash);
+  border: 1px solid theme('colors.lav-line'); border-radius: theme('borderRadius.pill'); padding: 6px 11px;
+  font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.lav-ink'); }
+.eg:hover, .eg:focus-visible { border-color: theme('colors.accent.line'); color: theme('colors.accent.dark');
+  background: theme('colors.tint.1'); }
+.eghint { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.faint.DEFAULT'); margin-top: 8px; }
+
+/* ============ options ============ */
+.opts { display: flex; flex-direction: column; gap: 11px; }
+.orow { display: flex; align-items: center; gap: 10px; }
+.orow .k { font-size: theme('fontSize.sm[0]'); font-weight: 600; color: theme('colors.ink.2');
+  width: 96px; flex: none; }
+.seg { display: flex; gap: 5px; background: theme('colors.tile.DEFAULT'); border-radius: theme('borderRadius.tile'); padding: 3px; }
+.seg button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 8px;
+  font-size: theme('fontSize.xs[0]'); font-weight: 700; color: theme('colors.muted.DEFAULT'); }
+.seg button.on { background: #fff; color: theme('colors.accent.dark'); box-shadow: 0 1px 2px rgba(20, 20, 26, .08); }
+.sel { flex: 1; min-width: 0; border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.tile');
+  background: #fff; padding: 9px 12px; font: inherit; font-size: theme('fontSize.sm[0]'); font-weight: 600;
+  color: theme('colors.ink.2'); cursor: pointer; }
+.sel:focus { outline: none; border-color: theme('colors.accent.DEFAULT'); }
+
+.gen { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; margin-top: 18px;
+  display: flex; align-items: center; justify-content: center; gap: 9px; height: 50px;
+  border-radius: theme('borderRadius.card'); background: theme('backgroundImage.grad-mark'); color: #fff;
+  font-size: 15px; font-weight: 700; filter: drop-shadow(0 8px 14px rgba(200, 60, 20, .3)); }
+.gen[disabled] { cursor: default; opacity: .6; filter: none; }
+.gen svg { width: 17px; height: 17px; }
+
+/* The source line says what it can't do — expectations get set before
+ * generation, not after. */
+.source { display: flex; gap: 9px; align-items: flex-start; margin-top: 14px; padding-top: 13px;
+  border-top: 1px solid theme('colors.rule.DEFAULT'); font-size: theme('fontSize.2xs[0]'); font-weight: 500;
+  color: theme('colors.muted.DEFAULT'); line-height: 1.5; }
+.source svg { width: 14px; height: 14px; color: theme('colors.accent.DEFAULT'); flex: none; margin-top: 1px; }
+.source b { color: theme('colors.ink.2'); font-weight: 700; }
+
+/* ============ drafts ============ */
+.outhead { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; min-height: 38px; }
+.outhead h2 { font-size: 20px; font-weight: 700; letter-spacing: -.5px; }
+.outhead .meta { font-size: theme('fontSize.xs[0]'); font-weight: 500; color: theme('colors.muted.2'); }
+.re { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; background: #fff;
+  border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.pill'); padding: 8px 14px;
+  font-size: theme('fontSize.xs[0]'); font-weight: 700; color: theme('colors.ink.2'); cursor: pointer; }
+.re[disabled] { opacity: .5; cursor: default; }
+.re svg { width: 13px; height: 13px; color: theme('colors.accent.DEFAULT'); }
+
+.empty { background: #fff; border: 1px dashed theme('colors.rule.2'); border-radius: theme('borderRadius.panel');
+  padding: 34px 22px; text-align: center; font-size: theme('fontSize.sm[0]'); font-weight: 500;
+  color: theme('colors.muted.2'); }
+
+.draft { background: #fff; border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.panel');
+  padding: 20px 22px; margin-bottom: 12px; filter: theme('dropShadow.panel'); position: relative; }
+.draft.failed { border-color: theme('colors.accent.line'); }
+.dtop { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+.dtag { font-size: theme('fontSize.micro[0]'); font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  color: theme('colors.accent.DEFAULT'); background: theme('colors.tint.1'); border-radius: theme('borderRadius.pill');
+  padding: 4px 10px; }
+.dlen { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.faint.DEFAULT'); }
+.dacts { margin-left: auto; display: flex; gap: 6px; }
+.act { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid theme('colors.rule.2'); border-radius: 9px; padding: 7px 11px;
+  font-size: theme('fontSize.xs[0]'); font-weight: 700; color: theme('colors.ink.2'); background: #fff; }
+.act:hover { border-color: theme('colors.accent.line'); color: theme('colors.accent.dark'); }
+.act svg { width: 13px; height: 13px; }
+.act[disabled] { opacity: .4; cursor: default; }
+
+/* Copy is read, not skimmed — it needs a reading line-length. */
+.body { font-size: 15.5px; font-weight: 500; line-height: 1.68; color: theme('colors.ink.2'); white-space: pre-wrap; }
+
+.dfoot { display: flex; align-items: center; gap: 8px; margin-top: 15px; padding-top: 13px;
+  border-top: 1px solid theme('colors.rule.DEFAULT'); font-size: theme('fontSize.2xs[0]'); font-weight: 600;
+  color: theme('colors.muted.2'); flex-wrap: wrap; }
+.chipsrc { background: theme('colors.tile.DEFAULT'); border-radius: theme('borderRadius.pill'); padding: 4px 10px; font-weight: 600; }
+.chipsrc.warn { background: var(--w-warn-bg); color: var(--w-warn-ink); }
+.chipsrc a { color: inherit; text-decoration: underline; }
+
+/* A wait that explains what it is buying you. */
+.sk { background: linear-gradient(90deg, #f1eff4 25%, #f9f7fb 50%, #f1eff4 75%); background-size: 200% 100%;
+  animation: sh 1.2s infinite; border-radius: 5px; display: block; }
+@keyframes sh { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+@media (max-width: 1080px) {
+  .cols { grid-template-columns: 1fr; }
+  .brief { position: static; }
+}

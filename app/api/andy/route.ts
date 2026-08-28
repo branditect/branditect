@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { parseStrategy, strategyPromptContext } from '@/lib/strategy'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { HOUSE_STYLE } from "@/lib/house-style";
+import { sanitiseOutput } from "@/lib/sanitise-output";
 
 export const maxDuration = 30
 
@@ -272,17 +274,20 @@ RULES:
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
       max_tokens: 1000,
-      system: systemPrompt,
+      system: systemPrompt + HOUSE_STYLE,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
     })
 
-    const reply = response.content
-      .map(c => c.type === 'text' ? c.text : '')
-      .join('')
-      .trim()
+    // Prompt rules leak, so the reply is sanitised before it reaches the UI.
+    const reply = sanitiseOutput(
+      response.content
+        .map(c => c.type === 'text' ? c.text : '')
+        .join('')
+        .trim()
+    )
 
     return NextResponse.json({ reply })
   } catch (err: unknown) {

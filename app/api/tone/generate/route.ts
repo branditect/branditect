@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { HOUSE_STYLE } from "@/lib/house-style";
 
 export const maxDuration = 60;
 
@@ -38,7 +39,7 @@ JSON structure:
   ]
 }
 
-Generate exactly 4 pillars and 4 touchpoints (Website, Email, Social Media, Customer Service). Generate 5-8 dos, 5-8 donts, 6-10 vocab_yes, 6-10 vocab_no. Keep everything concise.`,
+Generate exactly 4 pillars and 4 touchpoints (Website, Email, Social Media, Customer Service). Generate 5-8 dos, 5-8 donts, 6-10 vocab_yes, 6-10 vocab_no. Keep everything concise.` + HOUSE_STYLE,
       messages: [{
         role: "user",
         content: `Analyse these writing samples and extract the brand tone of voice:\n\n${pastedText.slice(0, 5000)}`

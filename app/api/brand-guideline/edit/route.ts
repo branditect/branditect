@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { HOUSE_STYLE } from '@/lib/house-style'
 
 export const maxDuration = 30
 
@@ -40,7 +41,7 @@ Current section data (JSON): ${JSON.stringify(currentData)}
 User instruction: "${instruction || 'Update based on the reference image'}"
 ${imageBase64 ? 'A reference image has been uploaded — use it to inform the changes.' : ''}
 
-Return ONLY a valid JSON object with the updated fields for this section, using the exact same structure as the current data. No explanation, no markdown, no code blocks.`,
+Return ONLY a valid JSON object with the updated fields for this section, using the exact same structure as the current data. No explanation, no markdown, no code blocks.` + HOUSE_STYLE,
     })
 
     const response = await client.messages.create({

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { HOUSE_STYLE } from "@/lib/house-style";
+import { sanitiseOutput } from "@/lib/sanitise-output";
 
 // Image-heavy guideline PDFs are slow: a 40-page one measured 104s. 300 is the
 // Vercel Pro ceiling; on Hobby this is capped at 60 and large PDFs will fail.
@@ -44,7 +46,7 @@ Rules:
 - Copy text VERBATIM wherever the guideline states a rule. Do not paraphrase rules.
 - Read hex codes off the colour swatches exactly. If a swatch shows CMYK or Pantone only, convert and mark it in "usage".
 - If a section genuinely is not in the document, use null (or an empty array). NEVER invent a rule, a hex code or a font name.
-- "summary" is what the assistant reads to answer questions. Include everything of substance: positioning, mission, tone, colour rules, typography, logo usage, imagery, packaging, social. Prefer the guideline's own wording. Long is fine.`;
+- "summary" is what the assistant reads to answer questions. Include everything of substance: positioning, mission, tone, colour rules, typography, logo usage, imagery, packaging, social. Prefer the guideline's own wording. Long is fine.` + HOUSE_STYLE;
 
 type Body = {
   brandId: string;
@@ -156,7 +158,9 @@ export async function POST(req: NextRequest) {
       parsed = JSON.parse(match[0]);
     }
 
-    const summary = typeof parsed.summary === "string" ? parsed.summary : "";
+    // Prose, so it is sanitised. The structured fields around it are not:
+    // hex values and rule text must survive verbatim.
+    const summary = typeof parsed.summary === "string" ? sanitiseOutput(parsed.summary) : "";
     if (!summary.trim()) {
       throw new Error("Indexing produced no summary");
     }

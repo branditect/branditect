@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { HOUSE_STYLE } from '@/lib/house-style'
 
 export const maxDuration = 60
 
@@ -61,7 +62,7 @@ Extract the design system and generate a complete, self-contained HTML file that
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
       max_tokens: 16000,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + HOUSE_STYLE,
       messages: [
         {
           role: 'user',

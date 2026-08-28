@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { HOUSE_STYLE } from "@/lib/house-style";
 
 export const maxDuration = 60;
 
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
       max_tokens: 6000,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + HOUSE_STYLE,
       messages: [{ role: "user", content: contentBlocks }],
     });
 

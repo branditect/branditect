@@ -3,6 +3,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { COPY_CONFIG } from '@/lib/copy-architect-config'
 import { buildBrandContext } from '@/lib/brandContext'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { HOUSE_STYLE } from "@/lib/house-style";
+import { sanitiseDeep } from '@/lib/sanitise-output'
 
 export const maxDuration = 30
 
@@ -162,7 +164,7 @@ Write the copy now. Return only the JSON.`
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
       max_tokens: 2000,
-      system: buildSystemPrompt(subConfig.deliverable, brandName, fullBrandContext),
+      system: buildSystemPrompt(subConfig.deliverable, brandName, fullBrandContext) + HOUSE_STYLE,
       messages: [
         { role: 'user', content: userContent },
       ],
@@ -211,7 +213,9 @@ Write the copy now. Return only the JSON.`
       return NextResponse.json({ error: `Failed to parse AI response. Raw start: ${cleaned.slice(0, 200)}` }, { status: 500 })
     }
 
-    return NextResponse.json(parsed)
+    // Sanitised on the parsed object, not the raw text: the structure is never
+    // at risk, and only the generated copy is touched.
+    return NextResponse.json(sanitiseDeep(parsed))
   } catch (err) {
     console.error('[copy-architect] Error:', err)
     const message = err instanceof Error ? err.message : 'Unexpected error'

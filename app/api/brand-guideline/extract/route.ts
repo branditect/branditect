@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { HOUSE_STYLE } from '@/lib/house-style'
 
 export const maxDuration = 60
 
@@ -101,7 +102,7 @@ CRITICAL INSTRUCTIONS:
 5. For rules: Copy the exact language used in the guideline.
 
 Return ONLY a valid JSON object matching this schema (no markdown, no code blocks, no explanation):
-${JSON.stringify(SCHEMA, null, 2)}`,
+${JSON.stringify(SCHEMA, null, 2)}` + HOUSE_STYLE,
             },
           ],
         },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { HOUSE_STYLE } from "@/lib/house-style";
 
 export const maxDuration = 30;
 
@@ -91,7 +92,7 @@ Other requests: ${inputs.other || "none"}`;
         // truncate. None of them need reasoning tokens.
         thinking: { type: "disabled" },
         max_tokens: 1200,
-        system: systemPrompt,
+        system: systemPrompt + HOUSE_STYLE,
         messages: [{ role: "user", content: userMessage }],
       }),
     });

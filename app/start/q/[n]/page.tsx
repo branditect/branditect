@@ -37,6 +37,7 @@ export default function QuestionScreen() {
   return (
     <StartShell
       save={save}
+      flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
           Question {n} of {TOTAL}

@@ -7,11 +7,12 @@ import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
 
 export default function StartWelcome() {
-  const { state, loading } = useOnboarding();
+  const { state, loading, flush } = useOnboarding();
   const partial = !loading && state.status === "partial";
 
   return (
     <StartShell
+      flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
           Before you begin
@@ -46,10 +47,6 @@ export default function StartWelcome() {
         <Link href={partial ? "/start/resume" : "/start/profile/1"}
           className="rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn">
           {partial ? "Pick up where you left off" : "Start"}
-        </Link>
-        <Link href="/home"
-          className="rounded-card border-[1.5px] border-rule-2 bg-card px-6 py-3 text-sm font-bold text-ink-2">
-          Skip for now
         </Link>
       </div>
 

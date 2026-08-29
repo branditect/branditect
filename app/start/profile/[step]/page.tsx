@@ -35,6 +35,7 @@ export default function ProfileStep() {
   return (
     <StartShell
       save={save}
+      flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
           Setup {idx + 1} of {STEPS.length}

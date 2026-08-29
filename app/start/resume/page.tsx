@@ -8,13 +8,14 @@ import { resumeQuestion } from "@/lib/onboarding";
 import { answeredTotal, questionTotal, sectionOf } from "@/lib/rail-steps";
 
 export default function Resume() {
-  const { state, loading } = useOnboarding();
+  const { state, loading, flush } = useOnboarding();
   const n = resumeQuestion(state);
   const answered = answeredTotal(state);
   const total = questionTotal();
 
   return (
     <StartShell
+      flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
           Picking up where you left off

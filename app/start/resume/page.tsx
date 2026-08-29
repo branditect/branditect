@@ -5,7 +5,7 @@ import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
-import { answeredTotal, questionTotal, sectionOf } from "@/lib/rail-steps";
+import { answeredTotal, questionTotal, sectionOf, gateFootNote } from "@/lib/rail-steps";
 
 export default function Resume() {
   const { state, loading, flush } = useOnboarding();
@@ -31,7 +31,7 @@ export default function Resume() {
           lede={
             loading
               ? "Finding your place…"
-              : `${answered} of ${total} answered. Pick up at question ${n}, or open the workspace and come back to it.`
+              : `${answered} of ${total} answered. ${gateFootNote(state)}`
           }
           foot={
             <RailFoot icon="cloud">

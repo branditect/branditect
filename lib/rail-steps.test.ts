@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { EMPTY_ONBOARDING, type OnboardingState } from "./onboarding.ts";
 import {
   railSteps, answeredInSection, answeredTotal, questionTotal,
-  sectionOf, sectionIndex, sectionTitle,
+  sectionOf, sectionIndex, sectionTitle, gateProgress, gateFootNote,
 } from "./rail-steps.ts";
 
 /**
@@ -101,5 +101,58 @@ describe("the eyebrow", () => {
     assert.equal(sectionOf(99), null);
     assert.equal(sectionIndex(null), 0);
     assert.equal(sectionTitle(null), "");
+  });
+});
+
+/**
+ * §3 of spec/leave-the-questionnaire.md. Said once, in the rail, on the way
+ * out — as information, never as a warning that blocks.
+ */
+describe("the gate-aware foot note", () => {
+  const at = (answers: Record<number, string>, voice: boolean, profile: boolean): OnboardingState => ({
+    ...EMPTY_ONBOARDING,
+    answers,
+    voice: voice ? { primary: "expert", secondary: null } : null,
+    profile: profile ? { track: "physical", charge_model: "one-off", team_size: "just-me" } : null,
+  });
+
+  it("counts the profile as one of the five", () => {
+    assert.deepEqual(gateProgress(at({}, false, true)), { done: 1, total: 5, cleared: false });
+    assert.deepEqual(gateProgress(at({}, false, false)), { done: 0, total: 5, cleared: false });
+  });
+
+  it("counts each gate question", () => {
+    assert.equal(gateProgress(at({ 6: "a" }, false, true)).done, 2);
+    assert.equal(gateProgress(at({ 6: "a", 11: "b" }, false, true)).done, 3);
+    assert.equal(gateProgress(at({ 6: "a", 11: "b", 13: "c" }, false, true)).done, 4);
+  });
+
+  it("counts Q18 from the voice, not from an answer", () => {
+    assert.equal(gateProgress(at({ 6: "a", 11: "b", 13: "c" }, true, true)).done, 5);
+    assert.equal(gateProgress(at({ 6: "a", 11: "b", 13: "c", 18: "typed" }, false, true)).done, 4);
+  });
+
+  it("ignores non-gate answers", () => {
+    assert.equal(gateProgress(at({ 1: "a", 2: "b", 3: "c", 4: "d", 5: "e" }, false, true)).done, 1);
+  });
+
+  it("reads as the spec's sentence before the gate", () => {
+    assert.equal(
+      gateFootNote(at({ 6: "a" }, false, true)),
+      "Studio needs 5 answers before it can write in your voice. You're 2 of 5 in.",
+    );
+  });
+
+  it("changes once the gate is cleared", () => {
+    assert.equal(
+      gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true)),
+      "Your workspace is open. The remaining questions are in Brand Readiness.",
+    );
+  });
+
+  it("never says skip", () => {
+    for (const s of [gateFootNote(at({}, false, false)), gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true))]) {
+      assert.ok(!/skip/i.test(s), s);
+    }
   });
 });

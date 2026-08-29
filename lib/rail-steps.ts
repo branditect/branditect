@@ -9,8 +9,8 @@
  * Pure — no React, no client, so the counts can be asserted against a fixture.
  */
 
-import { SECTIONS, type SectionId } from "./onboarding-questions.ts";
-import type { OnboardingState } from "./onboarding.ts";
+import { GATE, SECTIONS, type SectionId } from "./onboarding-questions.ts";
+import { isProfileComplete, type OnboardingState } from "./onboarding.ts";
 
 export type StepState = "todo" | "started" | "done" | "active";
 
@@ -88,4 +88,38 @@ export function answeredTotal(state: OnboardingState): number {
 
 export function questionTotal(): number {
   return SECTIONS.reduce((sum, s) => sum + (s.range[1] - s.range[0] + 1), 0);
+}
+
+/**
+ * How far into the gate someone is, out of five.
+ *
+ * The profile is one of the five and is not a question — three taps, but the
+ * examples, the voice rubric and the Numbers profile all depend on it. The
+ * other four are GATE ([6, 11, 13, 18]).
+ */
+export interface GateProgress {
+  done: number;
+  total: number;
+  cleared: boolean;
+}
+
+export function gateProgress(state: OnboardingState): GateProgress {
+  const answered = GATE.filter((n) =>
+    n === 18 ? Boolean(state.voice?.primary) : Boolean(state.answers[n]?.trim()),
+  ).length;
+  const done = answered + (isProfileComplete(state.profile) ? 1 : 0);
+  const total = GATE.length + 1;
+  return { done, total, cleared: done === total };
+}
+
+/**
+ * The line in the rail on the way out. Information, not a warning that blocks
+ * — a reason to come back, phrased as a fact. This is the one place a count of
+ * the gate belongs.
+ */
+export function gateFootNote(state: OnboardingState): string {
+  const { done, total, cleared } = gateProgress(state);
+  return cleared
+    ? "Your workspace is open. The remaining questions are in Brand Readiness."
+    : `Studio needs ${total} answers before it can write in your voice. You're ${done} of ${total} in.`;
 }

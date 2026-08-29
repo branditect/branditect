@@ -5,6 +5,7 @@ import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import type { Profile } from "@/lib/onboarding";
+import { gateFootNote, gateProgress } from "@/lib/rail-steps";
 
 /** Three taps, no typing. Sets the track, the voice rubric and the Numbers profile. */
 const STEPS = [
@@ -47,8 +48,10 @@ export default function ProfileStep() {
           heading="Let’s get to know your business"
           lede="Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs."
           foot={
-            <RailFoot icon="spark">
-              Your answers become your strategy, your tone of voice and every word Studio writes.
+            // The one place a count of the gate belongs: a reason to come back,
+            // phrased as a fact. Never a warning that blocks.
+            <RailFoot icon={gateProgress(state).cleared ? "spark" : "key"}>
+              {gateFootNote(state)}
             </RailFoot>
           }
         >

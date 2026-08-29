@@ -5,6 +5,7 @@ import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
+import { gateFootNote, gateProgress } from "@/lib/rail-steps";
 
 export default function StartWelcome() {
   const { state, loading, flush } = useOnboarding();
@@ -24,8 +25,10 @@ export default function StartWelcome() {
           heading="Four sections, twenty questions."
           lede="Five of them open your workspace. The rest sharpen it whenever you come back."
           foot={
-            <RailFoot icon="spark">
-              Your answers become your strategy, your tone of voice and every word Studio writes.
+            // The one place a count of the gate belongs: a reason to come back,
+            // phrased as a fact. Never a warning that blocks.
+            <RailFoot icon={gateProgress(state).cleared ? "spark" : "key"}>
+              {gateFootNote(state)}
             </RailFoot>
           }
         >

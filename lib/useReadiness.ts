@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { computeReadiness, questionnairePassed, type Readiness } from "@/lib/readiness";
-import type { Status } from "@/lib/onboarding";
+import { fromRow, type OnboardingRow, type Status } from "@/lib/onboarding";
+import { answeredTotal } from "@/lib/rail-steps";
 
 export interface KnowledgeCounts {
   documents: number;
@@ -22,6 +23,14 @@ const EMPTY_COUNTS: KnowledgeCounts = {
 };
 
 const PRESENTATION_TYPES = ["ppt", "pptx", "key", "odp"];
+
+/** How far into the questionnaire this brand is. */
+export interface OnboardingSummary {
+  status: Status;
+  answered: number;
+}
+
+const EMPTY_ONBOARDING_SUMMARY: OnboardingSummary = { status: "not_started", answered: 0 };
 
 /**
  * One query pass, one Readiness object.
@@ -45,6 +54,7 @@ export function useReadiness(brandId: string) {
   // honest and actionable; the real numbers overwrite it a moment later.
   const [readiness, setReadiness] = useState<Readiness>(ZERO_STATE);
   const [counts, setCounts] = useState<KnowledgeCounts>(EMPTY_COUNTS);
+  const [onboarding, setOnboarding] = useState<OnboardingSummary>(EMPTY_ONBOARDING_SUMMARY);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +73,7 @@ export function useReadiness(brandId: string) {
           // Readiness stuck on 0% for that quarter whatever anyone did.
           supabase
             .from("onboarding")
-            .select("status")
+            .select("status, answers, voice")
             .eq("brand_id", brandId)
             .maybeSingle(),
           supabase
@@ -95,6 +105,11 @@ export function useReadiness(brandId: string) {
 
       if (cancelled) return;
 
+      // One parse, read by the checks, the strip and anything else that needs
+      // to know how far in someone is. Never a second query.
+      const state = fromRow(onboarding.data as Partial<OnboardingRow> | null);
+      setOnboarding({ status: state.status, answered: answeredTotal(state) });
+
       const documents = docs.count ?? 0;
       const presentationCount = presentations.count ?? 0;
       const linkCount = links.count ?? 0;
@@ -109,9 +124,8 @@ export function useReadiness(brandId: string) {
 
       setReadiness(
         computeReadiness({
-          questionnaireComplete: questionnairePassed(
-            onboarding.data?.status as Status | undefined,
-          ),
+          questionnaireComplete: questionnairePassed(state.status),
+          questionnaireAnswered: answeredTotal(state),
           // "Files in Knowledge" is documents + presentations + links.
           knowledgeFileCount: documents + presentationCount + linkCount,
           brandImageCount: brandImages.count ?? 0,
@@ -124,6 +138,7 @@ export function useReadiness(brandId: string) {
     load().catch(() => {
       if (cancelled) return;
       setCounts(EMPTY_COUNTS);
+      setOnboarding(EMPTY_ONBOARDING_SUMMARY);
       setReadiness(ZERO_STATE);
       setLoading(false);
     });
@@ -133,5 +148,5 @@ export function useReadiness(brandId: string) {
     };
   }, [brandId]);
 
-  return { readiness, counts, loading };
+  return { readiness, counts, onboarding, loading };
 }

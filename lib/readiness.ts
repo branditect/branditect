@@ -10,10 +10,17 @@
  */
 
 import type { Status } from "./onboarding.ts";
+import { questionTotal } from "./rail-steps.ts";
 
 export interface ReadinessInputs {
   /** true once the gate is cleared — see questionnairePassed */
   questionnaireComplete: boolean;
+  /**
+   * How many of the twenty are answered. Drives the row's sublabel: "Not
+   * finished yet" tells someone nothing about whether coming back costs four
+   * minutes or forty.
+   */
+  questionnaireAnswered?: number;
   /** total files in Knowledge (documents + presentations + links) */
   knowledgeFileCount: number;
   /** images in Knowledge tagged as product or brand */
@@ -76,6 +83,13 @@ export function questionnairePassed(status: Status | null | undefined): boolean 
   return status === "gated_complete" || status === "complete";
 }
 
+export function questionnaireDetail(answered: number): string {
+  const total = questionTotal();
+  if (answered <= 0) return "Not started";
+  if (answered >= total) return `All ${total} answered`;
+  return `${answered} of ${total} answered`;
+}
+
 const POINTS_PER_CHECK = 25;
 
 export function computeReadiness(input: ReadinessInputs): Readiness {
@@ -83,15 +97,20 @@ export function computeReadiness(input: ReadinessInputs): Readiness {
     {
       id: "questionnaire",
       label: "Strategy questionnaire",
-      detail: input.questionnaireComplete
-        ? "All questions answered"
-        : "Not finished yet",
+      // The real count, always. "All questions answered" was a lie at the gate,
+      // where five of twenty is a passing check.
+      detail: questionnaireDetail(input.questionnaireAnswered ?? 0),
       passed: input.questionnaireComplete,
       points: input.questionnaireComplete ? POINTS_PER_CHECK : 0,
       // /start, not /brand/strategy. That route is the strategy DOCUMENT; the
-      // questionnaire lives at /start.
+      // questionnaire lives at /start, and startRouteFor sends a `partial`
+      // brand on to /start/resume from there.
       href: input.questionnaireComplete ? null : "/start",
-      action: input.questionnaireComplete ? null : "Continue",
+      action: input.questionnaireComplete
+        ? null
+        : (input.questionnaireAnswered ?? 0) === 0
+          ? "Start"
+          : "Pick up where you left off",
     },
     {
       id: "knowledgeFiles",

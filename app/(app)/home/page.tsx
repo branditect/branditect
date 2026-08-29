@@ -9,6 +9,7 @@ import { readinessHeadline } from "@/lib/readiness";
 import Icon from "@/components/icon";
 import ReadinessCard from "@/components/readiness-card";
 import WhatsNextPanel from "@/components/whats-next-panel";
+import OnboardingStrip from "@/components/onboarding-strip";
 import StudioCard, { type StudioVariant } from "@/components/studio-card";
 import ActivityList from "@/components/activity-list";
 import ChatRail from "@/components/chat-rail";
@@ -61,7 +62,7 @@ function greeting(hour: number): string {
 export default function HomePage() {
   const { brandId } = useBrand();
   const { user } = useUser();
-  const { readiness, counts } = useReadiness(brandId);
+  const { readiness, counts, onboarding } = useReadiness(brandId);
 
   const now = useMemo(() => new Date(), []);
   // Greet the person, not the brand. Falls back to a nameless greeting rather
@@ -109,6 +110,10 @@ export default function HomePage() {
             </Link>
           </div>
         </header>
+
+        {/* Above the fold: someone who left mid-questionnaire is invited back
+            before anything else competes for the decision. */}
+        <OnboardingStrip onboarding={onboarding} />
 
         <div className="grid grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] items-stretch gap-3 stack:grid-cols-1">
           <ReadinessCard readiness={readiness} knowledge={counts} />

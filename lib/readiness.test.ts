@@ -8,7 +8,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { computeReadiness, questionnairePassed, type ReadinessInputs } from "./readiness.ts";
+import { computeReadiness, questionnairePassed, questionnaireDetail, type ReadinessInputs } from "./readiness.ts";
 
 describe("computeReadiness", () => {
   const base: ReadinessInputs = {
@@ -166,5 +166,50 @@ describe("useReadiness no longer touches the retired module", () => {
     // not survive is the query and the call.
     assert.ok(!/from\("brand_strategies"\)/.test(source));
     assert.ok(!/isQuestionnaireComplete\(/.test(source));
+  });
+});
+
+/**
+ * §4c. "Not finished yet" tells someone nothing about whether coming back
+ * costs four minutes or forty.
+ */
+describe("the questionnaire row says where they got to", () => {
+  const row = (answered: number, status: "partial" | "gated_complete" | "not_started") =>
+    computeReadiness({
+      questionnaireComplete: questionnairePassed(status),
+      questionnaireAnswered: answered,
+      knowledgeFileCount: 0,
+      brandImageCount: 0,
+      hasBrandGuideline: false,
+    }).checks.find((c) => c.id === "questionnaire")!;
+
+  it("reads 'Not started' at zero, and offers Start", () => {
+    const c = row(0, "not_started");
+    assert.equal(c.detail, "Not started");
+    assert.equal(c.action, "Start");
+    assert.equal(c.href, "/start");
+  });
+
+  it("reads '7 of 20 answered' part way, and offers to pick up", () => {
+    const c = row(7, "partial");
+    assert.equal(c.detail, "7 of 20 answered");
+    assert.equal(c.action, "Pick up where you left off");
+    assert.equal(c.href, "/start");
+  });
+
+  /** The lie this replaces: at the gate the row claimed all questions were in. */
+  it("does not claim all questions are answered at the gate", () => {
+    const c = row(5, "gated_complete");
+    assert.equal(c.detail, "5 of 20 answered");
+    assert.equal(c.passed, true);
+    assert.equal(c.href, null);
+    assert.equal(c.action, null);
+  });
+
+  it("says all 20 only when all 20 are in", () => {
+    assert.equal(questionnaireDetail(20), "All 20 answered");
+    assert.equal(questionnaireDetail(19), "19 of 20 answered");
+    assert.equal(questionnaireDetail(0), "Not started");
+    assert.equal(questionnaireDetail(-1), "Not started");
   });
 });

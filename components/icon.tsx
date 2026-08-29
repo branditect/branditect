@@ -1,5 +1,5 @@
 /**
- * The Branditect icon set — 39 icons, all drawn in `currentColor`.
+ * The Branditect icon set — 40 icons, all drawn in `currentColor`.
  *
  * Nine are the real Branditect icons, exported from the brand icon set and
  * converted so their baked-in #F0562A became `currentColor` — without that
@@ -26,7 +26,9 @@ export type IconName =
   | "box" | "cloud" | "once" | "repeat" | "tick"
   // Studio ▸ Write — format marks and draft actions
   | "megaphone" | "mail" | "instagram" | "linkedin" | "help"
-  | "spark" | "copy" | "redo" | "book";
+  | "spark" | "copy" | "redo" | "book"
+  // Onboarding rail
+  | "key";
 
 interface IconSpec {
   d: React.ReactNode;
@@ -250,6 +252,10 @@ const PATHS: Record<IconName, IconSpec> = {
   },
   book: {
     d: <path d="M9 2a3.5 3.5 0 0 0-3.4 2.7A3.5 3.5 0 0 0 3 8a3.5 3.5 0 0 0 1 2.5A3.5 3.5 0 0 0 3 13a3.5 3.5 0 0 0 2.6 3.4A3.5 3.5 0 0 0 9 22h2V2zm4 0v20h2a3.5 3.5 0 0 0 3.4-2.6A3.5 3.5 0 0 0 21 13a3.5 3.5 0 0 0-1-2.5A3.5 3.5 0 0 0 21 8a3.5 3.5 0 0 0-2.6-3.3A3.5 3.5 0 0 0 15 2z" />,
+  },
+  // The gate. A required question is one of the five that opens the workspace.
+  key: {
+    d: <path d="M12.6 10a6 6 0 1 0-2.6 2.6L13 15.6V19h3v3h5v-4.6zM6.5 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4" />,
   },
 };
 

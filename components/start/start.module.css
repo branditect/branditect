@@ -1,0 +1,85 @@
+/* The onboarding rail — ported from branditect-ui/reference/onboarding.html.
+ * v6 tokens come from tailwind.config.ts via theme(); the block below holds the
+ * reference's own values that have no token yet.
+ *
+ * The rail is a full column, not a card: guidance on the left, the box you type
+ * in on the right. */
+.rail {
+  --r-violet: #6a4fb0;
+  --r-lav-line: #ddd0f4;
+  --r-lav-wash: #f5f0fd;
+  --r-rail-rule: #eae3f6;
+  --r-grad-rail: linear-gradient(168deg, #faf7fe 0%, #f2ecfb 58%, #efe8fa 100%);
+  --r-green-line: #bfe6cf;
+
+  background: var(--r-grad-rail);
+  border-right: 1px solid var(--r-rail-rule);
+  padding: 28px 30px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute; left: -90px; bottom: -130px; width: 330px; height: 330px; border-radius: 50%;
+  background: radial-gradient(circle at 45% 45%, rgba(202, 184, 242, .42), rgba(202, 184, 242, 0) 68%);
+  pointer-events: none;
+}
+/* Everything sits above the blob. */
+.rail > * { position: relative; z-index: 2; }
+
+.eyebrow { font-size: theme('fontSize.micro[0]'); font-weight: 800; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--r-violet); }
+.heading { font-size: 23px; font-weight: 700; letter-spacing: -.7px; line-height: 1.22; margin-top: 9px; }
+.lede { font-size: theme('fontSize.sm[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT');
+  margin-top: 10px; line-height: 1.6; }
+
+/* ============ stepper ============ */
+.steps { margin-top: 22px; display: flex; flex-direction: column; }
+.st { display: flex; gap: 13px; position: relative; padding-bottom: 14px; }
+.st:last-child { padding-bottom: 0; }
+.st .n { width: 25px; height: 25px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-size: theme('fontSize.2xs[0]'); font-weight: 700; background: #fff; color: theme('colors.faint.DEFAULT');
+  border: 1px solid var(--r-lav-line); z-index: 2; }
+.st .n svg { width: 12px; height: 12px; }
+/* The connecting line. It is what makes four rows read as one journey. */
+.st::before { content: ""; position: absolute; left: 12px; top: 25px; bottom: 0; width: 1.5px; background: var(--r-lav-line); }
+.st:last-child::before { display: none; }
+.st .t { font-size: theme('fontSize.base[0]'); font-weight: 600; color: theme('colors.muted.2'); line-height: 1.35; }
+.st .m { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.faint.DEFAULT'); margin-top: 2px; }
+
+.active .n { background: var(--r-violet); border-color: var(--r-violet); color: #fff; }
+.active .t { color: theme('colors.ink.DEFAULT'); font-weight: 700; }
+.active .m { color: var(--r-violet); font-weight: 600; }
+.done .n, .started .n { background: theme('colors.green-wash'); border-color: var(--r-green-line);
+  color: theme('colors.green-ink'); }
+.done .t, .started .t { color: theme('colors.ink.2'); }
+
+/* ============ guide card ============ */
+.guide { margin-top: 20px; background: #fff; border: 1px solid var(--r-rail-rule);
+  border-radius: theme('borderRadius.panel'); padding: 15px 16px; }
+.guideKey { display: flex; align-items: center; gap: 7px; font-size: theme('fontSize.micro[0]');
+  font-weight: 800; letter-spacing: .9px; text-transform: uppercase; color: var(--r-violet); }
+.guideKey svg { width: 13px; height: 13px; }
+.help { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.ink.2'); margin-top: 9px; line-height: 1.55; }
+.exlab { font-size: theme('fontSize.micro[0]'); font-weight: 800; letter-spacing: .9px; text-transform: uppercase;
+  color: theme('colors.faint.DEFAULT'); margin-top: 13px; padding-top: 12px; border-top: 1px solid #f0ecf8; }
+/* The worked example is a labelled card, never ghost text in the input —
+ * placeholder text vanishes exactly when it is wanted. */
+.ex { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.lav-ink'); margin-top: 7px;
+  line-height: 1.6; padding-left: 11px; border-left: 2.5px solid var(--r-lav-line); font-style: italic; }
+.exwho { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.faint.DEFAULT'); margin-top: 8px; }
+
+/* ============ foot note ============ */
+/* mt-auto: pinned to the bottom of the rail whatever is above it. */
+.footNote { margin-top: auto; padding-top: 18px; display: flex; gap: 9px; align-items: flex-start;
+  font-size: theme('fontSize.xs[0]'); font-weight: 500; color: theme('colors.lav-ink'); line-height: 1.5; }
+.footNote svg { width: 15px; height: 15px; color: var(--r-violet); flex: none; margin-top: 1px; }
+
+/* The reference hides the rail under 1080px. It must not — the guidance is
+ * what makes the question answerable, so it stacks above the input instead. */
+@media (max-width: 900px) {
+  .rail { border-right: 0; border-bottom: 1px solid var(--r-rail-rule); padding-bottom: 22px; }
+  .footNote { margin-top: 18px; }
+}

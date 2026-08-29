@@ -3,6 +3,7 @@
 import { useRouter, useParams } from "next/navigation";
 import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
+import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import type { Profile } from "@/lib/onboarding";
 
 /** Three taps, no typing. Sets the track, the voice rubric and the Numbers profile. */
@@ -32,10 +33,31 @@ export default function ProfileStep() {
   }
 
   return (
-    <StartShell save={save}
-      counter={<span className="text-xs font-bold text-muted-2">Setup {idx + 1} of {STEPS.length}</span>}>
+    <StartShell
+      save={save}
+      counter={
+        <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
+          Setup {idx + 1} of {STEPS.length}
+        </span>
+      }
+      rail={
+        <Rail
+          eyebrow="Getting started"
+          heading="Let’s get to know your business"
+          lede="Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs."
+          foot={
+            <RailFoot icon="spark">
+              Your answers become your strategy, your tone of voice and every word Studio writes.
+            </RailFoot>
+          }
+        >
+          <RailSteps state={state} />
+        </Rail>
+      }
+    >
       <h1 className="text-h2 font-bold tracking-[-0.5px]">{step.q}</h1>
-      <div className="mt-6 flex flex-col gap-2.5">
+
+      <div className="mt-6 flex max-w-[640px] flex-col gap-2.5">
         {step.options.map(([value, label]) => {
           const on = current[step.key as keyof Profile] === value;
           return (
@@ -47,6 +69,7 @@ export default function ProfileStep() {
           );
         })}
       </div>
+
       {/* Back is always live, including from step one. */}
       <button type="button"
         onClick={() => (idx === 0 ? router.push("/start") : router.push(`/start/profile/${idx}`))}

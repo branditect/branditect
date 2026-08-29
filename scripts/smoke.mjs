@@ -22,7 +22,7 @@ import { join } from "node:path";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const ROUTES = ["/login", "/signup", "/start", "/start/q/1", "/start/q/7", "/start/resume",
-                "/home", "/brand/strategy", "/knowledge/products", "/numbers"];
+                "/home", "/brand/strategy", "/brand/visual-identity", "/knowledge/products", "/numbers"];
 const CHROME = process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
@@ -131,10 +131,64 @@ for (const route of ROUTES) {
     }
   }
 
-  const ok = len > 0 && fatal.length === 0 && !blocked && !railWhy;
+  // A fixed-height box that is inline renders as a zero-width sliver and paints
+  // its background onto nothing. Silent in every unit test, obvious to a user:
+  // the colour page shipped with no colour on it for a day.
+  //
+  // Two checks, because this run has no session. The measurement only works on
+  // a rendered swatch, which needs a signed-in brand; the rule scan works
+  // whenever the stylesheet is loaded, which is always. Without the scan the
+  // guard would pass vacuously on every signed-out run — which is exactly what
+  // it did on the first attempt.
+  let chipWhy = "";
+  if (route === "/brand/visual-identity") {
+    const chipRes = await send("Runtime.evaluate", {
+      expression: `JSON.stringify((() => {
+        const el = document.querySelector("[class*=_chip__]");
+        const measured = el
+          ? (() => { const r = el.getBoundingClientRect();
+                     return { found: true, w: Math.round(r.width), h: Math.round(r.height),
+                              display: getComputedStyle(el).display }; })()
+          : { found: false };
+
+        // Any rule that sets a height but no display. An inline box ignores
+        // both height and width, whatever element the class lands on.
+        const offenders = [];
+        for (const sheet of document.styleSheets) {
+          let rules; try { rules = sheet.cssRules; } catch { continue; }   // cross-origin
+          for (const rule of rules ?? []) {
+            const st = rule.style;
+            if (!st || !rule.selectorText) continue;
+            const h = st.getPropertyValue("height");
+            if (!h || !/^\\d+(\\.\\d+)?px$/.test(h.trim()) || parseFloat(h) < 40) continue;
+            if (st.getPropertyValue("display")) continue;
+            const pos = st.getPropertyValue("position");
+            if (pos === "absolute" || pos === "fixed") continue;           // out of flow already
+            // CSS-module classes only. A Tailwind h-[100px] utility is meant to
+            // be combined with a display utility and is not the defect here.
+            if (!/_[A-Za-z]+__[A-Za-z0-9]/.test(rule.selectorText)) continue;
+            offenders.push(rule.selectorText + " { height: " + h + " }");
+          }
+        }
+        return { measured, offenders };
+      })())`,
+      returnByValue: true,
+    });
+    let chip = { measured: { found: false }, offenders: [] };
+    try { chip = JSON.parse(chipRes.result?.result?.value ?? "{}"); } catch { /* keep default */ }
+
+    const m = chip.measured ?? { found: false };
+    if (m.found && !(m.w > 40 && m.h > 50)) {
+      chipWhy = `  colour chip is ${m.w}x${m.h} (display: ${m.display})`;
+    } else if ((chip.offenders ?? []).length) {
+      chipWhy = `  fixed height with no display: ${chip.offenders.join("; ").slice(0, 110)}`;
+    }
+  }
+
+  const ok = len > 0 && fatal.length === 0 && !blocked && !railWhy && !chipWhy;
   if (!ok) failed++;
   const why = blocked ? `  BLOCKED: ${text.slice(0, 60)}`
-    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : railWhy;
+    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : railWhy || chipWhy;
   console.log(`${ok ? "PASS" : "FAIL"}  ${route.padEnd(22)} bodyText=${len}${why}`);
   lengths.push(len);
 }

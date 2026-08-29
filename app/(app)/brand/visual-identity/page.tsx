@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
@@ -89,6 +90,20 @@ function cssSnippetFor(font: FontRow): string {
     return `@font-face {\n  font-family: "${family}";\n  src: url("${font.file_url}");\n}\n\nfont-family: "${family}", sans-serif;`;
   }
   return `font-family: "${family}", sans-serif;`;
+}
+
+/**
+ * The real logo where there is one, a neutral stand-in where there is not.
+ * The rules are the point; the artwork only illustrates them.
+ */
+function Mark({
+  url, height = 30, width = 104, className,
+}: { url: string | null; height?: number; width?: number; className?: string }) {
+  if (!url) {
+    return <span className={`${s.placeholderMark} ${className ?? ""}`} style={{ height, width }}>Your logo</span>;
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt="" className={className} style={{ height, maxWidth: width, objectFit: "contain" }} />;
 }
 
 export default function VisualIdentityPage() {
@@ -242,7 +257,8 @@ export default function VisualIdentityPage() {
             <div className={s.glass}>
               <div className={s.stats}>
                 <div>
-                  <div className={s.statN}>{loading ? "—" : fileCount}</div>
+                  {/* A zero reads as empty. An em dash reads as broken. */}
+                  <div className={s.statN}>{fileCount}</div>
                   <div className={s.statK}>Files</div>
                 </div>
                 <div>
@@ -299,17 +315,33 @@ export default function VisualIdentityPage() {
           )}
 
           {/* ══════════ 2 · LOGOS ══════════ */}
-          {bySlot.size > 0 && (
-            <section className={s.sec}>
-              <div className={s.shead}>
-                <div>
-                  <h2>Logos</h2>
-                  <p>
-                    Each plate is fixed to its slot, so you can see whether a reversed file actually
-                    works before you use it. Download the one you need.
-                  </p>
-                </div>
+          {/* The section always renders. A card with no file is clutter; a
+              missing section is a page that gives no hint anything is missing. */}
+          <section className={s.sec}>
+            <div className={s.shead}>
+              <div>
+                <h2>Logos</h2>
+                <p>
+                  Each plate is fixed to its slot, so you can see whether a reversed file actually
+                  works before you use it. Download the one you need.
+                </p>
               </div>
+            </div>
+
+            {bySlot.size === 0 ? (
+              <div className={s.empty}>
+                <h3>No logos yet.</h3>
+                <p>
+                  Upload the primary, a reversed version and the symbol on its own — those three
+                  cover almost every use.
+                </p>
+                <Link href="/studio/brand-assets" className={s.emptyBtn}>
+                  <Icon name="upload" size={14} />
+                  Upload logos
+                </Link>
+              </div>
+            ) : (
+              <>
               <div className={s.logos}>
                 {SLOTS.filter((def) => bySlot.has(def.slot)).map((def) => {
                   const files = bySlot.get(def.slot)!;
@@ -367,8 +399,9 @@ export default function VisualIdentityPage() {
                   </div>
                 </>
               )}
-            </section>
-          )}
+              </>
+            )}
+          </section>
 
           {/* ══════════ 3 · COLOUR ══════════ */}
           {colors.length > 0 && (
@@ -441,14 +474,24 @@ export default function VisualIdentityPage() {
           )}
 
           {/* ══════════ 4 · TYPEFACES ══════════ */}
-          {fonts.length > 0 && (
-            <section className={s.sec}>
-              <div className={s.shead}>
-                <div>
-                  <h2>Typefaces</h2>
-                  <p>Each specimen is set in the real typeface. Copy the CSS and it will be too.</p>
-                </div>
+          <section className={s.sec}>
+            <div className={s.shead}>
+              <div>
+                <h2>Typefaces</h2>
+                <p>Each specimen is set in the real typeface. Copy the CSS and it will be too.</p>
               </div>
+            </div>
+
+            {fonts.length === 0 ? (
+              <div className={s.empty}>
+                <h3>No typefaces yet.</h3>
+                <p>Add the one for headlines and the one for everything else.</p>
+                <Link href="/studio/brand-assets" className={s.emptyBtn}>
+                  <Icon name="plus" size={14} />
+                  Add a typeface
+                </Link>
+              </div>
+            ) : (
               <div className={s.type}>
                 {fonts.map((font, i) => {
                   const inUse = font.weights_in_use ?? [];
@@ -485,8 +528,8 @@ export default function VisualIdentityPage() {
                   );
                 })}
               </div>
-            </section>
-          )}
+            )}
+          </section>
 
           {/* ══════════ 5 · TEMPLATES ══════════ */}
           {templates.length > 0 && (
@@ -523,76 +566,71 @@ export default function VisualIdentityPage() {
           )}
 
           {/* ══════════ 6 · HOW TO HOLD IT ══════════ */}
-          {/* Rendered with CSS transforms on the real logo, not stock
-              illustrations. These normally live on page 34 of a PDF nobody
-              opens; inline, they become enforceable. */}
-          {heroLogo?.file_url && (
-            <section className={s.sec}>
-              <div className={s.shead}>
-                <div>
-                  <h2>How to hold it</h2>
-                  <p>
-                    The four things that go wrong most often. They live here rather than on page 34
-                    of a PDF, because a rule nobody reads is not a rule.
-                  </p>
+          {/* Static content, no schema. It used to be gated on having a logo,
+              which made the brand rules disappear for exactly the brands that
+              have not set anything up yet — the ones that most need to read
+              them. Only the artwork is gated now. */}
+          <section className={s.sec}>
+            <div className={s.shead}>
+              <div>
+                <h2>How to hold it</h2>
+                <p>
+                  The four things that go wrong most often. They live here rather than on page 34
+                  of a PDF, because a rule nobody reads is not a rule.
+                </p>
+              </div>
+            </div>
+            <div className={s.rules}>
+              <div>
+                <div className={s.rbox}>
+                  <h4>Clear space</h4>
+                  <p>Keep the height of the symbol free on every side. Nothing crosses it — no text, no edge, no other logo.</p>
+                  <div className={s.clearspace}>
+                    <div className={s.csbox}>
+                      <Mark url={heroLogo?.file_url ?? null} height={34} width={150} />
+                    </div>
+                  </div>
+                </div>
+                <div className={s.rbox} style={{ marginTop: 12 }}>
+                  <h4>Minimum size</h4>
+                  <p>Below these, switch to the symbol on its own.</p>
+                  <div className={s.minsize}>
+                    <div className={s.ms}>
+                      <Mark url={heroLogo?.file_url ?? null} height={22} width={120} />
+                      <span className={s.msLab}>120px / 32mm</span>
+                    </div>
+                    <div className={s.ms}>
+                      <Mark url={(bySlot.get("icon")?.[0] ?? heroLogo)?.file_url ?? null} height={14} width={40} />
+                      <span className={s.msLab}>24px / 8mm</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className={s.rules}>
-                <div>
-                  <div className={s.rbox}>
-                    <h4>Clear space</h4>
-                    <p>Keep the height of the symbol free on every side. Nothing crosses it — no text, no edge, no other logo.</p>
-                    <div className={s.clearspace}>
-                      <div className={s.csbox}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={heroLogo.file_url} alt="" style={{ maxHeight: 34, maxWidth: 150, objectFit: "contain" }} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className={s.rbox} style={{ marginTop: 12 }}>
-                    <h4>Minimum size</h4>
-                    <p>Below these, switch to the symbol on its own.</p>
-                    <div className={s.minsize}>
-                      <div className={s.ms}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={heroLogo.file_url} alt="" style={{ height: 22, maxWidth: 120, objectFit: "contain" }} />
-                        <span className={s.msLab}>120px / 32mm</span>
-                      </div>
-                      <div className={s.ms}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={(bySlot.get("icon")?.[0] ?? heroLogo).file_url!} alt="" style={{ height: 14, maxWidth: 40, objectFit: "contain" }} />
-                        <span className={s.msLab}>24px / 8mm</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                <div>
-                  <div className={s.cglab}>Never</div>
-                  <div className={s.donts}>
-                    {[
-                      { cls: s.sq, title: "Don't stretch it", sub: "Scale both sides together, always", busy: false },
-                      { cls: s.rc, title: "Don't recolour it", sub: "The brand colours. Nothing else.", busy: false },
-                      { cls: s.sh, title: "Don't add effects", sub: "No shadows, glows, bevels or outlines", busy: false },
-                      { cls: "", title: "Don't fight the background", sub: "Busy photo? Use the reversed file on a solid block.", busy: true },
-                    ].map((d) => (
-                      <div key={d.title} className={s.dont}>
-                        <div className={`${s.dstage} ${d.busy ? s.busy : ""}`}>
-                          <span className={s.x}><Icon name="close" size={9} /></span>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={heroLogo.file_url!} alt="" className={d.cls || undefined} />
-                        </div>
-                        <div className={s.cap}>
-                          {d.title}
-                          <span>{d.sub}</span>
-                        </div>
+              <div>
+                <div className={s.cglab}>Never</div>
+                <div className={s.donts}>
+                  {[
+                    { cls: s.sq, title: "Don't stretch it", sub: "Scale both sides together, always", busy: false },
+                    { cls: s.rc, title: "Don't recolour it", sub: "The brand colours. Nothing else.", busy: false },
+                    { cls: s.sh, title: "Don't add effects", sub: "No shadows, glows, bevels or outlines", busy: false },
+                    { cls: "", title: "Don't fight the background", sub: "Busy photo? Use the reversed file on a solid block.", busy: true },
+                  ].map((d) => (
+                    <div key={d.title} className={s.dont}>
+                      <div className={`${s.dstage} ${d.busy ? s.busy : ""}`}>
+                        <span className={s.x}><Icon name="close" size={9} /></span>
+                        <Mark url={heroLogo?.file_url ?? null} className={d.cls || undefined} />
                       </div>
-                    ))}
-                  </div>
+                      <div className={s.cap}>
+                        {d.title}
+                        <span>{d.sub}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </section>
-          )}
+            </div>
+          </section>
 
           {/* ══════════ 7 · THE GUIDELINES PDF ══════════ */}
           {visual?.guideline_url && (

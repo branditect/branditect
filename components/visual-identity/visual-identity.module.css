@@ -122,15 +122,24 @@
   border-radius: theme('borderRadius.card'); overflow: hidden; background: #fff; text-align: left; position: relative; }
 .swatch:hover { border-color: theme('colors.accent.line'); }
 .swatch:focus-visible { border-color: theme('colors.accent.DEFAULT'); box-shadow: 0 0 0 3px theme('colors.tint.1'); }
-.chip { height: 70px; position: relative; }
+/* `display` is not optional here. The chip is a <span>, and width and height
+ * do not apply to an inline box — it collapsed to a zero-width sliver the
+ * height of a line box and painted the brand's colour onto nothing. Declared in
+ * the CSS rather than swapped in the JSX so it holds whichever element is used.
+ * The reference used a <div>, which is block by default, so the omission never
+ * showed there. */
+.chip { display: block; height: 70px; position: relative; }
 .cta { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity .12s;
   background: rgba(0, 0, 0, .32); color: #fff; font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: .4px; }
 .swatch:hover .cta, .swatch:focus-visible .cta { opacity: 1; }
-.meta { padding: 9px 11px 10px; }
-.nm { font-size: theme('fontSize.2xs[0]'); font-weight: 800; }
-.hx { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.muted.2'); margin-top: 2px;
-  font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.roleT { font-size: 9px; font-weight: 600; color: theme('colors.faint.DEFAULT'); margin-top: 5px; line-height: 1.35; }
+/* Same defect, same swatch: these are spans, so without a display they stack
+ * on one line and their margin-top is ignored. The name, the hex and the role
+ * ran together as one string. */
+.meta { display: block; padding: 9px 11px 10px; }
+.nm { display: block; font-size: theme('fontSize.2xs[0]'); font-weight: 800; }
+.hx { display: block; font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.muted.2');
+  margin-top: 2px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roleT { display: block; font-size: 9px; font-weight: 600; color: theme('colors.faint.DEFAULT'); margin-top: 5px; line-height: 1.35; }
 /* The badge is the point: it is the difference between a colour you can set
  * text in and one you can only fill a shape with. */
 .ok { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 800; border-radius: 4px;
@@ -236,6 +245,22 @@
 
 .emptyNote { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.muted.2');
   background: theme('colors.tile.DEFAULT'); border-radius: theme('borderRadius.card'); padding: 14px 16px; }
+
+/* A missing section is a page that gives no hint anything is missing. Every
+ * section says what it is for and how to fill it. */
+.empty { border: 1px dashed theme('colors.rule.2'); border-radius: theme('borderRadius.card');
+  padding: 22px 24px; background: theme('colors.tile.DEFAULT'); }
+.empty h3 { font-size: theme('fontSize.h3[0]'); font-weight: 800; letter-spacing: -.2px; }
+.empty p { font-size: theme('fontSize.sm[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT');
+  margin-top: 6px; line-height: 1.55; max-width: 60ch; }
+.emptyBtn { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+  border-radius: theme('borderRadius.tile'); background: theme('backgroundImage.grad-mark'); color: #fff;
+  padding: 10px 18px; font-size: theme('fontSize.sm[0]'); font-weight: 700; filter: theme('dropShadow.btn'); }
+
+/* Stands in for the real mark in the rules section when nothing is uploaded. */
+.placeholderMark { display: grid; place-items: center; width: 104px; height: 30px;
+  border-radius: 7px; background: theme('colors.rule.2'); color: theme('colors.faint.DEFAULT');
+  font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
 @media (max-width: 1180px) {
   .use, .logos { grid-template-columns: repeat(2, 1fr); }

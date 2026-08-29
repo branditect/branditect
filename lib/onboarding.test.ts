@@ -148,3 +148,106 @@ describe("a failing write", () => {
     assert.ok(!seen.includes("error"));
   });
 });
+
+/**
+ * spec/leave-the-questionnaire.md criterion 3.
+ *
+ * "Text typed immediately before clicking it is present in the database —
+ * asserted by a test that types, clicks within the debounce window, and reads
+ * the row back."
+ *
+ * This is the one failure mode that loses someone's work silently: they type a
+ * sentence, click Finish later 40ms later, and the 600ms debounce is still
+ * counting when the route changes. The write function stands in for the row —
+ * whatever reaches it is what reaches the database.
+ */
+describe("Finish later inside the debounce window", () => {
+  /** What StartShell does: await flush(), then navigate. */
+  async function finishLater(writer: { flush: () => Promise<unknown> }) {
+    await writer.flush();
+    return "/home";
+  }
+
+  it("writes the last thing typed, with no wait at all", async () => {
+    const { OnboardingWriter, DEBOUNCE_MS } = await import("./onboarding-store.ts");
+    const written: OnboardingState[] = [];
+    const w = new OnboardingWriter("brand-x", "user-1", () => {},
+      async (state) => { written.push(state); return { ok: true }; });
+
+    const typed = "The moment I decided to leave.";
+    w.queue({ ...EMPTY_ONBOARDING, answers: { 9: typed } });
+
+    // Not one tick of the debounce has elapsed.
+    assert.deepEqual(written, [], "a write happened before flush was called");
+
+    const to = await finishLater(w);
+    w.dispose();
+
+    assert.equal(to, "/home");
+    assert.equal(written.length, 1, "flush did not write");
+    assert.equal(written[0].answers[9], typed);
+    assert.ok(DEBOUNCE_MS >= 600, `the window this guards is ${DEBOUNCE_MS}ms`);
+  });
+
+  it("writes the latest keystroke, not the first", async () => {
+    const { OnboardingWriter } = await import("./onboarding-store.ts");
+    const written: OnboardingState[] = [];
+    const w = new OnboardingWriter("brand-x", null, () => {},
+      async (state) => { written.push(state); return { ok: true }; });
+
+    // Typing is one queue() per character in practice; only the last must land.
+    for (const text of ["T", "The", "The mom", "The moment."]) {
+      w.queue({ ...EMPTY_ONBOARDING, answers: { 9: text } });
+    }
+    await finishLater(w);
+    w.dispose();
+
+    assert.equal(written.length, 1, "the debounce should collapse to one write");
+    assert.equal(written[0].answers[9], "The moment.");
+  });
+
+  it("cancels the pending debounce, so the same edit is not written twice", async () => {
+    const { OnboardingWriter, DEBOUNCE_MS } = await import("./onboarding-store.ts");
+    const written: OnboardingState[] = [];
+    const w = new OnboardingWriter("brand-x", null, () => {},
+      async (state) => { written.push(state); return { ok: true }; });
+
+    w.queue({ ...EMPTY_ONBOARDING, answers: { 9: "once" } });
+    await finishLater(w);
+    // Let the debounce timer fire if it was never cancelled.
+    await new Promise((r) => setTimeout(r, DEBOUNCE_MS + 150));
+    w.dispose();
+
+    assert.equal(written.length, 1, `wrote ${written.length} times`);
+  });
+
+  it("still resolves when there is nothing pending, so leaving is never blocked", async () => {
+    const { OnboardingWriter } = await import("./onboarding-store.ts");
+    let calls = 0;
+    const w = new OnboardingWriter("brand-x", null, () => {},
+      async () => { calls += 1; return { ok: true }; });
+
+    const to = await finishLater(w);
+    w.dispose();
+
+    assert.equal(to, "/home");
+    assert.equal(calls, 0, "flushed a write with nothing to save");
+  });
+
+  /* A failed write must not strand the person on the questionnaire — the
+     answer is kept in the mirror and retried, and they still leave. */
+  it("leaves even when the write fails, keeping the answer for the retry", async () => {
+    const { OnboardingWriter } = await import("./onboarding-store.ts");
+    const seen: string[] = [];
+    const w = new OnboardingWriter("brand-x", null, (s) => seen.push(s.kind),
+      async () => ({ ok: false, error: "network" }));
+
+    w.queue({ ...EMPTY_ONBOARDING, answers: { 9: "typed then offline" } });
+    const to = await finishLater(w);
+    w.dispose();
+
+    assert.equal(to, "/home");
+    assert.ok(seen.includes("error"), seen.join(","));
+    assert.ok(!seen.includes("saved"));
+  });
+});

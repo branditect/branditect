@@ -1,640 +1,660 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useBrand } from '@/lib/useBrand'
+/**
+ * Visual brand identity — rebuilt from branditect-ui/spec/visual-identity.md.
+ *
+ * The five tabs (logos | colors | typography | brandbook | package) are gone.
+ * Tabs made sense when each was a list; they stop making sense when the answer
+ * to "which file do I use" lives in a different tab from the files.
+ *
+ * Renders inside app/(app)/layout.tsx — the sidebar stays, the AI Chat rail
+ * stays, and the 1240px wrap is the space between them.
+ *
+ * Download is the only action on an asset. The kit link in §8 is the one way
+ * anything leaves this system, and it is not built yet, so there is no second
+ * action and no per-asset URL to copy.
+ */
 
-type PDFJSLib = typeof import('pdfjs-dist')
-let pdfjsLib: PDFJSLib | null = null
-async function getPdfjs(): Promise<PDFJSLib> {
-  if (pdfjsLib) return pdfjsLib
-  pdfjsLib = await import('pdfjs-dist')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
-  return pdfjsLib
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useBrand } from "@/lib/useBrand";
+import Icon from "@/components/icon";
+import ChatRail from "@/components/chat-rail";
+import { contrastOnWhite, readableInkOn } from "@/lib/contrast";
+import { SLOTS, USE_CASES, canonicalSlot, formatOf } from "@/lib/logo-slots";
+import s from "@/components/visual-identity/visual-identity.module.css";
+
+/* ------------------------------------------------------------------ */
+/*  Rows. Optional fields are the columns supabase/visual-identity.sql */
+/*  adds — the page works before and after that migration runs.        */
+/* ------------------------------------------------------------------ */
+
+interface LogoRow {
+  id: string | number;
+  slot: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  format?: string | null;
+}
+interface ColorRow {
+  id: string | number;
+  hex: string | null;
+  name: string | null;
+  role?: string | null;
+  grouping?: string | null;
+  css_value?: string | null;
+}
+interface FontRow {
+  id: string | number;
+  name: string | null;
+  role: string | null;
+  google_font_url: string | null;
+  file_url: string | null;
+  weights_in_use?: number[] | null;
+}
+interface TemplateRow {
+  id: string;
+  name: string | null;
+  platform: string | null;
+  url: string | null;
+  thumbnail_url: string | null;
+}
+interface VisualRow {
+  guideline_url: string | null;
+  updated_at: string | null;
+  version?: string | null;
+  assets_updated_at?: string | null;
 }
 
-/* ── Types ──────────────────────────────────────────────────────────────────── */
+const WEIGHT_LADDER = [300, 400, 500, 600, 700, 800];
+const PANGRAM = "Sphinx of black quartz, judge my vow";
 
-interface Logo { id?: number; slot: string; file_url: string; file_name?: string }
-interface BrandColor { id: number; hex: string; name: string }
-interface BrandFont { id?: number; name: string; role?: string; google_font_url?: string }
-interface Page { id: number; page_number: number; file_url: string; file_name?: string; file_type?: string }
-
-/* ── Constants ──────────────────────────────────────────────────────────────── */
-
-const LOGO_SLOTS = [
-  { id: 'primary', label: 'Primary logo',            bg: '#ffffff', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
-  { id: 'dark',    label: 'Dark background version',  bg: '#1a1a1a', textCol: 'rgba(255,255,255,0.35)', border: 'none' },
-  { id: 'icon',    label: 'Icon / mark only',         bg: '#f4f7f9', textCol: '#e5e9eb', border: '1.5px dashed #e5e9eb' },
-  { id: 'white',   label: 'White version',            bg: '#4a4a4a', textCol: 'rgba(255,255,255,0.4)', border: 'none' },
-]
-
-const FONT_SUGGESTIONS = ['DM Sans', 'Inter', 'Plus Jakarta Sans', 'Syne', 'Space Grotesk', 'Manrope', 'Outfit', 'Cormorant Garamond', 'Playfair Display']
-
-type Tab = 'logos' | 'colors' | 'typography' | 'brandbook' | 'package'
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'logos',      label: 'Logos' },
-  { id: 'colors',     label: 'Color palette' },
-  { id: 'typography', label: 'Typography' },
-  { id: 'brandbook',  label: 'Brand guidelines' },
-  { id: 'package',    label: 'Asset package' },
-]
-
-const C = {
-  or: '#a63300', orl: '#fff0e6', payne: '#315A72', sky: '#87C5EA',
-  blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e', bd: '#e5e9eb', bdl: '#e5e9eb',
-  bg: '#f4f7f9',
+/** "INSTAGRAM POST 1:1" → "1:1". No ratio column exists, and a wrong badge is
+ *  worse than none. */
+function ratioOf(name: string | null): string | null {
+  const m = (name ?? "").match(/(\d{1,2}\s*:\s*\d{1,2})/);
+  return m ? m[1].replace(/\s+/g, "") : null;
 }
 
-/* ── Component ──────────────────────────────────────────────────────────────── */
+function familyFor(font: FontRow): string {
+  return `"${(font.name ?? "").replace(/"/g, "")}", system-ui, sans-serif`;
+}
+
+function cssSnippetFor(font: FontRow): string {
+  const family = (font.name ?? "").replace(/"/g, "");
+  if (font.google_font_url) {
+    return `@import url("${font.google_font_url}");\n\nfont-family: "${family}", sans-serif;`;
+  }
+  if (font.file_url) {
+    return `@font-face {\n  font-family: "${family}";\n  src: url("${font.file_url}");\n}\n\nfont-family: "${family}", sans-serif;`;
+  }
+  return `font-family: "${family}", sans-serif;`;
+}
 
 export default function VisualIdentityPage() {
-  const { brandId, brandName, loading: brandLoading } = useBrand()
+  const { brandId, brandName, loading: brandLoading } = useBrand();
 
-  const [tab, setTab] = useState<Tab>('logos')
-  const [logos, setLogos] = useState<Record<string, Logo>>({})
-  const [colors, setColors] = useState<BrandColor[]>([])
-  const [fonts, setFonts] = useState<BrandFont[]>([])
-  const [pages, setPages] = useState<Page[]>([])
-  const [dataLoading, setDataLoading] = useState(true)
-
-  // UI state
-  const [logoUploading, setLogoUploading] = useState<string | null>(null)
-  const [colorExtracting, setColorExtracting] = useState(false)
-  const [addColorOpen, setAddColorOpen] = useState(false)
-  const [newHex, setNewHex] = useState(''); const [newColorName, setNewColorName] = useState('')
-  const [addFontOpen, setAddFontOpen] = useState(false)
-  const [newFontName, setNewFontName] = useState(''); const [newFontRole, setNewFontRole] = useState('body')
-  const [pageUploading, setPageUploading] = useState(false)
-  const [pageProgress, setPageProgress] = useState('')
-  const [packageUrl, setPackageUrl] = useState<string | null>(null)
-  const [packageName, setPackageName] = useState<string | null>(null)
-  const [packageUploading, setPackageUploading] = useState(false)
-  const [toast, setToast] = useState(''); const [toastVisible, setToastVisible] = useState(false)
-  const [curPage, setCurPage] = useState(0)
-
-  // Chat state
-  const [chatMsgs, setChatMsgs] = useState([{ type: 'bot', text: 'Upload your brand guidelines and I can answer questions — colors, logo rules, tone, typography...' }])
-  const [chatInput, setChatInput] = useState('')
-  const [chatLoading, setChatLoading] = useState(false)
-
-  // Refs
-  const colorScreenshotRef = useRef<HTMLInputElement>(null)
-  const pageUploadRef = useRef<HTMLInputElement>(null)
-  const packageUploadRef = useRef<HTMLInputElement>(null)
-  const chatRef = useRef<HTMLDivElement>(null)
-
-  // ── Load data ────────────────────────────────────────────────────────────
+  const [logos, setLogos] = useState<LogoRow[]>([]);
+  const [colors, setColors] = useState<ColorRow[]>([]);
+  const [fonts, setFonts] = useState<FontRow[]>([]);
+  const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [visual, setVisual] = useState<VisualRow | null>(null);
+  const [pageCount, setPageCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (brandLoading || brandId === 'default') return
-    async function load() {
-      const [logosRes, colorsRes, fontsRes, pagesRes] = await Promise.all([
-        supabase.from('brand_logos').select('*').eq('brand_id', brandId),
-        supabase.from('brand_book_colors').select('*').eq('brand_id', brandId).order('created_at'),
-        supabase.from('brand_fonts').select('*').eq('brand_id', brandId),
-        supabase.from('brand_book_pages').select('*').eq('brand_id', brandId).order('page_number'),
-      ])
-      const logoMap: Record<string, Logo> = {}
-      ;(logosRes.data || []).forEach((l: Logo) => { logoMap[l.slot] = l })
-      setLogos(logoMap)
-      setColors(colorsRes.data || [])
-      setFonts(fontsRes.data || [])
-      setPages(pagesRes.data || [])
-      // Load Google Fonts
-      ;(fontsRes.data || []).forEach((f: BrandFont) => {
-        if (f.google_font_url) {
-          const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = f.google_font_url; document.head.appendChild(link)
-        }
-      })
-      setDataLoading(false)
-    }
-    load()
-  }, [brandId, brandLoading])
+    if (brandLoading) return;
+    if (!brandId || brandId === "default") { setLoading(false); return; }
+    let alive = true;
 
-  function showToast(msg: string) { setToast(msg); setToastVisible(true); setTimeout(() => setToastVisible(false), 2600) }
+    (async () => {
+      // `select("*")` is fine here and only here: this route is authenticated
+      // and reads the signed-in brand's own rows. The explicit column allowlist
+      // the spec requires belongs to the unauthenticated /k route.
+      const [l, c, f, t, v, p] = await Promise.all([
+        supabase.from("brand_logos").select("*").eq("brand_id", brandId).order("created_at"),
+        supabase.from("brand_book_colors").select("*").eq("brand_id", brandId).order("created_at"),
+        supabase.from("brand_fonts").select("*").eq("brand_id", brandId).order("created_at"),
+        supabase.from("brand_templates").select("*").eq("brand_id", brandId).order("created_at"),
+        supabase.from("brand_visual").select("*").eq("brand_id", brandId).maybeSingle(),
+        supabase.from("brand_book_pages").select("*", { count: "exact", head: true }).eq("brand_id", brandId),
+      ]);
+      if (!alive) return;
 
-  // ── Logo upload ─────────────────────────────────────────────────────────
+      setLogos((l.data as LogoRow[]) ?? []);
+      setColors((c.data as ColorRow[]) ?? []);
+      setFonts((f.data as FontRow[]) ?? []);
+      setTemplates((t.data as TemplateRow[]) ?? []);
+      setVisual((v.data as VisualRow) ?? null);
+      setPageCount(p.count ?? 0);
+      setLoading(false);
+    })();
 
-  async function uploadLogo(slot: string, files: FileList | null) {
-    if (!files?.[0]) return
-    setLogoUploading(slot)
-    const fd = new FormData(); fd.append('file', files[0]); fd.append('brandId', brandId); fd.append('uploadType', `logo_${slot}`)
-    try {
-      const res = await fetch('/api/brand-assets/upload', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (json.success) { setLogos(p => ({ ...p, [slot]: { slot, file_url: json.url, file_name: files[0].name } })); showToast('Logo uploaded') }
-    } catch { showToast('Upload failed') }
-    setLogoUploading(null)
-  }
+    return () => { alive = false; };
+  }, [brandId, brandLoading]);
 
-  async function deleteLogo(slot: string) {
-    setLogos(p => { const n = { ...p }; delete n[slot]; return n })
-    await fetch('/api/brand-assets/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId, slot }) })
-  }
-
-  // ── Color extract ───────────────────────────────────────────────────────
-
-  async function extractColors(files: FileList | null) {
-    if (!files?.[0]) return
-    setColorExtracting(true)
-    const fd = new FormData(); fd.append('file', files[0]); fd.append('brandId', brandId); fd.append('uploadType', 'color_screenshot'); fd.append('extractColors', 'true')
-    try {
-      const res = await fetch('/api/brand-assets/upload', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (json.colors?.length) {
-        const newOnes = json.colors.filter((c: BrandColor) => !colors.find(e => e.hex.toLowerCase() === c.hex.toLowerCase())).map((c: BrandColor, i: number) => ({ ...c, id: Date.now() + i }))
-        setColors(p => [...p, ...newOnes]); showToast(`${json.colors.length} colors extracted`)
-      } else showToast('No colors found')
-    } catch { showToast('Extraction failed') }
-    setColorExtracting(false)
-  }
-
-  async function addColor() {
-    if (!newHex.trim()) return
-    const hex = newHex.startsWith('#') ? newHex.trim() : '#' + newHex.trim()
-    const name = newColorName.trim() || 'Brand color'
-    setColors(p => [...p, { id: Date.now(), hex, name }]); setNewHex(''); setNewColorName(''); setAddColorOpen(false)
-    await fetch('/api/brand-book/color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId, hex, name }) })
-    showToast('Color added')
-  }
-
-  async function deleteColor(id: number) {
-    setColors(p => p.filter(c => c.id !== id))
-    await fetch('/api/brand-book/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, table: 'brand_book_colors', brandId }) })
-  }
-
-  // ── Font ────────────────────────────────────────────────────────────────
-
-  async function addFont() {
-    if (!newFontName.trim()) return
-    const googleUrl = `https://fonts.googleapis.com/css2?family=${newFontName.replace(/ /g, '+')}:wght@300;400;500;600;700&display=swap`
-    setFonts(p => [...p, { id: Date.now(), name: newFontName.trim(), role: newFontRole, google_font_url: googleUrl }])
-    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = googleUrl; document.head.appendChild(link)
-    setNewFontName(''); setAddFontOpen(false)
-    await fetch('/api/brand-assets/font', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId, name: newFontName.trim(), role: newFontRole, google_font_url: googleUrl }) }).catch(() => {})
-    showToast('Font added')
-  }
-
-  // ── Pages upload — PDFs converted to images client-side ──────────────
-
-  async function uploadPages(files: FileList | null) {
-    if (!files?.length) return
-    setPageUploading(true)
-
-    // Expand PDFs into individual page images
-    const allFiles: File[] = []
-    const sourcePdfs: File[] = []
-    for (const f of Array.from(files)) {
-      if (f.type === 'application/pdf') {
-        sourcePdfs.push(f)
-        try {
-          setPageProgress('Processing PDF...')
-          const pdfjs = await getPdfjs()
-          const arrayBuffer = await f.arrayBuffer()
-          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
-          for (let i = 1; i <= pdf.numPages; i++) {
-            setPageProgress(`Converting page ${i} / ${pdf.numPages}...`)
-            const page = await pdf.getPage(i)
-            const scale = 2
-            const viewport = page.getViewport({ scale })
-            const canvas = document.createElement('canvas')
-            canvas.width = viewport.width
-            canvas.height = viewport.height
-            const ctx = canvas.getContext('2d')!
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (page as any).render({ canvasContext: ctx, viewport }).promise
-            const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'))
-            allFiles.push(new File([blob], `${f.name}-page-${i}.png`, { type: 'image/png' }))
-          }
-        } catch {
-          showToast('Failed to process PDF: ' + f.name)
-        }
-      } else {
-        allFiles.push(f)
+  /* The specimen must render in the actual font. A specimen set in the wrong
+     typeface is worse than no specimen. */
+  useEffect(() => {
+    const added: HTMLElement[] = [];
+    for (const font of fonts) {
+      if (font.google_font_url) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = font.google_font_url;
+        document.head.appendChild(link);
+        added.push(link);
+      } else if (font.file_url && font.name) {
+        const style = document.createElement("style");
+        style.textContent = `@font-face{font-family:"${font.name.replace(/"/g, "")}";src:url("${font.file_url}");font-display:swap;}`;
+        document.head.appendChild(style);
+        added.push(style);
       }
     }
+    return () => { added.forEach((el) => el.remove()); };
+  }, [fonts]);
 
-    // Upload each page image
-    let uploaded = 0
-    for (let i = 0; i < allFiles.length; i++) {
-      setPageProgress(`Uploading page ${i + 1} / ${allFiles.length}...`)
-      const f = allFiles[i]
-      const fd = new FormData(); fd.append('file', f); fd.append('brandId', brandId); fd.append('uploadType', 'page'); fd.append('pageNumber', String(pages.length + i + 1))
-      try {
-        const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
-        const json = await res.json()
-        if (json.success) {
-          uploaded++
-          setPages(p => [...p, { id: json.id, page_number: pages.length + i + 1, file_url: json.url, file_name: f.name, file_type: 'image' }])
-        }
-      } catch {}
+  const flash = useCallback((message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 1900);
+  }, []);
+
+  const copy = useCallback((value: string, message: string) => {
+    navigator.clipboard?.writeText(value).then(
+      () => flash(message),
+      () => flash("Couldn't copy — select it instead"),
+    );
+  }, [flash]);
+
+  /** Files are on public storage URLs; `download` asks the browser to save. */
+  const download = useCallback((url: string | null, fileName: string | null) => {
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName ?? "";
+    a.rel = "noopener";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, []);
+
+  /* Grouped by slot. A logo with SVG + PNG is two rows sharing a slot. */
+  const bySlot = useMemo(() => {
+    const map = new Map<string, LogoRow[]>();
+    for (const row of logos) {
+      const slot = canonicalSlot(row.slot);
+      if (!slot || !row.file_url) continue;
+      map.set(slot, [...(map.get(slot) ?? []), row]);
     }
+    return map;
+  }, [logos]);
 
-    if (uploaded > 0) {
-      // Jump to first newly uploaded page
-      setCurPage(pages.length)
-      showToast(`${uploaded} page${uploaded > 1 ? 's' : ''} uploaded`)
-    }
+  const otherFiles = useMemo(
+    () => logos.filter((r) => r.file_url && !canonicalSlot(r.slot)),
+    [logos],
+  );
 
-    // Uploading pages only stored pictures. Indexing is what makes the brain
-    // able to answer from the guideline, so it runs as part of the upload
-    // rather than behind a separate button nobody presses.
-    await indexGuideline(sourcePdfs, allFiles)
+  const heroLogo = useMemo(
+    () => bySlot.get("primary")?.[0] ?? bySlot.get("icon")?.[0] ?? bySlot.get("dark")?.[0] ?? null,
+    [bySlot],
+  );
 
-    setPageUploading(false)
-    setPageProgress('')
+  const core = colors.filter((c) => (c.grouping ?? "core") !== "gradient");
+  const gradients = colors.filter((c) => (c.grouping ?? "core") === "gradient");
+
+  const fileCount = logos.filter((l) => l.file_url).length;
+  const version = visual?.version ?? "v1.0";
+  const updated = visual?.assets_updated_at ?? visual?.updated_at ?? null;
+
+  if (!brandLoading && (!brandId || brandId === "default")) {
+    return (
+      <div className={s.wrap}>
+        <div className={s.sec}>
+          <h2 style={{ fontSize: 19, fontWeight: 800 }}>No brand yet.</h2>
+          <p style={{ marginTop: 8 }} className={s.emptyNote}>
+            Your logos, colours and typefaces appear here once a brand is set up.
+          </p>
+        </div>
+      </div>
+    );
   }
-
-  async function indexGuideline(sourcePdfs: File[], pageImages: File[]) {
-    try {
-      setPageProgress('Reading the guideline...')
-      let body: Record<string, unknown>
-
-      if (sourcePdfs.length) {
-        // Send the PDF itself. Claude reads PDFs natively, and one document
-        // block is far smaller than forty page PNGs — which would blow the
-        // 32MB request ceiling on any real guideline.
-        const pdf = sourcePdfs[0]
-        const safe = pdf.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-        const path = `${brandId}/guideline_${Date.now()}_${safe}`
-        const { error } = await supabase.storage
-          .from('brand-documents')
-          .upload(path, pdf, { contentType: 'application/pdf', upsert: true })
-        if (error) throw new Error(error.message)
-        body = { brandId, storagePath: path, sourceName: pdf.name }
-      } else {
-        // Image-only guideline. Cap the page count — past this the request
-        // exceeds the API ceiling and fails after a long wait.
-        const MAX_PAGES = 20
-        const capped = pageImages.slice(0, MAX_PAGES)
-        if (!capped.length) return
-        if (pageImages.length > MAX_PAGES) {
-          showToast(`Indexing the first ${MAX_PAGES} of ${pageImages.length} pages`)
-        }
-        const images = await Promise.all(
-          capped.map(
-            f =>
-              new Promise<{ data: string; type: string }>((resolve, reject) => {
-                const r = new FileReader()
-                r.onload = e => {
-                  const result = e.target?.result as string
-                  resolve({ data: result.split(',')[1], type: f.type || 'image/png' })
-                }
-                r.onerror = () => reject(new Error(`Could not read ${f.name}`))
-                r.readAsDataURL(f)
-              })
-          )
-        )
-        body = { brandId, images, sourceName: capped[0].name }
-      }
-
-      const res = await fetch('/api/brand-guideline/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const json = await res.json()
-
-      if (!res.ok || json.error) {
-        showToast(`Pages saved, but indexing failed: ${json.error ?? res.status}`)
-        return
-      }
-
-      const found = Array.isArray(json.colors) ? json.colors.length : 0
-      showToast(found ? `Guideline indexed — ${found} colours read` : 'Guideline indexed')
-    } catch (err) {
-      showToast(`Pages saved, but indexing failed: ${err instanceof Error ? err.message : 'unknown error'}`)
-    }
-  }
-
-  async function deletePage(id: number) {
-    setPages(p => p.filter(pg => pg.id !== id))
-    await fetch('/api/brand-book/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, table: 'brand_book_pages', brandId }) })
-  }
-
-  // ── Package upload ──────────────────────────────────────────────────────
-
-  async function uploadPackage(files: FileList | null) {
-    if (!files?.[0]) return
-    setPackageUploading(true)
-    const fd = new FormData(); fd.append('file', files[0]); fd.append('brandId', brandId); fd.append('uploadType', 'package')
-    try {
-      const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
-      const json = await res.json()
-      if (json.success) { setPackageUrl(json.url); setPackageName(files[0].name); showToast('Package uploaded') }
-    } catch { showToast('Upload failed') }
-    setPackageUploading(false)
-  }
-
-  // ── AI Chat ─────────────────────────────────────────────────────────────
-
-  async function sendChat() {
-    if (!chatInput.trim() || chatLoading) return
-    const msg = chatInput.trim(); setChatInput('')
-    setChatMsgs(p => [...p, { type: 'user', text: msg }]); setChatLoading(true)
-    try {
-      const res = await fetch('/api/brand-book/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, pageUrls: pages.filter(p => p.file_type !== 'pdf').slice(0, 8).map(p => p.file_url) }),
-      })
-      const data = await res.json()
-      const reply = data.reply || ''
-      if (reply) {
-        setChatMsgs(p => [...p, { type: 'bot', text: reply }])
-        const hexMatches = reply.match(/#[0-9a-fA-F]{6}/g)
-        if (hexMatches) {
-          const newOnes = hexMatches.filter((h: string) => !colors.find(c => c.hex.toLowerCase() === h.toLowerCase()))
-          if (newOnes.length) {
-            setColors(p => [...p, ...newOnes.map((hex: string, i: number) => ({ id: Date.now() + i, hex, name: 'Extracted' }))])
-            for (const hex of newOnes) { fetch('/api/brand-book/color', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandId, hex, name: 'Extracted' }) }) }
-          }
-        }
-      } else { setChatMsgs(p => [...p, { type: 'bot', text: 'Upload brand guideline pages so I can read them.' }]) }
-    } catch { setChatMsgs(p => [...p, { type: 'bot', text: 'Error — please try again.' }]) }
-    setChatLoading(false)
-    setTimeout(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight }, 50)
-  }
-
-  // ── Loading ─────────────────────────────────────────────────────────────
-
-  if (brandLoading || dataLoading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: C.mu, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>Loading visual identity...</div>
-  }
-
-  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: '100%', fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="flex items-start gap-3 stack:flex-col">
+      <div className="min-w-0 flex-1">
+        <div className={s.wrap}>
+          {/* ══════════ HERO ══════════ */}
+          <div className={s.hero}>
+            <span className={s.rings} aria-hidden="true"><i /><i /><i /></span>
+            <div>
+              <span className={s.badge}>
+                <Icon name="spark" size={13} />
+                Brand · Visual identity
+              </span>
+              <h1>Visual brand identity</h1>
+              <p className={s.lede}>
+                Every logo, colour and typeface, in the versions that are actually current.{" "}
+                <b>Take what you need — you don&rsquo;t have to ask anyone.</b>
+              </p>
+            </div>
+            <div className={s.glass}>
+              <div className={s.stats}>
+                <div>
+                  <div className={s.statN}>{loading ? "—" : fileCount}</div>
+                  <div className={s.statK}>Files</div>
+                </div>
+                <div>
+                  <div className={s.statN}>{version}</div>
+                  <div className={s.statK}>Current</div>
+                </div>
+              </div>
+              <div className={s.vrow}>
+                <i />
+                {updated
+                  ? `Updated ${new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · everything here is the live version`
+                  : "Everything here is the live version"}
+              </div>
+            </div>
+          </div>
 
-      {/* Header */}
-      <div style={{ padding: '32px 48px 0', borderBottom: `0.5px solid ${C.bdl}`, background: 'white' }}>
-        <div style={{ marginBottom: 20 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: C.blk, margin: '0 0 6px' }}>{brandName} — Visual Identity</h1>
-          <p style={{ fontSize: 14, color: C.sec, margin: 0, lineHeight: 1.6 }}>Logos, colors, typography, brand guidelines and asset package — all in one place.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 0 }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '10px 20px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === t.id ? 600 : 500, color: tab === t.id ? C.or : C.mu, cursor: 'pointer', fontFamily: 'inherit', borderBottom: tab === t.id ? `2px solid ${C.or}` : '2px solid transparent', transition: 'all 0.13s' }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: '36px 48px', maxWidth: 940 }}>
-
-        {/* ── LOGOS ── */}
-        {tab === 'logos' && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 6 }}>Logo uploads</div>
-            <p style={{ fontSize: 14, color: C.sec, lineHeight: 1.7, marginBottom: 24 }}>Upload your logo in all variants. PNG, SVG, PDF or EPS.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {LOGO_SLOTS.map(slot => {
-                const uploaded = logos[slot.id]
-                const isUploading = logoUploading === slot.id
-                return (
-                  <div key={slot.id}>
-                    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.mu, marginBottom: 7 }}>{slot.label}</div>
-                    <label htmlFor={`ls-${slot.id}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, borderRadius: 10, background: slot.bg, border: slot.border, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-                      {uploaded ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={uploaded.file_url} alt={slot.label} style={{ maxHeight: '65%', maxWidth: '75%', objectFit: 'contain' }} />
-                          <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 4 }}>
-                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 3, background: 'rgba(0,0,0,0.4)', color: 'white' }}>Replace</span>
-                            <span onClick={e => { e.preventDefault(); deleteLogo(slot.id) }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 3, background: 'rgba(0,0,0,0.4)', color: 'white', cursor: 'pointer' }}>Remove</span>
-                          </div>
-                        </>
-                      ) : isUploading ? (
-                        <span style={{ fontSize: 12, color: slot.textCol }}>Uploading...</span>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3v14M6 8l6-5 6 5M2 20h20" stroke={slot.textCol} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          <span style={{ fontSize: 11, color: slot.textCol }}>PNG, SVG or PDF</span>
-                        </div>
-                      )}
-                      <input id={`ls-${slot.id}`} type="file" accept="image/*,.svg,.pdf,.eps" style={{ display: 'none' }} onChange={e => uploadLogo(slot.id, e.target.files)} />
-                    </label>
-                    {uploaded && (
-                      <div style={{ marginTop: 7, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 11, color: C.mu, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{uploaded.file_name}</span>
-                        <a href={uploaded.file_url} download={uploaded.file_name} style={{ fontSize: 11, color: C.or, textDecoration: 'none' }}>Download</a>
+          {/* ══════════ 1 · WHICH ONE DO I USE ══════════ */}
+          {/* A card whose slot has no file is not rendered — never a card that
+              answers a question with nothing. */}
+          {USE_CASES.some((u) => bySlot.has(u.slot)) && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <div className={s.eyebrow}>Start here</div>
+                  <h2 style={{ marginTop: 5 }}>Which one do I use?</h2>
+                  <p>
+                    Files named &ldquo;primary&rdquo; and &ldquo;symbol only&rdquo; are a filing
+                    cabinet. This is the same set, sorted by the question people actually arrive with.
+                  </p>
+                </div>
+              </div>
+              <div className={s.use}>
+                {USE_CASES.filter((u) => bySlot.has(u.slot)).map((u) => {
+                  const files = bySlot.get(u.slot)!;
+                  const fmts = files.map((f) => formatOf(f.file_name, f.format)).filter(Boolean);
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className={`${s.uc} ${s[u.tone]}`}
+                      onClick={() => download(files[0].file_url, files[0].file_name)}
+                    >
+                      <div className={s.ucq}>{u.question}</div>
+                      <div className={s.ucans}>
+                        <div className={s.ucfile}>{u.answer}</div>
+                        <div className={s.ucfmt}>{fmts.length ? fmts.join(" · ") : u.note}</div>
+                        <span className={s.go}>Download<Icon name="upload" size={12} /></span>
                       </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── COLORS ── */}
-        {tab === 'colors' && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 6 }}>Color palette</div>
-            <p style={{ fontSize: 14, color: C.sec, lineHeight: 1.7, marginBottom: 20 }}>Drop a screenshot of your brand colors to auto-extract, or add manually.</p>
-            <div onClick={() => colorScreenshotRef.current?.click()} style={{ border: `1.5px dashed ${C.bdl}`, borderRadius: 10, padding: 22, textAlign: 'center', cursor: 'pointer', background: C.bg, marginBottom: 28 }}>
-              {colorExtracting ? <div style={{ fontSize: 13, color: C.mu }}>Extracting colors with AI...</div> : <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu }}>Drop screenshot to extract colors</div>}
-              <input ref={colorScreenshotRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => extractColors(e.target.files)} />
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
-              {colors.map(c => (
-                <div key={c.id} style={{ width: 110 }}>
-                  <div onClick={() => { navigator.clipboard.writeText(c.hex).catch(() => {}); showToast(`Copied ${c.hex}`) }} style={{ width: 110, height: 110, borderRadius: 12, background: c.hex, border: '0.5px solid rgba(0,0,0,0.06)', cursor: 'pointer', position: 'relative' }}>
-                    <button onClick={e => { e.stopPropagation(); deleteColor(c.id) }} style={{ position: 'absolute', top: 5, right: 5, width: 17, height: 17, borderRadius: '50%', background: 'rgba(0,0,0,0.28)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: C.blk, fontFamily: 'monospace', marginTop: 7 }}>{c.name}</div>
-                  <div style={{ fontSize: 10, color: C.mu, fontFamily: 'monospace' }}>{c.hex}</div>
-                </div>
-              ))}
-              <div onClick={() => setAddColorOpen(p => !p)} style={{ width: 110, height: 110, borderRadius: 12, border: `1.5px dashed ${C.bdl}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 24, color: C.bd }}>+</div>
-            </div>
-            {addColorOpen && (
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', padding: '14px 18px', borderRadius: 10, background: C.bg, border: `0.5px solid ${C.bdl}` }}>
-                <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Hex</div><input value={newHex} onChange={e => setNewHex(e.target.value)} onKeyDown={e => e.key === 'Enter' && addColor()} placeholder="#a63300" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }} /></div>
-                <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Name</div><input value={newColorName} onChange={e => setNewColorName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addColor()} placeholder="Brand Orange" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} /></div>
-                <button onClick={addColor} style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: C.or, color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Add</button>
-                <button onClick={() => setAddColorOpen(false)} style={{ padding: '7px 12px', borderRadius: 6, border: `0.5px solid ${C.bdl}`, background: 'transparent', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        )}
+            </section>
+          )}
 
-        {/* ── TYPOGRAPHY ── */}
-        {tab === 'typography' && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 6 }}>Typography</div>
-            <p style={{ fontSize: 14, color: C.sec, lineHeight: 1.7, marginBottom: 24 }}>Add your brand fonts by Google Fonts name.</p>
-            {fonts.map(font => (
-              <div key={font.id} style={{ border: `0.5px solid ${C.bdl}`, borderRadius: 10, padding: '16px 20px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 8, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 24, fontFamily: `'${font.name}', sans-serif`, color: C.blk, lineHeight: 1 }}>Aa</span>
+          {/* ══════════ 2 · LOGOS ══════════ */}
+          {bySlot.size > 0 && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <h2>Logos</h2>
+                  <p>
+                    Each plate is fixed to its slot, so you can see whether a reversed file actually
+                    works before you use it. Download the one you need.
+                  </p>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: C.blk, marginBottom: 2 }}>{font.name}</div>
-                  <div style={{ fontSize: 11, color: C.mu, marginBottom: 7 }}>{font.role === 'heading' ? 'Heading' : font.role === 'body' ? 'Body copy' : 'Accent'} · Google Fonts</div>
-                  <div style={{ fontSize: 13, color: C.sec, fontFamily: `'${font.name}', sans-serif` }}>The quick brown fox jumps over the lazy dog</div>
-                </div>
-                <button onClick={() => setFonts(p => p.filter(f => f.id !== font.id))} style={{ fontSize: 11, padding: '5px 11px', borderRadius: 5, border: `0.5px solid ${C.bdl}`, background: 'transparent', color: C.mu, cursor: 'pointer', fontFamily: 'inherit' }}>Remove</button>
               </div>
-            ))}
-            {addFontOpen ? (
-              <div style={{ border: `0.5px solid ${C.bdl}`, borderRadius: 10, padding: '14px 18px', background: C.bg }}>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                  <div style={{ flex: 2 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Font name</div><input value={newFontName} onChange={e => setNewFontName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addFont()} placeholder="e.g. DM Sans" list="fl" style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} /><datalist id="fl">{FONT_SUGGESTIONS.map(f => <option key={f} value={f} />)}</datalist></div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 11, color: C.mu, marginBottom: 5 }}>Role</div><select value={newFontRole} onChange={e => setNewFontRole(e.target.value)} style={{ width: '100%', padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 6, fontSize: 12, fontFamily: 'inherit', outline: 'none', background: 'white', boxSizing: 'border-box' }}><option value="heading">Heading</option><option value="body">Body</option><option value="accent">Accent</option></select></div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}><button onClick={addFont} style={{ padding: '7px 18px', borderRadius: 6, border: 'none', background: C.or, color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Add font</button><button onClick={() => setAddFontOpen(false)} style={{ padding: '7px 12px', borderRadius: 6, border: `0.5px solid ${C.bdl}`, background: 'transparent', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button></div>
-              </div>
-            ) : (
-              <button onClick={() => setAddFontOpen(true)} style={{ padding: '9px 0', width: 140, borderRadius: 8, border: `1.5px dashed ${C.bdl}`, background: 'transparent', color: C.mu, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add font</button>
-            )}
-          </div>
-        )}
-
-        {/* ── BRAND GUIDELINES ── */}
-        {tab === 'brandbook' && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 6 }}>Brand guidelines</div>
-            <p style={{ fontSize: 14, color: C.sec, lineHeight: 1.7, marginBottom: 20 }}>Upload your brand book as images or PDF. The AI reads all pages and answers questions.</p>
-
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
-              <button onClick={() => pageUploadRef.current?.click()} style={{ padding: '8px 18px', borderRadius: 8, border: `0.5px solid ${C.bdl}`, background: 'white', color: C.sec, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {pageUploading ? (pageProgress || 'Processing...') : 'Upload pages'}
-              </button>
-              <span style={{ fontSize: 11, color: C.mu }}>PNG, JPG or PDF</span>
-              <input ref={pageUploadRef} type="file" accept="image/*,.pdf,application/pdf" multiple style={{ display: 'none' }} onChange={e => uploadPages(e.target.files)} />
-            </div>
-
-            {pages.length > 0 ? (() => {
-              const safeIdx = Math.min(curPage, pages.length - 1)
-              const activePage = pages[safeIdx]
-              return (
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ background: '#1a1a1a', borderRadius: 10, overflow: 'hidden', marginBottom: 8, position: 'relative', aspectRatio: '16/9' }}>
-                  {activePage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={activePage.file_url} alt={`Page ${safeIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-                  ) : null}
-                  <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 11, padding: '3px 10px', borderRadius: 12 }}>{safeIdx + 1} / {pages.length}</div>
-                  {safeIdx > 0 && <button onClick={() => setCurPage(p => p - 1)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&larr;</button>}
-                  {safeIdx < pages.length - 1 && <button onClick={() => setCurPage(p => p + 1)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&rarr;</button>}
-                </div>
-                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
-                  {pages.map((pg, i) => (
-                    <div key={pg.id} onClick={() => setCurPage(i)} style={{ width: 80, height: 45, borderRadius: 5, overflow: 'hidden', flexShrink: 0, cursor: 'pointer', border: i === safeIdx ? `2px solid ${C.or}` : '1.5px solid transparent', background: '#1a1a1a', position: 'relative' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={pg.file_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      <button onClick={e => { e.stopPropagation(); deletePage(pg.id) }} style={{ position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+              <div className={s.logos}>
+                {SLOTS.filter((def) => bySlot.has(def.slot)).map((def) => {
+                  const files = bySlot.get(def.slot)!;
+                  const first = files[0];
+                  return (
+                    <div key={def.slot} className={s.lc}>
+                      <div className={s.lcTop}>
+                        <div className={s.lcT}>{def.label}</div>
+                        <div className={s.lcU}>{def.usage}</div>
+                      </div>
+                      <div className={`${s.plate} ${s[def.plate]}`}>
+                        <span className={s.tag}>{def.tag}</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={first.file_url!} alt={`${def.label} for ${brandName}`} />
+                      </div>
+                      <div className={s.lcBot}>
+                        <div className={s.fmts}>
+                          {files.map((f) => {
+                            const fmt = formatOf(f.file_name, f.format);
+                            return fmt ? <span key={String(f.id)} className={s.fmtChip}>{fmt}</span> : null;
+                          })}
+                        </div>
+                        <div className={s.acts}>
+                          <button
+                            type="button"
+                            className={`${s.act} ${s.prime}`}
+                            onClick={() => download(first.file_url, first.file_name)}
+                          >
+                            <Icon name="upload" size={12} />
+                            Download
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  ))}
+                  );
+                })}
+              </div>
+
+              {otherFiles.length > 0 && (
+                <>
+                  <div className={s.cglab} style={{ marginTop: 18 }}>All files</div>
+                  <div className={s.fmts}>
+                    {otherFiles.map((f) => (
+                      <button
+                        key={String(f.id)}
+                        type="button"
+                        className={s.act}
+                        style={{ width: "auto", padding: "7px 12px" }}
+                        onClick={() => download(f.file_url, f.file_name)}
+                      >
+                        <Icon name="upload" size={12} />
+                        {f.file_name ?? f.slot ?? "File"}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+
+          {/* ══════════ 3 · COLOUR ══════════ */}
+          {colors.length > 0 && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <h2>Colour</h2>
+                  <p>
+                    Every swatch copies. The contrast badge is measured against white at render, so
+                    it cannot go stale — it is the difference between a colour you can set text in
+                    and one you can only fill a shape with.
+                  </p>
                 </div>
               </div>
-              )
-            })() : (
-              <div onClick={() => pageUploadRef.current?.click()} style={{ border: `1.5px dashed ${C.bdl}`, borderRadius: 10, aspectRatio: '16/9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', background: C.bg, marginBottom: 24 }}>
-                <div style={{ fontSize: 13, color: C.mu }}>Upload your brand guidelines</div>
-                <div style={{ fontSize: 11, color: C.bd }}>PNG, JPG or PDF</div>
-              </div>
-            )}
 
-            {/* AI Chat */}
-            <div style={{ border: `0.5px solid ${C.bdl}`, borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ padding: '10px 14px', background: C.bg, borderBottom: `0.5px solid ${C.bdl}`, display: 'flex', alignItems: 'center', gap: 7 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e' }} />
-                <span style={{ fontSize: 12, fontWeight: 500, color: C.blk }}>Ask about the brand guidelines</span>
-              </div>
-              <div ref={chatRef} style={{ maxHeight: 160, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {chatMsgs.map((m, i) => (
-                  <div key={i} style={{ fontSize: 12, lineHeight: 1.55, padding: '7px 10px', maxWidth: '88%', background: m.type === 'bot' ? C.bg : C.payne, color: m.type === 'bot' ? C.blk : 'white', alignSelf: m.type === 'user' ? 'flex-end' : 'flex-start', borderRadius: m.type === 'bot' ? '8px 8px 8px 2px' : '8px 8px 2px 8px' }}>{m.text}</div>
-                ))}
-                {chatLoading && <div style={{ fontSize: 12, color: C.mu, fontStyle: 'italic' }}>Reading the brand guidelines...</div>}
-              </div>
-              <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: `0.5px solid ${C.bdl}` }}>
-                <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="What colors does this brand use?" style={{ flex: 1, fontSize: 12, padding: '7px 10px', border: `0.5px solid ${C.bdl}`, borderRadius: 7, outline: 'none', fontFamily: 'inherit', color: C.blk, boxSizing: 'border-box' }} />
-                <button onClick={sendChat} disabled={chatLoading} style={{ padding: '7px 16px', background: C.payne, color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', opacity: chatLoading ? 0.4 : 1 }}>Ask</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── ASSET PACKAGE ── */}
-        {tab === 'package' && (
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 6 }}>Brand asset package</div>
-            <p style={{ fontSize: 14, color: C.sec, lineHeight: 1.7, marginBottom: 20 }}>Upload a zipped brand package for team sharing, or download individual assets.</p>
-
-            {packageUrl ? (
-              <div style={{ border: `0.5px solid ${C.bdl}`, borderRadius: 10, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28, background: 'white' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: C.blk }}>{packageName}</div>
-                  <div style={{ fontSize: 11, color: C.mu, marginTop: 2 }}>Ready to share with your team</div>
-                </div>
-                <a href={packageUrl} download={packageName} style={{ fontSize: 12, padding: '6px 16px', borderRadius: 7, background: C.payne, color: 'white', textDecoration: 'none', fontWeight: 500 }}>Download</a>
-                <button onClick={() => packageUploadRef.current?.click()} style={{ fontSize: 12, padding: '6px 14px', borderRadius: 7, border: `0.5px solid ${C.bdl}`, background: 'transparent', color: C.mu, cursor: 'pointer', fontFamily: 'inherit' }}>Replace</button>
-              </div>
-            ) : (
-              <div onClick={() => packageUploadRef.current?.click()} style={{ border: `1.5px dashed ${C.bdl}`, borderRadius: 10, padding: '36px 24px', textAlign: 'center', cursor: packageUploading ? 'wait' : 'pointer', background: C.bg, marginBottom: 28 }}>
-                {packageUploading ? <div style={{ fontSize: 13, color: C.mu }}>Uploading...</div> : (
-                  <>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: C.sec, marginBottom: 5 }}>Upload brand package ZIP</div>
-                    <div style={{ fontSize: 12, color: C.mu }}>ZIP file containing logos, fonts, guidelines</div>
-                  </>
-                )}
-              </div>
-            )}
-            <input ref={packageUploadRef} type="file" accept=".zip,.rar,.7z" style={{ display: 'none' }} onChange={e => uploadPackage(e.target.files)} />
-
-            {/* Assets summary */}
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 12 }}>Assets in this library</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
               {[
-                { label: 'Logos', count: Object.keys(logos).length, ready: Object.keys(logos).length > 0 },
-                { label: 'Colors', count: colors.length, ready: colors.length > 0 },
-                { label: 'Fonts', count: fonts.length, ready: fonts.length > 0 },
-                { label: 'Brand book', count: pages.length, ready: pages.length > 0 },
-              ].map(item => (
-                <div key={item.label} style={{ border: `0.5px solid ${C.bdl}`, borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 6, background: item.ready ? '#EBF5FC' : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {item.ready ? <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3.5 3.5 5.5-6" stroke={C.payne} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> : <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.bd }} />}
+                { key: "core", label: "Core", rows: core },
+                { key: "gradient", label: "Gradients", rows: gradients },
+              ]
+                .filter((g) => g.rows.length > 0)
+                .map((group) => (
+                  <div key={group.key} className={s.cgroup}>
+                    <div className={s.cglab}>{group.label}</div>
+                    <div className={s.sw}>
+                      {group.rows.map((c) => {
+                        const isGradient = group.key === "gradient";
+                        const value = isGradient ? (c.css_value ?? c.hex ?? "") : (c.hex ?? "");
+                        const contrast = isGradient ? null : contrastOnWhite(value);
+                        return (
+                          <button
+                            key={String(c.id)}
+                            type="button"
+                            className={s.swatch}
+                            onClick={() => copy(value, isGradient ? "CSS copied" : `${value} copied`)}
+                          >
+                            <span
+                              className={s.chip}
+                              style={
+                                isGradient
+                                  ? { backgroundImage: value }
+                                  : { backgroundColor: value }
+                              }
+                            >
+                              <span
+                                className={s.cta}
+                                style={{ color: isGradient ? "#fff" : readableInkOn(value) === "#15151b" ? "#fff" : "#fff" }}
+                              >
+                                {isGradient ? "Copy CSS" : "Copy HEX"}
+                              </span>
+                            </span>
+                            <span className={s.meta}>
+                              <span className={s.nm}>{c.name || "Untitled"}</span>
+                              <span className={s.hx}>{value.toUpperCase()}</span>
+                              {c.role && <span className={s.roleT}>{c.role}</span>}
+                              {contrast && (
+                                <span
+                                  className={`${s.ok} ${contrast.level === "AAA" || contrast.level === "AA" ? s.pass : s.warn}`}
+                                >
+                                  {contrast.ratio}:1 · {contrast.label}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: C.blk }}>{item.label}</div>
-                    <div style={{ fontSize: 11, color: C.mu, marginTop: 1 }}>{item.count} {item.count === 1 ? 'item' : 'items'}</div>
+                ))}
+            </section>
+          )}
+
+          {/* ══════════ 4 · TYPEFACES ══════════ */}
+          {fonts.length > 0 && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <h2>Typefaces</h2>
+                  <p>Each specimen is set in the real typeface. Copy the CSS and it will be too.</p>
+                </div>
+              </div>
+              <div className={s.type}>
+                {fonts.map((font, i) => {
+                  const inUse = font.weights_in_use ?? [];
+                  const snippet = cssSnippetFor(font);
+                  return (
+                    <div key={String(font.id)} className={s.tc}>
+                      <div className={`${s.spec} ${i % 2 === 0 ? s.specA : s.specB}`}>
+                        <div className={s.ag} style={{ fontFamily: familyFor(font) }}>Ag</div>
+                        <div className={s.pang} style={{ fontFamily: familyFor(font) }}>{PANGRAM}</div>
+                      </div>
+                      <div className={s.tbody}>
+                        <h3>{font.name || "Untitled"}</h3>
+                        {font.role && <div className={s.roleLab}>{font.role}</div>}
+                        <div className={s.wts}>
+                          {WEIGHT_LADDER.map((w) => (
+                            <span key={w} className={`${s.wt} ${inUse.includes(w) ? s.wtOn : ""}`}>{w}</span>
+                          ))}
+                        </div>
+                        <pre className={s.code}>{snippet}</pre>
+                        <div className={s.trow}>
+                          <button type="button" className={`${s.act} ${s.prime}`} onClick={() => copy(snippet, "CSS copied")}>
+                            <Icon name="doc" size={12} />
+                            Copy CSS
+                          </button>
+                          {font.file_url && (
+                            <button type="button" className={s.act} onClick={() => download(font.file_url, font.name)}>
+                              <Icon name="upload" size={12} />
+                              Download
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ══════════ 5 · TEMPLATES ══════════ */}
+          {templates.length > 0 && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <h2>Templates</h2>
+                  <p>Sized and set up already. Open one and replace the words.</p>
+                </div>
+              </div>
+              <div className={s.tpl}>
+                {templates.map((t) => {
+                  const ratio = ratioOf(t.name);
+                  return (
+                    <a key={t.id} href={t.url ?? "#"} target="_blank" rel="noopener noreferrer" className={s.tpc}>
+                      <span className={s.thumb}>
+                        {t.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={t.thumbnail_url} alt="" />
+                        ) : (
+                          <Icon name="img" size={24} />
+                        )}
+                        {ratio && <span className={s.ratio}>{ratio}</span>}
+                      </span>
+                      <span className={s.tb}>
+                        <span className={s.tn}>{t.name || "Template"}</span>
+                        <span className={s.td}>{t.platform ? `Opens in ${t.platform}` : "Opens in a new tab"}</span>
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ══════════ 6 · HOW TO HOLD IT ══════════ */}
+          {/* Rendered with CSS transforms on the real logo, not stock
+              illustrations. These normally live on page 34 of a PDF nobody
+              opens; inline, they become enforceable. */}
+          {heroLogo?.file_url && (
+            <section className={s.sec}>
+              <div className={s.shead}>
+                <div>
+                  <h2>How to hold it</h2>
+                  <p>
+                    The four things that go wrong most often. They live here rather than on page 34
+                    of a PDF, because a rule nobody reads is not a rule.
+                  </p>
+                </div>
+              </div>
+              <div className={s.rules}>
+                <div>
+                  <div className={s.rbox}>
+                    <h4>Clear space</h4>
+                    <p>Keep the height of the symbol free on every side. Nothing crosses it — no text, no edge, no other logo.</p>
+                    <div className={s.clearspace}>
+                      <div className={s.csbox}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={heroLogo.file_url} alt="" style={{ maxHeight: 34, maxWidth: 150, objectFit: "contain" }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className={s.rbox} style={{ marginTop: 12 }}>
+                    <h4>Minimum size</h4>
+                    <p>Below these, switch to the symbol on its own.</p>
+                    <div className={s.minsize}>
+                      <div className={s.ms}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={heroLogo.file_url} alt="" style={{ height: 22, maxWidth: 120, objectFit: "contain" }} />
+                        <span className={s.msLab}>120px / 32mm</span>
+                      </div>
+                      <div className={s.ms}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={(bySlot.get("icon")?.[0] ?? heroLogo).file_url!} alt="" style={{ height: 14, maxWidth: 40, objectFit: "contain" }} />
+                        <span className={s.msLab}>24px / 8mm</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Individual downloads */}
-            {(Object.keys(logos).length > 0 || fonts.length > 0) && (
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.mu, marginBottom: 10 }}>Individual downloads</div>
-                {Object.values(logos).map(logo => (
-                  <div key={logo.slot} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 14px', borderRadius: 7, border: `0.5px solid ${C.bdl}`, marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: C.blk }}>Logo — <span style={{ color: C.mu }}>{logo.slot}</span></span>
-                    <a href={logo.file_url} download={logo.file_name} style={{ fontSize: 11, padding: '3px 12px', borderRadius: 4, border: `0.5px solid ${C.bdl}`, color: C.sec, textDecoration: 'none' }}>Download</a>
+                <div>
+                  <div className={s.cglab}>Never</div>
+                  <div className={s.donts}>
+                    {[
+                      { cls: s.sq, title: "Don't stretch it", sub: "Scale both sides together, always", busy: false },
+                      { cls: s.rc, title: "Don't recolour it", sub: "The brand colours. Nothing else.", busy: false },
+                      { cls: s.sh, title: "Don't add effects", sub: "No shadows, glows, bevels or outlines", busy: false },
+                      { cls: "", title: "Don't fight the background", sub: "Busy photo? Use the reversed file on a solid block.", busy: true },
+                    ].map((d) => (
+                      <div key={d.title} className={s.dont}>
+                        <div className={`${s.dstage} ${d.busy ? s.busy : ""}`}>
+                          <span className={s.x}><Icon name="close" size={9} /></span>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={heroLogo.file_url!} alt="" className={d.cls || undefined} />
+                        </div>
+                        <div className={s.cap}>
+                          {d.title}
+                          <span>{d.sub}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {fonts.filter(f => f.google_font_url).map(font => (
-                  <div key={font.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 14px', borderRadius: 7, border: `0.5px solid ${C.bdl}`, marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: C.blk }}>Font — <span style={{ color: C.mu }}>{font.name}</span></span>
-                    <a href={`https://fonts.google.com/specimen/${font.name.replace(/ /g, '+')}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, padding: '3px 12px', borderRadius: 4, border: `0.5px solid ${C.bdl}`, color: C.sec, textDecoration: 'none' }}>Open</a>
-                  </div>
-                ))}
+                </div>
               </div>
-            )}
+            </section>
+          )}
+
+          {/* ══════════ 7 · THE GUIDELINES PDF ══════════ */}
+          {visual?.guideline_url && (
+            <div className={s.guide}>
+              <div className={s.cov}><div className={s.covL}>Brand<br />Guidelines</div></div>
+              <div className="min-w-0">
+                <h3>The full guidelines</h3>
+                <p>
+                  Everything above, plus photography direction, tone of voice, iconography and the
+                  print specifications. Read it once; come back to this page for the day-to-day.
+                </p>
+                <div className={s.gmeta}>
+                  {pageCount > 0 && <span className={s.gpill}>{pageCount} pages</span>}
+                  <span className={s.gpill}>{version}</span>
+                  {updated && (
+                    <span className={s.gpill}>
+                      Updated {new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className={s.gacts}>
+                <a className={s.act} href={visual.guideline_url} target="_blank" rel="noopener noreferrer">
+                  <Icon name="doc" size={12} />
+                  Read here
+                </a>
+                <button
+                  type="button"
+                  className={s.act}
+                  onClick={() => download(visual.guideline_url, "brand-guidelines.pdf")}
+                >
+                  <Icon name="upload" size={12} />
+                  Download
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && logos.length === 0 && colors.length === 0 && fonts.length === 0 && (
+            <div className={s.sec}>
+              <p className={s.emptyNote}>
+                Nothing has been uploaded for this brand yet. Logos, colours and typefaces appear
+                here as they are added.
+              </p>
+            </div>
+          )}
+
+          <div className={`${s.toast} ${toast ? s.toastOn : ""}`} role="status" aria-live="polite">
+            {toast}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Toast */}
-      {toastVisible && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.blk, color: 'white', fontSize: 12, padding: '8px 18px', borderRadius: 20, zIndex: 99, whiteSpace: 'nowrap', pointerEvents: 'none' }}>{toast}</div>
-      )}
+      {/* The AI Chat rail stays, exactly as on every other page. */}
+      <ChatRail
+        indexedFileCount={fileCount}
+        suggestions={[
+          "Which logo should I use on a dark photo?",
+          "What is our primary colour?",
+          "Which typeface do headings use?",
+        ]}
+      />
     </div>
-  )
+  );
 }

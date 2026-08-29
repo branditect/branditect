@@ -9,8 +9,10 @@
  * than no meter.
  */
 
+import type { Status } from "./onboarding.ts";
+
 export interface ReadinessInputs {
-  /** true only when every question in the strategy questionnaire is answered */
+  /** true once the gate is cleared — see questionnairePassed */
   questionnaireComplete: boolean;
   /** total files in Knowledge (documents + presentations + links) */
   knowledgeFileCount: number;
@@ -57,6 +59,21 @@ export interface Readiness {
   totalCount: number;
   /** the first failing check — drives the greeting subtitle and the hero copy */
   nextAction: Check | null;
+}
+
+/**
+ * The questionnaire check ticks at the GATE, not at 20 of 20.
+ *
+ * If it needed all twenty, someone would clear the gate, open their workspace
+ * and see 0% — which reads as broken and is the opposite of the reward the
+ * gate exists to give. `gated_complete` is five answers in and fifteen
+ * outstanding; that is a finished check.
+ *
+ * No partial credit inside the check. Equal quarters exist so a founder can
+ * predict their score, and a continuous number destroys that.
+ */
+export function questionnairePassed(status: Status | null | undefined): boolean {
+  return status === "gated_complete" || status === "complete";
 }
 
 const POINTS_PER_CHECK = 25;

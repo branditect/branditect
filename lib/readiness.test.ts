@@ -7,7 +7,8 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { computeReadiness, type ReadinessInputs } from "./readiness.ts";
+import { readFileSync } from "node:fs";
+import { computeReadiness, questionnairePassed, type ReadinessInputs } from "./readiness.ts";
 
 describe("computeReadiness", () => {
   const base: ReadinessInputs = {
@@ -94,5 +95,76 @@ describe("computeReadiness", () => {
       assert.equal(c.href, null);
       assert.equal(c.action, null);
     }
+  });
+});
+
+/**
+ * The way back. Brand Readiness used to read the retired 38-question module
+ * against the old strategy_questions answers, so finishing the new
+ * questionnaire left this quarter on 0% no matter what anyone did.
+ */
+describe("the questionnaire check reads onboarding status", () => {
+  it("ticks at the gate, not at 20 of 20", () => {
+    assert.equal(questionnairePassed("gated_complete"), true);
+  });
+
+  it("stays ticked at 20 of 20", () => {
+    assert.equal(questionnairePassed("complete"), true);
+  });
+
+  it("does not tick before the gate", () => {
+    assert.equal(questionnairePassed("partial"), false);
+    assert.equal(questionnairePassed("not_started"), false);
+  });
+
+  it("treats a missing onboarding row as not started", () => {
+    assert.equal(questionnairePassed(null), false);
+    assert.equal(questionnairePassed(undefined), false);
+  });
+
+  /** Criterion 6. */
+  it("puts Brand Readiness at 25% once the gate is cleared", () => {
+    const r = computeReadiness({
+      questionnaireComplete: questionnairePassed("gated_complete"),
+      knowledgeFileCount: 0,
+      brandImageCount: 0,
+      hasBrandGuideline: false,
+    });
+    assert.equal(r.score, 25);
+    assert.equal(r.checks.find((c) => c.id === "questionnaire")?.passed, true);
+    assert.equal(r.band, "Starting");
+  });
+
+  it("gives no partial credit for a half-finished questionnaire", () => {
+    const r = computeReadiness({
+      questionnaireComplete: questionnairePassed("partial"),
+      knowledgeFileCount: 0,
+      brandImageCount: 0,
+      hasBrandGuideline: false,
+    });
+    assert.equal(r.score, 0);
+  });
+});
+
+/**
+ * Criterion 5. A grep test, because the failure it guards against is an import
+ * quietly surviving a refactor — which is exactly how this broke.
+ */
+describe("useReadiness no longer touches the retired module", () => {
+  const source = readFileSync(new URL("./useReadiness.ts", import.meta.url), "utf8");
+
+  it("does not import lib/strategy-questions", () => {
+    assert.ok(!/strategy-questions/.test(source), "useReadiness.ts still references strategy-questions");
+  });
+
+  it("reads the onboarding table", () => {
+    assert.ok(/from\("onboarding"\)/.test(source), "useReadiness.ts does not query the onboarding table");
+  });
+
+  it("does not read brand_strategies for the questionnaire check", () => {
+    // The name may still appear in a comment explaining what broke; what must
+    // not survive is the query and the call.
+    assert.ok(!/from\("brand_strategies"\)/.test(source));
+    assert.ok(!/isQuestionnaireComplete\(/.test(source));
   });
 });

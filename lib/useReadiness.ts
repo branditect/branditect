@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { computeReadiness, type Readiness } from "@/lib/readiness";
-import { isQuestionnaireComplete } from "@/lib/strategy-questions";
+import { computeReadiness, questionnairePassed, type Readiness } from "@/lib/readiness";
+import type { Status } from "@/lib/onboarding";
 
 export interface KnowledgeCounts {
   documents: number;
@@ -54,14 +54,17 @@ export function useReadiness(brandId: string) {
     async function load() {
       const count = { count: "exact" as const, head: true };
 
-      const [strategy, docs, presentations, images, brandImages, products, links, visual] =
+      const [onboarding, docs, presentations, images, brandImages, products, links, visual] =
         await Promise.all([
+          // The `onboarding` table, not `brand_strategies`. This used to read
+          // isQuestionnaireComplete from the retired 38-question module against
+          // the old strategy_questions answers, which the new questionnaire
+          // never writes — so finishing it left the check unticked and Brand
+          // Readiness stuck on 0% for that quarter whatever anyone did.
           supabase
-            .from("brand_strategies")
-            .select("answers")
+            .from("onboarding")
+            .select("status")
             .eq("brand_id", brandId)
-            .order("updated_at", { ascending: false })
-            .limit(1)
             .maybeSingle(),
           supabase
             .from("brand_documents")
@@ -106,8 +109,8 @@ export function useReadiness(brandId: string) {
 
       setReadiness(
         computeReadiness({
-          questionnaireComplete: isQuestionnaireComplete(
-            strategy.data?.answers as Record<string, string> | null,
+          questionnaireComplete: questionnairePassed(
+            onboarding.data?.status as Status | undefined,
           ),
           // "Files in Knowledge" is documents + presentations + links.
           knowledgeFileCount: documents + presentationCount + linkCount,

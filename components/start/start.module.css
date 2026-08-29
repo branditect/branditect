@@ -26,8 +26,13 @@
   background: radial-gradient(circle at 45% 45%, rgba(202, 184, 242, .42), rgba(202, 184, 242, 0) 68%);
   pointer-events: none;
 }
-/* Everything sits above the blob. */
-.rail > * { position: relative; z-index: 2; }
+/* Everything EXCEPT the blob sits above it. `.rail > *` alone ties with
+ * `.blob` on specificity (0-1-0) and, coming later, won — which put the
+ * decorative blob back in the flow as a 330px block and pushed the whole rail
+ * below the fold. The reference selector was `.rail .blob` (0-2-0) and did not
+ * tie; flattening it for the CSS module lost the point. Do not fix this by
+ * reordering the rules: the next person to sort this file reintroduces it. */
+.rail > *:not(.blob) { position: relative; z-index: 2; }
 
 .eyebrow { font-size: theme('fontSize.micro[0]'); font-weight: 800; letter-spacing: 1.2px;
   text-transform: uppercase; color: var(--r-violet); }

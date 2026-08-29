@@ -21,7 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
-const ROUTES = ["/login", "/signup", "/start", "/start/q/1", "/start/resume",
+const ROUTES = ["/login", "/signup", "/start", "/start/q/1", "/start/q/7", "/start/resume",
                 "/home", "/brand/strategy", "/knowledge/products", "/numbers"];
 const CHROME = process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -94,10 +94,47 @@ for (const route of ROUTES) {
   // Hydration errors are the point of this test, so they fail the route even
   // when the server HTML happened to survive.
   const fatal = errors.filter((e) => !/favicon|net::ERR/i.test(e));
-  const ok = len > 0 && fatal.length === 0 && !blocked;
+  // The onboarding rail is a fixed-height column with a foot note pinned to the
+  // bottom. A decorative element that falls into the document flow pushes the
+  // logo, the eyebrow, the question and the guide card below the fold — which
+  // npm test cannot see, because it is computed style in a real browser, and
+  // which a user sees immediately as a third of empty lavender.
+  let railWhy = "";
+  if (route === "/start/q/7") {
+    const railRes = await send("Runtime.evaluate", {
+      expression: `JSON.stringify((() => {
+        const rail = document.querySelector("aside");
+        if (!rail) return { found: false };
+        const first = rail.querySelector(":scope > *:nth-child(2)");
+        const blob = rail.querySelector(":scope > *:nth-child(1)");
+        return {
+          found: true,
+          railTop: first ? Math.round(first.getBoundingClientRect().top) : null,
+          railHeight: Math.round(rail.getBoundingClientRect().height),
+          viewport: window.innerHeight,
+          blobPosition: blob ? getComputedStyle(blob).position : null,
+        };
+      })())`,
+      returnByValue: true,
+    });
+    let rail = { found: false };
+    try { rail = JSON.parse(railRes.result?.result?.value ?? "{}"); } catch { /* keep default */ }
+
+    if (!rail.found) {
+      railWhy = "  no rail on the page";
+    } else if (!(rail.railTop !== null && rail.railTop < 60)) {
+      railWhy = `  rail content starts at ${rail.railTop}px, expected < 60 (blob position: ${rail.blobPosition})`;
+    } else if (!(rail.railHeight <= rail.viewport + 1)) {
+      // The assertion that matters long-term: whatever the cause, a rail taller
+      // than the viewport breaks the pinned-foot-note contract.
+      railWhy = `  the rail is taller than the viewport (${rail.railHeight}px in ${rail.viewport}px)`;
+    }
+  }
+
+  const ok = len > 0 && fatal.length === 0 && !blocked && !railWhy;
   if (!ok) failed++;
   const why = blocked ? `  BLOCKED: ${text.slice(0, 60)}`
-    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : "";
+    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : railWhy;
   console.log(`${ok ? "PASS" : "FAIL"}  ${route.padEnd(22)} bodyText=${len}${why}`);
   lengths.push(len);
 }

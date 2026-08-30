@@ -178,7 +178,7 @@ describe("Finish later inside the debounce window", () => {
     w.queue({ ...EMPTY_ONBOARDING, answers: { 9: typed } });
 
     // Not one tick of the debounce has elapsed.
-    assert.deepEqual(written, [], "a write happened before flush was called");
+    assert.equal(written.length, 0, "a write happened before flush was called");
 
     const to = await finishLater(w);
     w.dispose();

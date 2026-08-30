@@ -121,11 +121,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "api_error", message: "The image service returned something unreadable." }, { status: 502 });
     }
 
-    const finishReason = data.candidates?.[0]?.finishReason;
+    const candidate = data.candidates?.[0];
+    const finishReason = candidate?.finishReason;
     if (finishReason === "SAFETY" || finishReason === "BLOCKED") {
       return NextResponse.json({
         error: "safety_block",
         message: "That request was flagged. Try a simpler description or a different reference.",
+      }, { status: 400 });
+    }
+    // The upstream declines some briefs — usually a description that does not
+    // fit the references attached to it. It says so, and the card should
+    // repeat that rather than "no image came back", which sounds like a fault
+    // at our end and gives nobody anything to change.
+    if (finishReason === "IMAGE_OTHER" || finishReason === "PROHIBITED_CONTENT") {
+      return NextResponse.json({
+        error: "not_generated",
+        message: "That description and those references did not go together. Try rewording it, or pick a reference closer to what you want.",
       }, { status: 400 });
     }
 

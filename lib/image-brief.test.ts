@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import {
   buildImagePrompt, buildParts, productIdentity, decideProductAccess,
   briefBlocker, briefReady, isValidWhere, isValidFormat,
+  refsAfterKindChange, productIdFor, defaultKind, defaultWhere,
   WHERES, FORMATS, PRODUCT_FIELDS,
   type Brief,
 } from "./image-brief.ts";
@@ -306,5 +307,70 @@ describe("the route reads only the four fields", () => {
 
   it("checks product ownership before reading it", () => {
     assert.ok(/decideProductAccess/.test(source), "the route does not gate on ownership");
+  });
+});
+
+/** Criterion 1b. */
+describe("switching to Something else", () => {
+  const refs = [
+    { id: "product:p1", source: "product" as const },
+    { id: "knowledge:k1", source: "knowledge" as const },
+    { id: "upload:u1", source: "upload" as const },
+  ];
+
+  it("removes the product's photos", () => {
+    assert.deepEqual(refsAfterKindChange(refs, "other").map((r) => r.id), ["knowledge:k1", "upload:u1"]);
+  });
+
+  it("keeps references the user added themselves", () => {
+    const kept = refsAfterKindChange(refs, "other");
+    assert.ok(kept.every((r) => r.source !== "product"));
+    assert.equal(kept.length, 2);
+  });
+
+  it("leaves them alone when staying on A product picture", () => {
+    assert.deepEqual(refsAfterKindChange(refs, "product"), refs);
+  });
+
+  it("sends productId null", () => {
+    assert.equal(productIdFor("other", "p1"), null);
+    assert.equal(productIdFor("product", "p1"), "p1");
+    assert.equal(productIdFor("product", ""), null);
+    assert.equal(productIdFor("product", null), null);
+  });
+
+  it("defaults to Something else only when the brand has no products", () => {
+    assert.equal(defaultKind(0), "other");
+    assert.equal(defaultKind(4), "product");
+  });
+
+  it("defaults Where to studio for a product and outdoors otherwise", () => {
+    assert.equal(defaultWhere("product"), "studio");
+    assert.equal(defaultWhere("other"), "outdoors");
+  });
+});
+
+/** Criterion 2. CLAUDE.md bans "Architect" as a label, and Library is reserved
+ *  for saved Studio outputs. */
+describe("the page names nothing it should not", () => {
+  const page = readFileSync(new URL("../app/(app)/studio/create-images/page.tsx", import.meta.url), "utf8");
+
+  it("says Architect nowhere", () => {
+    assert.ok(!/architect/i.test(page), "the page still says Architect");
+  });
+
+  it("does not call anything Brand Library", () => {
+    assert.ok(!/Brand Library/.test(page));
+  });
+
+  it("names no vendor in the UI", () => {
+    for (const vendor of ["Gemini", "OpenAI", "DALL", "Midjourney", "Stability"]) {
+      assert.ok(!page.includes(vendor), `${vendor} is named on the page`);
+    }
+  });
+
+  it("calls the button Make the image", () => {
+    assert.ok(page.includes("Make the image"), "the button copy is missing");
+    assert.ok(!/Generate Architect Vision/.test(page));
   });
 });

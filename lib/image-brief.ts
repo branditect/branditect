@@ -157,3 +157,32 @@ export function briefBlocker(referenceCount: number, subject: string): string | 
 export function briefReady(referenceCount: number): string {
   return `${referenceCount} reference${referenceCount === 1 ? "" : "s"} read · about 15 seconds`;
 }
+
+
+export type Kind = "product" | "other";
+
+export interface ReferenceLike { id: string; source: "knowledge" | "product" | "upload" }
+
+/**
+ * Criterion 1b. Switching to "Something else" removes the product's photos —
+ * leaving them behind is how you generate a bottle nobody asked for. Anything
+ * the user added themselves stays.
+ */
+export function refsAfterKindChange<T extends ReferenceLike>(refs: T[], kind: Kind): T[] {
+  return kind === "other" ? refs.filter((r) => r.source !== "product") : refs;
+}
+
+/** What goes on the wire. "Something else" always sends null. */
+export function productIdFor(kind: Kind, productId: string | null | undefined): string | null {
+  return kind === "product" && productId ? productId : null;
+}
+
+/** A brand with a catalogue is usually photographing it. */
+export function defaultKind(productCount: number): Kind {
+  return productCount > 0 ? "product" : "other";
+}
+
+/** Studio when a product is selected, outdoors otherwise. */
+export function defaultWhere(kind: Kind): Where {
+  return kind === "product" ? "studio" : "outdoors";
+}

@@ -1,534 +1,610 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
+/**
+ * Studio ▸ Create images — rebuilt from branditect-ui/spec/create-images.md.
+ *
+ * The old page had three controls that did not do what they appeared to. Those
+ * are fixed in the route (f82ded3); this is the panel that drives it.
+ *
+ * Renders inside app/(app)/layout.tsx — the sidebar and the AI Chat rail stay,
+ * and the 1240px wrap is the space between them.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
-import Link from "next/link";
+import Icon from "@/components/icon";
+import ChatRail from "@/components/chat-rail";
+import {
+  briefBlocker, briefReady, defaultKind, defaultWhere, productIdFor, refsAfterKindChange,
+  FORMATS, type Format, type Kind, type Where,
+} from "@/lib/image-brief";
+import s from "@/components/studio/create-images.module.css";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+type RefSource = "knowledge" | "product" | "upload";
 
-interface GeneratedImage { imageBase64: string; mimeType: string; }
-
-interface RefImage {
-  preview: string;
-  source: "upload" | "library";
-  file?: File;
-  url?: string;
-}
-
-interface LibraryImage {
+interface Reference {
   id: string;
-  file_url: string;
-  file_name: string;
-  tags: string[];
-  category: string;
+  name: string;
+  /** Displayable. For an upload this is an object URL. */
+  url: string;
+  source: RefSource;
+  file?: File;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
+interface Product { id: string; name: string; category: string | null; image_url: string | null }
+interface LibraryImage { id: string; file_url: string; file_name: string }
 
-const FORMAT_OPTIONS = [
-  { label: "Square 1:1", value: "Square 1:1" },
-  { label: "Portrait 9:16", value: "Portrait 9:16" },
-  { label: "Landscape 16:9", value: "Landscape 16:9" },
-  { label: "Portrait 4:5", value: "Portrait 4:5" },
+type Shot =
+  | { id: string; state: "working"; format: Format; refs: Reference[]; where: Where }
+  | { id: string; state: "done"; format: Format; refs: Reference[]; where: Where;
+      src: string; base64: string; mimeType: string; saved: boolean; subject: string; productId: string | null }
+  | { id: string; state: "failed"; format: Format; refs: Reference[]; where: Where; reason: string };
+
+const WHERE_OPTIONS: { id: Where; label: string; detail: string; icon: "target" | "box" | "cloud"; tone: string }[] = [
+  { id: "studio", label: "Studio", detail: "Plain background", icon: "target", tone: "bg-grad-more" },
+  { id: "indoors", label: "Indoors", detail: "A room, a shop", icon: "box", tone: "bg-grad-numbers" },
+  { id: "outdoors", label: "Outdoors", detail: "Outside, daylight", icon: "cloud", tone: "bg-grad-assets" },
 ];
 
-const MODE_OPTIONS = [
-  { key: "studio", label: "Studio", icon: "STD" },
-  { key: "outdoor_people", label: "Outdoor People", icon: "OUT" },
-  { key: "environment", label: "Environment", icon: "ENV" },
-];
+const RATIO_BOX: Record<Format, { w: number; h: number }> = {
+  "1:1": { w: 22, h: 22 }, "4:5": { w: 18, h: 22 }, "9:16": { w: 13, h: 23 }, "16:9": { w: 28, h: 16 },
+};
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+const MAX_REFS = 3;
 
-function resizeBlobToBase64(blob: Blob, maxSize: number): Promise<string> {
+function aspectPadding(format: Format): string {
+  const [w, h] = format.split(":").map(Number);
+  return `${(h / w) * 100}%`;
+}
+
+/** Downscaled before upload — the whole payload has to fit a serverless body limit. */
+function resizeToBase64(blob: Blob, maxSize = 512): Promise<string> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
     const objectUrl = URL.createObjectURL(blob);
     img.onload = () => {
       const canvas = document.createElement("canvas");
       let w = img.width, h = img.height;
       if (w > h && w > maxSize) { h = (h / w) * maxSize; w = maxSize; }
       else if (h > maxSize) { w = (w / h) * maxSize; h = maxSize; }
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w; canvas.height = h;
       canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(objectUrl);
       resolve(canvas.toDataURL("image/jpeg", 0.85).split(",")[1]);
     };
-    img.onerror = (err) => {
-      URL.revokeObjectURL(objectUrl);
-      reject(err);
-    };
+    img.onerror = (e) => { URL.revokeObjectURL(objectUrl); reject(e); };
     img.src = objectUrl;
   });
 }
 
-function resizeImageToBase64(file: File, maxSize: number): Promise<string> {
-  return resizeBlobToBase64(file, maxSize);
+async function referenceToBase64(ref: Reference): Promise<string> {
+  if (ref.file) return resizeToBase64(ref.file);
+  const res = await fetch(ref.url);
+  return resizeToBase64(await res.blob());
 }
 
-function getAspectClass(format: string): string {
-  if (format.includes("9:16")) return "aspect-[9/16] max-h-[500px]";
-  if (format.includes("16:9")) return "aspect-video";
-  if (format.includes("4:5")) return "aspect-[4/5]";
-  return "aspect-square";
-}
+export default function CreateImagesPage() {
+  const { brandId, loading: brandLoading } = useBrand();
 
-/* ================================================================== */
-/*  MAIN COMPONENT                                                     */
-/* ================================================================== */
-
-export default function ImageArchitectPage() {
-  const { brandId } = useBrand();
-  /* ---- Reference images (unified) ---- */
-  const [refs, setRefs] = useState<RefImage[]>([]);
-  const refInputRef = useRef<HTMLInputElement>(null);
-  const [refDragOver, setRefDragOver] = useState(false);
-
-  /* ---- Library picker ---- */
-  const [showLibrary, setShowLibrary] = useState(false);
-  const [libraryImages, setLibraryImages] = useState<LibraryImage[]>([]);
-  const [librarySearch, setLibrarySearch] = useState("");
-  const [libraryLoading, setLibraryLoading] = useState(false);
-
-  /* ---- Brief form ---- */
-  const [mode, setMode] = useState("studio");
+  const [kind, setKind] = useState<Kind>("other");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productId, setProductId] = useState<string>("");
+  const [refs, setRefs] = useState<Reference[]>([]);
+  const [where, setWhere] = useState<Where>("outdoors");
   const [subject, setSubject] = useState("");
-  const [format, setFormat] = useState("Square 1:1");
-  const [colour, setColour] = useState("");
-  const [other, setOther] = useState("");
+  const [format, setFormat] = useState<Format>("1:1");
+  const [extra, setExtra] = useState("");
+  const [extraOpen, setExtraOpen] = useState(false);
 
-  /* ---- Generation ---- */
-  const [generating, setGenerating] = useState(false);
-  const [genResult, setGenResult] = useState<GeneratedImage | null>(null);
-  const [genError, setGenError] = useState<{ error: string; message: string } | null>(null);
-  const [savedToLib, setSavedToLib] = useState(false);
+  const [shots, setShots] = useState<Shot[]>([]);
+  const [tab, setTab] = useState<"session" | "saved">("session");
+  const [savedImages, setSavedImages] = useState<LibraryImage[]>([]);
+  const [library, setLibrary] = useState<LibraryImage[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  /* ---- Reference file handling ---- */
+  const product = useMemo(() => products.find((p) => p.id === productId) ?? null, [products, productId]);
 
-  const addRefFiles = useCallback((newFiles: FileList | File[]) => {
-    const valid = Array.from(newFiles).filter((f) => {
-      const ext = f.name.split(".").pop()?.toLowerCase();
-      return ["jpg", "jpeg", "png", "webp"].includes(ext || "") && f.size <= 8 * 1024 * 1024;
-    });
+  /* ---- brand data ---- */
+  useEffect(() => {
+    if (brandLoading || !brandId || brandId === "default") return;
+    let alive = true;
+    (async () => {
+      const [p, imgs] = await Promise.all([
+        supabase.from("catalog_products").select("id, name, category, image_url").eq("brand_id", brandId).order("sort_order"),
+        supabase.from("brand_images").select("id, file_url, file_name").eq("brand_id", brandId)
+          .eq("category", "ai-generated").order("uploaded_at", { ascending: false }),
+      ]);
+      if (!alive) return;
+      const rows = (p.data as Product[]) ?? [];
+      setProducts(rows);
+      setSavedImages((imgs.data as LibraryImage[]) ?? []);
+      // A brand with a catalogue is usually photographing it.
+      setKind(defaultKind(rows.length));
+    })();
+    return () => { alive = false; };
+  }, [brandId, brandLoading]);
+
+  const flash = useCallback((m: string) => {
+    setToast(m);
+    window.setTimeout(() => setToast(null), 1900);
+  }, []);
+
+  /* ---- references ---- */
+  const addRef = useCallback((next: Reference) => {
+    setRefs((prev) => (prev.length >= MAX_REFS || prev.some((r) => r.id === next.id) ? prev : [...prev, next]));
+  }, []);
+
+  const removeRef = useCallback((id: string) => {
+    setRefs((prev) => prev.filter((r) => r.id !== id));
+  }, []);
+
+  /* Selecting a product adds its photo as a reference and marks it. */
+  const chooseProduct = useCallback((id: string) => {
+    setProductId(id);
+    setWhere("studio");
+    const p = products.find((x) => x.id === id);
     setRefs((prev) => {
-      const newRefs: RefImage[] = valid.map((f) => ({ preview: URL.createObjectURL(f), source: "upload", file: f }));
-      return [...prev, ...newRefs].slice(0, 3);
+      const mine = prev.filter((r) => r.source !== "product");
+      if (!p?.image_url) return mine;
+      return [{ id: `product:${p.id}`, name: `${p.name} · product`, url: p.image_url, source: "product" as const },
+              ...mine].slice(0, MAX_REFS);
     });
-  }, []);
+  }, [products]);
 
-  const addLibraryRef = useCallback((img: LibraryImage) => {
-    setRefs((prev) => {
-      if (prev.length >= 3) return prev;
-      if (prev.some((r) => r.url === img.file_url)) return prev;
-      return [...prev, { preview: img.file_url, source: "library", url: img.file_url }];
-    });
-  }, []);
+  /**
+   * Switching to Something else removes the product's photos. Leaving them
+   * behind is how you generate a bottle nobody asked for. References the user
+   * added themselves stay.
+   */
+  const chooseKind = useCallback((next: Kind) => {
+    setKind(next);
+    if (next === "other") {
+      setProductId("");
+      setRefs((prev) => refsAfterKindChange(prev, next));
+      setWhere(defaultWhere(next));
+    } else if (products.length && !productId) {
+      chooseProduct(products[0].id);
+    }
+  }, [products, productId, chooseProduct]);
 
-  const removeRef = useCallback((index: number) => {
-    setRefs((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const handleRefDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); setRefDragOver(false);
-    if (e.dataTransfer.files.length) addRefFiles(e.dataTransfer.files);
-  }, [addRefFiles]);
-
-  const handleRefFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.length) addRefFiles(e.target.files);
-    e.target.value = "";
-  }, [addRefFiles]);
-
-  /* ---- Library fetching ---- */
-
-  const fetchLibrary = useCallback(async () => {
-    setLibraryLoading(true);
-    const { data } = await supabase
-      .from("brand_images")
-      .select("id, file_url, file_name, tags, category")
-      .eq("brand_id", brandId)
-      .order("uploaded_at", { ascending: false });
-    setLibraryImages(data || []);
-    setLibraryLoading(false);
+  const openLibrary = useCallback(async () => {
+    if (!brandId || brandId === "default") return;
+    const { data } = await supabase.from("brand_images").select("id, file_url, file_name")
+      .eq("brand_id", brandId).order("uploaded_at", { ascending: false }).limit(60);
+    setLibrary((data as LibraryImage[]) ?? []);
   }, [brandId]);
 
-  useEffect(() => {
-    if (showLibrary && libraryImages.length === 0) fetchLibrary();
-  }, [showLibrary, libraryImages.length, fetchLibrary]);
+  const onUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    addRef({ id: `upload:${Date.now()}`, name: file.name, url: URL.createObjectURL(file), source: "upload", file });
+    e.target.value = "";
+  }, [addRef]);
 
-  const filteredLibrary = librarySearch
-    ? libraryImages.filter((img) => {
-        const s = librarySearch.toLowerCase();
-        return img.file_name.toLowerCase().includes(s) ||
-          img.tags.some((t) => t.toLowerCase().includes(s)) ||
-          img.category.toLowerCase().includes(s);
-      })
-    : libraryImages;
+  /* ---- generate ---- */
+  const blocker = briefBlocker(refs.length, subject);
 
-  /* ---- Generate image ---- */
-
-  const urlToBase64 = useCallback(async (url: string): Promise<string> => {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return resizeBlobToBase64(blob, 512);
-  }, []);
-
-  const generateImage = useCallback(async () => {
-    if (!subject.trim() || refs.length === 0) return;
-    setGenerating(true); setGenError(null); setGenResult(null); setSavedToLib(false);
+  const generate = useCallback(async () => {
+    if (blocker || busy) return;
+    setBusy(true);
+    const id = `shot-${Date.now()}`;
+    const snapshot = { format, refs: [...refs], where };
+    // Newest first, and previous results stay — comparing two attempts is the
+    // point. The old page held one result and overwrote it.
+    setShots((prev) => [{ id, state: "working", ...snapshot }, ...prev]);
 
     try {
-      // The API only uses the first reference image — only encode that one
-      // to keep the payload well under Vercel's 4.5MB function body limit.
-      const firstRef = refs[0];
-      let firstBase64 = "";
-      if (firstRef.source === "upload" && firstRef.file) {
-        firstBase64 = await resizeImageToBase64(firstRef.file, 512);
-      } else if (firstRef.url) {
-        firstBase64 = await urlToBase64(firstRef.url);
-      }
-
+      const images = await Promise.all(refs.map(async (r) => ({ data: await referenceToBase64(r), mimeType: "image/jpeg" })));
       const res = await fetch("/api/brand/generate-from-reference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          images: firstBase64 ? [firstBase64] : [],
-          brief: { subject, format, colour, mode, other },
-          dna: null,
+          brandId,
+          images,
+          brief: { subject: subject.trim(), where, format, productId: productIdFor(kind, productId), extra: extra.trim() || undefined },
         }),
       });
-      const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); } catch {
-        setGenError({ error: "api_error", message: `Server error: ${text.slice(0, 100)}` });
-        return;
-      }
+      const data = await res.json();
       if (!res.ok || data.error) {
-        setGenError({ error: data.error || "api_error", message: data.message || "Image generation failed" });
+        // The brief is untouched on a failure.
+        setShots((prev) => prev.map((sh) => sh.id === id
+          ? { ...snapshot, id, state: "failed", reason: data.message || "That didn't work." } : sh));
         return;
       }
-      setGenResult(data);
+      setShots((prev) => prev.map((sh) => sh.id === id ? {
+        ...snapshot, id, state: "done", saved: false, subject: subject.trim(),
+        productId: productIdFor(kind, productId),
+        base64: data.imageBase64, mimeType: data.mimeType || "image/png",
+        src: `data:${data.mimeType || "image/png"};base64,${data.imageBase64}`,
+      } : sh));
     } catch (err) {
-      setGenError({ error: "api_error", message: err instanceof Error ? err.message : "Image generation failed" });
+      const reason = err instanceof Error ? err.message : "That didn't work.";
+      setShots((prev) => prev.map((sh) => sh.id === id ? { ...snapshot, id, state: "failed", reason } : sh));
     } finally {
-      setGenerating(false);
+      setBusy(false);
     }
-  }, [subject, refs, format, colour, mode, other, urlToBase64]);
+  }, [blocker, busy, refs, format, where, subject, extra, kind, productId, brandId]);
 
-  /* ---- Actions ---- */
-
-  const downloadImage = useCallback(() => {
-    if (!genResult) return;
-    const byteChars = atob(genResult.imageBase64);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([byteArray], { type: genResult.mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `brand-image-${Date.now()}.jpg`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [genResult]);
-
-  const saveToLibrary = useCallback(async () => {
-    if (!genResult) return;
+  /* Saved images become reference material for the next round, which is how a
+     brand's look compounds instead of drifting. */
+  const save = useCallback(async (shot: Shot) => {
+    if (shot.state !== "done" || !brandId || brandId === "default") return;
     try {
-      const byteChars = atob(genResult.imageBase64);
-      const byteArray = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-      const blob = new Blob([byteArray], { type: "image/jpeg" });
-      const fileName = `generated-${Date.now()}.jpg`;
+      const bytes = Uint8Array.from(atob(shot.base64), (c) => c.charCodeAt(0));
+      const fileName = `created-${Date.now()}.png`;
       const path = `${brandId}/${fileName}`;
+      const { error: upErr } = await supabase.storage.from("brand-images")
+        .upload(path, new Blob([bytes], { type: shot.mimeType }), { upsert: true });
+      if (upErr) { flash(`Not saved — ${upErr.message}`); return; }
 
-      await supabase.storage.from("brand-images").upload(path, blob, { upsert: true });
       const { data: urlData } = supabase.storage.from("brand-images").getPublicUrl(path);
-
-      await supabase.from("brand_images").insert({
+      const { error } = await supabase.from("brand_images").insert({
         brand_id: brandId,
         file_url: urlData.publicUrl,
         file_name: fileName,
-        file_size: byteArray.length,
+        file_size: bytes.length,
         category: "ai-generated",
-        format: format.includes("1:1") ? "square" : format.includes("9:16") ? "story" : format.includes("16:9") ? "landscape" : format.includes("4:5") ? "portrait" : "other",
+        format: shot.format === "1:1" ? "square" : shot.format === "9:16" ? "story" : shot.format === "16:9" ? "landscape" : "portrait",
         campaign_name: "",
-        tags: ["ai-generated", "image-architect"],
+        tags: ["created"],
+        // The brief, the product and the references it was made from.
+        meta: {
+          subject: shot.subject, where: shot.where, format: shot.format,
+          productId: shot.productId, referenceIds: shot.refs.map((r) => r.id),
+        },
       });
+      // supabase-js resolves {data, error} and never throws.
+      if (error) { flash(`Not saved — ${error.message}`); return; }
 
-      setSavedToLib(true);
-      setTimeout(() => setSavedToLib(false), 3000);
+      setShots((prev) => prev.map((x) => x.id === shot.id && x.state === "done" ? { ...x, saved: true } : x));
+      setSavedImages((prev) => [{ id: path, file_url: urlData.publicUrl, file_name: fileName }, ...prev]);
+      flash("Saved to Knowledge ▸ Images");
     } catch (err) {
-      console.error("Save to library failed:", err);
+      flash(err instanceof Error ? `Not saved — ${err.message}` : "Not saved");
     }
-  }, [genResult, format, brandId]);
+  }, [brandId, flash]);
 
-  /* ================================================================ */
-  /*  RENDER                                                           */
-  /* ================================================================ */
+  const download = useCallback((shot: Shot) => {
+    if (shot.state !== "done") return;
+    const a = document.createElement("a");
+    a.href = shot.src;
+    a.download = `created-${shot.id}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }, []);
+
+  const examples = useMemo(() => [
+    product ? `${product.name} on a silver background` : "This product on a silver background",
+    "A girl running outside wearing a yellow dress",
+    "A man on a construction site looking up at the sky",
+    "The bottle on a kitchen counter in morning light",
+  ], [product]);
 
   return (
-    <div className="flex flex-col flex-1 h-full bg-background">
-      {/* Header */}
-      <div className="px-8 pt-8 pb-5 shrink-0">
-        <div className="flex items-center gap-2 mb-2">
-          <Link href="/brand/visual-identity" className="text-on-surface-variant hover:text-primary text-sm font-body">← Brand Library</Link>
-        </div>
-        <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Image Architect</h1>
-        <p className="text-on-surface-variant font-body font-medium text-sm leading-relaxed max-w-lg">Upload reference images and describe what you need. Gemini generates a new image matched to your style.</p>
-      </div>
+    <div className="flex items-start gap-3 stack:flex-col">
+      <div className="min-w-0 flex-1">
+        <div className={s.wrap}>
+          <div className={s.phead}>
+            <div>
+              <div className={s.eyebrow}>Studio</div>
+              <h1>Create images</h1>
+              <p>
+                Pick something that already looks right, say what you want to see, and get a new
+                image shot in the same light.
+              </p>
+            </div>
+            {savedImages.length > 0 && (
+              <span className={s.hcount}><b>{savedImages.length}</b>&nbsp;saved</span>
+            )}
+          </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="max-w-2xl mx-auto space-y-8">
-          {!genResult ? (
-            <>
-              {/* Reference images */}
-              <FieldSection label="Reference Images">
-                <p className="text-[0.72rem] text-muted mb-3">Upload or choose from your asset library. 1-3 images, Gemini will match the style.</p>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  {/* Upload zone */}
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setRefDragOver(true); }}
-                    onDragLeave={() => setRefDragOver(false)}
-                    onDrop={handleRefDrop}
-                    onClick={() => refInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer transition-all py-10 ${refDragOver ? "border-primary bg-primary-container/30" : "border-outline-variant/40 bg-surface-container-low hover:bg-surface-container-high/50"}`}
-                  >
-                    <input ref={refInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleRefFileChange} />
-                    <svg className="h-7 w-7 text-on-surface-variant/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.595H6.75z" />
-                    </svg>
-                    <span className="font-body text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Upload images</span>
-                  </div>
-
-                  {/* Library picker button */}
-                  <button
-                    onClick={() => setShowLibrary(!showLibrary)}
-                    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed cursor-pointer transition-all py-10 ${showLibrary ? "border-primary bg-primary-container/30" : "border-outline-variant/40 bg-surface-container-low hover:bg-surface-container-high/50"}`}
-                  >
-                    <svg className="h-7 w-7 text-on-surface-variant/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                    </svg>
-                    <span className="font-body text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Choose from library</span>
+          <div className={s.panes}>
+            {/* ══════════ BRIEF ══════════ */}
+            <div className={s.brief}>
+              {/* 1 · an explicit either/or */}
+              <div className={s.step}>
+                <div className={s.slab}><span className={s.snum}>1</span><h3>What are you making?</h3></div>
+                <div className={s.kind}>
+                  <button type="button" className={`${s.kd} ${kind === "product" ? s.on : ""}`}
+                    aria-pressed={kind === "product"} onClick={() => chooseKind("product")}>
+                    <Icon name="bag" size={19} />
+                    <span className={s.kl}>A product picture</span>
+                    <span className={s.kdd}>Something from your catalogue</span>
+                  </button>
+                  <button type="button" className={`${s.kd} ${kind === "other" ? s.on : ""}`}
+                    aria-pressed={kind === "other"} onClick={() => chooseKind("other")}>
+                    <Icon name="img" size={19} />
+                    <span className={s.kl}>Something else</span>
+                    <span className={s.kdd}>People, places, moods</span>
                   </button>
                 </div>
 
-                {/* Library picker panel */}
-                {showLibrary && (
-                  <div className="mb-3 border border-light rounded-lg bg-white overflow-hidden">
-                    <div className="px-3 py-2 border-b border-light bg-pale">
-                      <input
-                        value={librarySearch}
-                        onChange={(e) => setLibrarySearch(e.target.value)}
-                        placeholder="Search by tag, name, or category…"
-                        className="w-full bg-white border border-light rounded-md px-3 py-1.5 text-[0.72rem] text-ink outline-none focus:border-brand-orange placeholder:text-muted/50"
-                      />
-                    </div>
-                    <div className="max-h-[240px] overflow-y-auto p-2">
-                      {libraryLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
-                        </div>
-                      ) : filteredLibrary.length === 0 ? (
-                        <p className="text-center text-[0.72rem] text-muted py-6">
-                          {librarySearch ? "No images match your search" : "No images in your library yet"}
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-4 gap-1.5">
-                          {filteredLibrary.map((img) => {
-                            const isSelected = refs.some((r) => r.url === img.file_url);
-                            return (
-                              <button
-                                key={img.id}
-                                onClick={() => addLibraryRef(img)}
-                                disabled={isSelected || refs.length >= 3}
-                                className={`relative aspect-square rounded-md overflow-hidden transition-all ${isSelected ? "ring-2 ring-brand-orange opacity-60" : refs.length >= 3 ? "opacity-30 cursor-not-allowed" : "hover:ring-2 hover:ring-brand-orange/50"}`}
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={img.file_url} alt={img.file_name} className="w-full h-full object-cover" />
-                                {isSelected && (
-                                  <div className="absolute inset-0 bg-brand-orange/20 flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">✓</span>
-                                  </div>
-                                )}
-                                {img.tags.length > 0 && (
-                                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5">
-                                    <span className="font-mono text-[0.4rem] text-white truncate block">{img.tags.join(", ")}</span>
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
+                {kind === "product" && (
+                  <div className={s.pwrap}>
+                    {products.length === 0 ? (
+                      <p className={s.pnote}>No products yet. Add one in Knowledge ▸ Products, or pick Something else.</p>
+                    ) : (
+                      <>
+                        <label className={s.psel}>
+                          <span className="sr-only">Which product?</span>
+                          <select value={productId} onChange={(e) => chooseProduct(e.target.value)} aria-label="Which product?">
+                            <option value="">Pick a product</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}{p.category ? ` — ${p.category}` : ""}</option>
+                            ))}
+                          </select>
+                          <span className={s.pcar}><Icon name="chevronRight" size={15} /></span>
+                        </label>
+                        {product && (
+                          <p className={s.pnote}>
+                            <b>
+                              {product.image_url
+                                ? "1 product photo added as reference below."
+                                : "No product photo on file, so nothing was added below."}
+                            </b>{" "}
+                            The label, shape and colour are kept exact, and &ldquo;this product&rdquo; in
+                            your description means this one.
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
+              </div>
 
-                {/* Selected references */}
-                {refs.length > 0 && (
-                  <div className="flex gap-2 mb-1">
-                    {refs.map((ref, i) => (
-                      <div key={i} className="relative w-20 h-20 rounded-md overflow-hidden bg-pale group">
+              {/* 2 · references */}
+              <div className={s.step}>
+                <div className={s.slab}>
+                  <span className={s.snum}>2</span><h3>Pick your reference pictures</h3>
+                  <span className={s.req}>Needed</span>
+                </div>
+                <p className={s.shint}>
+                  Choose pictures that show what you are after. Up to three, and all of them are read.
+                </p>
+                <div className={s.refs}>
+                  {refs.map((r) => (
+                    <div key={r.id} className={`${s.ref} ${r.source === "product" ? s.fromprod : ""}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={r.url} alt={r.name} />
+                      <button type="button" className={s.rm} aria-label={`Remove ${r.name}`} onClick={() => removeRef(r.id)}>
+                        <Icon name="close" size={9} />
+                      </button>
+                      <span className={s.tagn}>{r.name}</span>
+                    </div>
+                  ))}
+                  {refs.length < MAX_REFS && (
+                    <>
+                      <button type="button" className={s.addref} onClick={() => void openLibrary()}>
+                        <Icon name="img" size={17} />
+                        <span>From<br />Knowledge</span>
+                      </button>
+                      {refs.length < MAX_REFS - 1 && (
+                        <button type="button" className={s.addref} onClick={() => fileRef.current?.click()}>
+                          <Icon name="upload" size={17} />
+                          <span>Upload</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onUpload} />
+              </div>
+
+              {/* 3 · where */}
+              <div className={s.step}>
+                <div className={s.slab}><span className={s.snum}>3</span><h3>Where is it?</h3></div>
+                <p className={s.shint}>This is the one thing a picture cannot tell us on its own.</p>
+                <div className={s.wheres}>
+                  {WHERE_OPTIONS.map((w) => (
+                    <button key={w.id} type="button" className={`${s.wh} ${where === w.id ? s.on : ""}`}
+                      aria-pressed={where === w.id} onClick={() => setWhere(w.id)}>
+                      <span className={`${s.wi} ${w.tone}`}>
+                        <Icon name={w.icon} size={17} />
+                      </span>
+                      <span className={s.wl}>{w.label}</span>
+                      <span className={s.wd}>{w.detail}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4 · subject */}
+              <div className={s.step}>
+                <div className={s.slab}>
+                  <span className={s.snum}>4</span><h3>What do you want to see?</h3>
+                  <span className={s.req}>Needed</span>
+                </div>
+                <p className={s.shint}>Say it plainly, the way you would to a photographer.</p>
+                <textarea className={s.brf} value={subject} onChange={(e) => setSubject(e.target.value)}
+                  placeholder="One sentence is enough." aria-label="What do you want to see?" />
+                <div className={s.exs}>
+                  {examples.map((e) => (
+                    <button key={e} type="button" className={s.ex} onClick={() => setSubject(e)}>{e}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5 · shape */}
+              <div className={s.step}>
+                <div className={s.slab}><span className={s.snum}>5</span><h3>Shape</h3></div>
+                <div className={s.ratios}>
+                  {FORMATS.map((f) => (
+                    <button key={f} type="button" className={`${s.rt} ${format === f ? s.on : ""}`}
+                      aria-pressed={format === f} onClick={() => setFormat(f)}>
+                      <span className={s.box} style={{ width: RATIO_BOX[f].w, height: RATIO_BOX[f].h }} />
+                      <span className={s.lb}>{f}</span>
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className={s.moreBtn} onClick={() => setExtraOpen((v) => !v)}>
+                  <Icon name="chevronRight" size={11} />
+                  Anything else — props, angle, space for text
+                </button>
+                {extraOpen && (
+                  <textarea className={s.brf} style={{ minHeight: 62, marginTop: 8 }} value={extra}
+                    onChange={(e) => setExtra(e.target.value)} aria-label="Anything else" />
+                )}
+              </div>
+
+              <button type="button" className={s.go} disabled={Boolean(blocker) || busy} onClick={() => void generate()}>
+                {busy ? "Making it…" : "Make the image"}
+              </button>
+              <p className={s.gowhy}>{blocker ?? briefReady(refs.length)}</p>
+            </div>
+
+            {/* ══════════ CANVAS ══════════ */}
+            <div className={s.canvas}>
+              <div className={s.ctop}>
+                <div>
+                  <h2>{tab === "session" ? "This session" : "Saved"}</h2>
+                  <div className={s.csub}>
+                    {tab === "session" ? "Nothing is kept unless you save it" : "In Knowledge ▸ Images"}
+                  </div>
+                </div>
+                <div className={s.seg} role="group" aria-label="Which images">
+                  <button type="button" className={tab === "session" ? s.on : undefined} onClick={() => setTab("session")}>Session</button>
+                  <button type="button" className={tab === "saved" ? s.on : undefined} onClick={() => setTab("saved")}>Saved</button>
+                </div>
+              </div>
+
+              {tab === "session" ? (
+                shots.length === 0 ? (
+                  <div className={s.empty}>
+                    <span className={s.emptyIc}><Icon name="img" size={26} /></span>
+                    <h3>Nothing made yet.</h3>
+                    <p>Pick a reference picture and say what you want to see. The first one takes about fifteen seconds.</p>
+                  </div>
+                ) : (
+                  <div className={s.grid}>
+                    {shots.map((shot) => (
+                      <article key={shot.id} className={`${s.shot} ${shot.state === "failed" ? s.failed : ""}`}>
+                        <div className={s.shotImg}>
+                          {shot.state === "done" ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={shot.src} alt={shot.subject} />
+                          ) : (
+                            <div className={shot.state === "working" ? s.working : undefined}
+                              style={{ paddingTop: aspectPadding(shot.format) }} />
+                          )}
+                          <span className={s.badge}>{shot.format}</span>
+                        </div>
+                        <div className={s.shotBody}>
+                          <div className={s.prov}>
+                            {shot.refs.slice(0, 3).map((r) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={r.id} className={s.th} src={r.url} alt="" />
+                            ))}
+                            <span>
+                              {shot.refs.length} reference{shot.refs.length === 1 ? "" : "s"} · {shot.where}
+                            </span>
+                          </div>
+
+                          {shot.state === "working" && (
+                            <p className={s.wstat}><i />Matching the light and grade from your references…</p>
+                          )}
+                          {shot.state === "failed" && (
+                            <>
+                              <p className={s.failMsg}>{shot.reason}</p>
+                              <div className={s.acts} style={{ marginTop: 9, gridTemplateColumns: "1fr" }}>
+                                <button type="button" className={s.act} disabled={busy} onClick={() => void generate()}>
+                                  <Icon name="repeat" size={12} />Retry
+                                </button>
+                              </div>
+                            </>
+                          )}
+                          {shot.state === "done" && (
+                            <div className={s.acts}>
+                              <button type="button" className={`${s.act} ${shot.saved ? s.done : s.prime}`}
+                                disabled={shot.saved} onClick={() => void save(shot)}>
+                                <Icon name={shot.saved ? "check" : "upload"} size={12} />
+                                {shot.saved ? "Saved" : "Save"}
+                              </button>
+                              <button type="button" className={s.act} onClick={() => download(shot)}>
+                                <Icon name="upload" size={12} />Get
+                              </button>
+                              <button type="button" className={s.act} disabled={busy} onClick={() => void generate()}>
+                                <Icon name="repeat" size={12} />Again
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )
+              ) : savedImages.length === 0 ? (
+                <div className={s.empty}>
+                  <span className={s.emptyIc}><Icon name="img" size={26} /></span>
+                  <h3>Nothing saved yet.</h3>
+                  <p>Saved images go to Knowledge ▸ Images, and can be used as references next time.</p>
+                </div>
+              ) : (
+                <div className={s.grid}>
+                  {savedImages.map((img) => (
+                    <article key={img.id} className={s.shot}>
+                      <div className={s.shotImg}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={ref.preview} alt={`ref ${i + 1}`} className="w-full h-full object-cover" />
-                        <button onClick={() => removeRef(i)} className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white text-[0.5rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-center">
-                          <span className="font-mono text-[0.4rem] text-white">{ref.source === "library" ? "Library" : "Upload"}</span>
+                        <img src={img.file_url} alt={img.file_name} />
+                      </div>
+                      <div className={s.shotBody}>
+                        <div className={s.acts} style={{ gridTemplateColumns: "1fr" }}>
+                          <button type="button" className={s.act}
+                            onClick={() => addRef({ id: `knowledge:${img.id}`, name: img.file_name, url: img.file_url, source: "knowledge" })}>
+                            <Icon name="plus" size={12} />Use as reference
+                          </button>
                         </div>
                       </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {library && (
+            <div className={s.sheet} role="dialog" aria-label="Pick from Knowledge" onClick={() => setLibrary(null)}>
+              <div className={s.sheetBox} onClick={(e) => e.stopPropagation()}>
+                <div className={s.sheetTop}>
+                  <h3>From Knowledge ▸ Images</h3>
+                  <button type="button" className={s.act} style={{ marginLeft: "auto", width: "auto", padding: "7px 12px" }}
+                    onClick={() => setLibrary(null)}>
+                    <Icon name="close" size={12} />Close
+                  </button>
+                </div>
+                {library.length === 0 ? (
+                  <p style={{ padding: "22px 18px" }} className={s.csub}>No images in Knowledge yet.</p>
+                ) : (
+                  <div className={s.sheetGrid}>
+                    {library.map((img) => (
+                      <button key={img.id} type="button" className={s.pick}
+                        onClick={() => {
+                          addRef({ id: `knowledge:${img.id}`, name: img.file_name, url: img.file_url, source: "knowledge" });
+                          setLibrary(null);
+                        }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img.file_url} alt={img.file_name} />
+                      </button>
                     ))}
                   </div>
                 )}
-                <span className="font-mono text-[0.55rem] text-muted">{refs.length}/3 reference images</span>
-              </FieldSection>
-
-              {/* Brief form */}
-              <FieldSection label="Scene Mode">
-                <div className="flex gap-2">
-                  {MODE_OPTIONS.map((m) => (
-                    <Chip key={m.key} label={`${m.icon} ${m.label}`} active={mode === m.key} onClick={() => setMode(m.key)} />
-                  ))}
-                </div>
-              </FieldSection>
-
-              <FieldSection label="Subject" required>
-                <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Who or what is in the image? (e.g. a confident young woman · a group of three friends)" className="form-input" />
-              </FieldSection>
-
-              <FieldSection label="Content Format">
-                <div className="flex flex-wrap gap-2">
-                  {FORMAT_OPTIONS.map((opt) => (
-                    <Chip key={opt.value} label={opt.label} active={format === opt.value} onClick={() => setFormat(opt.value)} />
-                  ))}
-                </div>
-              </FieldSection>
-
-              <FieldSection label="Colour / Wardrobe">
-                <input value={colour} onChange={(e) => setColour(e.target.value)} placeholder="e.g. bright orange oversized hoodie · all-white linen · bold yellow streetwear" className="form-input" />
-              </FieldSection>
-
-              <FieldSection label="Anything Else">
-                <textarea value={other} onChange={(e) => setOther(e.target.value)} rows={2} placeholder="Additional details — props, angle, text overlay space, specific scenario…" className="form-input resize-y" />
-              </FieldSection>
-
-              {/* Errors */}
-              {genError && (
-                <div className={`px-4 py-3 rounded-lg mb-4 text-[0.78rem] ${genError.error === "safety_block" ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-red-50 border border-red-200 text-red-600"}`}>
-                  {genError.message}
-                </div>
-              )}
-
-              {/* Generate button */}
-              <button
-                onClick={generateImage}
-                disabled={!subject.trim() || refs.length === 0 || generating}
-                className="w-full py-5 rounded-2xl bg-primary text-white font-headline font-extrabold text-base shadow-primary-glow disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.97] flex items-center justify-center gap-2.5"
-              >
-                {generating ? (
-                  <>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Generating image...
-                  </>
-                ) : "Generate Architect Vision"}
-              </button>
-
-              {/* Loading placeholder */}
-              {generating && (
-                <div className={`mt-6 rounded-xl bg-pale flex flex-col items-center justify-center ${getAspectClass(format)} animate-pulse`}>
-                  <p className="text-[0.82rem] text-muted font-medium mb-1">Generating your image…</p>
-                  <p className="text-[0.65rem] text-muted/60 max-w-xs text-center">Gemini is studying your reference and creating a new image in the same style</p>
-                </div>
-              )}
-            </>
-          ) : (
-            /* ---- Generated image output ---- */
-            <div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`data:${genResult.mimeType};base64,${genResult.imageBase64}`}
-                alt="Generated brand image"
-                className="w-full rounded-xl mb-2"
-              />
-              <p className="text-[0.65rem] text-muted mb-6 text-center">Generated with Gemini · matched to your reference style</p>
-
-              {/* Action buttons */}
-              <div className="flex gap-3 mb-6">
-                <button onClick={downloadImage} className="flex-1 py-3 rounded-lg bg-brand-orange text-white font-mono text-[0.7rem] uppercase tracking-wide hover:bg-brand-orange-hover transition-all">
-                  Download image
-                </button>
-                <button onClick={saveToLibrary} className="flex-1 py-3 rounded-lg border border-light text-mid font-mono text-[0.7rem] uppercase tracking-wide hover:border-brand-orange hover:text-brand-orange transition-all">
-                  {savedToLib ? "Saved to library ✓" : "Save to library"}
-                </button>
-                <button onClick={() => { setGenResult(null); setGenError(null); generateImage(); }} className="px-6 py-3 rounded-lg bg-pale text-muted font-mono text-[0.7rem] uppercase tracking-wide hover:text-ink transition-all">
-                  Regenerate
-                </button>
               </div>
-
-              <button onClick={() => { setGenResult(null); setGenError(null); }} className="text-[0.72rem] text-muted hover:text-brand-orange transition-colors">
-                ← Back to form
-              </button>
             </div>
           )}
+
+          <div className={`${s.toast} ${toast ? s.toastOn : ""}`} role="status" aria-live="polite">{toast}</div>
         </div>
       </div>
 
-      <style jsx global>{`
-        .form-input {
-          width: 100%;
-          border: 2px solid transparent;
-          border-radius: 1rem;
-          padding: 1rem 1.25rem;
-          font-size: 0.875rem;
-          color: #1a1c1e;
-          background: #f3f6fc;
-          outline: none;
-          transition: all 0.2s;
-          font-family: var(--font-manrope), Manrope, var(--font-dm-sans), sans-serif;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-        .form-input:focus { background: #fff; border-color: rgba(236, 92, 54, 0.3); }
-        .form-input::placeholder { color: rgba(68, 71, 78, 0.4); }
-      `}</style>
+      <ChatRail
+        indexedFileCount={savedImages.length}
+        suggestions={[
+          "What does our photography look like?",
+          "Which product should I photograph next?",
+          "What colours should a new image use?",
+        ]}
+      />
     </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
-
-function FieldSection({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3">
-      <label className="font-headline font-bold text-base text-on-surface flex items-center gap-2">
-        {label}
-        {required && <span className="text-primary text-[10px] font-bold uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full">Required</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-5 py-3 rounded-2xl font-body font-bold text-xs transition-all active:scale-95 ${
-        active
-          ? "bg-primary text-white shadow-lg shadow-primary/20"
-          : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
-      }`}
-    >
-      {label}
-    </button>
   );
 }

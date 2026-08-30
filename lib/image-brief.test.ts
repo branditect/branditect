@@ -6,7 +6,7 @@ import {
   buildImagePrompt, buildParts, productIdentity, decideProductAccess,
   briefBlocker, briefReady, isValidWhere, isValidFormat,
   WHERES, FORMATS, PRODUCT_FIELDS,
-  type Brief, type Where,
+  type Brief,
 } from "./image-brief.ts";
 
 const BRIEF: Brief = {

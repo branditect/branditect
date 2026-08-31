@@ -172,3 +172,133 @@
   .band h2 { font-size: 24px; }
   .sec { padding: 40px 0; }
 }
+
+/* ============ landing hero ============ */
+.landingHero { display: grid; grid-template-columns: minmax(0, 1.08fr) 404px; gap: 56px;
+  align-items: start; padding: 54px 0 26px; }
+.heroKicker { display: inline-flex; align-items: center; gap: 9px; background: var(--s-lav-wash);
+  border: 1px solid var(--s-lav-line); border-radius: theme('borderRadius.pill'); padding: 7px 15px;
+  font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--s-violet); }
+.landingHero h1 { font-size: 54px; font-weight: 800; letter-spacing: -2.2px; line-height: 1.06; margin-top: 22px; }
+.landingHero h1 em { font-style: normal; background: var(--s-grad-hero); -webkit-background-clip: text;
+  background-clip: text; color: transparent; }
+.heroLede { font-size: 18.5px; font-weight: 400; color: theme('colors.muted.DEFAULT'); margin-top: 20px;
+  max-width: 50ch; line-height: 1.62; }
+.heroLede b { font-weight: 700; color: theme('colors.ink.2'); }
+.trust { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 26px; }
+.tp { display: inline-flex; align-items: center; gap: 7px; background: rgba(255, 255, 255, .72);
+  border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.pill'); padding: 8px 14px;
+  font-size: theme('fontSize.xs[0]'); font-weight: 700; color: theme('colors.ink.2'); }
+.tp svg { color: var(--s-green); flex: none; }
+
+/* The same card as /login: white into lavender, a violet orb behind it, and a
+ * blur so the wash reads through the edges. Sticky, so it stays beside the
+ * copy as the page scrolls. */
+.authCard { position: sticky; top: 86px; overflow: hidden; border-radius: 26px; padding: 22px 24px 20px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .95) 0%, rgba(240, 234, 253, .94) 100%);
+  border: 1px solid rgba(255, 255, 255, .85);
+  box-shadow: 0 30px 60px -30px rgba(90, 40, 20, .4), 0 2px 6px rgba(90, 40, 20, .07);
+  backdrop-filter: blur(10px); scroll-margin-top: 86px; }
+.orb { position: absolute; right: -70px; top: -46px; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(160, 124, 232, .42), rgba(216, 201, 249, 0) 68%);
+  pointer-events: none; }
+.orb2 { position: absolute; left: -80px; bottom: -90px; width: 230px; height: 230px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(251, 92, 31, .16), rgba(251, 92, 31, 0) 66%);
+  pointer-events: none; }
+.authCard > *:not(.orb):not(.orb2) { position: relative; z-index: 2; }
+.tabs { display: flex; background: rgba(255, 255, 255, .55); border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: theme('borderRadius.pill'); padding: 4px; margin-bottom: 4px; }
+.tabs button { all: unset; cursor: pointer; flex: 1; text-align: center; border-radius: theme('borderRadius.pill');
+  padding: 9px; font-size: theme('fontSize.sm[0]'); font-weight: 700; color: theme('colors.muted.DEFAULT'); }
+.tabs button.on { background: theme('colors.card'); color: theme('colors.ink.DEFAULT');
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .09); }
+
+/* ============ screenshot frames ============ */
+.frame { border-radius: theme('borderRadius.panel'); overflow: hidden; background: theme('colors.card');
+  border: 1px solid theme('colors.rule.2'); box-shadow: 0 24px 50px -30px rgba(20, 20, 26, .38); }
+.frame img { display: block; width: 100%; height: auto; }
+.cap { display: flex; gap: 9px; margin-top: 14px; font-size: theme('fontSize.sm[0]'); font-weight: 500;
+  color: theme('colors.muted.DEFAULT'); line-height: 1.6; }
+.cap b { font-weight: 800; color: theme('colors.ink.2'); }
+.capDot { width: 6px; height: 6px; border-radius: 50%; background: theme('colors.accent.DEFAULT');
+  flex: none; margin-top: 7px; }
+
+/* ============ three truths ============ */
+.truths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.tr { border-radius: theme('borderRadius.panel'); padding: 28px 26px 24px; display: flex; flex-direction: column; }
+.t1 { background: theme('backgroundImage.grad-more'); }
+.t2 { background: theme('backgroundImage.grad-images'); }
+.t3 { background: theme('backgroundImage.grad-numbers'); }
+.tn { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; color: theme('colors.ink.DEFAULT'); opacity: .42; }
+.tr h3 { font-size: 24px; font-weight: 800; letter-spacing: -.7px; margin-top: 9px; }
+.tw { font-size: theme('fontSize.base[0]'); font-weight: 500; color: theme('colors.ink.2'); opacity: .82;
+  margin-top: 11px; line-height: 1.6; flex: 1; }
+.tf { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(0, 0, 0, .09);
+  font-size: 13.5px; font-weight: 600; color: theme('colors.ink.2'); }
+.tf b { font-weight: 800; color: theme('colors.ink.DEFAULT'); }
+
+/* ============ define, feed, make ============ */
+.flow { display: grid; grid-template-columns: repeat(3, 1fr); background: theme('colors.card');
+  border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.panel'); overflow: hidden; }
+.fs { padding: 28px 26px; border-right: 1px solid theme('colors.rule.DEFAULT'); }
+.fs:last-child { border-right: 0; }
+.fsV { font-size: theme('fontSize.xs[0]'); font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
+  color: theme('colors.accent.dark'); }
+.fs h3 { font-size: 20px; font-weight: 800; letter-spacing: -.5px; margin-top: 9px; }
+.fs p { font-size: theme('fontSize.base[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT');
+  margin-top: 9px; line-height: 1.6; }
+
+/* ============ about strip ============ */
+.aboutStrip { display: grid; grid-template-columns: 1.15fr 1fr; gap: 44px; align-items: center;
+  background: var(--s-navy); border-radius: 26px; padding: 44px 42px; color: #fff; }
+.aboutStrip h2 { font-size: 32px; font-weight: 800; letter-spacing: -1.1px; line-height: 1.16; }
+.aboutStrip p { font-size: 15.5px; font-weight: 400; color: rgba(255, 255, 255, .78); margin-top: 16px; line-height: 1.7; }
+.aboutStrip p b { font-weight: 700; color: #fff; }
+.facts { background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: theme('borderRadius.panel'); padding: 6px 20px; }
+.factRow { display: flex; justify-content: space-between; gap: 14px; padding: 13px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .12); font-size: 13.5px; }
+.factRow:last-child { border-bottom: 0; }
+.factK { font-weight: 500; color: rgba(255, 255, 255, .62); }
+.factV { font-weight: 800; text-align: right; }
+
+/* ============ final ============ */
+.final { background: var(--s-grad-hero); border-radius: 26px; padding: 56px 40px; text-align: center;
+  color: #fff; position: relative; overflow: hidden; margin: 20px 0 70px; }
+.rings { position: absolute; right: -80px; top: -120px; width: 520px; height: 520px; opacity: .4; pointer-events: none; }
+.rings i { position: absolute; inset: 0; border: 1px solid rgba(255, 255, 255, .24); border-radius: 50%; }
+.rings i:nth-child(2) { inset: 60px; }
+.rings i:nth-child(3) { inset: 120px; }
+.final > *:not(.rings) { position: relative; z-index: 2; }
+.final h2 { font-size: 38px; font-weight: 800; letter-spacing: -1.3px; line-height: 1.13; }
+.final p { font-size: 16.5px; font-weight: 400; color: rgba(255, 255, 255, .88); margin: 15px auto 0;
+  max-width: 48ch; line-height: 1.6; }
+.final .btn { background: #fff; color: theme('colors.accent.dark'); margin-top: 28px;
+  box-shadow: 0 8px 20px rgba(90, 25, 5, .28); }
+.finalFine { font-size: 12.5px; font-weight: 600; color: rgba(255, 255, 255, .78); margin-top: 14px; }
+
+.anchor { scroll-margin-top: 80px; }
+.allplans { text-align: center; margin-top: 20px; font-size: theme('fontSize.sm[0]'); font-weight: 600; }
+.allplans a { color: theme('colors.accent.dark'); font-weight: 700; }
+/* The border only appears once the page has moved, so the nav sits flat on the
+ * hero and gains an edge when there is content behind it. */
+.navScrolled { border-bottom-color: theme('colors.rule.2'); box-shadow: 0 1px 0 rgba(20, 20, 26, .04); }
+
+@media (max-width: 1040px) {
+  .landingHero { grid-template-columns: 1fr; gap: 36px; }
+  .authCard { position: static; max-width: 440px; }
+  .landingHero h1 { font-size: 40px; }
+  .truths, .aboutStrip { grid-template-columns: 1fr; }
+  .flow { grid-template-columns: 1fr; }
+  .fs { border-right: 0; border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
+}
+@media (max-width: 620px) {
+  .landingHero { padding: 30px 0 18px; }
+  .landingHero h1 { font-size: 32px; letter-spacing: -1.2px; }
+  .heroLede { font-size: 15.5px; }
+  .final { padding: 34px 22px; border-radius: 18px; }
+  .final h2 { font-size: 26px; }
+  .aboutStrip { padding: 28px 22px; border-radius: 18px; }
+  .aboutStrip h2 { font-size: 24px; }
+}

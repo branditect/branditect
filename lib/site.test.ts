@@ -34,14 +34,15 @@ describe("the public site exists", () => {
 
 /** Criterion 4. Five surfaces hand-rolled the mark before logo.tsx existed. */
 describe("the nav uses components/logo.tsx", () => {
-  it("imports Logo in the layout", () => {
-    const layout = read(SITE_FILES.find((f) => f.endsWith("(site)/layout.tsx"))!);
-    assert.ok(/from "@\/components\/logo"/.test(layout), "the layout does not import Logo");
-    assert.ok(/<Logo\b/.test(layout), "the layout does not render Logo");
+  it("renders the real Logo in the nav", () => {
+    const nav = read(new URL("../components/site/site-nav.tsx", import.meta.url).pathname);
+    assert.ok(/from "@\/components\/logo"/.test(nav), "the nav does not import Logo");
+    assert.ok(/<Logo\b/.test(nav), "the nav does not render Logo");
   });
 
-  it("draws no mark of its own anywhere under (site)", () => {
-    for (const f of SITE_FILES) {
+  it("draws no mark of its own anywhere under (site) or components/site", () => {
+    const siteComponents = filesUnder(new URL("../components/site", import.meta.url).pathname);
+    for (const f of [...SITE_FILES, ...siteComponents]) {
       const src = read(f);
       assert.ok(!/linearGradient/i.test(src), `${f} draws a gradient of its own`);
       assert.ok(!/viewBox="0 0 119 123"/.test(src), `${f} inlines the mark artwork`);
@@ -149,14 +150,14 @@ describe("sitemap and robots", () => {
   const robots = read(new URL("../app/robots.ts", import.meta.url).pathname);
 
   it("lists exactly the three public routes", () => {
-    const urls = [...sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)].map((m) => m[1]);
+    const urls = Array.from(sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)).map((m) => m[1]);
     assert.deepEqual(urls.sort(), ["/", "/about", "/pricing"]);
   });
 
   it("keeps the app, onboarding and the kit portal out of the sitemap", () => {
     // The comment above the entries names what it excludes; the entries are
     // what matters.
-    const urls = [...sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)].map((m) => m[1]);
+    const urls = Array.from(sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)).map((m) => m[1]);
     for (const path of ["/home", "/start", "/k", "/api"]) {
       assert.ok(!urls.includes(path), `${path} is in the sitemap`);
     }
@@ -185,8 +186,68 @@ describe("no em dashes on the public site", () => {
     const name = f.slice(f.lastIndexOf("/") + 1);
     it(`${name} has none`, () => {
       const src = read(f);
-      const found = [...src.matchAll(/.{0,40}[—–].{0,40}/g)].map((m) => m[0]);
+      const found = Array.from(src.matchAll(/.{0,40}[\u2014\u2013].{0,40}/g)).map((m) => m[0]);
       assert.deepEqual(found, [], `${f}:\n${found.join("\n")}`);
     });
   }
+});
+
+/**
+ * Criterion 11. Rebuilding the form on the landing page would fork the
+ * validation, the identical-error rule on the sign-in path, and the
+ * aria-disabled handling on the SSO buttons.
+ */
+describe("the landing page reuses the real auth form", () => {
+  const siteComponents = filesUnder(new URL("../components/site", import.meta.url).pathname);
+
+  it("declares no password input of its own", () => {
+    for (const f of [...SITE_FILES, ...siteComponents]) {
+      const src = read(f);
+      assert.ok(!/type=["']password["']/.test(src), `${f} declares a password input`);
+    }
+  });
+
+  it("declares no email input of its own either", () => {
+    for (const f of [...SITE_FILES, ...siteComponents]) {
+      const src = read(f);
+      assert.ok(!/type=["']email["']/.test(src), `${f} declares an email input`);
+    }
+  });
+
+  it("imports AuthForm rather than copying it", () => {
+    const card = read(new URL("../components/site/hero-auth-card.tsx", import.meta.url).pathname);
+    assert.ok(/from "@\/components\/auth\/auth-form"/.test(card), "the card does not import AuthForm");
+    assert.ok(/<AuthForm\b/.test(card), "the card does not render AuthForm");
+  });
+
+  it("leaves /login and /signup in place", () => {
+    for (const page of ["../app/login/page.tsx", "../app/signup/page.tsx"]) {
+      let there = true;
+      try { statSync(new URL(page, import.meta.url).pathname); } catch { there = false; }
+      assert.ok(there, `${page} was removed; it is linked from emails`);
+    }
+  });
+});
+
+/** Criterion 13, at the source level. The browser check confirms they resolve. */
+describe("the landing page carries the three anchors", () => {
+  const landing = read(new URL("../app/(site)/landing-client.tsx", import.meta.url).pathname);
+
+  for (const id of ["how", "pricing", "about"]) {
+    it(`has a section with id ${id}`, () => {
+      assert.ok(new RegExp(`id="${id}"`).test(landing), `no #${id} on the landing page`);
+    });
+  }
+
+  it("the nav points at those anchors on the landing page", () => {
+    const nav = read(new URL("../components/site/site-nav.tsx", import.meta.url).pathname);
+    for (const anchor of ["#how", "#pricing", "#about"]) {
+      assert.ok(nav.includes(`"${anchor}"`), `the nav does not link to ${anchor}`);
+    }
+  });
+
+  it("has no Product link, which had no page behind it", () => {
+    const nav = read(new URL("../components/site/site-nav.tsx", import.meta.url).pathname);
+    assert.ok(!/>Product</.test(nav), "the nav still carries a Product link");
+  });
 });

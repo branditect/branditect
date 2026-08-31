@@ -17,7 +17,7 @@ import s from "./auth.module.css";
  * When a provider is wired, drop `demo` and its tag from that button only.
  */
 
-const NOTE = "Demo version — sign in with email for now";
+const NOTE = "Demo version. Sign in with email for now.";
 
 const PROVIDERS = [
   {

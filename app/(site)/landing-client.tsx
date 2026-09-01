@@ -157,7 +157,7 @@ export default function LandingClient() {
         <section className={`${s.sec} ${s.anchor}`} id="pricing" style={{ paddingTop: 0 }}>
           <div className={s.sechead} style={{ textAlign: "center", margin: "0 auto 34px" }}>
             <div className={s.eyebrow}>Pricing</div>
-            <h2>Build it for nothing.</h2>
+            <h2>Get started for free!</h2>
             <p>A hundred credits, no card, no countdown. Pay when you want it working for you.</p>
           </div>
           <div className={`${s.plans} ${s.plansThree}`}>

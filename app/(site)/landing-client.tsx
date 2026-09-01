@@ -34,6 +34,15 @@ const FLOW = [
   { v: "Make", title: "Get work back", body: "Copy in your voice citing your own facts, images shot in your own light, and offers that respect your floor price." },
 ];
 
+const ROLES = [
+  "A strategist, who decides what the brand stands for and what it will never say",
+  "A product manager, on top of every product, every detail and every price",
+  "A copywriter, who can write it the same way twice",
+  "A designer and a photographer, producing the images before anyone asks for them",
+  "Someone who holds the library: every product image, video and logo, in every format and crop",
+  "A shared drive that one person is supposed to maintain full time, and usually does not",
+];
+
 const LANDING_PLANS = PLANS.filter((p) => p.id !== "enterprise");
 
 /* The nav's Log in and Start free carry ?auth=, so either opens this card on
@@ -189,29 +198,41 @@ export default function LandingClient() {
         <section className={`${s.sec} ${s.anchor}`} id="about" style={{ paddingTop: 0 }}>
           <div className={s.aboutStrip}>
             <div>
-              <h2>Built in Finland, for people who sell something specific.</h2>
+              <div className={s.aboutLead}>About</div>
+              <h2>
+                Built by a team that has spent two decades building brands around the world.
+                Made in Finland.
+              </h2>
               <p>
-                Branditect exists because the three questions every brand answers forever are
-                usually buried in a deck nobody opens, an inbox nobody searches and a spreadsheet
-                one person maintains. <b>It writes from what you gave it and nothing else.</b> Ask
-                for a product that is not in there and it tells you so.
+                A brand rarely fails on strategy alone. It fails in the gaps between strategy,
+                product and price. The launch that was on brand and under margin. The claim nobody
+                checked before it went to print. The retailer description written from memory at
+                eleven at night, because the spec sheet was somewhere in an inbox.
               </p>
+              <p><b>Big brands close those gaps with people.</b></p>
+            </div>
+
+            <ul className={s.roles}>
+              {ROLES.map((r) => (
+                <li key={r}><i />{r}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={s.aboutStrip} style={{ display: "block", marginTop: 14 }}>
+            <div className={s.aboutClose} style={{ marginTop: 0, paddingTop: 0, borderTop: 0 }}>
+              <p>
+                What a big brand has is not better instincts than you. It is strategy and
+                infrastructure.
+              </p>
+              <p>
+                Branditect gives you both, at whatever stage you are at. First product or four
+                hundredth. You still make every decision. You stop making them from memory.
+              </p>
+              <p className={s.aboutPunch}>They have a marketing team. You have Branditect.</p>
               <div className={s.bandCta} style={{ justifyContent: "flex-start", marginTop: 22 }}>
                 <Link href="/about" className={`${s.btn} ${s.line}`}>Read the whole thing</Link>
               </div>
-            </div>
-            <div className={s.facts}>
-              {[
-                ["Where it runs", "EU infrastructure"],
-                ["Who owns your files", "You do"],
-                ["Data protection", "GDPR, as processor"],
-                ["Where it is built", "Finland"],
-              ].map(([k, v]) => (
-                <div key={k} className={s.factRow}>
-                  <span className={s.factK}>{k}</span>
-                  <span className={s.factV}>{v}</span>
-                </div>
-              ))}
             </div>
           </div>
         </section>

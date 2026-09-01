@@ -302,3 +302,20 @@
   .aboutStrip { padding: 28px 22px; border-radius: 18px; }
   .aboutStrip h2 { font-size: 24px; }
 }
+
+/* The roles a big brand fills with people. A list rather than prose, because
+ * the point is the length of it. */
+.roles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.roles li { display: flex; gap: 11px; font-size: 14.5px; font-weight: 500; line-height: 1.55;
+  color: rgba(255, 255, 255, .84); }
+.roles li i { width: 6px; height: 6px; border-radius: 50%; background: theme('colors.accent.DEFAULT');
+  flex: none; margin-top: 8px; }
+.aboutClose { margin-top: 34px; padding-top: 26px; border-top: 1px solid rgba(255, 255, 255, .16); }
+.aboutClose p { font-size: 15.5px; font-weight: 400; color: rgba(255, 255, 255, .78); line-height: 1.7; margin-top: 0; }
+.aboutClose p + p { margin-top: 14px; }
+.aboutPunch { font-size: 22px; font-weight: 800; letter-spacing: -.6px; color: #fff; margin-top: 22px; line-height: 1.25; }
+.aboutLead { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase; color: rgba(255, 255, 255, .58); }
+@media (max-width: 620px) {
+  .aboutPunch { font-size: 18px; }
+}

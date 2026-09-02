@@ -120,3 +120,57 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+/**
+ * Remove ONE product, or put one back.
+ *
+ * Soft delete. `deleted_at` is stamped and the row stays, because the row
+ * carries the landed cost, the floor price and the margin guardrails somebody
+ * worked out once, and this project has no database backups of any kind.
+ *
+ * If the column is missing the route refuses rather than falling back to a
+ * real DELETE. Silently doing the destructive thing because the safe thing was
+ * unavailable is how data goes missing.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = req.nextUrl;
+    const id = searchParams.get("id");
+    const brandId = searchParams.get("brand_id");
+    const restore = searchParams.get("restore") === "1";
+
+    if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+    if (!brandId) return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
+
+    // Scoped by brand_id as well as id, so a guessed id cannot reach another
+    // brand's product.
+    const { data, error } = await supabase
+      .from("catalog_products")
+      .update({ deleted_at: restore ? null : new Date().toISOString() })
+      .eq("id", id)
+      .eq("brand_id", brandId)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      // PGRST204 is "column not found in the schema cache".
+      if (/deleted_at/.test(error.message)) {
+        console.error("[product DELETE] deleted_at is missing:", error.message);
+        return NextResponse.json({
+          error: "not_migrated",
+          message: "Removing a product needs one more database column. Run supabase/product-delete.sql.",
+        }, { status: 501 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    // supabase-js resolves { data, error } and never throws, so a missing row
+    // arrives here as data === null rather than as a failure.
+    if (!data) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+
+    return NextResponse.json({ product: data, restored: restore });
+  } catch (error) {
+    console.error("Product DELETE error:", error);
+    const message = error instanceof Error ? error.message : "Failed to remove product";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

@@ -1,4 +1,5 @@
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { liveOnly } from "@/lib/product-delete";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -23,7 +24,7 @@ export async function buildBrandContext(brandId: string): Promise<string> {
     supabase
       .from("catalog_products")
       .select(
-        "type, name, description, price_rrp, price_monthly, price_model, inclusions, ideal_client, delivery_time, category"
+        "type, name, description, price_rrp, price_monthly, price_model, inclusions, ideal_client, delivery_time, category, deleted_at"
       )
       .eq("brand_id", brandId)
       .order("sort_order"),
@@ -114,8 +115,12 @@ export async function buildBrandContext(brandId: string): Promise<string> {
   }
 
   // 3. Products & Services Catalogue
-  if (productsRes.data && productsRes.data.length > 0) {
-    const productLines = productsRes.data.map((p: any) => {
+  // Filtered here rather than in the query: `.is("deleted_at", null)` fails
+  // outright where the column does not exist yet, and that would take every
+  // prompt in the app down with it. liveOnly treats an absent field as live.
+  const liveProducts = liveOnly(productsRes.data as any[]);
+  if (liveProducts.length > 0) {
+    const productLines = liveProducts.map((p: any) => {
       const parts: string[] = [`${p.name} (${p.type})`];
       if (p.description) parts.push(p.description);
       if (p.category) parts.push(`Category: ${p.category}`);

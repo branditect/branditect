@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
 import ProductDrawer from "@/components/products/product-drawer";
+import RemoveProductDialog, { UndoBar } from "@/components/products/remove-product";
 import {
   categoryStyle,
   formatMoney,
@@ -29,6 +30,10 @@ export default function ProductsPage() {
   const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Product | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [undo, setUndo] = useState<Product | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
 
@@ -94,12 +99,79 @@ export default function ProductsPage() {
     setPage(1);
   }
 
+  /**
+   * Removing is a soft delete: the row keeps its costs, prices and guardrails
+   * and is stamped `deleted_at`. The list updates immediately, and the write
+   * is checked before that is treated as true.
+   */
+  async function remove(p: Product) {
+    setRemoving(true);
+    setRemoveError(null);
+    try {
+      const res = await fetch(
+        `/api/catalog/product?id=${encodeURIComponent(p.id)}&brand_id=${encodeURIComponent(brandId)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // supabase-js never throws, so the route's own error is the only
+        // signal that nothing happened. Say so rather than showing it gone.
+        setRemoveError(data.message || data.error || "That did not save. The product is still here.");
+        return;
+      }
+      setProducts((prev) => (prev ?? []).filter((x) => x.id !== p.id));
+      if (selectedId === p.id) setSelectedId(null);
+      setUndo(p);
+    } catch {
+      setRemoveError("That did not save. The product is still here.");
+    } finally {
+      setRemoving(false);
+      setConfirming(null);
+    }
+  }
+
+  async function restore(p: Product) {
+    setUndo(null);
+    const res = await fetch(
+      `/api/catalog/product?id=${encodeURIComponent(p.id)}&brand_id=${encodeURIComponent(brandId)}&restore=1`,
+      { method: "DELETE" },
+    );
+    if (!res.ok) {
+      setRemoveError("Could not put it back. Reload and try again.");
+      return;
+    }
+    setProducts((prev) => [...(prev ?? []), p]);
+  }
+
   const loading = products === null;
   const isEmpty = !loading && (products?.length ?? 0) === 0;
   const noResults = !loading && !isEmpty && sorted.length === 0;
 
   return (
     <div className="mx-auto flex max-w-[1560px] items-start gap-3 px-4 py-3">
+      {/* Top level on purpose: these must not depend on the drawer being open. */}
+      {removeError && (
+        <div role="alert" className="fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 rounded-pill bg-[#a63232] px-5 py-3 text-sm font-semibold text-white shadow-float">
+          {removeError}
+          <button type="button" onClick={() => setRemoveError(null)} className="ml-3 underline">Dismiss</button>
+        </div>
+      )}
+      {confirming && (
+        <RemoveProductDialog
+          name={confirming.name}
+          busy={removing}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => void remove(confirming)}
+        />
+      )}
+      {undo && (
+        <UndoBar
+          name={undo.name}
+          onUndo={() => void restore(undo)}
+          onDismiss={() => setUndo(null)}
+        />
+      )}
+
       <main className="flex min-h-[calc(100vh-24px)] min-w-0 flex-1 flex-col rounded-panel border border-rule bg-card p-5 drop-shadow-panel">
         <header className="flex flex-wrap items-start gap-3.5">
           <div>
@@ -314,16 +386,28 @@ export default function ProductsPage() {
                           )}
                         </td>
                         <td className="px-2.5 py-3 align-middle">
-                          <span
-                            aria-hidden="true"
-                            className={`ml-auto grid h-7 w-7 place-items-center rounded-[9px] border ${
-                              isSelected
-                                ? "border-accent-line bg-tint-1 text-accent"
-                                : "border-rule-2 bg-white text-ink-2"
-                            }`}
-                          >
-                            <Icon name="chevronRight" size={13} />
-                          </span>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Stops the row click, which opens the drawer. */}
+                            <button
+                              type="button"
+                              aria-label={`Remove ${p.name}`}
+                              title={`Remove ${p.name}`}
+                              onClick={(e) => { e.stopPropagation(); setConfirming(p); }}
+                              className="grid h-7 w-7 place-items-center rounded-[9px] border border-rule-2 bg-white text-muted-2 hover:border-[#f3c9c9] hover:bg-[#fdecec] hover:text-[#a63232] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+                            >
+                              <Icon name="trash" size={13} />
+                            </button>
+                            <span
+                              aria-hidden="true"
+                              className={`grid h-7 w-7 place-items-center rounded-[9px] border ${
+                                isSelected
+                                  ? "border-accent-line bg-tint-1 text-accent"
+                                  : "border-rule-2 bg-white text-ink-2"
+                              }`}
+                            >
+                              <Icon name="chevronRight" size={13} />
+                            </span>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -391,7 +475,7 @@ export default function ProductsPage() {
       {/* Below 1280px the drawer would crush the table, so it is hidden there. */}
       {selected && (
         <div className="hidden xl:block">
-          <ProductDrawer
+      <ProductDrawer
             product={selected}
             brandId={brandId}
             onClose={() => setSelectedId(null)}

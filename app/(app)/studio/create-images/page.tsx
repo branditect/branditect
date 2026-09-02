@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { liveOnly } from "@/lib/product-delete";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
 import ChatRail from "@/components/chat-rail";
@@ -32,7 +33,7 @@ interface Reference {
   file?: File;
 }
 
-interface Product { id: string; name: string; category: string | null; image_url: string | null }
+interface Product { id: string; name: string; category: string | null; image_url: string | null; deleted_at?: string | null }
 interface LibraryImage { id: string; file_url: string; file_name: string }
 
 type Shot =
@@ -113,12 +114,12 @@ export default function CreateImagesPage() {
     let alive = true;
     (async () => {
       const [p, imgs] = await Promise.all([
-        supabase.from("catalog_products").select("id, name, category, image_url").eq("brand_id", brandId).order("sort_order"),
+        supabase.from("catalog_products").select("id, name, category, image_url, deleted_at").eq("brand_id", brandId).order("sort_order"),
         supabase.from("brand_images").select("id, file_url, file_name").eq("brand_id", brandId)
           .eq("category", "ai-generated").order("uploaded_at", { ascending: false }),
       ]);
       if (!alive) return;
-      const rows = (p.data as Product[]) ?? [];
+      const rows = liveOnly((p.data as Product[]) ?? []);
       setProducts(rows);
       setSavedImages((imgs.data as LibraryImage[]) ?? []);
       // A brand with a catalogue is usually photographing it.

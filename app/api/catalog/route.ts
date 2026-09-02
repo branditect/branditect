@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { liveOnly, deletedOnly } from "@/lib/product-delete";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,9 +15,14 @@ export async function GET(req: NextRequest) {
       supabase.from("brand_financial_rules").select("*").eq("brand_id", brandId).maybeSingle(),
     ]);
 
+    // A removed product is out of the list and out of everything that reads
+    // it, including the brand context Studio writes from. It is returned
+    // separately so the page can offer it back.
+    const rows = productsRes.data ?? [];
     return NextResponse.json({
       catalog: catalogRes.data,
-      products: productsRes.data || [],
+      products: liveOnly(rows),
+      deletedProducts: deletedOnly(rows),
       financialRules: rulesRes.data,
     });
   } catch (error) {

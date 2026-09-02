@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { computeReadiness, questionnairePassed, type Readiness } from "@/lib/readiness";
 import { fromRow, type OnboardingRow, type Status } from "@/lib/onboarding";
 import { answeredTotal } from "@/lib/rail-steps";
+import { liveOnly } from "@/lib/product-delete";
 
 export interface KnowledgeCounts {
   documents: number;
@@ -94,7 +95,7 @@ export function useReadiness(brandId: string) {
             .select("*", count)
             .eq("brand_id", brandId)
             .in("category", ["product", "brand"]),
-          supabase.from("catalog_products").select("*", count).eq("brand_id", brandId),
+          supabase.from("catalog_products").select("id, deleted_at").eq("brand_id", brandId),
           supabase.from("brand_templates").select("*", count).eq("brand_id", brandId),
           supabase
             .from("brand_visual")
@@ -117,7 +118,7 @@ export function useReadiness(brandId: string) {
       setCounts({
         documents,
         images: images.count ?? 0,
-        products: products.count ?? 0,
+        products: liveOnly(products.data ?? []).length,
         presentations: presentationCount,
         links: linkCount,
       });

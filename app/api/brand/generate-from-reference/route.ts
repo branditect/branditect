@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { isLive } from "@/lib/product-delete";
 import {
   buildImagePrompt, buildParts, productIdentity, decideProductAccess,
   isValidFormat, isValidWhere, PRODUCT_FIELDS,
@@ -34,7 +35,7 @@ async function readProduct(
 ): Promise<{ ok: true; product: ProductIdentity | null; imageUrl: string | null } | { ok: false; status: 403 }> {
   const { data, error } = await supabase
     .from("catalog_products")
-    .select(`id, brand_id, image_url, ${PRODUCT_FIELDS.join(", ")}`)
+    .select(`id, brand_id, image_url, deleted_at, ${PRODUCT_FIELDS.join(", ")}`)
     .eq("id", productId)
     .maybeSingle();
 
@@ -47,7 +48,10 @@ async function readProduct(
   // round, and a missing row refuses exactly like a foreign one.
   const row = data as Record<string, unknown> | null;
   const access = decideProductAccess(brandId, (row?.brand_id as string) ?? null);
-  if (!access.ok || !row) return { ok: false, status: 403 };
+  // A removed product refuses exactly like a foreign one.
+  if (!access.ok || !row || !isLive(row as { deleted_at?: string | null })) {
+    return { ok: false, status: 403 };
+  }
 
   return {
     ok: true,

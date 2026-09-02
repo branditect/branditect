@@ -190,10 +190,10 @@ describe("the questionnaire row says where they got to", () => {
     assert.equal(c.href, "/start");
   });
 
-  it("reads '7 of 20 answered' part way, and offers to pick up", () => {
+  it("reads '7 of 20 answered' part way, and offers to continue", () => {
     const c = row(7, "partial");
     assert.equal(c.detail, "7 of 20 answered");
-    assert.equal(c.action, "Pick up where you left off");
+    assert.equal(c.action, "Continue");
     assert.equal(c.href, "/start");
   });
 

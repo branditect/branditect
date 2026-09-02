@@ -110,7 +110,7 @@ export function computeReadiness(input: ReadinessInputs): Readiness {
         ? null
         : (input.questionnaireAnswered ?? 0) === 0
           ? "Start"
-          : "Pick up where you left off",
+          : "Continue",
     },
     {
       id: "knowledgeFiles",

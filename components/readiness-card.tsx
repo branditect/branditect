@@ -35,14 +35,17 @@ export default function ReadinessCard({ readiness, knowledge }: ReadinessCardPro
         className="absolute right-6 top-6 w-28 -rotate-6 rounded-card bg-white p-3 shadow-[0_14px_26px_-14px_rgba(60,12,0,.55)] stack:hidden"
       >
         <div className="text-[5.5px] font-normal uppercase tracking-[.85px] text-faint-2">
-          Apex Performance
+          Your data
         </div>
-        <div className="mt-[11px] text-[17px] font-bold leading-[17.5px] tracking-[-.6px] text-ink">
-          BUILT
+        {/* FOUNDATION is twice the length of the word this replaced. At 13.5px
+            it measured 87px inside an 89px tile, which is under 2px of
+            clearance and would spill on a machine that renders wider. */}
+        <div className="mt-[11px] text-[12px] font-bold leading-[13.5px] tracking-[-.4px] text-ink">
+          YOUR
           <br />
-          FOR
+          BRAND
           <br />
-          MORE.
+          FOUNDATION
         </div>
       </div>
 

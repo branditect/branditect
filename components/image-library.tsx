@@ -76,7 +76,11 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
     setImages(data || []);
     setLoading(false);
-  }, []);
+    // BRAND_ID belongs in here. useBrand resolves after the first render, so
+    // an empty array froze this on the prop's default of "default", a brand
+    // that does not exist, and the grid stayed empty for everyone. The lint
+    // warning about this missing dependency had been in the build all along.
+  }, [BRAND_ID]);
 
   useEffect(() => { fetchImages(); }, [fetchImages]);
 
@@ -178,7 +182,9 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     setPendingUploads([]);
     setUploading(false);
     fetchImages();
-  }, [pendingUploads, fetchImages]);
+    // BRAND_ID again: without it an upload writes brand_id "default", which
+    // under RLS nobody can read back, so the file uploads and then vanishes.
+  }, [pendingUploads, fetchImages, BRAND_ID]);
 
   /* ---- Actions ---- */
 

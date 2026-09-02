@@ -188,13 +188,31 @@ describe("the migration", () => {
     for (const t of ["product_images", "product_documents"]) {
       assert.ok(new RegExp(`ALTER TABLE ${t}\\s+ENABLE ROW LEVEL SECURITY`).test(sql), `${t} has no RLS`);
     }
-    const policies = sql.match(/brand_id IN \(SELECT brand_id FROM brands WHERE user_id = auth\.uid\(\)\)/g) ?? [];
-    assert.equal(policies.length, 4, "each policy needs both USING and WITH CHECK");
+    // Count inside the CREATE POLICY statements only. The counts view carries
+    // the same predicate and would otherwise inflate this.
+    const policyBlock = sql.slice(sql.indexOf("CREATE POLICY"), sql.indexOf("-- \u2500\u2500 the counts"));
+    const policies = policyBlock.match(/brand_id IN \(SELECT brand_id FROM brands WHERE user_id = auth\.uid\(\)\)/g) ?? [];
+    assert.equal(policies.length, 4, `each policy needs both USING and WITH CHECK, found ${policies.length}`);
   });
 
   it("derives the counts rather than storing them", () => {
     assert.ok(/CREATE OR REPLACE VIEW product_attachment_counts/.test(sql), "no counts view");
     assert.ok(/security_invoker = on/.test(sql), "the view would bypass RLS as its owner");
+  });
+
+  /* security_invoker alone was not enough. The view reads catalog_products,
+     which has no RLS of its own, so running as the caller still returned every
+     brand's rows. Verified against the live database: a new account saw all 10
+     products across all 4 brands. The view has to filter itself. */
+  it("filters itself rather than trusting the base table's RLS", () => {
+    assert.ok(/FROM catalog_products p\s+WHERE auth\.role\(\) = 'service_role'/.test(sql),
+      "the counts view does not filter by the caller's brands");
+    assert.ok(/OR p\.brand_id IN \(SELECT brand_id FROM brands WHERE user_id = auth\.uid\(\)\)/.test(sql),
+      "the view has no brand predicate");
+  });
+
+  it("keeps a service_role branch, or server reads would silently return nothing", () => {
+    assert.ok(/auth\.role\(\) = 'service_role'/.test(sql), "no service_role branch");
   });
 
   it("is safe to run twice", () => {

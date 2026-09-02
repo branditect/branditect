@@ -90,15 +90,21 @@ CREATE POLICY product_documents_own_brand ON product_documents
 -- catalog_products.image_count and source_file_count already exist and are
 -- exactly that: written once, never maintained, decorative. This view is the
 -- truth and they are left alone.
+--
+-- The view filters itself rather than relying on the RLS of the table it
+-- reads. security_invoker alone was not enough: catalog_products has no RLS,
+-- so running as the caller still returned every brand's rows. The service_role
+-- branch keeps server-side reads working, and without it every route using the
+-- service key would silently return nothing.
 CREATE OR REPLACE VIEW product_attachment_counts AS
 SELECT p.id AS product_id,
        p.brand_id,
        (SELECT count(*) FROM product_images    pi WHERE pi.product_id = p.id) AS image_count,
        (SELECT count(*) FROM product_documents pd WHERE pd.product_id = p.id) AS document_count
-FROM catalog_products p;
+FROM catalog_products p
+WHERE auth.role() = 'service_role'
+   OR p.brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid());
 
--- A view runs as its owner, so it would bypass the RLS on the tables beneath
--- it. security_invoker makes it run as the caller instead.
 ALTER VIEW product_attachment_counts SET (security_invoker = on);
 
 -- ── the orphan brand id, recorded rather than hidden ───────────────────────

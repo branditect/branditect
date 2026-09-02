@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { serviceClient as supabase } from "@/lib/supabase-admin";
+
+/**
+ * Uses the service-role client, not the anon one.
+ *
+ * A route handler carries no user session: nothing in this app sends an
+ * Authorization header, so `auth.uid()` is null here. With RLS on the table
+ * below, the anon client would read and write nothing and the route would
+ * report "not found" for rows that exist. Ownership is enforced by the
+ * explicit brand_id scoping on every query instead.
+ */
 
 /**
  * Business profile and running costs — both business-level, stored on

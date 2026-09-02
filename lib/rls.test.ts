@@ -1,6 +1,7 @@
 /** Run with: npm test */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { auditResult } from "./rls-audit.ts";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -99,4 +100,105 @@ describe("no route handler uses the anon client", () => {
         `${name} imports the anon client and would read nothing under RLS`);
     });
   }
+});
+
+/**
+ * The first migration failed because it dropped only the policy name it
+ * creates. Postgres ORs PERMISSIVE policies, so nine pre-existing
+ * `USING (true)` policies kept every table world-readable while RLS was on and
+ * scoped policies sat beside them. Naming the offenders is the thing that went
+ * wrong; the follow-up finds them instead.
+ */
+describe("the follow-up drops world-open policies by discovery", () => {
+  const sql2 = readFileSync(new URL("../supabase/close-rls-2.sql", import.meta.url), "utf8");
+
+  it("sweeps pg_policies rather than naming policies", () => {
+    assert.ok(/FROM pg_policies\s/.test(sql2), "it does not read pg_policies");
+    assert.ok(/permissive = 'PERMISSIVE'/.test(sql2), "it does not filter to permissive policies");
+    assert.ok(/\(qual = 'true' OR with_check = 'true'\)/.test(sql2),
+      "it does not catch both a world-open read and a world-open write");
+    assert.ok(/EXECUTE format\('DROP POLICY %I ON %I\.%I'/.test(sql2), "it does not drop what it finds");
+  });
+
+  it("recreates a scoped policy for every table it sweeps", () => {
+    // RLS on with no policy denies everyone including the owner, which is a
+    // different outage rather than a fix.
+    assert.ok(/CREATE POLICY %I ON %I/.test(sql2), "no scoped policy is recreated");
+    for (const t of ["catalog_products", "brand_images", "brand_guideline", "brand_visual_dna"]) {
+      assert.ok(new RegExp(`'${t}'`).test(sql2), `${t} gets no policy back`);
+    }
+  });
+
+  it("covers the three tables the first migration missed", () => {
+    for (const t of ["brand_guideline", "brand_visual_dna", "product_specs"]) {
+      assert.ok(sql2.includes(t), `${t} is not covered`);
+    }
+  });
+
+  /* product_specs has no brand_id. Its offending policy came from
+     supabase/product_specs.sql, which this repo wrote. */
+  it("scopes product_specs through its product, since it has no brand_id", () => {
+    assert.ok(/product_id IN \(\s*SELECT id FROM catalog_products/.test(sql2),
+      "product_specs is not scoped through catalog_products");
+  });
+
+  it("exposes the audit to the service role only", () => {
+    assert.ok(/CREATE OR REPLACE FUNCTION public\.rls_open_policies/.test(sql2), "no audit function");
+    assert.ok(/REVOKE ALL ON FUNCTION public\.rls_open_policies\(\) FROM anon, authenticated/.test(sql2),
+      "the audit function is callable by ordinary users");
+    assert.ok(/GRANT EXECUTE ON FUNCTION public\.rls_open_policies\(\) TO service_role/.test(sql2),
+      "the audit function is not callable by the server");
+  });
+});
+
+/**
+ * The check that has to keep working. npm test is offline, so the database
+ * half is scripts/rls-audit.mjs; this asserts it exists, is wired up, and
+ * fails rather than passing when it cannot reach the audit.
+ */
+describe("the standing RLS audit", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+
+  it("is wired to an npm script", () => {
+    assert.ok(/scripts\/rls-audit\.mjs/.test(pkg.scripts["rls:audit"]), pkg.scripts["rls:audit"]);
+  });
+
+  it("passes only when the database answered and there are no offenders", () => {
+    assert.equal(auditResult({ reachable: true, policies: [] }).exitCode, 0);
+  });
+
+  it("fails when a world-open policy exists, and names it", () => {
+    const r = auditResult({ reachable: true, policies: [
+      { table_name: "brand_images", policy_name: "Allow all for now", cmd: "ALL", qual: "true", with_check: "true" },
+    ]});
+    assert.equal(r.exitCode, 1);
+    assert.ok(r.message.includes("brand_images.Allow all for now"), r.message);
+    assert.ok(r.message.includes("qual=true"), r.message);
+    assert.ok(r.message.includes("with_check=true"), r.message);
+  });
+
+  /* A check that goes green because it could not run is worse than none. */
+  it("fails when the audit function is missing", () => {
+    const r = auditResult({ reachable: false, errorBody: "404 Could not find the function public.rls_open_policies" });
+    assert.equal(r.exitCode, 1);
+    assert.ok(/close-rls-2\.sql/.test(r.message), r.message);
+  });
+
+  it("fails when the request itself failed", () => {
+    assert.equal(auditResult({ reachable: false, errorBody: "500 boom" }).exitCode, 1);
+    assert.equal(auditResult({ reachable: false, errorBody: "TypeError: fetch failed" }).exitCode, 1);
+  });
+
+  it("fails on a response that is not a list, rather than assuming it is empty", () => {
+    assert.equal(auditResult({ reachable: true, policies: { message: "nope" } }).exitCode, 1);
+    assert.equal(auditResult({ reachable: true, policies: undefined }).exitCode, 1);
+    assert.equal(auditResult({ reachable: true, policies: null }).exitCode, 1);
+  });
+
+  it("uses the service key, the only role granted the function", () => {
+    const script = readFileSync(new URL("../scripts/rls-audit.mjs", import.meta.url), "utf8");
+    assert.ok(/SUPABASE_SERVICE_ROLE_KEY/.test(script));
+    assert.ok(/rpc\/rls_open_policies/.test(script), "it does not call the audit function");
+    assert.ok(/process\.exit\(result\.exitCode\)/.test(script), "it does not exit on the decision");
+  });
 });

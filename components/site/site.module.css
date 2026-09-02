@@ -14,12 +14,6 @@
   --s-green-wash: #e8f6ee;
   --s-green-ink: #1c7a48;
   --s-grad-hero: linear-gradient(92.52deg, #f16d2c 11.42%, #fe4401 92%);
-  /* Large headlines only. Roca is a licensed face and its files are not in the
-   * repo, so this resolves to the app's own typeface until they are added to
-   * public/fonts and the @font-face block in app/globals.css is uncommented.
-   * Body copy is deliberately excluded: a display face at 14px reads worse
-   * than the text face it would replace. */
-  --s-display: "Roca", "Roca One", var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
   min-height: 100vh;
   background: theme('colors.page');
   color: theme('colors.ink.DEFAULT');
@@ -51,7 +45,7 @@
 .kicker { display: inline-block; font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: 1.4px;
   text-transform: uppercase; color: var(--s-violet); background: var(--s-lav-wash);
   border: 1px solid var(--s-lav-line); border-radius: theme('borderRadius.pill'); padding: 6px 14px; }
-.hero h1 { font-family: var(--s-display); font-size: 52px; font-weight: 800; letter-spacing: -2px; line-height: 1.08; margin-top: 20px; }
+.hero h1 { font-size: 52px; font-weight: 800; letter-spacing: -2px; line-height: 1.08; margin-top: 20px; }
 .hero h1 em { font-style: normal; background: var(--s-grad-hero); -webkit-background-clip: text;
   background-clip: text; color: transparent; }
 .lede { font-size: 17px; font-weight: 400; line-height: 1.62; color: theme('colors.muted.DEFAULT');
@@ -97,7 +91,7 @@
 /* ============ sections ============ */
 .sec { padding: 58px 0; }
 .sechead { text-align: center; max-width: 62ch; margin: 0 auto 28px; }
-.sechead h2 { font-family: var(--s-display); font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.15; }
+.sechead h2 { font-size: 34px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.15; }
 .sechead p { font-size: theme('fontSize.base[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT');
   margin-top: 12px; line-height: 1.6; }
 .eyebrow { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
@@ -149,7 +143,7 @@
 
 /* ============ band ============ */
 .band { background: var(--s-navy); color: #fff; border-radius: 24px; padding: 44px 40px; text-align: center; }
-.band h2 { font-family: var(--s-display); font-size: 32px; font-weight: 800; letter-spacing: -1.1px; }
+.band h2 { font-size: 32px; font-weight: 800; letter-spacing: -1.1px; }
 .band p { font-size: theme('fontSize.base[0]'); font-weight: 400; color: rgba(255, 255, 255, .74);
   margin: 12px auto 0; max-width: 56ch; line-height: 1.6; }
 .bandCta { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
@@ -186,7 +180,7 @@
   border: 1px solid var(--s-lav-line); border-radius: theme('borderRadius.pill'); padding: 7px 15px;
   font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase;
   color: var(--s-violet); }
-.landingHero h1 { font-family: var(--s-display); font-size: 54px; font-weight: 800; letter-spacing: -2.2px; line-height: 1.06; margin-top: 22px; }
+.landingHero h1 { font-size: 54px; font-weight: 800; letter-spacing: -2.2px; line-height: 1.06; margin-top: 22px; }
 .landingHero h1 em { font-style: normal; background: var(--s-grad-hero); -webkit-background-clip: text;
   background-clip: text; color: transparent; }
 .heroLede { font-size: 18.5px; font-weight: 400; color: theme('colors.muted.DEFAULT'); margin-top: 20px;
@@ -258,7 +252,7 @@
 /* ============ about strip ============ */
 .aboutStrip { display: grid; grid-template-columns: 1.15fr 1fr; gap: 44px; align-items: center;
   background: var(--s-navy); border-radius: 26px; padding: 44px 42px; color: #fff; }
-.aboutStrip h2 { font-family: var(--s-display); font-size: 32px; font-weight: 800; letter-spacing: -1.1px; line-height: 1.16; }
+.aboutStrip h2 { font-size: 32px; font-weight: 800; letter-spacing: -1.1px; line-height: 1.16; }
 .aboutStrip p { font-size: 15.5px; font-weight: 400; color: rgba(255, 255, 255, .78); margin-top: 16px; line-height: 1.7; }
 .aboutStrip p b { font-weight: 700; color: #fff; }
 .facts { background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14);
@@ -277,7 +271,7 @@
 .rings i:nth-child(2) { inset: 60px; }
 .rings i:nth-child(3) { inset: 120px; }
 .final > *:not(.rings) { position: relative; z-index: 2; }
-.final h2 { font-family: var(--s-display); font-size: 38px; font-weight: 800; letter-spacing: -1.3px; line-height: 1.13; }
+.final h2 { font-size: 38px; font-weight: 800; letter-spacing: -1.3px; line-height: 1.13; }
 .final p { font-size: 16.5px; font-weight: 400; color: rgba(255, 255, 255, .88); margin: 15px auto 0;
   max-width: 48ch; line-height: 1.6; }
 .final .btn { background: #fff; color: theme('colors.accent.dark'); margin-top: 28px;

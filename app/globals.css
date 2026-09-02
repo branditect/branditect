@@ -245,3 +245,28 @@
 }
 .gen-dot:nth-child(2) { animation-delay: 0.2s; }
 .gen-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Roca, the marketing display face.
+ *
+ * Roca is a licensed typeface and its files are not in this repository. Until
+ * they are, every large headline falls back to Plus Jakarta Sans and looks
+ * exactly as it did before, which is why this is written down rather than left
+ * to be noticed.
+ *
+ * To turn it on: drop the woff2 files into public/fonts/ and uncomment the two
+ * blocks below. Nothing else has to change, because the marketing stylesheet
+ * already asks for "Roca" first in --s-display.
+ *
+ * @font-face {
+ *   font-family: "Roca";
+ *   src: url("/fonts/roca-regular.woff2") format("woff2");
+ *   font-weight: 400;
+ *   font-display: swap;
+ * }
+ * @font-face {
+ *   font-family: "Roca";
+ *   src: url("/fonts/roca-bold.woff2") format("woff2");
+ *   font-weight: 700 800;
+ *   font-display: swap;
+ * }
+ */

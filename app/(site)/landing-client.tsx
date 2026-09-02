@@ -10,21 +10,33 @@ import SignedInGate from "@/components/site/signed-in-gate";
 import { PLANS } from "@/lib/pricing-plans";
 import s from "@/components/site/site.module.css";
 
-const TRUTHS = [
+const STEPS = [
   {
-    n: "01", title: "Brand truth", tone: "t1",
-    body: "Your strategy, positioning, tone of voice and visual identity, written down once and used by everything you make afterwards.",
-    foot: "Answered in about four minutes.",
+    n: "01", title: "Your strategy.", tone: "t1",
+    body:
+      "You answer 25 questions. Not \u201cwhat is your mission\u201d. Why you started, who you are " +
+      "actually for, what you will never claim even when it costs you a sale. Branditect turns the " +
+      "answers into a strategy foundation: positioning, audience, voice, anti-voice and your claim rules.",
+    ask: "Who is this actually for, and how should I talk to them?",
+    answer:
+      "Your customer segment in a paragraph you could hand to a freelancer, the trigger that makes " +
+      "them buy, the voice you chose, and the four claims your own rules block. Every output after " +
+      "this obeys it, which is what the next two cards are.",
   },
   {
-    n: "02", title: "Product truth", tone: "t2",
-    body: "Every product, its specifications and the claims you can actually prove. If a number is not in there, nothing will write it.",
-    foot: "Every fact carries its source.",
+    n: "02", title: "Your product knowledge.", tone: "t2",
+    ask: "Write a post and a catalogue entry for SKU 12 and SKU 14, and find every image linked to them.",
+    answer:
+      "Both formats, in your voice, written to the segment you defined in card one. Three verified " +
+      "selling points with the document each one came from. Two claims blocked for lack of evidence. " +
+      "Eleven images across the two products, with the five cleared for retail use marked.",
   },
   {
-    n: "03", title: "Commercial truth", tone: "t3",
-    body: "Landed cost, real margin, floor price and the most you will discount. The part that decides whether the work was worth doing.",
-    foot: "Net of tax, against landed cost.",
+    n: "03", title: "Your true numbers.", tone: "t3",
+    ask: "Can I run 25% off this product?",
+    answer:
+      "Not at your current cost. Your floor is 21%, which changed when packaging went up in March. " +
+      "Want the campaign written to 21%?",
   },
 ];
 
@@ -73,12 +85,15 @@ export default function LandingClient() {
           <div>
             <span className={s.heroKicker}>Brand truth · Product truth · Commercial truth</span>
             <h1>
-              They have a marketing&nbsp;team.<br />You have <em>Branditect.</em>
+              You run the business.<br /><em>We do the work.</em>
             </h1>
             <p className={s.heroLede}>
               The commercial brain for product and ecommerce brands. It holds your strategy, your
               product truth and your margins together, so everything you publish is on brand,
-              accurate and profitable. <b>Build the whole brain free.</b>
+              accurate and profitable. It writes your copy understanding each and every one of your
+              products, your tone of voice and style. And makes your images, too. It&rsquo;s like
+              having a superstar marketing team behind you.{" "}
+              <b>Start building with Branditect for free, today.</b>
             </p>
             <div className={s.trust}>
               {["Free forever", "No card to start", "100 credits to try everything", "Your data stays in the EU"].map((t) => (
@@ -106,19 +121,24 @@ export default function LandingClient() {
         <section className={`${s.sec} ${s.anchor}`} id="how">
           <div className={`${s.sechead}`} style={{ textAlign: "center", margin: "0 auto 34px" }}>
             <div className={s.eyebrow}>How it works</div>
-            <h2>Three kinds of truth, in one place.</h2>
+            <h2>Branditect builds your strategy and helps you reach your business goals, every day.</h2>
             <p>
               Each one is usable by everything else, which is the whole difference between a brand
               brain and a folder of documents.
             </p>
           </div>
           <div className={s.truths}>
-            {TRUTHS.map((t) => (
+            {STEPS.map((t) => (
               <div key={t.n} className={`${s.tr} ${s[t.tone]}`}>
                 <div className={s.tn}>{t.n}</div>
                 <h3>{t.title}</h3>
-                <p className={s.tw}>{t.body}</p>
-                <div className={s.tf}><b>{t.foot}</b></div>
+                {t.body && <p className={s.tw}>{t.body}</p>}
+                {/* The question and its answer are the argument. A claim about
+                    what it can do is worth less than the exchange itself. */}
+                <div className={s.qa2}>
+                  <p className={s.askLine}><span>Ask it</span>{t.ask}</p>
+                  <p className={s.answerLine}><span>It answers</span>{t.answer}</p>
+                </div>
               </div>
             ))}
           </div>

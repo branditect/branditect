@@ -39,6 +39,22 @@ const EDITABLE = new Set([
   "min_margin_pct",
   "stock_status",
   "stock_units",
+
+  // The pricing lines. Without these the allowlist silently drops them and the
+  // tab looks like it saved: the request returns 200 because the other fields
+  // wrote fine.
+  "price_lines_visible",
+  "price_lines_custom",
+  "pricing_notes",
+  "freight_duty",
+  "packaging_cost",
+  "licence_cost",
+  "labour_per_job",
+  "cac",
+  "payment_fees",
+  "shipping_cost",
+  "returns_allowance",
+  "platform_fee",
 ]);
 
 const NUMERIC = new Set([
@@ -51,6 +67,15 @@ const NUMERIC = new Set([
   "max_discount_pct",
   "min_margin_pct",
   "stock_units",
+  "freight_duty",
+  "packaging_cost",
+  "licence_cost",
+  "labour_per_job",
+  "cac",
+  "payment_fees",
+  "shipping_cost",
+  "returns_allowance",
+  "platform_fee",
 ]);
 
 export async function PATCH(req: NextRequest) {
@@ -92,7 +117,15 @@ export async function PATCH(req: NextRequest) {
         continue;
       }
 
-      if (key === "tags") {
+      if (key === "tags" || key === "price_lines_visible") {
+        // An empty array is a real answer for price_lines_visible: it means
+        // "this product shows no lines", which is not the same as NULL, which
+        // means "use the preset".
+        patch[key] = Array.isArray(value) ? value : key === "price_lines_visible" ? null : [];
+        continue;
+      }
+
+      if (key === "price_lines_custom") {
         patch[key] = Array.isArray(value) ? value : [];
         continue;
       }

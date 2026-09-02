@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import Icon from "@/components/icon";
+// DescriptionField still serves Details. SpecsEditor does not: the
+// Specifications section is gone from the card.
+import { DescriptionField } from "@/components/products/specs-editor";
+import PricingTab from "@/components/products/pricing-tab";
+import {
+  derivedLandedCost, parseCustomLines, visibleLines,
+  type CustomLine, type LineId,
+} from "@/lib/pricing-lines";
 import ImagePicker from "@/components/products/image-picker";
 import {
   categoryStyle,
-  formatMoney,
-  margin,
-  marginFootnote,
   STOCK_LABELS,
   STOCK_STYLES,
   type Product,
   type StockStatus,
 } from "@/lib/products";
-import { SpecsEditor, DescriptionField, type Spec } from "@/components/products/specs-editor";
 
 const TABS = ["Details", "Pricing", "Inventory", "Media", "History"] as const;
 type Tab = (typeof TABS)[number];
@@ -38,6 +41,13 @@ interface Draft {
   minMarginPct: string;
   stockStatus: StockStatus | "";
   stockUnits: string;
+  /* The pricing tab's own state. Guardrails are gone from here; they are
+     edited at Numbers, Pricing and offers, on the same columns. */
+  priceLinesVisible: LineId[] | null;
+  priceLinesCustom: CustomLine[];
+  pricingNotes: string;
+  /* Every cost line, keyed by its catalog_products column. */
+  priceValues: Record<string, string>;
 }
 
 const numStr = (n: number | null | undefined) => (n == null ? "" : String(n));
@@ -61,6 +71,24 @@ function toDraft(p: Product): Draft {
     minMarginPct: numStr(p.minMarginPct),
     stockStatus: p.stockStatus ?? "",
     stockUnits: numStr(p.stockUnits),
+    priceLinesVisible: Array.isArray(p.priceLinesVisible) ? (p.priceLinesVisible as LineId[]) : null,
+    priceLinesCustom: parseCustomLines(p.priceLinesCustom),
+    pricingNotes: p.pricingNotes ?? "",
+    priceValues: {
+      price_retail: numStr(p.retailPrice),
+      price_rrp: numStr(p.rrp),
+      tax_rate_pct: numStr(p.taxRatePct),
+      price_cogs: numStr(p.factoryCost),
+      freight_duty: numStr(p.freightDuty),
+      packaging_cost: numStr(p.packagingCost),
+      licence_cost: numStr(p.licenceCost),
+      labour_per_job: numStr(p.labourPerJob),
+      cac: numStr(p.cac),
+      payment_fees: numStr(p.paymentFees),
+      shipping_cost: numStr(p.shippingCost),
+      returns_allowance: numStr(p.returnsAllowance),
+      platform_fee: numStr(p.platformFee),
+    },
   };
 }
 
@@ -91,14 +119,20 @@ function toPatch(d: Draft) {
     barcode: d.barcode.trim(),
     tags: splitTags(d.tags),
     image_url: d.imageUrl,
-    price_retail: toNum(d.retailPrice),
-    price_rrp: toNum(d.rrp),
-    tax_rate_pct: toNum(d.taxRatePct),
-    landed_cost: toNum(d.landedCost),
-    price_cogs: toNum(d.factoryCost),
-    floor_price: toNum(d.floorPrice),
-    max_discount_pct: toNum(d.maxDiscountPct),
-    min_margin_pct: toNum(d.minMarginPct),
+    ...Object.fromEntries(Object.entries(d.priceValues).map(([k, v]) => [k, toNum(v)])),
+    // Derived from the goods group rather than typed, so the column keeps
+    // meaning what it has always meant.
+    landed_cost: derivedLandedCost(
+      visibleLines(d.priceLinesVisible, null),
+      Object.fromEntries(Object.entries(d.priceValues).map(([k, v]) => [k, toNum(v)])),
+      d.priceLinesCustom,
+    ),
+    price_lines_visible: d.priceLinesVisible,
+    price_lines_custom: d.priceLinesCustom,
+    pricing_notes: d.pricingNotes.trim() || null,
+    // floor_price, max_discount_pct and min_margin_pct are deliberately absent.
+    // They are edited at Numbers, Pricing and offers now; sending them from
+    // here would overwrite that page's work with a stale copy.
     stock_status: d.stockStatus === "" ? null : d.stockStatus,
     stock_units: toNum(d.stockUnits),
   };
@@ -199,28 +233,10 @@ export default function ProductDrawer({
   returnFocusTo?: HTMLElement | null;
 }) {
   const [tab, setTab] = useState<Tab>("Details");
+  // catalog_products.type drives the preset. It is not on the Product model,
+  // so it is read from the row the drawer was given.
+  const productType = (product as unknown as { type?: string | null }).type ?? null;
 
-  // Specs live in their own table, so they load and save alongside the draft
-  // rather than through the product PATCH.
-  const [specs, setSpecs] = useState<Spec[]>([]);
-  const [specsLoaded, setSpecsLoaded] = useState<Spec[]>([]);
-  const [specsLoading, setSpecsLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setSpecsLoading(true);
-    fetch(`/api/catalog/product/specs?product_id=${product.id}&brand_id=${brandId}`)
-      .then((r) => r.json())
-      .then((j) => {
-        if (!alive) return;
-        const rows: Spec[] = (j.specs ?? []).map((r: Spec) => ({ id: r.id, key: r.key, value: r.value ?? "" }));
-        setSpecs(rows);
-        setSpecsLoaded(rows);
-      })
-      .catch(() => { /* surfaced by the save path if it matters */ })
-      .finally(() => { if (alive) setSpecsLoading(false); });
-    return () => { alive = false; };
-  }, [product.id, brandId]);
   const [draft, setDraft] = useState<Draft>(() => toDraft(product));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -235,25 +251,28 @@ export default function ProductDrawer({
   }, [product]);
 
   const original = useMemo(() => toDraft(product), [product]);
-  // Specs are compared by content, not identity: a row edited in place has the
-  // same id, and a row just added has none at all.
-  const specsKey = (rows: Spec[]) => JSON.stringify(rows.map((r) => [r.key, r.value]));
-  const specsDirty = specsKey(specs) !== specsKey(specsLoaded);
-
   const dirty = useMemo(
     () => (Object.keys(draft) as (keyof Draft)[]).some((k) => draft[k] !== original[k]),
     [draft, original],
-  ) || specsDirty;
+  );
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
+
+  /* Every pricing line writes into one map keyed by its column, so adding a
+     line is a row in lib/pricing-lines.ts rather than another piece of state. */
+  const priceValues = useMemo(
+    () => Object.fromEntries(Object.entries(draft.priceValues).map(([k, v]) => [k, toNum(v)])),
+    [draft.priceValues],
+  );
+  const setPriceValue = (column: string, raw: string) =>
+    setDraft((d) => ({ ...d, priceValues: { ...d.priceValues, [column]: raw } }));
 
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
 
   function requestClose() {
     if (dirtyRef.current && !window.confirm("Discard unsaved changes to this product?")) return;
-    setSpecs(specsLoaded);
     onClose();
     returnFocusTo?.focus();
   }
@@ -317,21 +336,6 @@ export default function ProductDrawer({
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Could not save");
 
-      // Same request cycle as the product fields, so one Save covers both and
-      // the footer's dirty/clean state stays honest.
-      const specRes = await fetch("/api/catalog/product/specs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product.id, brand_id: brandId, specs }),
-      });
-      const specBody = await specRes.json();
-      if (!specRes.ok) throw new Error(specBody.error || "Could not save specifications");
-      const savedSpecs: Spec[] = (specBody.specs ?? []).map(
-        (r: Spec) => ({ id: r.id, key: r.key, value: r.value ?? "" }),
-      );
-      setSpecs(savedSpecs);
-      setSpecsLoaded(savedSpecs);
-
       onSaved({
         ...product,
         name: draft.name.trim(),
@@ -341,14 +345,18 @@ export default function ProductDrawer({
         barcode: draft.barcode.trim() || undefined,
         tags: splitTags(draft.tags),
         imageUrl: draft.imageUrl,
-        retailPrice: toNum(draft.retailPrice),
-        rrp: toNum(draft.rrp),
-        taxRatePct: toNum(draft.taxRatePct),
-        landedCost: toNum(draft.landedCost),
-        factoryCost: toNum(draft.factoryCost),
-        floorPrice: toNum(draft.floorPrice),
-        maxDiscountPct: toNum(draft.maxDiscountPct),
-        minMarginPct: toNum(draft.minMarginPct),
+        retailPrice: toNum(draft.priceValues.price_retail),
+        rrp: toNum(draft.priceValues.price_rrp),
+        taxRatePct: toNum(draft.priceValues.tax_rate_pct),
+        landedCost: derivedLandedCost(
+          visibleLines(draft.priceLinesVisible, null),
+          Object.fromEntries(Object.entries(draft.priceValues).map(([k, v]) => [k, toNum(v)])),
+          draft.priceLinesCustom,
+        ),
+        factoryCost: toNum(draft.priceValues.price_cogs),
+        pricingNotes: draft.pricingNotes.trim() || null,
+        priceLinesVisible: draft.priceLinesVisible,
+        priceLinesCustom: draft.priceLinesCustom,
         stockStatus: draft.stockStatus === "" ? null : draft.stockStatus,
         stockUnits: toNum(draft.stockUnits),
       });
@@ -361,16 +369,7 @@ export default function ProductDrawer({
 
   // Recomputed from the draft, so the number moves as the inputs change — that
   // live feedback is the point of editing price and cost side by side.
-  const live = {
-    retailPrice: toNum(draft.retailPrice),
-    taxRatePct: toNum(draft.taxRatePct),
-    landedCost: toNum(draft.landedCost),
-    factoryCost: toNum(draft.factoryCost),
-    currency: product.currency,
-  };
-  const m = margin(live);
   const status = draft.stockStatus === "" ? null : draft.stockStatus;
-  const money = (n: number | null) => (n == null ? dash : formatMoney(n, product.currency));
 
   return (
     <>
@@ -441,22 +440,6 @@ export default function ProductDrawer({
           </button>
         </div>
 
-        <div className="flex gap-[7px] px-[18px] pt-3.5">
-          {[
-            { label: "Write about it", icon: "pen" as const, href: `/studio/write?product=${product.id}` },
-            { label: "Make images", icon: "img" as const, href: `/studio/create-images?product=${product.id}` },
-            { label: "Ask about it", icon: "chat" as const, href: `/chat?product=${product.id}` },
-          ].map((a) => (
-            <Link
-              key={a.label}
-              href={a.href}
-              className="flex flex-1 flex-col items-center gap-[5px] rounded-tile border border-accent-line bg-tint-1 px-1.5 py-[9px] text-center text-2xs font-bold text-accent hover:bg-tint-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <Icon name={a.icon} size={15} />
-              {a.label}
-            </Link>
-          ))}
-        </div>
 
         <div
           ref={tablistRef}
@@ -512,115 +495,22 @@ export default function ProductDrawer({
                   </p>
                 </Section>
 
-                <Section title="Specifications">
-                  <SpecsEditor
-                    specs={specs}
-                    loading={specsLoading}
-                    onChange={setSpecs}
-                  />
-                </Section>
-
-                <Section title="What Branditect knows">
-                  <dl className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-[9px]">
-                    <Row label="Indexed">
-                      {product.indexed ? (
-                        <span className="text-green-ink">
-                          Yes · {product.sourceFileCount} source file
-                          {product.sourceFileCount === 1 ? "" : "s"}
-                        </span>
-                      ) : (
-                        <span className="text-muted">
-                          Not yet — it won&apos;t be quoted in Studio until it is
-                        </span>
-                      )}
-                    </Row>
-                    <Row label="Images">{product.imageCount} in Knowledge</Row>
-                    <Row label="Used in">
-                      {product.usedInOutputCount} output{product.usedInOutputCount === 1 ? "" : "s"}
-                    </Row>
-                  </dl>
-                </Section>
               </>
             )}
 
             {tab === "Pricing" && (
-              <>
-                <Section title="Margin">
-                  {m ? (
-                    <div className="rounded-card border border-rule bg-tile px-3.5 py-[13px]">
-                      <div className="flex items-baseline gap-[9px]">
-                        <b className="text-[24px] font-bold tracking-[-0.7px] tabular-nums">
-                          {m.pct.toFixed(1)}%
-                        </b>
-                        <span className="text-2xs font-semibold text-muted">
-                          {formatMoney(m.cash, product.currency)} per unit
-                        </span>
-                        {!m.exact && (
-                          <span className="ml-auto rounded-pill bg-amber-wash px-2 py-0.5 text-micro font-bold uppercase tracking-[0.6px] text-amber">
-                            Estimate
-                          </span>
-                        )}
-                      </div>
-                      <div className="relative mt-2.5 h-1.5 overflow-hidden rounded-pill bg-rule-2">
-                        <i
-                          className={`absolute inset-y-0 left-0 block rounded-pill transition-[width] motion-reduce:transition-none ${
-                            m.pct < 0 ? "bg-accent" : m.exact ? "bg-good" : "bg-amber"
-                          }`}
-                          style={{ width: `${Math.max(0, Math.min(100, m.pct))}%` }}
-                        />
-                      </div>
-                      <p className="mt-[9px] text-2xs font-medium leading-[1.5] text-muted">
-                        {marginFootnote(live, m)}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-card border border-rule bg-tile px-3.5 py-[13px]">
-                      <b className="text-[24px] font-bold tracking-[-0.7px] text-faint">—</b>
-                      <p className="mt-[9px] text-2xs font-medium leading-[1.5] text-muted">
-                        No margin can be calculated without a retail price and a cost. A blank figure
-                        is better than a fabricated one.
-                      </p>
-                    </div>
-                  )}
-                </Section>
-
-                <Section title="Prices">
-                  <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
-                    <Field label="Retail price" type="number" value={draft.retailPrice} onChange={(v) => set("retailPrice", v)} suffix={product.currency} />
-                    <Field label="RRP" type="number" value={draft.rrp} onChange={(v) => set("rrp", v)} suffix={product.currency} />
-                    <Field label="Tax rate" type="number" value={draft.taxRatePct} onChange={(v) => set("taxRatePct", v)} suffix="%" placeholder="20" />
-                    <Field label="Landed cost" type="number" value={draft.landedCost} onChange={(v) => set("landedCost", v)} suffix={product.currency} />
-                    <Field label="Factory cost" type="number" value={draft.factoryCost} onChange={(v) => set("factoryCost", v)} suffix={product.currency} />
-                    <dt className="pt-1.5 text-xs font-medium text-muted">Net price</dt>
-                    <dd className="m-0 pt-1.5 text-xs font-semibold tabular-nums text-ink-2">
-                      {m ? money(m.net) : dash}
-                    </dd>
-                  </div>
-                  <p className="mt-2 text-2xs font-medium leading-[1.5] text-muted">
-                    Landed cost is factory cost plus duty, freight and packaging. Margin is computed
-                    from it, not from factory cost — leave it blank and the figure above is marked an
-                    estimate rather than quietly reading high.
-                  </p>
-                </Section>
-
-                <Section title="Guardrails Studio obeys">
-                  <div className="rounded-card border border-accent-line bg-tint-1 px-3.5 py-[13px]">
-                    <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
-                      <Field label="Floor price" type="number" value={draft.floorPrice} onChange={(v) => set("floorPrice", v)} suffix={product.currency} />
-                      <Field label="Max discount" type="number" value={draft.maxDiscountPct} onChange={(v) => set("maxDiscountPct", v)} suffix="%" />
-                      <Field label="Min margin" type="number" value={draft.minMarginPct} onChange={(v) => set("minMarginPct", v)} suffix="%" />
-                    </div>
-                    <p className="mt-2.5 border-t border-accent-line pt-[9px] text-2xs font-medium leading-[1.5] text-accent-dark">
-                      Copy and offers written about this product stay inside these limits. Brand-wide
-                      defaults live in{" "}
-                      <Link href="/numbers/pricing" className="underline underline-offset-2">
-                        Numbers ▸ Pricing &amp; offers
-                      </Link>
-                      .
-                    </p>
-                  </div>
-                </Section>
-              </>
+              <PricingTab
+                currency={product.currency}
+                track={productType}
+                values={priceValues}
+                visible={draft.priceLinesVisible}
+                custom={draft.priceLinesCustom}
+                notes={draft.pricingNotes}
+                onValue={(column, raw) => setPriceValue(column, raw)}
+                onVisible={(next) => setDraft((d) => ({ ...d, priceLinesVisible: next }))}
+                onCustom={(next) => setDraft((d) => ({ ...d, priceLinesCustom: next }))}
+                onNotes={(v) => setDraft((d) => ({ ...d, pricingNotes: v }))}
+              />
             )}
 
             {tab === "Inventory" && (

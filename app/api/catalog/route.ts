@@ -15,10 +15,21 @@ export async function GET(req: NextRequest) {
       supabase.from("brand_financial_rules").select("*").eq("brand_id", brandId).maybeSingle(),
     ]);
 
+    /* PostgREST expands `*` from its cached schema, and that cache lagged
+       behind the pricing migration by more than fifteen minutes. Reading the
+       new columns by name in a second query means the Pricing tab gets them
+       whatever the cache is doing, and it stops being needed the moment the
+       cache catches up without anything having to change. */
+    const { data: priceRows } = await supabase
+      .from("catalog_products")
+      .select("id, price_lines_visible, price_lines_custom, pricing_notes, freight_duty, packaging_cost, licence_cost, labour_per_job, cac, payment_fees, shipping_cost, returns_allowance, platform_fee")
+      .eq("brand_id", brandId);
+    const byId = new Map((priceRows ?? []).map((r) => [r.id, r]));
+
     // A removed product is out of the list and out of everything that reads
     // it, including the brand context Studio writes from. It is returned
     // separately so the page can offer it back.
-    const rows = productsRes.data ?? [];
+    const rows = (productsRes.data ?? []).map((r) => ({ ...r, ...(byId.get(r.id) ?? {}) }));
     return NextResponse.json({
       catalog: catalogRes.data,
       products: liveOnly(rows),

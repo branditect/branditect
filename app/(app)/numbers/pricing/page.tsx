@@ -7,6 +7,7 @@ import { marginPct, netPrice, priceForMargin } from "@/lib/numbers";
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, numStr, toNum,
 } from "@/components/numbers/calc-shell";
+import GuardrailsPanel from "@/components/numbers/guardrails-panel";
 
 type Direction = "fromPrice" | "fromMargin";
 
@@ -136,6 +137,20 @@ export default function PricingCalculator() {
             cost is the flattering version, and it is wrong by about five points.
           </p>
         </div>
+      </div>
+
+      {/* The calculator above is a sandbox and never writes back. This does:
+          it is where the limits live now, moved off the product card. */}
+      <div className="mt-3">
+        <GuardrailsPanel
+          brandId={brandId}
+          products={products}
+          productId={productId}
+          onProductChange={setProductId}
+          onSaved={(saved) =>
+            setProducts((prev) => prev.map((p) => (p.id === saved.id ? fromRow(saved) : p)))
+          }
+        />
       </div>
     </CalcShell>
   );

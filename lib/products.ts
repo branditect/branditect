@@ -38,6 +38,20 @@ export interface Product {
   minMarginPct?: number | null;
 
   // availability — one flag, deliberately
+  /* The pricing tab's lines. NULL visible means "use the preset". */
+  priceLinesVisible?: string[] | null | undefined;
+  priceLinesCustom?: unknown | undefined;
+  pricingNotes?: string | null | undefined;
+  freightDuty?: number | null | undefined;
+  packagingCost?: number | null | undefined;
+  licenceCost?: number | null | undefined;
+  labourPerJob?: number | null | undefined;
+  cac?: number | null | undefined;
+  paymentFees?: number | null | undefined;
+  shippingCost?: number | null | undefined;
+  returnsAllowance?: number | null | undefined;
+  platformFee?: number | null | undefined;
+
   stockStatus: StockStatus | null;
   stockUnits?: number | null;
   stockSyncedAt?: string | null;
@@ -231,6 +245,19 @@ export function fromRow(row: any): Product {
     floorPrice: num(row.floor_price),
     maxDiscountPct: num(row.max_discount_pct),
     minMarginPct: num(row.min_margin_pct),
+
+    priceLinesVisible: Array.isArray(row.price_lines_visible) ? row.price_lines_visible : null,
+    priceLinesCustom: row.price_lines_custom ?? [],
+    pricingNotes: row.pricing_notes ?? null,
+    freightDuty: num(row.freight_duty),
+    packagingCost: num(row.packaging_cost),
+    licenceCost: num(row.licence_cost),
+    labourPerJob: num(row.labour_per_job),
+    cac: num(row.cac),
+    paymentFees: num(row.payment_fees),
+    shippingCost: num(row.shipping_cost),
+    returnsAllowance: num(row.returns_allowance),
+    platformFee: num(row.platform_fee),
 
     stockStatus: (row.stock_status as StockStatus) ?? null,
     stockUnits: num(row.stock_units),

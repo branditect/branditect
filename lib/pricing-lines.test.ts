@@ -8,7 +8,6 @@ import {
 } from "./pricing-lines.ts";
 import { netPrice, marginPct } from "./numbers.ts";
 
-const ALL = LINES.map((l) => l.id);
 
 describe("the line table", () => {
   it("puts every line in exactly one group", () => {

@@ -13,7 +13,8 @@ Home        the landing screen: readiness, then what to make
 Brand       define · Strategy · Tone of voice · Visual identity · Channels
 Knowledge   feed   · Products · Documents · Images · Presentations · Links
 Studio      make   · Write · Create images
-Numbers     define · Profitability · Product costs · Pricing & offers
+Numbers     define · one landing page; cost, pricing, offers, recurring and running costs
+                     are routes beneath it, not nav children
 AI Chat     the brand-trained assistant
 ```
 

@@ -51,7 +51,6 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Write", href: "/studio/write" },
       { label: "Create images", href: "/studio/create-images" },
-      { label: "Brand assets", href: "/studio/brand-assets" },
     ],
   },
   // No children: /numbers is a real landing page that already lists every

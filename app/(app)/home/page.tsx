@@ -34,9 +34,9 @@ const STUDIO: { title: string; description: string; href: string; variant: Studi
     variant: "numbers",
   },
   {
-    title: "Brand Assets",
-    description: "Your logos, colors and brand guidelines.",
-    href: "/studio/brand-assets",
+    title: "Visual identity",
+    description: "Your logos, colors and typefaces.",
+    href: "/brand/visual-identity",
     variant: "assets",
   },
   {

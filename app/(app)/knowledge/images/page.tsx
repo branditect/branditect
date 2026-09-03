@@ -4,14 +4,14 @@ import { useState } from "react";
 import ImageLibrary from "@/components/image-library";
 import FileLibrary from "@/components/file-library";
 import { useBrand } from "@/lib/useBrand";
+import { TYPE_TABS } from "@/lib/media-categories";
 
-const assetTypes = [
-  { key: "images", label: "Images", icon: "IMG", desc: "Photos, screenshots, brand imagery" },
-  { key: "videos", label: "Videos", icon: "VID", desc: "Brand videos, reels, ads" },
-  { key: "sounds", label: "Sounds", icon: "SND", desc: "Audio logos, jingles, podcasts" },
-  { key: "graphics", label: "Graphics", icon: "GFX", desc: "Logos, icons, illustrations, vectors" },
-  { key: "web", label: "Website / App", icon: "WEB", desc: "Screenshots, wireframes, UI components" },
-];
+/* The tabs and the category each one writes come from one list. They used to
+   be two: a list for the buttons and a category= prop per panel, which could
+   disagree without anything noticing — and a tab writing a value the CHECK
+   constraint refuses fails at the database, which reads to the person as the
+   file simply not appearing. */
+const assetTypes = TYPE_TABS;
 
 export default function AssetsPage() {
   const [activeType, setActiveType] = useState("images");

@@ -1,0 +1,36 @@
+-- brand_images.category — the state of the CHECK constraint, recorded.
+--
+-- NOTHING IN THIS FILE NEEDS TO BE RUN. It is here because the live database
+-- and the migration files disagreed, and that disagreement is what made
+-- finding 0 of branditect-ui/spec/knowledge-images.md look like a live bug.
+--
+-- The spec expected four of the five media tabs to reject every upload: the
+-- page passes video, audio, graphic and web into brand_images.category, and no
+-- migration in this directory widens the original six-value constraint.
+--
+-- Probed against the live database on 2026-09-03, one attempted insert per
+-- value, each row deleted immediately:
+--
+--   social, event, product, campaign, brand, ai-generated   accepted
+--   video, audio, graphic, web                              accepted
+--   zz-not-a-real-category                                  REJECTED by
+--                                    "brand_images_category_check"
+--
+-- So the constraint exists and had already been widened by hand, outside these
+-- files. The bug does not reproduce. No migration was run.
+--
+-- The nonsense value matters: without it, "all ten accepted" would equally
+-- describe a table with no constraint at all, and criterion 11 would pass for
+-- the wrong reason.
+--
+-- ── if you ever need to widen it again ──────────────────────────────────────
+-- Do NOT paste the block from the spec without reading the live definition
+-- first. It is a DROP followed by an ADD with a fixed list of ten, so if the
+-- hand-widening added an eleventh value this would silently narrow the
+-- constraint and orphan any row using it. Read it first:
+--
+--   SELECT pg_get_constraintdef(oid)
+--   FROM pg_constraint
+--   WHERE conname = 'brand_images_category_check';
+--
+-- Then widen by union with what that returns, never by replacement.

@@ -23,7 +23,7 @@ Rules that hold across changes:
 - **Max depth 3.** Section → sub-section → detail. No fourth level.
 - **Max 6 primary items.** Adding a seventh means something else merges or leaves.
 - **No dead entries.** A nav item that 404s is worse than a missing feature. The old app shipped three.
-- **One home per concept.** A thing belongs in exactly one place. Logos, colours and typefaces live on **Brand ▸ Visual identity**; the Studio "Brand assets" tab was the same library reached a second way and was retired on 2026-09-03. The page survives only as the upload destination Visual identity links to, and is being folded into Visual identity next.
+- **One home per concept.** A thing belongs in exactly one place. Logos, colours and typefaces live on **Brand ▸ Visual identity**, which both shows and changes them. The Studio "Brand assets" tab was the same library reached a second way; it was deleted on 2026-09-03 and `/studio/brand-assets` redirects there. The `/api/brand-assets/*` endpoints stay — they are endpoints, not pages — and so does the `brand-assets` storage bucket, which is a name collision and nothing to do with the tab.
 
 ## Naming
 

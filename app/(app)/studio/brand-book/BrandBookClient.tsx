@@ -393,7 +393,7 @@ export default function BrandBookClient() {
             </div>
           )}
           <Link
-            href="/studio/brand-assets"
+            href="/brand/visual-identity"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               marginTop: 10, padding: '8px 12px', borderRadius: 8,

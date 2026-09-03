@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
-  const { brandId, hex, name } = await req.json()
+  const { brandId: requested, hex, name } = await req.json()
+  const auth = await resolveBrand(req, requested ?? null)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  const brandId = auth.brandId
 
   const { data, error } = await supabase
     .from('brand_book_colors')

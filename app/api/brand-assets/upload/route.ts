@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export const maxDuration = 60
 
@@ -11,11 +12,17 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
 
     const file = formData.get('file') as File | null
-    const brandId = formData.get('brandId') as string
     const uploadType = formData.get('uploadType') as string
     const extractColors = formData.get('extractColors') === 'true'
 
-    if (!file || !brandId || !uploadType) {
+    // The brand comes from the caller's token, not from the form. This route
+    // runs on the service key, so a brandId in the body was an instruction to
+    // write into any brand at all — no sign-in required.
+    const auth = await resolveBrand(req, formData.get('brandId') as string | null)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
+
+    if (!file || !uploadType) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
@@ -109,7 +116,10 @@ Extract every color swatch you can see with its exact hex code. If you see label
 }
 
 export async function DELETE(req: NextRequest) {
-  const { brandId, slot } = await req.json()
+  const { brandId: requested, slot } = await req.json()
+  const auth = await resolveBrand(req, requested ?? null)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  const brandId = auth.brandId
 
   const { error } = await supabase
     .from('brand_logos')

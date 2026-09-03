@@ -16,7 +16,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
@@ -24,6 +23,8 @@ import ChatRail from "@/components/chat-rail";
 import { contrastOnWhite, readableInkOn } from "@/lib/contrast";
 import { SLOTS, USE_CASES, canonicalSlot, formatOf } from "@/lib/logo-slots";
 import s from "@/components/visual-identity/visual-identity.module.css";
+import { AddLogo, AddColour, AddTypeface } from "@/components/visual-identity/uploads";
+import u from "@/components/visual-identity/uploads.module.css";
 
 /* ------------------------------------------------------------------ */
 /*  Rows. Optional fields are the columns supabase/visual-identity.sql */
@@ -118,12 +119,12 @@ export default function VisualIdentityPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (brandLoading) return;
+  // Extracted from the effect so an upload can call it. Everything on this
+  // page comes from one read, which is what keeps a section and its count from
+  // disagreeing after something is added.
+  const reload = useCallback(async (alive: () => boolean = () => true) => {
     if (!brandId || brandId === "default") { setLoading(false); return; }
-    let alive = true;
-
-    (async () => {
+    {
       // `select("*")` is fine here and only here: this route is authenticated
       // and reads the signed-in brand's own rows. The explicit column allowlist
       // the spec requires belongs to the unauthenticated /k route.
@@ -135,7 +136,7 @@ export default function VisualIdentityPage() {
         supabase.from("brand_visual").select("*").eq("brand_id", brandId).maybeSingle(),
         supabase.from("brand_book_pages").select("*", { count: "exact", head: true }).eq("brand_id", brandId),
       ]);
-      if (!alive) return;
+      if (!alive()) return;
 
       setLogos((l.data as LogoRow[]) ?? []);
       setColors((c.data as ColorRow[]) ?? []);
@@ -144,10 +145,15 @@ export default function VisualIdentityPage() {
       setVisual((v.data as VisualRow) ?? null);
       setPageCount(p.count ?? 0);
       setLoading(false);
-    })();
+    }
+  }, [brandId]);
 
+  useEffect(() => {
+    if (brandLoading) return;
+    let alive = true;
+    reload(() => alive);
     return () => { alive = false; };
-  }, [brandId, brandLoading]);
+  }, [brandLoading, reload]);
 
   /* The specimen must render in the actual font. A specimen set in the wrong
      typeface is worse than no specimen. */
@@ -326,6 +332,9 @@ export default function VisualIdentityPage() {
                   works before you use it. Download the one you need.
                 </p>
               </div>
+              <div className={u.headActions}>
+                <AddLogo brandId={brandId} onDone={() => { reload(); flash("Logo uploaded"); }} />
+              </div>
             </div>
 
             {bySlot.size === 0 ? (
@@ -335,10 +344,11 @@ export default function VisualIdentityPage() {
                   Upload the primary, a reversed version and the symbol on its own — those three
                   cover almost every use.
                 </p>
-                <Link href="/studio/brand-assets" className={s.emptyBtn}>
-                  <Icon name="upload" size={14} />
-                  Upload logos
-                </Link>
+                <AddLogo
+                  brandId={brandId}
+                  variant="empty"
+                  onDone={() => { reload(); flash("Logo uploaded"); }}
+                />
               </div>
             ) : (
               <>
@@ -404,7 +414,9 @@ export default function VisualIdentityPage() {
           </section>
 
           {/* ══════════ 3 · COLOUR ══════════ */}
-          {colors.length > 0 && (
+          {/* Renders whether or not there are colours. Hiding the section when
+              empty removed the only way to add the first one. */}
+          {(
             <section className={s.sec}>
               <div className={s.shead}>
                 <div>
@@ -415,7 +427,25 @@ export default function VisualIdentityPage() {
                     and one you can only fill a shape with.
                   </p>
                 </div>
+                <div className={u.headActions}>
+                  <AddColour brandId={brandId} onDone={() => { reload(); flash("Colour added"); }} />
+                </div>
               </div>
+
+              {colors.length === 0 && (
+                <div className={s.empty}>
+                  <h3>No colours yet.</h3>
+                  <p>
+                    Add the ones you actually use — a primary, an ink and a background will carry
+                    most of what Studio makes. Or pull them straight out of a screenshot.
+                  </p>
+                  <AddColour
+                    brandId={brandId}
+                    variant="empty"
+                    onDone={() => { reload(); flash("Colour added"); }}
+                  />
+                </div>
+              )}
 
               {[
                 { key: "core", label: "Core", rows: core },
@@ -480,16 +510,20 @@ export default function VisualIdentityPage() {
                 <h2>Typefaces</h2>
                 <p>Each specimen is set in the real typeface. Copy the CSS and it will be too.</p>
               </div>
+              <div className={u.headActions}>
+                <AddTypeface brandId={brandId} onDone={() => { reload(); flash("Typeface added"); }} />
+              </div>
             </div>
 
             {fonts.length === 0 ? (
               <div className={s.empty}>
                 <h3>No typefaces yet.</h3>
                 <p>Add the one for headlines and the one for everything else.</p>
-                <Link href="/studio/brand-assets" className={s.emptyBtn}>
-                  <Icon name="plus" size={14} />
-                  Add a typeface
-                </Link>
+                <AddTypeface
+                  brandId={brandId}
+                  variant="empty"
+                  onDone={() => { reload(); flash("Typeface added"); }}
+                />
               </div>
             ) : (
               <div className={s.type}>

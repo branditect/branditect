@@ -35,7 +35,12 @@ const nextConfig = {
       { source: '/dashboard/create', destination: '/studio/write', permanent: true },
       { source: '/dashboard/draft-pad', destination: '/studio/write', permanent: true },
       { source: '/dashboard/brand-library/image-architect', destination: '/studio/create-images', permanent: true },
-      { source: '/dashboard/brand-assets', destination: '/studio/brand-assets', permanent: true },
+      // Studio ▸ Brand assets was retired on 2026-09-03: it was a second home
+      // for the brand library, and logo, colour and typeface upload now live on
+      // the page that displays them. Both URLs keep resolving — BrandBookClient
+      // linked to it, and it was in the nav for months, so it is in bookmarks.
+      { source: '/dashboard/brand-assets', destination: '/brand/visual-identity', permanent: true },
+      { source: '/studio/brand-assets', destination: '/brand/visual-identity', permanent: true },
       // Code Architect keeps working behind Studio's "More" card rather than
       // being folded into Brand assets, which would have lost the feature.
       { source: '/dashboard/brand-code-architect', destination: '/studio/code', permanent: true },

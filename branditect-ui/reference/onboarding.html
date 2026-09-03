@@ -1,0 +1,625 @@
+<title>Onboarding Flow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6; --rule-3:#ddddf1;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea;
+    --green:#2fbf71; --green-wash:#e8f6ee; --green-ink:#1c7a48;
+    --violet:#6a4fb0; --lav-line:#ddd0f4; --lav-ink:#5b4a80; --lav-wash:#f5f0fd;
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 92%);
+    --grad-rail:linear-gradient(168deg,#faf7fe 0%,#f2ecfb 58%,#efe8fa 100%);
+    --r-panel:16px; --r-card:12px; --r-tile:10px; --r-pill:50px;
+    --shadow-btn:drop-shadow(0 6px 12px rgba(200,60,20,.28));
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased;
+    background:linear-gradient(150deg,#fb6a2a 0%,#f4571f 46%,#ef4a15 100%);
+    padding:22px;display:flex;flex-direction:column;
+  }
+  h1,h2,h3,p{margin:0} svg{display:block} button{font:inherit}
+
+  /* preview device — not part of the product */
+  .dev{
+    display:flex;align-items:center;gap:6px;margin-bottom:12px;align-self:flex-start;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+    border-radius:var(--r-pill);padding:5px 8px;backdrop-filter:blur(4px);
+  }
+  .dev b{font-weight:800;letter-spacing:.5px;text-transform:uppercase;font-size:var(--fs-micro);color:rgba(255,255,255,.6);padding:0 6px}
+  .dev button{all:unset;cursor:pointer;padding:5px 12px;border-radius:var(--r-pill);color:rgba(255,255,255,.8);font-size:var(--fs-2xs);font-weight:700}
+  .dev button:hover{background:rgba(255,255,255,.16);color:#fff}
+
+  .app{
+    flex:1;min-height:0;background:var(--card);border-radius:24px;overflow:hidden;
+    display:grid;grid-template-columns:352px minmax(0,1fr);
+    box-shadow:0 30px 70px -30px rgba(120,30,5,.5),0 2px 6px rgba(120,30,5,.14);
+  }
+
+  /* ---------- left rail ---------- */
+  .rail{background:var(--grad-rail);padding:28px 30px 24px;display:flex;flex-direction:column;
+        position:relative;overflow:hidden;border-right:1px solid #eae3f6}
+  .rail .blob{position:absolute;left:-90px;bottom:-130px;width:330px;height:330px;border-radius:50%;
+    background:radial-gradient(circle at 45% 45%,rgba(202,184,242,.42),rgba(202,184,242,0) 68%)}
+  .rail>*{position:relative;z-index:2}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+  .brand .mk{width:32px;height:32px;border-radius:9px;background:var(--grad-hero);display:grid;place-items:center;flex:none}
+  .brand .mk svg{width:18px;height:18px;fill:#fff}
+  .brand .wm{font-size:17px;font-weight:700;letter-spacing:-.4px}
+
+  .eyebrow{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--violet)}
+  .rail h2{font-size:23px;font-weight:700;letter-spacing:-.7px;line-height:1.22;margin-top:9px}
+  .rail .lede{font-size:var(--fs-sm);font-weight:400;color:var(--muted);margin-top:10px;line-height:1.6}
+
+  .steps{margin-top:22px;display:flex;flex-direction:column}
+  .st{display:flex;gap:13px;position:relative;padding-bottom:14px}
+  .st:last-child{padding-bottom:0}
+  .st .n{width:25px;height:25px;flex:none;border-radius:50%;display:grid;place-items:center;
+    font-size:var(--fs-2xs);font-weight:700;background:#fff;color:var(--faint);border:1px solid var(--lav-line);z-index:2}
+  .st .n svg{width:12px;height:12px;fill:currentColor}
+  .st::before{content:"";position:absolute;left:12px;top:25px;bottom:0;width:1.5px;background:var(--lav-line)}
+  .st:last-child::before{display:none}
+  .st .t{font-size:var(--fs-body);font-weight:600;color:var(--muted-2);line-height:1.35}
+  .st .m{font-size:var(--fs-2xs);font-weight:500;color:var(--faint);margin-top:2px}
+  .st.on .n{background:var(--violet);border-color:var(--violet);color:#fff}
+  .st.on .t{color:var(--ink);font-weight:700}
+  .st.on .m{color:var(--violet);font-weight:600}
+  .st.done .n{background:var(--green-wash);border-color:#bfe6cf;color:var(--green-ink)}
+  .st.done .t{color:var(--ink-2)}
+
+  .guide{margin-top:20px;background:#fff;border:1px solid #eae3f6;border-radius:var(--r-panel);padding:15px 16px}
+  .guide .k{display:flex;align-items:center;gap:7px;font-size:var(--fs-micro);font-weight:800;
+    letter-spacing:.9px;text-transform:uppercase;color:var(--violet)}
+  .guide .k svg{width:13px;height:13px;fill:currentColor}
+  .guide .help{font-size:var(--fs-sm);font-weight:500;color:var(--ink-2);margin-top:9px;line-height:1.55}
+  .guide .exlab{font-size:var(--fs-micro);font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+    color:var(--faint);margin-top:13px;padding-top:12px;border-top:1px solid #f0ecf8}
+  .guide .ex{font-size:var(--fs-sm);font-weight:500;color:var(--lav-ink);margin-top:7px;line-height:1.6;
+    padding-left:11px;border-left:2.5px solid var(--lav-line);font-style:italic}
+  .guide .exwho{font-size:var(--fs-2xs);font-weight:600;color:var(--faint);margin-top:8px}
+
+  .foot-note{margin-top:auto;padding-top:18px;display:flex;gap:9px;align-items:flex-start;
+    font-size:var(--fs-xs);font-weight:500;color:var(--lav-ink);line-height:1.5}
+  .foot-note svg{width:15px;height:15px;fill:var(--violet);flex:none;margin-top:1px}
+
+  /* ---------- right ---------- */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .mtop{display:flex;align-items:center;gap:10px;padding:20px 34px 0;flex:none}
+  .qcount{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--violet)}
+  .autosave{
+    display:flex;align-items:center;gap:6px;font-size:var(--fs-2xs);font-weight:600;color:var(--green-ink);
+    background:var(--green-wash);border-radius:var(--r-pill);padding:3px 10px;opacity:0;transition:opacity .25s;
+  }
+  .autosave.on{opacity:1}
+  .autosave svg{width:11px;height:11px;fill:currentColor}
+  .skip{all:unset;margin-left:auto;cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--muted-2);
+    padding:6px 12px;border-radius:var(--r-tile)}
+  .skip:hover{background:var(--tile);color:var(--ink-2)}
+  .skip[hidden]{display:none}
+
+  .mbody{flex:1;min-height:0;overflow-y:auto;padding:14px 34px 24px}
+  .mbody h1{font-size:32px;font-weight:700;letter-spacing:-1px;line-height:1.15}
+  .mbody .sub{font-size:15px;font-weight:400;color:var(--muted);margin-top:9px;line-height:1.55}
+
+  .req{display:inline-flex;align-items:center;gap:6px;margin-top:13px;font-size:var(--fs-xs);font-weight:600;
+    color:var(--violet);background:var(--lav-wash);border:1px solid var(--lav-line);border-radius:var(--r-pill);padding:5px 12px}
+  .req svg{width:12px;height:12px;fill:currentColor}
+
+  .opts{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+  .oc{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:16px;
+    border:1.5px solid var(--rule-2);background:#fff;border-radius:var(--r-panel);padding:16px 20px}
+  .oc:hover{border-color:var(--accent-line)}
+  .oc .ic{width:50px;height:50px;flex:none;border-radius:14px;display:grid;place-items:center}
+  .oc .ic svg{width:23px;height:23px;fill:currentColor}
+  .oc .ic.o{background:var(--tint-1);color:var(--accent)}
+  .oc .ic.v{background:var(--lav-wash);color:var(--violet)}
+  .oc .ic.g{background:var(--green-wash);color:var(--green-ink)}
+  .oc>span{min-width:0}
+  .oc .t{display:block;font-size:17px;font-weight:700;letter-spacing:-.3px}
+  .oc .v{display:block;font-size:var(--fs-sm);font-weight:400;color:var(--muted);margin-top:3px;line-height:1.5;max-width:46ch}
+  .oc .rad{margin-left:auto;width:21px;height:21px;flex:none;border-radius:50%;border:1.5px solid var(--rule-3)}
+  .oc.on{border-color:var(--accent);background:linear-gradient(120deg,#fff8f5,#fdeee8)}
+  .oc.on .rad{border-color:var(--accent);border-width:2px;box-shadow:inset 0 0 0 3.5px #fff,inset 0 0 0 9px var(--accent)}
+
+  .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .pill{all:unset;box-sizing:border-box;cursor:pointer;border:1.5px solid var(--rule-2);background:#fff;
+    border-radius:var(--r-pill);padding:9px 16px;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)}
+  .pill:hover{border-color:var(--accent-line)}
+  .pill.on{border-color:var(--accent);background:var(--tint-1);color:var(--accent-dark)}
+
+  .ta{width:100%;min-height:180px;resize:vertical;border:1.5px solid var(--rule-2);border-radius:var(--r-panel);
+    background:#fff;padding:18px 20px;font:inherit;font-size:16px;font-weight:500;color:var(--ink);line-height:1.6}
+  .ta::placeholder{color:var(--faint);font-weight:400}
+  .ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-1)}
+  .kbd{display:block;margin-top:10px;font-size:var(--fs-2xs);font-weight:500;color:var(--faint)}
+  .kbd b{font-weight:700;color:var(--muted-2)}
+
+  .note{display:flex;gap:10px;align-items:flex-start;margin-top:16px;background:var(--lav-wash);
+    border-radius:var(--r-card);padding:12px 15px;font-size:var(--fs-sm);font-weight:500;color:var(--lav-ink);line-height:1.5}
+  .note svg{width:16px;height:16px;fill:var(--violet);flex:none;margin-top:1px}
+
+  /* voice */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+  .tile{all:unset;box-sizing:border-box;cursor:pointer;border:1.5px solid var(--rule-2);background:#fff;
+    border-radius:var(--r-card);padding:13px 15px}
+  .tile:hover{border-color:var(--accent-line)}
+  .tile.on{border-color:var(--accent);background:var(--tint-1)}
+  .tile .t{font-size:var(--fs-body);font-weight:700}
+  .tile.on .t{color:var(--accent-dark)}
+  .tile .v{font-size:var(--fs-xs);font-weight:400;color:var(--muted);margin-top:3px;line-height:1.45}
+  .tile .think{font-size:var(--fs-2xs);font-weight:600;color:var(--faint);margin-top:6px}
+  .tile .gate{display:flex;gap:6px;margin-top:8px;padding-top:7px;border-top:1px solid var(--rule);
+    font-size:var(--fs-2xs);font-weight:500;color:var(--violet);line-height:1.4}
+  .tile .gate svg{width:12px;height:12px;fill:currentColor;flex:none;margin-top:1px}
+
+  .vcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  .vc{background:#fff;border:1.5px solid var(--rule-2);border-radius:var(--r-panel);padding:16px 17px 15px;
+    display:flex;flex-direction:column;cursor:pointer}
+  .vc:hover{border-color:var(--accent-line)}
+  .vc.on{border-color:var(--accent);background:linear-gradient(150deg,#fffaf8,#fdf0eb)}
+  .vc .nm{font-size:var(--fs-micro);font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--violet)}
+  .vc.on .nm{color:var(--accent-dark)}
+  .vc .hl{font-size:17px;font-weight:700;letter-spacing:-.4px;line-height:1.28;margin-top:10px}
+  .vc .su{font-size:var(--fs-sm);font-weight:400;color:var(--ink-2);margin-top:8px;line-height:1.55;flex:1}
+  .vc .ct{margin-top:13px;align-self:flex-start;background:var(--tint-1);color:var(--accent-dark);
+    border-radius:var(--r-tile);padding:6px 12px;font-size:var(--fs-xs);font-weight:700}
+  .sk{background:linear-gradient(90deg,#f1eff4 25%,#f9f7fb 50%,#f1eff4 75%);background-size:200% 100%;
+      animation:sh 1.2s infinite;border-radius:5px;display:block}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  .avlist{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+  .av{display:flex;align-items:center;gap:11px;border:1.5px solid var(--rule-2);border-radius:var(--r-card);
+    padding:12px 15px;font-size:var(--fs-body);font-weight:600;color:var(--muted)}
+  .av .x{width:20px;height:20px;flex:none;border-radius:50%;background:#fdeeea;color:#c8402a;display:grid;place-items:center}
+  .av .x svg{width:11px;height:11px;fill:currentColor}
+  .av .w{margin-left:auto;font-size:var(--fs-xs);font-weight:500;color:var(--faint)}
+
+  /* reward */
+  .rhero{background:var(--grad-hero);color:#fff;border-radius:var(--r-panel);padding:24px 26px;
+    position:relative;overflow:hidden;filter:drop-shadow(0 10px 18px rgba(180,50,10,.18))}
+  .rhero .arc{position:absolute;right:-70px;top:-110px;width:290px;height:290px;border-radius:50%;
+    background:radial-gradient(circle at 40% 60%,rgba(255,255,255,.2),rgba(255,255,255,0) 68%)}
+  .rhero>*{position:relative;z-index:2}
+  .rhero .k{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.3px;text-transform:uppercase;opacity:.86}
+  .rhero h2{font-size:27px;font-weight:800;letter-spacing:-.9px;line-height:1.18;margin-top:9px}
+  .rhero p{font-size:15px;font-weight:400;margin-top:10px;opacity:.94;line-height:1.6;max-width:50ch}
+  .rhero .cta{display:inline-block;margin-top:14px;background:#fff;color:var(--accent-dark);
+    border-radius:var(--r-tile);padding:8px 15px;font-size:var(--fs-sm);font-weight:700}
+  .savednote{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:var(--fs-xs);font-weight:600;
+    color:var(--green-ink);background:var(--green-wash);border-radius:var(--r-tile);padding:10px 13px}
+  .savednote svg{width:14px;height:14px;fill:currentColor;flex:none}
+  .pulse{background:#fff;border:1px solid var(--rule);border-radius:var(--r-panel);padding:16px 18px;margin-top:11px}
+  .pulse .top{display:flex;align-items:baseline;gap:11px}
+  .pulse .num{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--accent)}
+  .pulse .lb{font-size:var(--fs-sm);font-weight:700}
+  .pulse .st2{margin-left:auto;font-size:var(--fs-xs);font-weight:600;color:var(--muted-2)}
+  .track{height:7px;border-radius:4px;background:var(--tile);margin-top:10px;overflow:hidden}
+  .track i{display:block;height:100%;background:var(--grad-hero);border-radius:4px}
+  .gaps{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .gap{display:flex;align-items:center;gap:9px;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)}
+  .gap .ic{width:19px;height:19px;flex:none;border-radius:50%;display:grid;place-items:center}
+  .gap .ic svg{width:11px;height:11px;fill:currentColor}
+  .gap .ok{background:var(--green-wash);color:var(--green-ink)}
+  .gap .no{background:var(--tile);color:var(--faint)}
+  .gap .m{margin-left:auto;font-size:var(--fs-xs);font-weight:600;color:var(--muted-2)}
+
+  /* resume */
+  .resume{max-width:460px}
+  .resume .big{font-size:30px;font-weight:700;letter-spacing:-.9px;line-height:1.2}
+  .resume .sub2{font-size:15px;font-weight:400;color:var(--muted);margin-top:10px;line-height:1.6}
+  .resume .box{margin-top:18px;background:var(--lav-wash);border:1px solid var(--lav-line);
+    border-radius:var(--r-panel);padding:15px 17px}
+  .resume .box .r{display:flex;align-items:center;gap:9px;font-size:var(--fs-sm);font-weight:600;color:var(--lav-ink);padding:4px 0}
+  .resume .box .r svg{width:14px;height:14px;fill:var(--violet);flex:none}
+
+  .mfoot{flex:none;border-top:1px solid var(--rule);padding:15px 34px;display:flex;align-items:center;gap:10px}
+  .btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+    height:48px;padding:0 24px;border-radius:var(--r-card);background:var(--grad-hero);color:#fff;
+    font-size:15px;font-weight:700;filter:var(--shadow-btn)}
+  .btn svg{width:16px;height:16px;fill:currentColor}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;filter:none}
+  .btn.back{background:#fff;color:var(--ink-2);border:1.5px solid var(--rule-2);filter:none;font-weight:600}
+  .btn.back:hover:not([disabled]){border-color:var(--rule-3);background:#fcfcfc}
+  .btn.line{background:#fff;color:var(--accent);border:1.5px solid var(--accent-line);filter:none}
+  .mfoot .sp{margin-left:auto}
+  .mfoot .hintx{font-size:var(--fs-2xs);color:var(--faint);font-weight:500}
+
+  @media (max-width:1080px){ .app{grid-template-columns:1fr} .rail{display:none} }
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="i-b" viewBox="0 0 24 24"><path d="M7 3h6a5 5 0 0 1 2.6 9.3A5.2 5.2 0 0 1 13.4 22H7zm3 3v4h3a2 2 0 1 0 0-4zm0 7v6h3.2a3 3 0 0 0 0-6z"/></symbol>
+  <symbol id="i-arr" viewBox="0 0 24 24"><path d="m13 5 7 7-7 7-1.4-1.4 4.6-4.6H4v-2h12.2l-4.6-4.6z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m11 19-7-7 7-7 1.4 1.4L7.8 11H20v2H7.8l4.6 4.6z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 19 2 12l2.1-2.1L9 14.8 19.9 3.9 22 6z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 2 3 6.5v11L12 22l9-4.5v-11zm0 2.3 6.4 3.2L12 10.7 5.6 7.5zM5 9.3l6 3v7.2l-6-3zm8 10.2v-7.2l6-3v7.2z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v10.2l3.6-3.6L17 11l-5 5-5-5 1.4-1.4L11 13.2V3zM5 19h14v2H5z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10m0 2c-5 0-9 2.7-9 6v2h18v-2c0-3.3-4-6-9-6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.2 6.1L20.5 10l-6.3 2.2L12 18.4 9.8 12.2 3.5 10l6.3-1.9z"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M12.6 10a6 6 0 1 0-2.6 2.6L13 15.6V19h3v3h5v-4.6zM6.5 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M6.5 19A4.5 4.5 0 0 1 6 10.06a6 6 0 0 1 11.6-1.1A4.5 4.5 0 0 1 17.5 19z"/></symbol>
+</defs></svg>
+
+<div class="dev">
+  <b>Preview</b>
+  <button onclick="restart()">Start over</button>
+  <button onclick="jump(6)">Jump to Q6</button>
+  <button onclick="jump(18)">Voice (Q18)</button>
+  <button onclick="showResume()">Resume screen</button>
+  <button onclick="finish()">Reward</button>
+</div>
+
+<div class="app" id="app"></div>
+
+<script>
+var DATA = {"sections":[{"id":"why","title":"Why you exist","range":[1,5]},{"id":"sell","title":"What you sell","range":[6,10]},{"id":"who","title":"Who it's for","range":[11,15]},{"id":"show","title":"How you show up","range":[16,20]}],"tileOrder":{"physical":["confident","bold","warm","expert","visionary","calm"],"digital":["expert","visionary","warm","confident","calm","bold"],"service":["calm","warm","expert","confident","bold","visionary"]},"exemplar":{"physical":"a boot repair business","digital":"a late-invoice app","service":"a window cleaner"},"questions":[{"n":1,"section":"why","kind":"text","q":"What made you start this?","help":{"all":"The moment, not the mission statement. What actually happened?"},"ex":{"physical":"I worked in an outdoor shop for four years and watched people bin 200 euro boots because the sole had worn through. The uppers were fine.","digital":"I freelanced for five years and every Sunday night I wrote the same awkward email asking someone to pay me.","service":"I worked for a big contract cleaner. We had cafés on fortnightly contracts getting service maybe once a quarter, and nobody was checking."}},{"n":2,"section":"why","kind":"text","q":"What is broken about how people solve this today?","help":{"physical":"Think about the products they buy now, not the market.","digital":"Think about the tools they use now, not the market.","service":"Think about who they hire now, not the market."},"ex":{"physical":"Boots are built to be replaced, not repaired, and the cobblers who used to fix them have mostly closed.","digital":"Freelancers do not chase, because it feels rude. So they absorb three weeks of delay and call it normal.","service":"Contracts are written so nobody can tell what they actually got. Small venues are the first to be deprioritised."}},{"n":3,"section":"why","kind":"text","q":"If this works exactly how you want in three years, what does it look like?","help":{"all":"Concrete. Revenue, team, reach, whatever it is you actually want."},"ex":{"physical":"Kits for the 40 most common boot models, sold through the outdoor shops themselves, still four of us.","digital":"10,000 freelancers using it, still no sales team, and average payment time under 30 days across the whole base.","service":"Every independent café inside the ring road, six vans, and I stop cleaning windows myself."}},{"n":4,"section":"why","kind":"text","q":"What is the part of this you would still do for free?","help":{"all":"Not why you do it. Which specific part do you enjoy enough that the money is beside the point?"},"ex":{"physical":"The photos people send of a boot they were about to throw out, back on a trail.","digital":"Reading the messages where someone got paid for a job they had already written off.","service":"The first hour, before anyone is awake, when the whole street is mine."}},{"n":5,"section":"why","kind":"text","q":"What will you never do, even if it costs you a sale?","help":{"all":"Your actual line. The thing you would turn down money over."},"ex":{"physical":"Never sell a kit for a boot we know cannot be repaired properly. We publish that list.","digital":"Never send a chase email the freelancer has not seen and approved.","service":"Never bill for a visit that did not happen. Every visit gets a timestamped photo."}},{"n":6,"section":"sell","kind":"text","required":true,"q":"What is it, in one sentence a stranger would understand?","help":{"all":"No category jargon. Say it the way you would to a neighbour."},"note":"The highest-leverage answer in the whole questionnaire. Everything Studio writes starts here.","ex":{"physical":"Resoling kits that let you fix your own walking boots instead of replacing them.","digital":"An app that chases your late invoices so you do not have to.","service":"Window cleaning for shops and cafés in central Helsinki."}},{"n":7,"section":"sell","kind":"text","q":"What do you do differently from everyone else in your space?","help":{"all":"One thing, plainly. If it is also true of your competitors, it does not count."},"ex":{"physical":"We publish the list of boots our kits will not work on, including ones we would make money selling for.","digital":"The chase email is written in the freelancer's own voice, and it escalates on a schedule they set.","service":"Every visit ends with a timestamped photo in your inbox, so you never wonder whether we came."}},{"n":8,"section":"sell","kind":"text","q":"Why should someone believe you?","help":{"physical":"Materials, testing, certifications, warranty, where it is made.","digital":"Uptime, security, results data, who built it.","service":"Licensing, insurance, years doing it, who actually turns up."},"note":"Two voices — Calm and Expert — need real proof here. A number, a certification or a test.","ex":{"physical":"Kits tested to 800 kilometres on trail. Fits 40 boot models. A step-by-step video for every one, filmed in real time with the mistakes left in.","digital":"2,400 users. Average time to payment down from 47 days to 31. Read-only bank access, we never touch your money.","service":"2 million euro public liability. Purified water fed pole to 12 metres. Before 7am so trading is untouched. From 45 euro a visit."}},{"n":9,"section":"sell","kind":"text","q":"If someone does not buy from you, what do they do instead?","help":{"physical":"Include \"nothing\" and \"keeps using the broken one\". Those are usually the real competition.","digital":"Include \"nothing\" and \"does it manually\". Those are usually the real competition.","service":"Include \"nothing\" and \"does it herself\". Those are usually the real competition."},"ex":{"physical":"Buys new boots, or keeps wearing worn soles until they slip on wet rock.","digital":"Keeps writing the emails himself on Sunday nights, or gives up and waits.","service":"Signs with a big contract cleaner, or does it herself on a Sunday with a squeegee."}},{"n":10,"section":"sell","kind":"text","q":"What do people complain about with the alternatives?","help":{"all":"What have you actually heard someone say? Their words, not yours."},"note":"Every phrase you capture here is usable verbatim in copy. This is the customer language bank.","ex":{"physical":"Cobblers cost more than new boots. Nobody does this any more. I did not know it was possible.","digital":"It feels aggressive. I do not want to annoy a client I need. The templates all sound like a debt collector.","service":"They came once and never again. I could not get anyone on the phone. The contract was a year long."}},{"n":11,"section":"who","kind":"text","required":true,"q":"Describe your best customer. Who are they, and what is going on in their life?","help":{"all":"One person, not a segment. Picture someone you have actually sold to."},"ex":{"physical":"Man, 45, owns one good pair of boots he has had eight years, fixes his own bike, actively annoyed by throwaway gear.","digital":"Solo designer, 12 clients, invoices on 30 days, gets paid at 55, has never once sent a second reminder.","service":"Café owner, one or two sites, opens at seven, notices the glass on Monday when the light hits it."}},{"n":12,"section":"who","kind":"text","q":"What is the moment they realise they need you?","help":{"physical":"The trigger. Usually something failed, wore out, or ran out.","digital":"The trigger. Usually a specific frustration hitting its limit.","service":"The trigger. Usually they saw the problem in front of a customer."},"ex":{"physical":"He turns the boot over before a trip and the tread is gone.","digital":"It is the 20th, rent is due, and 4,000 euro is sitting in invoices that went out six weeks ago.","service":"A customer photographs her flat white and she can see the smears in the background."}},{"n":13,"section":"who","kind":"text","required":true,"q":"What is different for them after?","help":{"all":"Concretely. What can they do, or stop doing?"},"ex":{"physical":"He keeps the boots that are already broken in, and spends 30 euro instead of 220.","digital":"She stops thinking about it. Money arrives without a single awkward email from her.","service":"The windows get done every two weeks without her booking anything or being there."}},{"n":14,"section":"who","kind":"text","q":"What do they worry about before buying?","help":{"physical":"Will it fit, will it work, can they send it back. And price.","digital":"Their data, getting locked in, how long it takes to learn. And price.","service":"Will you turn up, are they tied in, do they have to be there. And price."},"ex":{"physical":"That he will ruin the boots. That the repair will not hold on the first wet descent.","digital":"That it will send something tone-deaf to a client she has spent three years keeping.","service":"That she will be locked into a year. That they will come twice and disappear."}},{"n":15,"section":"who","kind":"text","q":"Who is this not for?","help":{"all":"Be specific. Saying it out loud sharpens everything above."},"ex":{"physical":"People who want it done for them. People whose boots are already delaminating at the upper.","digital":"Agencies with a finance person. Anyone whose clients already pay on time.","service":"Offices and apartment blocks. Anywhere outside the tram network."}},{"n":16,"section":"show","kind":"text","q":"Three words for your brand.","help":{"all":"Not aspirational. What is true today?"},"ex":{"physical":"Repairable. Honest. Unfussy.","digital":"Calm. Precise. On your side.","service":"Reliable. Invisible. Early."}},{"n":17,"section":"show","kind":"text","q":{"physical":"If your brand were a person at a party, how would they behave?","digital":"If your brand were a person at a conference, how would they behave?","service":"If your brand were a person standing in a customer's kitchen, how would they behave?"},"help":{"physical":"Holding court, listening, introducing people, or fixing the music?","digital":"On stage, working the room, hiding at the coffee, or answering questions properly in the corridor?","service":"Chatty, in and out, explaining everything, or just quietly getting on with it?"},"ex":{"physical":"Not the loudest. Ends up in the kitchen explaining how something works to two people who actually want to know.","digital":"Skips the keynote. Answers your question properly in the corridor and does not pitch you.","service":"Takes their shoes off at the door, does the job, does not need a conversation about it."}},{"n":18,"section":"show","kind":"voice","required":true,"q":"Which of these sounds like you?","help":{"all":"Pick a voice, then read your own hero written three ways. Nothing auto-advances."},"ex":{"physical":"","digital":"","service":""}},{"n":19,"section":"show","kind":"antivoice","q":"So: never like this?","help":{"all":"Built from the tiles you did not pick. One tap to confirm, and Studio will avoid these registers."},"ex":{"physical":"","digital":"","service":""}},{"n":20,"section":"show","kind":"text","q":"Which brands do you like the look of, and what specifically about them?","help":{"all":"Any industry. Name the thing you like, not just the brand."},"note":"\"What specifically\" is the whole question. \"I like Aesop\" is unusable. \"The restraint\" is a brief.","ex":{"physical":"Patagonia's repair pages. They make fixing something look like the more serious choice, not the cheaper one.","digital":"Monzo. The numbers are big and the language is small, which is the opposite of every other bank.","service":"Aesop. The packaging tells you almost nothing and you still want it. Not the bottles, the restraint."}}],"archetypes":{"confident":{"name":"Confident & precise","line":"Few words. No hedging. Lets the product speak.","think":"Rhode, Mercedes, Aesop"},"warm":{"name":"Warm & human","line":"Talks like a person who likes you.","think":"Glossier, Innocent, Bloom"},"bold":{"name":"Bold & playful","line":"Breaks the rules your category takes seriously.","think":"Burger King, Oatly, Duolingo"},"calm":{"name":"Calm & reassuring","line":"Plain, careful, no hype. Tells you the risk.","think":"CeraVe, Volvo, Philips","needsProof":true},"visionary":{"name":"Visionary & inspiring","line":"Talks about what becomes possible.","think":"Apple, Nike, Tony's Chocolonely"},"expert":{"name":"Expert & direct","line":"Leads with the number. Proof in every sentence.","think":"Revolut, Stripe, Dyson","needsProof":true}},"neighbours":{"confident":["visionary","calm"],"warm":["bold","calm"],"bold":["warm","visionary"],"calm":["expert","confident"],"visionary":["confident","bold"],"expert":["calm","confident"]}};
+</script>
+<script>
+/* ============================================================
+   State. In the product this lives in Supabase, mirrored to
+   localStorage. Here it is in memory only — the preview panel
+   does not keep browser storage reliably, and the point being
+   demonstrated is the flow, not the storage engine.
+   ============================================================ */
+var S = {
+  screen: "profile",     // profile | q | reward | resume
+  step: 0,               // profile sub-step 0..2
+  n: 1,                  // current question 1..20
+  track: "physical",
+  charge: "one-off",
+  team: "just-me",
+  answers: {},           // { 6: "…" }
+  skipped: {},           // { 7: true }
+  voice: null,
+  secondary: null,
+  furthest: 1            // how far they have reached — back never loses this
+};
+
+var ARCH = DATA.archetypes, NEIGH = DATA.neighbours;
+function Q(n){ return DATA.questions[n-1]; }
+function pick(v, track){
+  if (v && typeof v === "object"){ return ("all" in v) ? v.all : v[track]; }
+  return v;
+}
+function sectionOf(n){ return DATA.sections.find(function(s){ return n>=s.range[0] && n<=s.range[1]; }); }
+function answeredIn(s){
+  var c=0; for(var i=s.range[0];i<=s.range[1];i++){ if(S.answers[i] || (i===18&&S.voice)) c++; } return c;
+}
+function gateDone(){
+  return [6,11,13].every(function(n){ return (S.answers[n]||"").trim(); }) && !!S.voice;
+}
+var esc = function(t){ return String(t==null?"":t).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); };
+
+/* ---- autosave indicator ---------------------------------- */
+var saveTimer=null;
+function flashSaved(){
+  var el = document.getElementById("autosave");
+  if (!el) return;
+  el.classList.add("on");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ el.classList.remove("on"); }, 2400);
+}
+/* Every mutation goes through here. In the product this is a
+   debounced upsert to Supabase plus a localStorage mirror. */
+function save(){ flashSaved(); }
+
+/* ============================================================
+   Render
+   ============================================================ */
+function stepsHTML(activeSectionId){
+  return '<div class="steps">' + DATA.sections.map(function(s){
+    var done = answeredIn(s), total = s.range[1]-s.range[0]+1;
+    var cls = s.id===activeSectionId ? "on" : (done===total ? "done" : (done>0 ? "done" : ""));
+    var mark = (done===total) ? '<svg><use href="#i-check"></use></svg>' : (DATA.sections.indexOf(s)+1);
+    return '<div class="st '+cls+'"><span class="n">'+mark+'</span><div><div class="t">'+s.title+
+           '</div><div class="m">'+(done? done+' of '+total+' answered' : total+' questions')+'</div></div></div>';
+  }).join("") + '</div>';
+}
+
+function render(){
+  var app = document.getElementById("app");
+  if (S.screen==="profile") app.innerHTML = viewProfile();
+  else if (S.screen==="resume") app.innerHTML = viewResume();
+  else if (S.screen==="reward") app.innerHTML = viewReward();
+  else app.innerHTML = viewQuestion();
+  wire();
+}
+
+/* ---------- profile ---------- */
+var PROFILE = [
+  { k:"track", title:"What do you sell?", sub:"This swaps every example you'll see from here on.",
+    opts:[
+      {v:"physical", ic:"o", i:"i-box", t:"Physical products", d:"Things you make or buy in, and ship to someone."},
+      {v:"digital",  ic:"v", i:"i-dl",  t:"Digital products",  d:"Apps, software, courses, templates — anything downloaded or logged into."},
+      {v:"service",  ic:"g", i:"i-user",t:"Services",          d:"Work, expertise or a result you deliver for someone."}
+    ]},
+  { k:"charge", title:"How do you charge?", sub:"Numbers uses this too, so you only answer it once.",
+    opts:[
+      {v:"one-off",   ic:"o", i:"i-box",  t:"One-off",   d:"They pay once, per thing."},
+      {v:"recurring", ic:"v", i:"i-cloud",t:"Recurring", d:"They pay every month or year to keep it."}
+    ]},
+  { k:"team", title:"Who is “we”?", sub:"If it's just you, Studio writes in first person and drops the word “team”.",
+    opts:[
+      {v:"just-me", ic:"o", i:"i-user", t:"Just me",  d:"One person. Studio will never write “our team”."},
+      {v:"2-3",     ic:"v", i:"i-user", t:"2–3", d:"Small enough that “we” means everyone."},
+      {v:"4-10",    ic:"g", i:"i-user", t:"4–10", d:"A team, and copy can say so."}
+    ]}
+];
+
+function viewProfile(){
+  var p = PROFILE[S.step], cur = S[p.k];
+  return '<aside class="rail"><span class="blob"></span>'+
+    brandHTML()+
+    '<div class="eyebrow">Getting started</div>'+
+    '<h2>Let’s get to know your business</h2>'+
+    '<p class="lede">Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs.</p>'+
+    stepsHTML(null)+
+    '<div class="foot-note"><svg><use href="#i-spark"></use></svg>Your answers become your strategy, your tone of voice and every word Studio writes.</div>'+
+  '</aside>'+
+  '<main class="main">'+
+    '<div class="mtop"><span class="qcount">Setup · '+(S.step+1)+' of 3</span>'+
+      '<span class="autosave" id="autosave"><svg><use href="#i-check"></use></svg>Saved</span></div>'+
+    '<div class="mbody"><h1>'+p.title+'</h1><p class="sub">'+p.sub+'</p>'+
+      '<div class="opts">'+ p.opts.map(function(o){
+        return '<button class="oc'+(cur===o.v?" on":"")+'" data-set="'+p.k+'" data-val="'+o.v+'">'+
+          '<span class="ic '+o.ic+'"><svg><use href="#'+o.i+'"></use></svg></span>'+
+          '<span><span class="t">'+esc(o.t)+'</span><span class="v">'+esc(o.d)+'</span></span>'+
+          '<span class="rad"></span></button>';
+      }).join("") +'</div>'+
+    '</div>'+
+    '<div class="mfoot">'+
+      '<button class="btn back" data-prev '+(S.step===0?"disabled":"")+'><svg><use href="#i-back"></use></svg>Back</button>'+
+      '<button class="btn sp" data-next>Next<svg><use href="#i-arr"></use></svg></button>'+
+    '</div>'+
+  '</main>';
+}
+
+function brandHTML(){
+  return '<div class="brand"><span class="mk"><svg><use href="#i-b"></use></svg></span><span class="wm">Branditect</span></div>';
+}
+
+/* ---------- question ---------- */
+function viewQuestion(){
+  var q = Q(S.n), sec = sectionOf(S.n), secIdx = DATA.sections.indexOf(sec)+1;
+  var qText = pick(q.q, S.track), help = pick(q.help, S.track);
+  var ex = q.ex[S.track];
+
+  var guide = '<div class="guide"><div class="k"><svg><use href="#i-spark"></use></svg>How to answer</div>'+
+    '<p class="help">'+esc(help)+'</p>'+
+    (ex ? '<div class="exlab">Example answer</div><p class="ex">'+esc(ex)+'</p>'+
+          '<p class="exwho">— '+DATA.exemplar[S.track]+', not yours. Copy the shape, not the words.</p>' : '')+
+    '</div>';
+
+  var rail = '<aside class="rail"><span class="blob"></span>'+ brandHTML()+
+    '<div class="eyebrow">Step '+secIdx+' of 4 · '+sec.title+'</div>'+
+    '<h2>'+esc(qText)+'</h2>'+ guide +
+    '<div class="foot-note"><svg><use href="#'+(q.required?"i-key":"i-spark")+'"></use></svg>'+
+      esc(q.note || (q.required ? "One of the five answers that unlocks your workspace."
+                                : "Skippable — it becomes a Brand Readiness item you can come back to."))+
+    '</div></aside>';
+
+  var body;
+  if (q.kind === "voice")      body = voiceBody();
+  else if (q.kind === "antivoice") body = antiVoiceBody();
+  else                          body = textBody(q);
+
+  var canNext = !q.required || (q.kind==="voice" ? !!S.voice : !!(S.answers[S.n]||"").trim());
+
+  return rail +
+  '<main class="main">'+
+    '<div class="mtop"><span class="qcount">Question '+S.n+' of 20</span>'+
+      '<span class="autosave" id="autosave"><svg><use href="#i-check"></use></svg>Saved</span>'+
+      '<button class="skip" data-skip '+(q.required?"hidden":"")+'>Skip for now</button></div>'+
+    '<div class="mbody">'+ body +'</div>'+
+    '<div class="mfoot">'+
+      '<button class="btn back" data-prev><svg><use href="#i-back"></use></svg>Back</button>'+
+      (canNext
+        ? '<button class="btn sp" data-next>'+(S.n===20?"Finish":"Next question")+'<svg><use href="#i-arr"></use></svg></button>'
+        : '<span class="sp"></span><span class="hintx">An answer is needed to continue</span>'+
+          '<button class="btn" disabled>'+(S.n===20?"Finish":"Next question")+'<svg><use href="#i-arr"></use></svg></button>')+
+    '</div>'+
+  '</main>';
+}
+
+function textBody(q){
+  var val = S.answers[S.n] || "";
+  return '<h1>Your answer</h1>'+
+    (q.required ? '<span class="req"><svg><use href="#i-key"></use></svg>Needed to open your workspace</span>' : '')+
+    (S.skipped[S.n] ? '<div class="note"><svg><use href="#i-spark"></use></svg>You skipped this one. It’s waiting for you in Brand Readiness — answering it now removes it from the list.</div>' : '')+
+    '<div style="margin-top:18px"><textarea class="ta" id="ta" placeholder="Write it the way you’d say it out loud…">'+esc(val)+'</textarea>'+
+    '<span class="kbd"><b>Enter</b> to continue · <b>Shift + Enter</b> for a new line · saves as you type</span></div>';
+}
+
+function voiceBody(){
+  var order = DATA.tileOrder[S.track];
+  var proofThin = !(S.answers[8]||"").trim();
+
+  if (!S.voice){
+    return '<h1>Which of these sounds like you?</h1>'+
+      '<p class="sub">Ordered for your track. Nothing is hidden — read them all, then pick.</p>'+
+      '<span class="req"><svg><use href="#i-key"></use></svg>Needed to open your workspace</span>'+
+      '<div class="tiles">'+ order.map(function(id){
+        var a = ARCH[id];
+        return '<button class="tile" data-voice="'+id+'"><div class="t">'+a.name+'</div>'+
+          '<div class="v">'+esc(a.line)+'</div><div class="think">Think: '+esc(a.think)+'</div>'+
+          (a.needsProof && proofThin
+            ? '<div class="gate"><svg><use href="#i-spark"></use></svg>This voice needs proof. Add a number, a test or a certification to question 8 and we’ll write it properly.</div>' : '')+
+          '</button>';
+      }).join("") +'</div>';
+  }
+
+  var trio = [S.voice].concat(NEIGH[S.voice]);
+  var HERO = {
+    physical:{h:"Your boots are fine. It’s the sole that’s gone.", s:"A kit, a video, and thirty euro. Forty boot models, tested to 800 kilometres.", c:"See if yours is on the list"},
+    digital: {h:"Get paid without writing the email.", s:"It chases in your voice, on your schedule. Average time to payment down from 47 days to 31.", c:"See how it chases"},
+    service: {h:"Clean windows. Every second Thursday.", s:"We come before you open and leave a timestamped photo. From 45 euro a visit.", c:"See if we cover your street"}
+  }[S.track];
+
+  return '<h1>This is you, in three voices</h1>'+
+    '<p class="sub">Real copy from your own answers to 6, 11 and 13 — not samples. Nothing jumps ahead when you tap.</p>'+
+    '<div class="vcards">'+ trio.map(function(id,i){
+      var a = ARCH[id], on = (id===S.voice);
+      if (i===2) return '<div class="vc" data-voice="'+id+'"><div class="nm">'+a.name+'</div>'+
+        '<span class="sk" style="height:15px;width:88%;margin-top:11px"></span>'+
+        '<span class="sk" style="height:15px;width:60%;margin-top:7px"></span>'+
+        '<span class="sk" style="height:11px;width:96%;margin-top:14px"></span>'+
+        '<span class="sk" style="height:11px;width:78%;margin-top:6px"></span>'+
+        '<span class="sk" style="height:30px;width:128px;margin-top:17px;border-radius:10px"></span></div>';
+      return '<div class="vc'+(on?" on":"")+'" data-voice="'+id+'"><div class="nm">'+a.name+'</div>'+
+        '<div class="hl">'+esc(HERO.h)+'</div><div class="su">'+esc(HERO.s)+'</div>'+
+        '<span class="ct">'+esc(HERO.c)+'</span></div>';
+    }).join("") +'</div>'+
+    '<div style="margin-top:20px"><div style="font-size:13px;font-weight:700;color:var(--ink-2)">And a bit of…</div>'+
+      '<div class="pills">'+ ["warm","bold","expert","confident","visionary","calm"]
+        .filter(function(id){ return id!==S.voice; }).slice(0,3)
+        .map(function(id){ return '<button class="pill'+(S.secondary===id?" on":"")+'" data-sec="'+id+'">'+ARCH[id].name.split(" ")[0]+'</button>'; }).join("")+
+        '<button class="pill'+(S.secondary===null?" on":"")+'" data-sec="">No secondary</button>'+
+      '</div></div>'+
+    '<div class="note"><svg><use href="#i-spark"></use></svg>Whichever you pick is saved to Studio ▸ Library as your homepage hero. You are not filling in a quiz — you are leaving with copy.</div>';
+}
+
+function antiVoiceBody(){
+  var rejected = Object.keys(ARCH).filter(function(id){ return id!==S.voice && id!==S.secondary; });
+  return '<h1>So — never like this?</h1>'+
+    '<p class="sub">Built from the tiles you didn’t pick. Confirm and Studio will avoid these registers for good.</p>'+
+    '<div class="avlist">'+ rejected.map(function(id){
+      return '<div class="av"><span class="x"><svg><use href="#i-x"></use></svg></span>'+ARCH[id].name+
+        '<span class="w">'+esc(ARCH[id].line)+'</span></div>';
+    }).join("") +'</div>'+
+    '<div class="note"><svg><use href="#i-spark"></use></svg>This is the most useful thing on the page for the AI. A named mistake is enforceable; “be tasteful” is not.</div>';
+}
+
+/* ---------- resume ---------- */
+function viewResume(){
+  var answered = Object.keys(S.answers).length;
+  return '<aside class="rail"><span class="blob"></span>'+brandHTML()+
+    '<div class="eyebrow">Welcome back</div><h2>Nothing you wrote is lost</h2>'+
+    '<p class="lede">Every answer saved as you typed it. Pick up where you left off, or open your workspace and come back later.</p>'+
+    stepsHTML(null)+
+    '<div class="foot-note"><svg><use href="#i-cloud"></use></svg>Saved to your account, not this browser. Sign in anywhere and it’s there.</div></aside>'+
+  '<main class="main"><div class="mtop"><span class="qcount">Resume</span></div>'+
+    '<div class="mbody"><div class="resume">'+
+      '<div class="big">You were on question '+S.furthest+' of 20.</div>'+
+      '<p class="sub2">'+answered+' answered so far.</p>'+
+      '<div class="box">'+
+        '<div class="r"><svg><use href="#i-check"></use></svg>Everything you have written is saved</div>'+
+        '<div class="r"><svg><use href="#i-check"></use></svg>Skipped questions are waiting in Brand Readiness</div>'+
+        '<div class="r"><svg><use href="#i-check"></use></svg>You can change any earlier answer at any time</div>'+
+      '</div></div></div>'+
+    '<div class="mfoot"><button class="btn" onclick="jump(S.furthest)">Continue<svg><use href="#i-arr"></use></svg></button>'+
+      '<button class="btn line" onclick="finish()">Open my workspace instead</button></div></main>';
+}
+
+/* ---------- reward ---------- */
+function viewReward(){
+  var HERO = {
+    physical:{h:"Your boots are fine. It’s the sole that’s gone.", s:"A kit, a video, and thirty euro. Forty boot models, tested to 800 kilometres.", c:"See if yours is on the list"},
+    digital: {h:"Get paid without writing the email.", s:"It chases in your voice, on your schedule. Average time to payment down from 47 days to 31.", c:"See how it chases"},
+    service: {h:"Clean windows. Every second Thursday.", s:"We come before you open and leave a timestamped photo. From 45 euro a visit.", c:"See if we cover your street"}
+  }[S.track];
+  var answered = Object.keys(S.answers).length + (S.voice?1:0);
+  var left = 20 - answered;
+  var gate = gateDone();
+
+  return '<aside class="rail"><span class="blob"></span>'+brandHTML()+
+    '<div class="eyebrow">'+(gate?"Gate cleared":"Saved")+'</div>'+
+    '<h2>Here’s what you just made</h2>'+
+    '<p class="lede">'+(gate
+      ? "The five answers that matter are in, and you’re holding a homepage hero. The rest sharpen it whenever you come back."
+      : "Everything is saved. Answer the five gate questions to open the full workspace.")+'</p>'+
+    stepsHTML(null)+
+    '<div class="foot-note"><svg><use href="#i-cloud"></use></svg>Saved to your account. Everything here regenerates when you change an answer.</div></aside>'+
+  '<main class="main"><div class="mtop"><span class="qcount">Your brand, so far</span></div>'+
+  '<div class="mbody">'+
+    '<div class="rhero"><span class="arc"></span>'+
+      '<div class="k">Your hero — '+(S.voice?ARCH[S.voice].name:"—")+'</div>'+
+      '<h2>'+esc(HERO.h)+'</h2><p>'+esc(HERO.s)+'</p><span class="cta">'+esc(HERO.c)+'</span></div>'+
+    '<div class="savednote"><svg><use href="#i-check"></use></svg>Saved to Studio ▸ Library. You walked in with nothing and you’re leaving with a homepage hero.</div>'+
+    '<div class="pulse"><div class="top"><span class="num">'+(gate?"25%":"0%")+'</span><span class="lb">Brand Readiness</span>'+
+      '<span class="st2">'+(gate?"1":"0")+' of 4 checks done</span></div>'+
+      '<div class="track"><i style="width:'+(gate?25:0)+'%"></i></div>'+
+      '<div class="gaps">'+
+        '<div class="gap"><span class="ic '+(gate?"ok":"no")+'"><svg><use href="#'+(gate?"i-check":"i-dot")+'"></use></svg></span>Strategy questionnaire<span class="m">'+(gate?"Gate cleared":"5 answers needed")+'</span></div>'+
+        '<div class="gap"><span class="ic no"><svg><use href="#i-dot"></use></svg></span>Files in Knowledge<span class="m">0 of 6</span></div>'+
+        '<div class="gap"><span class="ic no"><svg><use href="#i-dot"></use></svg></span>Product &amp; brand images<span class="m">0 of 7</span></div>'+
+        '<div class="gap"><span class="ic no"><svg><use href="#i-dot"></use></svg></span>Brand guideline<span class="m">Not uploaded</span></div>'+
+      '</div></div>'+
+  '</div>'+
+  '<div class="mfoot"><button class="btn">Open my workspace<svg><use href="#i-arr"></use></svg></button>'+
+    (left>0 ? '<button class="btn line" onclick="jump(nextUnanswered())">Keep going — '+left+' question'+(left===1?"":"s")+' left</button>' : '')+
+  '</div></main>';
+}
+
+function nextUnanswered(){
+  for (var i=1;i<=20;i++){ if(!(S.answers[i]||"").trim() && !(i===18&&S.voice)) return i; }
+  return 20;
+}
+
+/* ============================================================
+   Events
+   ============================================================ */
+function wire(){
+  document.querySelectorAll("[data-set]").forEach(function(b){
+    b.addEventListener("click", function(){ S[b.dataset.set] = b.dataset.val; save(); render(); });
+  });
+  var ta = document.getElementById("ta");
+  if (ta){
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    var t=null;
+    ta.addEventListener("input", function(){
+      S.answers[S.n] = ta.value;
+      delete S.skipped[S.n];
+      clearTimeout(t); t = setTimeout(save, 600);      // debounced, like the real upsert
+    });
+    ta.addEventListener("blur", function(){ if(ta.value.trim()) save(); });
+    ta.addEventListener("keydown", function(e){
+      if (e.key==="Enter" && !e.shiftKey){ e.preventDefault(); next(); }
+    });
+  }
+  document.querySelectorAll("[data-voice]").forEach(function(b){
+    b.addEventListener("click", function(){ S.voice = b.dataset.voice; S.answers[18]=ARCH[S.voice].name; save(); render(); });
+  });
+  document.querySelectorAll("[data-sec]").forEach(function(b){
+    b.addEventListener("click", function(){ S.secondary = b.dataset.sec || null; save(); render(); });
+  });
+  var p = document.querySelector("[data-prev]"), n = document.querySelector("[data-next]"),
+      s = document.querySelector("[data-skip]");
+  if (p) p.addEventListener("click", prev);
+  if (n) n.addEventListener("click", next);
+  if (s) s.addEventListener("click", function(){ S.skipped[S.n]=true; delete S.answers[S.n]; save(); next(true); });
+}
+
+function next(skipping){
+  if (S.screen==="profile"){
+    if (S.step<2){ S.step++; } else { S.screen="q"; S.n=1; }
+    save(); return render();
+  }
+  if (S.n===20){ return finish(); }
+  S.n++; S.furthest = Math.max(S.furthest, S.n); save(); render();
+}
+function prev(){
+  if (S.screen==="profile"){ if(S.step>0) S.step--; return render(); }
+  if (S.n===1){ S.screen="profile"; S.step=2; return render(); }
+  S.n--; render();                        // going back never loses the furthest mark
+}
+function jump(n){ S.screen="q"; S.n=n; S.furthest=Math.max(S.furthest,n); render(); }
+function finish(){ S.screen="reward"; save(); render(); }
+function showResume(){ S.screen="resume"; render(); }
+function restart(){
+  S = {screen:"profile",step:0,n:1,track:"physical",charge:"one-off",team:"just-me",
+       answers:{},skipped:{},voice:null,secondary:null,furthest:1};
+  render();
+}
+
+render();
+</script>

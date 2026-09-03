@@ -1,0 +1,538 @@
+<title>Product card</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0; --tint-1:#fef0ea;
+    --good:#1c7a48; --good-wash:#e8f6ee;
+    --amber:#9a6a1a; --amber-wash:#fdf3e3;
+    --violet:#6b53ac; --lav-wash:#f5f0fd; --lav-line:#ddd0f4; --lav-ink:#5b4a80;
+    --navy:#1d2748;
+    --grad-images:linear-gradient(129deg,#ede6fc 17%,#d8c9f9 83%);
+    --grad-numbers:linear-gradient(128deg,#e8effd 22%,#d0dbf7 95%);
+    --grad-assets:linear-gradient(123deg,#e6f4f1 28%,#b3cfcb 83%);
+    --grad-more:linear-gradient(120deg,#fdf3f0 18%,#fbe0d9 92%);
+    --r-panel:16px; --r-card:11px; --r-tile:9px; --r-pill:50px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e7e5;color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    font-size:14px;font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased;
+    padding:26px 20px;display:flex;justify-content:center}
+  h1,h2,h3,h4,p{margin:0} svg{display:block} button{font:inherit;cursor:pointer}
+
+  .devnote{position:fixed;left:20px;top:20px;max-width:250px;background:#fff6ed;
+    border:1.5px solid var(--accent-line);border-radius:var(--r-card);padding:12px 14px;
+    font-size:12px;color:#8a3d18;line-height:1.55;z-index:9}
+  .devnote b{font-weight:800}
+
+  /* ============ DRAWER ============ */
+  .drawer{width:620px;background:var(--card);border-radius:20px;overflow:hidden;
+    box-shadow:0 40px 80px -40px rgba(20,20,26,.5),0 2px 8px rgba(20,20,26,.08);
+    display:flex;flex-direction:column;max-height:calc(100vh - 52px)}
+
+  .dhead{padding:20px 22px 0}
+  .dtop{display:flex;gap:14px;align-items:flex-start}
+  .thumb{width:64px;height:64px;border-radius:var(--r-card);flex:none;border:1px solid var(--rule-2);
+    background:#fff;display:grid;place-items:center;overflow:hidden}
+  .thumb i{display:block;width:100%;height:100%;background:linear-gradient(160deg,#e8e8ea,#c9c9cf)}
+  .dtop .who{min-width:0;flex:1}
+  .dtop h2{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+  .dtop .sku{font-size:11.5px;font-weight:600;color:var(--muted-2);margin-top:3px}
+  .cat{display:inline-block;background:var(--lav-wash);color:var(--lav-ink);border-radius:var(--r-pill);
+    padding:4px 11px;font-size:11px;font-weight:800;margin-top:8px}
+  .x{margin-left:auto;flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--rule-2);
+    background:#fff;display:grid;place-items:center}
+  .x svg{width:13px;height:13px;fill:var(--muted)}
+
+  /* tabs */
+  .tabs{display:flex;gap:2px;margin-top:18px;border-bottom:1px solid var(--rule-2);padding:0 0 0 2px}
+  .tabs button{border:0;background:none;padding:10px 14px 11px;font-size:14px;font-weight:700;
+    color:var(--muted-2);border-bottom:2.5px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink-2)}
+  .tabs button.on{color:var(--accent-dark);border-bottom-color:var(--accent);font-weight:800}
+
+  .body{padding:20px 22px 8px;overflow-y:auto;flex:1}
+  .sec{margin-bottom:22px}
+  .sec:last-child{margin-bottom:8px}
+  .sech{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+  .sech h3{font-size:11px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted-2)}
+  .sech .n{font-size:10.5px;font-weight:800;background:var(--tile);color:var(--muted);border-radius:5px;padding:2px 7px}
+  .sech .act{margin-left:auto;display:flex;gap:6px}
+  .mini{border:1px solid var(--rule-2);background:#fff;border-radius:var(--r-pill);padding:5px 11px;
+    font-size:11px;font-weight:800;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
+  .mini svg{width:11px;height:11px;fill:currentColor}
+  .mini:hover{border-color:var(--accent-line);color:var(--accent-dark)}
+  .mini.on{background:var(--tint-1);border-color:var(--accent-line);color:var(--accent-dark)}
+
+  .fld{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:10px;margin-bottom:9px}
+  .fld label{font-size:12.5px;font-weight:600;color:var(--muted)}
+  .fld .in{position:relative}
+  .fld input,.fld textarea{width:100%;border:1.5px solid var(--rule-2);border-radius:9px;background:#fff;
+    padding:9px 11px;font:inherit;font-size:13.5px;color:var(--ink);outline:0}
+  .fld input:focus,.fld textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-1)}
+  .fld .suf{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:12px;
+    font-weight:700;color:var(--faint);pointer-events:none}
+  .hint{font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.5;margin-top:7px}
+
+  /* ============ PRICING ============ */
+  .mcards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+  .mcard{border:1px solid var(--rule-2);border-radius:var(--r-card);padding:12px 13px;background:var(--tile)}
+  .mcard.lead{background:var(--grad-numbers);border-color:transparent}
+  .mcard .k{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-2)}
+  .mcard .v{font-size:23px;font-weight:800;letter-spacing:-.8px;margin-top:6px;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .mcard .s{font-size:11px;font-weight:600;color:var(--muted);margin-top:4px}
+  .mcard .bar{height:5px;border-radius:4px;background:rgba(0,0,0,.08);margin-top:9px;overflow:hidden}
+  .mcard .bar i{display:block;height:100%;border-radius:4px;background:var(--good)}
+  .mcard.warnish .bar i{background:var(--amber)}
+
+  .grp{border:1px solid var(--rule-2);border-radius:var(--r-card);overflow:hidden;margin-bottom:11px}
+  .grph{display:flex;align-items:center;gap:8px;background:#fafaf9;padding:9px 13px;
+    border-bottom:1px solid var(--rule-2)}
+  .grph .t{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted-2)}
+  .grph .sum{margin-left:auto;font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums}
+  .grph .sum.neg{color:var(--accent-dark)}
+  .rows{padding:11px 13px 12px}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) 128px 26px;align-items:center;gap:9px;margin-bottom:8px}
+  .row:last-child{margin-bottom:0}
+  .row .nm{font-size:13px;font-weight:600;color:var(--ink-2)}
+  .row .nm small{display:block;font-size:10.5px;font-weight:500;color:var(--faint);margin-top:1px}
+  .row .in{position:relative}
+  .row input{width:100%;border:1.5px solid var(--rule-2);border-radius:8px;background:#fff;
+    padding:7px 30px 7px 10px;font:inherit;font-size:13px;text-align:right;
+    font-variant-numeric:tabular-nums;outline:0}
+  .row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-1)}
+  .row .suf{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11.5px;
+    font-weight:700;color:var(--faint);pointer-events:none}
+  .row .rm{border:0;background:none;padding:0;width:26px;height:26px;border-radius:6px;
+    display:grid;place-items:center;color:var(--faint)}
+  .row .rm:hover{background:var(--tint-1);color:var(--accent-dark)}
+  .row .rm svg{width:11px;height:11px;fill:currentColor}
+  .row.calc input{background:var(--tile);border-style:dashed;color:var(--muted)}
+  .addrow{width:100%;border:1.5px dashed var(--rule-2);background:none;border-radius:8px;padding:8px;
+    font-size:11.5px;font-weight:800;color:var(--muted-2);margin-top:9px}
+  .addrow:hover{border-color:var(--accent-line);color:var(--accent-dark);background:var(--tint-1)}
+
+  /* line picker */
+  .picker{border:1px solid var(--lav-line);background:var(--lav-wash);border-radius:var(--r-card);
+    padding:12px 13px;margin-bottom:12px}
+  .picker .ph{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;
+    color:var(--violet);margin-bottom:9px}
+  .presets{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--lav-line);background:rgba(255,255,255,.7);border-radius:var(--r-pill);
+    padding:5px 11px;font-size:11.5px;font-weight:700;color:var(--lav-ink);display:inline-flex;align-items:center;gap:6px}
+  .chip.on{background:var(--violet);border-color:var(--violet);color:#fff}
+  .chip .t{font-size:10px;opacity:.75}
+  .pnote{font-size:11px;font-weight:500;color:var(--lav-ink);opacity:.85;margin-top:10px;line-height:1.5}
+
+  .fld textarea{resize:vertical}
+
+  /* ============ MEDIA ============ */
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .mtile{position:relative;aspect-ratio:1;border-radius:var(--r-tile);overflow:hidden;
+    border:1px solid var(--rule-2);background:var(--tile);padding:0;display:block}
+  .mtile i{position:absolute;inset:0;display:block}
+  .mtile:hover{border-color:var(--accent-line)}
+  .mtile .tag{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.72));
+    color:#fff;font-size:9.5px;font-weight:700;padding:14px 6px 5px;text-align:left}
+  .mtile .pin{position:absolute;top:5px;left:5px;background:rgba(255,255,255,.92);border-radius:5px;
+    padding:2px 6px;font-size:9px;font-weight:800;color:var(--ink)}
+  .mtile .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28px;height:28px;
+    border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center}
+  .mtile .play svg{width:11px;height:11px;fill:#fff;margin-left:2px}
+  .mtile .dur{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;
+    padding:2px 5px;font-size:9px;font-weight:800}
+
+  .doc{display:flex;align-items:center;gap:11px;border:1px solid var(--rule-2);border-radius:var(--r-card);
+    padding:10px 12px;margin-bottom:7px;background:#fff;width:100%;text-align:left}
+  .doc:hover{border-color:var(--accent-line);background:var(--tint-1)}
+  .doc .ic{width:30px;height:30px;border-radius:7px;flex:none;display:grid;place-items:center;
+    background:var(--grad-more)}
+  .doc .ic svg{width:15px;height:15px;fill:var(--accent-dark)}
+  .doc .nm{min-width:0;flex:1}
+  .doc .nm b{display:block;font-size:13px;font-weight:700;line-height:1.3}
+  .doc .nm span{font-size:10.5px;font-weight:600;color:var(--muted-2)}
+  .doc .role{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:var(--tile);color:var(--muted);border-radius:5px;padding:3px 7px;flex:none}
+  .doc .dl{flex:none;color:var(--muted-2)}
+  .doc .dl svg{width:14px;height:14px;fill:currentColor}
+
+  .empty{border:1.5px dashed var(--rule-2);border-radius:var(--r-card);background:var(--tile);
+    padding:22px 18px;text-align:center}
+  .empty h4{font-size:14px;font-weight:800}
+  .empty p{font-size:12px;font-weight:500;color:var(--muted);margin-top:6px;line-height:1.55;max-width:38ch;margin-inline:auto}
+  .empty .row2{display:flex;gap:7px;justify-content:center;margin-top:12px}
+
+  /* history */
+  .hist{position:relative;padding-left:18px}
+  .hist::before{content:"";position:absolute;left:4px;top:5px;bottom:5px;width:1.5px;background:var(--rule-2)}
+  .hev{position:relative;padding-bottom:14px}
+  .hev:last-child{padding-bottom:0}
+  .hev::before{content:"";position:absolute;left:-18px;top:4px;width:9px;height:9px;border-radius:50%;
+    background:#fff;border:2px solid var(--rule-2)}
+  .hev.now::before{border-color:var(--accent);background:var(--accent)}
+  .hev .w{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.45}
+  .hev .w b{font-weight:800}
+  .hev .t{font-size:10.5px;font-weight:600;color:var(--faint);margin-top:2px}
+
+  /* footer */
+  .foot{display:flex;align-items:center;gap:10px;padding:13px 22px;border-top:1px solid var(--rule-2);
+    background:#fafaf9}
+  .foot .sp{margin-left:auto;display:flex;gap:8px}
+  .btn{border:0;border-radius:9px;padding:10px 20px;font-size:13.5px;font-weight:800;
+    background:var(--accent);color:#fff}
+  .btn.ghost{background:none;color:var(--muted);border:1px solid var(--rule-2)}
+  .btn.done{background:var(--tile);color:var(--muted-2)}
+  .foot .dirty{font-size:11.5px;font-weight:700;color:var(--amber)}
+
+  .pane{display:none} .pane.on{display:block}
+</style>
+
+<svg style="display:none">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+  <symbol id="i-cols" viewBox="0 0 24 24"><path d="M4 4h5v16H4zM10.5 4h3v16h-3zM15 4h5v16h-5z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2H21a1 1 0 0 1 1 1v8.4a1 1 0 0 1-.3.7l-9.6 9.6a1 1 0 0 1-1.4 0l-8.4-8.4a1 1 0 0 1 0-1.4l9.6-9.6a1 1 0 0 1 .7-.3Zm4.9 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></symbol>
+</svg>
+
+<div class="devnote">
+  <b>The product card.</b> The three Studio buttons are gone, Details keeps only what a person types,
+  Pricing is groups of lines you choose, guardrails became Notes, and Media shows what is tagged.
+  Click the tabs and the line chips.
+</div>
+
+<div class="drawer">
+
+  <div class="dhead">
+    <div class="dtop">
+      <span class="thumb"><i></i></span>
+      <div class="who">
+        <h2>SORBIFY OIL</h2>
+        <div class="sku">SRB-OIL-500 · 500ml bottle</div>
+        <span class="cat">absorbents</span>
+      </div>
+      <button class="x"><svg><use href="#i-x"></use></svg></button>
+    </div>
+
+    <div class="tabs">
+      <button class="on" data-p="details">Details</button>
+      <button data-p="pricing">Pricing</button>
+      <button data-p="inventory">Inventory</button>
+      <button data-p="media">Media</button>
+      <button data-p="history">History</button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- ══════════ DETAILS ══════════ -->
+    <div class="pane on" id="p-details">
+      <div class="sec">
+        <div class="sech"><h3>Product information</h3></div>
+        <div class="fld"><label>Product name</label><span class="in"><input value="SORBIFY OIL"></span></div>
+        <div class="fld" style="align-items:flex-start">
+          <label style="padding-top:9px">Description</label>
+          <span class="in"><textarea style="min-height:132px;line-height:1.6">OIL ABSORBENT
+For oil and hydrocarbon spills
+
+• Hydraulic oil leaks
+• Engine oil vehicle maintenance spills
+• Diesel and fuel spills
+• Lubricants and machine oils</textarea></span>
+        </div>
+        <p class="hint" style="margin-left:122px">Studio writes from this. Facts, not adjectives —
+          it will find its own. <b style="float:right;font-weight:600;color:var(--faint)">252 / 2000</b></p>
+        <div class="fld" style="margin-top:12px"><label>Category</label><span class="in"><input value="absorbents"></span></div>
+        <div class="fld"><label>SKU</label><span class="in"><input value="SRB-OIL-500"></span></div>
+        <div class="fld"><label>Barcode</label><span class="in"><input placeholder="Optional"></span></div>
+        <div class="fld"><label>Tags</label><span class="in"><input value="absorbent, oil, workshop"></span></div>
+      </div>
+    </div>
+
+    <!-- ══════════ PRICING ══════════ -->
+    <div class="pane" id="p-pricing">
+
+      <!-- two margins, because CAC is not a cost of goods -->
+      <div class="mcards">
+        <div class="mcard lead">
+          <div class="k">Gross margin</div>
+          <div class="v" id="gm">62.1%</div>
+          <div class="s" id="gmc">€17.05 per unit</div>
+          <div class="bar"><i id="gmb" style="width:62%"></i></div>
+        </div>
+        <div class="mcard warnish">
+          <div class="k">Contribution</div>
+          <div class="v" id="cm">40.3%</div>
+          <div class="s" id="cmc">€11.05 after selling costs</div>
+          <div class="bar"><i id="cmb" style="width:40%"></i></div>
+        </div>
+      </div>
+
+      <!-- which lines this product shows -->
+      <div class="picker">
+        <div class="ph">Which lines does this product need?</div>
+        <div class="presets">
+          <button class="mini on">Physical goods</button>
+          <button class="mini">Digital</button>
+          <button class="mini">Service</button>
+        </div>
+        <div class="chips" id="chips">
+          <button class="chip on" data-line="retail">Retail price<span class="t">in</span></button>
+          <button class="chip on" data-line="rrp">RRP<span class="t">in</span></button>
+          <button class="chip on" data-line="tax">Tax rate<span class="t">in</span></button>
+          <button class="chip on" data-line="unit">Unit cost<span class="t">goods</span></button>
+          <button class="chip on" data-line="freight">Freight &amp; duty<span class="t">goods</span></button>
+          <button class="chip on" data-line="pack">Packaging<span class="t">goods</span></button>
+          <button class="chip on" data-line="cac">CAC<span class="t">sell</span></button>
+          <button class="chip on" data-line="fees">Payment fees<span class="t">sell</span></button>
+          <button class="chip" data-line="ship">Shipping to customer<span class="t">sell</span></button>
+          <button class="chip" data-line="returns">Returns allowance<span class="t">sell</span></button>
+          <button class="chip" data-line="platform">Platform fee<span class="t">sell</span></button>
+          <button class="chip" data-line="licence">Licence cost<span class="t">goods</span></button>
+          <button class="chip" data-line="labour">Labour per job<span class="t">goods</span></button>
+        </div>
+        <p class="pnote">A digital product has no freight and a service has no packaging. Turn a line
+          off and it stops asking. Nothing you have typed is deleted — it comes back if you turn the
+          line on again.</p>
+      </div>
+
+      <!-- REVENUE -->
+      <div class="grp">
+        <div class="grph"><span class="t">What comes in</span><span class="sum" id="s-in">€27.50</span></div>
+        <div class="rows" id="g-in">
+          <div class="row" data-line="retail"><span class="nm">Retail price<small>What the customer pays, tax included</small></span>
+            <span class="in"><input value="33.00"><span class="suf">€</span></span><span></span></div>
+          <div class="row" data-line="rrp"><span class="nm">RRP<small>Recommended, for comparison only</small></span>
+            <span class="in"><input value="39.00"><span class="suf">€</span></span><span></span></div>
+          <div class="row" data-line="tax"><span class="nm">Tax rate</span>
+            <span class="in"><input value="20"><span class="suf">%</span></span><span></span></div>
+          <div class="row calc"><span class="nm">Net price<small>Retail less tax. This is what margin is measured against.</small></span>
+            <span class="in"><input value="27.50" readonly><span class="suf">€</span></span><span></span></div>
+        </div>
+      </div>
+
+      <!-- COST OF GOODS -->
+      <div class="grp">
+        <div class="grph"><span class="t">Cost of goods · COGS</span><span class="sum neg" id="s-goods">−€10.45</span></div>
+        <div class="rows" id="g-goods">
+          <div class="row" data-line="unit"><span class="nm">Unit cost<small>What your supplier charges</small></span>
+            <span class="in"><input value="8.20"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="freight"><span class="nm">Freight &amp; duty</span>
+            <span class="in"><input value="1.45"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="pack"><span class="nm">Packaging</span>
+            <span class="in"><input value="0.80"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="licence" hidden><span class="nm">Licence cost</span>
+            <span class="in"><input placeholder="0.00"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="labour" hidden><span class="nm">Labour per job</span>
+            <span class="in"><input placeholder="0.00"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <button class="addrow">+ Add your own line</button>
+        </div>
+      </div>
+
+      <!-- COST TO SELL -->
+      <div class="grp">
+        <div class="grph"><span class="t">Cost to sell</span><span class="sum neg" id="s-sell">−€6.00</span></div>
+        <div class="rows" id="g-sell">
+          <div class="row" data-line="cac"><span class="nm">CAC<small>Blended cost to win one order</small></span>
+            <span class="in"><input value="4.90"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="fees"><span class="nm">Payment fees</span>
+            <span class="in"><input value="1.10"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="ship" hidden><span class="nm">Shipping to customer</span>
+            <span class="in"><input placeholder="0.00"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="returns" hidden><span class="nm">Returns allowance</span>
+            <span class="in"><input placeholder="0.00"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <div class="row" data-line="platform" hidden><span class="nm">Platform fee</span>
+            <span class="in"><input placeholder="0.00"><span class="suf">€</span></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button></div>
+          <button class="addrow">+ Add your own line</button>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <!-- Same field shape as Description on the Details tab: label in the left
+           column, box in the right. A pricing note is a typed field like any
+           other and should not look like a different kind of thing. -->
+      <div class="sec" style="margin-top:22px">
+        <div class="sech"><h3>Notes</h3></div>
+        <div class="fld" style="align-items:flex-start">
+          <label style="padding-top:9px">Pricing notes</label>
+          <span class="in"><textarea style="min-height:120px;line-height:1.6">Distributor price is 22.00 at 50+ units, agreed with Nordkit in March.
+Never quote below 26.00 on the webshop — it undercuts our own resellers.
+Freight assumes a full pallet. Part loads add about 0.60 a unit.</textarea></span>
+        </div>
+        <p class="hint" style="margin-left:122px">Anything about this product's pricing that a number
+          cannot hold. Studio reads it, so a rule written here is a rule it follows.
+          <b style="float:right;font-weight:600;color:var(--faint)">218 / 2000</b></p>
+      </div>
+    </div>
+
+    <!-- ══════════ INVENTORY ══════════ -->
+    <div class="pane" id="p-inventory">
+      <div class="sec">
+        <div class="sech"><h3>Stock</h3></div>
+        <div class="fld"><label>Status</label><span class="in"><input value="In stock"></span></div>
+        <div class="fld"><label>Units</label><span class="in"><input value="1000"></span></div>
+        <div class="fld"><label>Reorder at</label><span class="in"><input value="150"></span></div>
+        <p class="hint">One flag, deliberately. Synced from your shop when connected, otherwise typed here.</p>
+      </div>
+    </div>
+
+    <!-- ══════════ MEDIA ══════════ -->
+    <div class="pane" id="p-media">
+      <div class="sec">
+        <div class="sech"><h3>Images and video</h3><span class="n">7</span>
+          <span class="act">
+            <button class="mini"><svg><use href="#i-tag"></use></svg>Tag more</button>
+            <button class="mini"><svg><use href="#i-dl"></use></svg>Download all</button>
+          </span></div>
+        <div class="mgrid">
+          <button class="mtile"><i style="background:linear-gradient(155deg,#e8e6e4,#b9b5b0)"></i>
+            <span class="pin">Primary</span><span class="tag">Front, on white</span></button>
+          <button class="mtile"><i style="background:linear-gradient(150deg,#dfe6ea,#9fb0ba)"></i>
+            <span class="tag">Pack shot</span></button>
+          <button class="mtile"><i style="background:linear-gradient(160deg,#d8c9a8,#8a7350)"></i>
+            <span class="tag">In the workshop</span></button>
+          <button class="mtile"><i style="background:linear-gradient(150deg,#2b2b30,#4a4a55)"></i>
+            <span class="play"><svg><use href="#i-play"></use></svg></span>
+            <span class="dur">0:24</span><span class="tag">Absorbency test</span></button>
+          <button class="mtile"><i style="background:linear-gradient(140deg,#e6dfd4,#a89a86)"></i>
+            <span class="tag">Label detail</span></button>
+          <button class="mtile"><i style="background:linear-gradient(165deg,#cfd8d3,#7d8f88)"></i>
+            <span class="tag">On a site floor</span></button>
+          <button class="mtile"><i style="background:linear-gradient(150deg,#f0e2d8,#c39f88)"></i>
+            <span class="tag">Generated · yellow fabric</span></button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Documents</h3><span class="n">3</span>
+          <span class="act">
+            <button class="mini"><svg><use href="#i-tag"></use></svg>Tag more</button>
+            <button class="mini"><svg><use href="#i-dl"></use></svg>Download all</button>
+          </span></div>
+        <button class="doc"><span class="ic"><svg><use href="#i-doc"></use></svg></span>
+          <span class="nm"><b>SORBIFY OIL safety data sheet.pdf</b><span>2.1 MB · added 12 Mar</span></span>
+          <span class="role">Safety sheet</span><span class="dl"><svg><use href="#i-dl"></use></svg></span></button>
+        <button class="doc"><span class="ic"><svg><use href="#i-doc"></use></svg></span>
+          <span class="nm"><b>Absorbency test, TÜV 2025.pdf</b><span>840 KB · added 4 Feb</span></span>
+          <span class="role">Certificate</span><span class="dl"><svg><use href="#i-dl"></use></svg></span></button>
+        <button class="doc"><span class="ic"><svg><use href="#i-doc"></use></svg></span>
+          <span class="nm"><b>500ml spec sheet.pdf</b><span>310 KB · added 4 Feb</span></span>
+          <span class="role">Spec</span><span class="dl"><svg><use href="#i-dl"></use></svg></span></button>
+        <p class="hint">Tagged from Knowledge, or from an upload. Studio cites these when it writes a
+          claim about this product, so the safety sheet is the source and not a guess.</p>
+      </div>
+    </div>
+
+    <!-- ══════════ HISTORY ══════════ -->
+    <div class="pane" id="p-history">
+      <div class="sec">
+        <div class="sech"><h3>What changed</h3></div>
+        <div class="hist">
+          <div class="hev now"><div class="w"><b>You</b> edited the notes</div><div class="t">2 minutes ago</div></div>
+          <div class="hev"><div class="w"><b>You</b> tagged 2 images from Knowledge</div><div class="t">Today, 09:14</div></div>
+          <div class="hev"><div class="w"><b>Studio</b> used this product in a product description</div><div class="t">Yesterday, 16:02</div></div>
+          <div class="hev"><div class="w"><b>You</b> changed unit cost from €7.80 to €8.20</div><div class="t">12 Mar</div></div>
+          <div class="hev"><div class="w"><b>You</b> created this product</div><div class="t">4 Feb</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span class="dirty" id="dirty" hidden>Unsaved changes</span>
+    <span class="sp">
+      <button class="btn ghost">Revert</button>
+      <button class="btn done" id="save">Saved</button>
+    </span>
+  </div>
+</div>
+
+<script>
+  // tabs
+  document.querySelectorAll(".tabs button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on")});
+      document.querySelectorAll(".pane").forEach(function(x){x.classList.remove("on")});
+      b.classList.add("on");
+      document.getElementById("p-"+b.getAttribute("data-p")).classList.add("on");
+    });
+  });
+
+  // line chips: turning a line off hides its row, it does not delete the value
+  document.querySelectorAll("#chips .chip").forEach(function(c){
+    c.addEventListener("click", function(){
+      c.classList.toggle("on");
+      const on = c.classList.contains("on");
+      document.querySelectorAll('[data-line="'+c.getAttribute("data-line")+'"].row')
+        .forEach(function(r){ r.hidden = !on; });
+      recalc(); dirty();
+    });
+  });
+
+  function val(line){
+    const r = document.querySelector('.row[data-line="'+line+'"]');
+    if(!r || r.hidden) return 0;
+    return parseFloat(r.querySelector("input").value) || 0;
+  }
+  function money(n){ return (n<0?"−€":"€") + Math.abs(n).toFixed(2); }
+
+  function recalc(){
+    const retail = val("retail"), tax = val("tax");
+    const net = tax ? retail / (1 + tax/100) : retail;
+    const goods = val("unit") + val("freight") + val("pack") + val("licence") + val("labour");
+    const sell  = val("cac") + val("fees") + val("ship") + val("returns") + val("platform");
+
+    document.getElementById("s-in").textContent = money(net);
+    document.getElementById("s-goods").textContent = money(-goods);
+    document.getElementById("s-sell").textContent = money(-sell);
+    const netRow = document.querySelector(".row.calc input");
+    if(netRow) netRow.value = net.toFixed(2);
+
+    // Gross margin keeps the house rule: net of tax, against cost of goods.
+    // Contribution is additive — CAC is a cost to SELL, not a cost of goods,
+    // and folding it into COGS would understate gross margin on every product.
+    const gmc = net - goods, cmc = net - goods - sell;
+    const gm = net ? gmc/net*100 : 0, cm = net ? cmc/net*100 : 0;
+    document.getElementById("gm").textContent = net ? gm.toFixed(1)+"%" : "—";
+    document.getElementById("cm").textContent = net ? cm.toFixed(1)+"%" : "—";
+    document.getElementById("gmc").textContent = money(gmc) + " per unit";
+    document.getElementById("cmc").textContent = money(cmc) + " after selling costs";
+    document.getElementById("gmb").style.width = Math.max(0,Math.min(100,gm)) + "%";
+    document.getElementById("cmb").style.width = Math.max(0,Math.min(100,cm)) + "%";
+  }
+  function dirty(){
+    document.getElementById("dirty").hidden = false;
+    const s = document.getElementById("save");
+    s.textContent = "Save changes"; s.classList.remove("done");
+  }
+  document.addEventListener("input", function(e){
+    if(e.target.matches("input,textarea")){ recalc(); dirty(); }
+  });
+  document.querySelectorAll(".row .rm").forEach(function(b){
+    b.addEventListener("click", function(){
+      const line = b.closest(".row").getAttribute("data-line");
+      const chip = document.querySelector('.chip[data-line="'+line+'"]');
+      if(chip) chip.classList.remove("on");
+      b.closest(".row").hidden = true; recalc(); dirty();
+    });
+  });
+  recalc();
+</script>

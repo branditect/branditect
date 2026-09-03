@@ -86,8 +86,19 @@ Four checks, 25% each, defined in `lib/readiness.ts` (tests in `lib/readiness.te
 | Readiness data | `lib/useReadiness.ts` |
 | Questionnaire | `lib/strategy-questions.ts` |
 | Old URL redirects | `next.config.mjs` |
+| Current specs | `branditect-ui/spec/` |
 | Original handoff package | `docs/handoff/` |
 | Superseded design system | `CLAUDE.editorial-architect.md` |
+
+`branditect-ui/spec/` is current and authoritative. `docs/handoff/` is the
+original August handoff, frozen — read it for history, never for what to build.
+
+Both are in git. `branditect-ui/` was untracked until 2026-09-03, which meant
+the specs the code cites by name — `lib/auth-errors.ts`, `lib/onboarding.ts`,
+`lib/strategy.ts`, `lib/studio-write.ts` and five more — existed on one laptop
+while the frozen handoff was the part with history. Where the two disagree,
+`branditect-ui/` wins, with one recorded exception: the Numbers route list in
+`docs/handoff/spec/routes.md` is the accurate one.
 
 ## Testing against real data
 

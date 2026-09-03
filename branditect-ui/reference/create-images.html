@@ -1,0 +1,485 @@
+<title>Studio · Create images</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-4:#fbe7e2;
+    --green:#2fbf71; --green-wash:#e8f6ee; --green-ink:#1c7a48;
+    --violet:#6a4fb0; --violet-2:#8b6bd8; --lav-line:#ddd0f4; --lav-ink:#5b4a80; --lav-wash:#f5f0fd;
+    --blue-ink:#3c5a8f; --blue-wash:#e8effd; --teal-ink:#2f6b62; --teal-wash:#e6f4f1;
+    --amber-ink:#9a6a1a; --amber-wash:#fdf3e3;
+    --navy:#1d2748; --slate:#4a6ea8; --purple:#6b53ac;
+
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 92%);
+    --grad-mark:linear-gradient(135deg,#f16d2c,#fe4401);
+    --grad-images:linear-gradient(129deg,#ede6fc 17%,#d8c9f9 83%);
+    --grad-numbers:linear-gradient(128deg,#e8effd 22%,#d0dbf7 95%);
+    --grad-assets:linear-gradient(123deg,#e6f4f1 28%,#b3cfcb 83%);
+    --grad-more:linear-gradient(120deg,#fdf3f0 18%,#fbe0d9 92%);
+
+    --r-panel:18px; --r-card:12px; --r-tile:10px; --r-pill:50px;
+    --shadow-panel:0 6px 10px rgba(20,20,26,.06),0 1px 1px rgba(20,20,26,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4,p{margin:0} svg{display:block} button{font:inherit;cursor:pointer}
+  .wrap{max-width:1240px;margin:0 auto;padding:22px 22px 70px}
+
+  .devnote{background:#fff6ed;border:1.5px solid var(--accent-line);border-radius:var(--r-card);
+    padding:13px 16px;font-size:var(--fs-sm);color:#8a3d18;margin-bottom:18px;line-height:1.55}
+  .devnote b{font-weight:800}
+
+  /* ============ PAGE HEAD ============ */
+  .phead{display:flex;align-items:flex-end;gap:16px;margin-bottom:16px}
+  .phead .eyebrow{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.3px;
+    text-transform:uppercase;color:var(--violet)}
+  .phead h1{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:5px}
+  .phead p{font-size:var(--fs-sm);font-weight:400;color:var(--muted);margin-top:5px;max-width:56ch;line-height:1.55}
+  .hcount{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:7px;background:var(--card);
+    border:1px solid var(--rule-2);border-radius:var(--r-pill);padding:8px 15px;font-size:var(--fs-sm);font-weight:800}
+  .hcount b{color:var(--accent-dark)}
+
+  /* ============ TWO PANES ============ */
+  .panes{display:grid;grid-template-columns:412px minmax(0,1fr);gap:16px;align-items:start}
+  .brief{position:sticky;top:22px;background:var(--card);border:1px solid var(--rule);
+    border-radius:var(--r-panel);padding:18px;box-shadow:var(--shadow-panel)}
+
+  .step{margin-bottom:20px}
+  .step:last-of-type{margin-bottom:0}
+  .slab{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .snum{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;flex:none;
+    display:grid;place-items:center;font-size:var(--fs-micro);font-weight:800}
+  .slab h3{font-size:var(--fs-body);font-weight:800}
+  .slab .req{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--accent-dark);background:var(--tint-1);border-radius:4px;padding:2px 6px}
+  .shint{font-size:var(--fs-2xs);font-weight:500;color:var(--muted-2);margin:-4px 0 9px 28px;line-height:1.45}
+
+  /* ---- 1 · product or not ----
+     An explicit either/or, not an optional row someone can scroll past. Most
+     images are not product shots, and the tool should not imply otherwise. */
+  .kind{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .kd{border:1.5px solid var(--rule-2);border-radius:var(--r-card);background:var(--card);
+    padding:13px 12px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left}
+  .kd svg{width:19px;height:19px;fill:var(--muted-2);margin-bottom:4px}
+  .kd .kl{font-size:var(--fs-sm);font-weight:800;color:var(--ink)}
+  .kd .kdd{font-size:9.5px;font-weight:600;color:var(--muted-2);line-height:1.35}
+  .kd:hover{border-color:var(--accent-line)}
+  .kd.on{border-color:var(--accent);background:var(--tint-1)}
+  .kd.on svg{fill:var(--accent)}
+  .kd.on .kl{color:var(--accent-dark)}
+
+  .pwrap{margin-top:9px}
+  .psel{position:relative;display:block}
+  .psel select{width:100%;appearance:none;-webkit-appearance:none;border:1.5px solid var(--accent-line);
+    border-radius:var(--r-card);background:var(--tint-1);padding:11px 34px 11px 13px;font:inherit;
+    font-size:var(--fs-sm);font-weight:700;color:var(--ink);outline:0;cursor:pointer}
+  .psel select:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--tint-1)}
+  .pcar{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+    fill:none;stroke:var(--accent-dark);stroke-width:2.4;pointer-events:none}
+  .pnote{font-size:9.5px;font-weight:600;color:var(--muted);margin-top:8px;line-height:1.5}
+  .pnote b{font-weight:800;color:var(--ink-2)}
+
+  /* ---- 1 · references ---- */
+  .refs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ref.fromprod{border-color:var(--accent-line);box-shadow:0 0 0 1.5px var(--accent-line)}
+  .ref{aspect-ratio:1;border-radius:var(--r-tile);overflow:hidden;position:relative;border:1px solid var(--rule-2)}
+  .ref .px{position:absolute;inset:0}
+  .ref .rm{position:absolute;top:5px;right:5px;width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,.62);
+    border:0;display:grid;place-items:center;padding:0}
+  .ref .rm svg{width:9px;height:9px;fill:#fff}
+  .ref .tagn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.72));
+    color:#fff;font-size:9px;font-weight:700;padding:12px 6px 5px}
+  .addref{aspect-ratio:1;border:1.5px dashed var(--rule-2);border-radius:var(--r-tile);background:var(--tile);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted-2)}
+  .addref:hover{border-color:var(--accent-line);color:var(--accent-dark);background:var(--tint-1)}
+  .addref svg{width:17px;height:17px;fill:currentColor}
+  .addref span{font-size:9px;font-weight:800;letter-spacing:.4px;text-align:center;line-height:1.25}
+
+  /* ---- what it picked up ----
+     Read-only and in plain words. An earlier version made these editable chips
+     reading "low saturation · shallow depth". That asks a founder to audit a
+     photographer's vocabulary before they are allowed to make a picture. The
+     system still reads all of it; it just stops making that the user's problem. */
+  .look{margin-top:11px;background:var(--grad-images);border-radius:var(--r-card);padding:13px 14px}
+  .look .k{font-size:var(--fs-micro);font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--violet)}
+  .look .k svg{width:12px;height:12px;fill:currentColor;display:inline-block;vertical-align:-2px;margin-right:5px}
+  .lkread{font-size:var(--fs-sm);font-weight:500;color:var(--lav-ink);margin-top:8px;line-height:1.55}
+  .lkread b{font-weight:800}
+
+  /* ---- where ---- */
+  .wheres{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .wh{border:1.5px solid var(--rule-2);border-radius:var(--r-card);background:var(--card);padding:11px 7px 10px;
+    display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+  .wh .wi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center}
+  .wh .wi svg{width:17px;height:17px;fill:var(--ink-2)}
+  .wh .wl{font-size:var(--fs-2xs);font-weight:800;color:var(--ink)}
+  .wh .wd{font-size:9px;font-weight:600;color:var(--muted-2);line-height:1.3}
+  .wh:hover{border-color:var(--accent-line)}
+  .wh.on{border-color:var(--accent);background:var(--tint-1)}
+  .wh.on .wl{color:var(--accent-dark)}
+
+  /* ---- 2 · what ---- */
+  textarea.brf{width:100%;min-height:96px;resize:vertical;border:1.5px solid var(--rule-2);border-radius:var(--r-card);
+    background:var(--card);padding:12px 13px;font:inherit;font-size:var(--fs-sm);line-height:1.6;color:var(--ink);outline:0}
+  textarea.brf:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--tint-1)}
+  textarea.brf::placeholder{color:var(--faint);font-weight:400}
+  .exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .ex{background:var(--tile);border:1px solid var(--rule-2);border-radius:var(--r-pill);padding:6px 11px;
+    font-size:var(--fs-2xs);font-weight:600;color:var(--muted);text-align:left}
+  .ex:hover{background:var(--tint-1);border-color:var(--accent-line);color:var(--accent-dark)}
+
+  /* ---- 3 · shape ---- */
+  .ratios{display:flex;gap:7px}
+  .rt{flex:1;border:1.5px solid var(--rule-2);border-radius:var(--r-tile);background:var(--card);padding:9px 4px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:6px}
+  .rt .box{border:1.5px solid var(--muted-2);border-radius:3px;background:var(--tile)}
+  .rt .lb{font-size:9px;font-weight:800;color:var(--muted)}
+  .rt.on{border-color:var(--accent);background:var(--tint-1)}
+  .rt.on .box{border-color:var(--accent-dark);background:#fff}
+  .rt.on .lb{color:var(--accent-dark)}
+  .r11 .box{width:22px;height:22px} .r45 .box{width:18px;height:22px}
+  .r916 .box{width:13px;height:23px} .r169 .box{width:28px;height:16px}
+
+  .more{margin-top:12px;width:100%;background:none;border:0;border-top:1px solid var(--rule);padding:11px 0 0;
+    font-size:var(--fs-2xs);font-weight:800;color:var(--muted-2);text-align:left;display:flex;align-items:center;gap:6px}
+  .more svg{width:11px;height:11px;fill:currentColor}
+
+  .go{margin-top:15px;width:100%;border:0;border-radius:var(--r-card);background:var(--grad-mark);color:#fff;
+    padding:14px;font-size:var(--fs-body);font-weight:800;box-shadow:0 5px 14px -5px rgba(224,70,20,.6)}
+  .go:disabled{background:var(--tint-4);color:#d09a86;box-shadow:none;cursor:not-allowed}
+  .gowhy{font-size:var(--fs-2xs);font-weight:600;color:var(--muted-2);text-align:center;margin-top:8px}
+
+  /* ============ CANVAS ============ */
+  .canvas{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);
+    padding:18px;min-height:640px;box-shadow:var(--shadow-panel)}
+  .ctop{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .ctop h2{font-size:var(--fs-body);font-weight:800}
+  .ctop .sub{font-size:var(--fs-2xs);font-weight:500;color:var(--muted-2)}
+  .seg{margin-left:auto;display:flex;background:var(--tile);border-radius:var(--r-pill);padding:3px}
+  .seg button{border:0;background:none;border-radius:var(--r-pill);padding:6px 13px;font-size:var(--fs-2xs);
+    font-weight:800;color:var(--muted-2)}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .shot{border:1px solid var(--rule-2);border-radius:var(--r-card);overflow:hidden;background:var(--card)}
+  .shot .img{position:relative;background:var(--tile)}
+  .shot .img .px{display:block;width:100%;aspect-ratio:1}
+  .shot .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:#fff;border-radius:5px;
+    padding:3px 7px;font-size:9px;font-weight:800;letter-spacing:.5px}
+  .shot .body{padding:11px 12px 12px}
+  .prov{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:600;color:var(--muted-2);
+    padding-bottom:9px;border-bottom:1px solid var(--rule);margin-bottom:9px}
+  .prov .th{width:20px;height:20px;border-radius:4px;flex:none}
+  .acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .act{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--rule-2);
+    background:var(--card);border-radius:8px;padding:7px 4px;font-size:var(--fs-2xs);font-weight:800;color:var(--ink-2)}
+  .act svg{width:12px;height:12px;fill:currentColor}
+  .act:hover{border-color:var(--accent-line);background:var(--tint-1);color:var(--accent-dark)}
+  .act.prime{background:var(--tint-1);border-color:var(--accent-line);color:var(--accent-dark)}
+  .act.done{background:var(--green-wash);border-color:#bfe6cf;color:var(--green-ink)}
+
+  /* working state */
+  .working .img{position:relative;overflow:hidden}
+  .working .px{background:linear-gradient(100deg,#f0eef4 30%,#e6e1ef 50%,#f0eef4 70%);
+    background-size:220% 100%;animation:sh 1.5s linear infinite}
+  @keyframes sh{from{background-position:180% 0}to{background-position:-40% 0}}
+  .wstat{display:flex;align-items:center;gap:8px;font-size:var(--fs-2xs);font-weight:700;color:var(--lav-ink)}
+  .wstat i{width:12px;height:12px;border:2px solid var(--lav-line);border-top-color:var(--violet);
+    border-radius:50%;animation:sp .7s linear infinite;flex:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* empty */
+  .empty{border:1.5px dashed var(--rule-2);border-radius:var(--r-card);background:var(--tile);
+    min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+  .empty .ic{width:56px;height:56px;border-radius:16px;background:var(--grad-images);display:grid;place-items:center;margin-bottom:14px}
+  .empty .ic svg{width:26px;height:26px;fill:var(--violet)}
+  .empty h3{font-size:16px;font-weight:800}
+  .empty p{font-size:var(--fs-sm);font-weight:400;color:var(--muted);margin-top:7px;max-width:38ch;line-height:1.6}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);opacity:0;
+    background:var(--ink);color:#fff;font-size:var(--fs-sm);font-weight:700;border-radius:var(--r-pill);
+    padding:11px 20px;box-shadow:0 12px 28px -10px rgba(0,0,0,.5);pointer-events:none;transition:all .18s;z-index:60}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:1100px){ .panes{grid-template-columns:1fr} .brief{position:static} .grid{grid-template-columns:1fr} }
+</style>
+
+<svg style="display:none">
+  <symbol id="i-img" viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm2 12 4-5 3 4 3-3 4 4V5H5v12Z"/><circle cx="9" cy="9" r="1.6"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 20V8m0 0 4 4m-4-4-4 4" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="3.4" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M8 3v6h7V3M8 21v-6h8v6" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M20 4v7h-7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2.5 14 9l6.5 2-6.5 2-2 6.5-2-6.5L3.5 11 10 9l2-6.5Z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 7h12l1 14H5zM9 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></symbol>
+  <symbol id="i-studio" viewBox="0 0 24 24"><path d="M3 18h18v3H3z"/><path d="M5 18c0-5 3.1-8 7-8s7 3 7 8" opacity=".45"/><circle cx="12" cy="5" r="2.6"/></symbol>
+  <symbol id="i-indoor" viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11h-6v-6h-4v6z"/></symbol>
+  <symbol id="i-outdoor" viewBox="0 0 24 24"><circle cx="17" cy="7" r="3"/><path d="M2 20l6-9 4 5 3-3.5L22 20z"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <div class="devnote">
+    <b>Content area only.</b> Renders inside <code>app/(app)/layout.tsx</code> — the left sidebar and
+    the AI Chat rail stay. Click the reference tiles, the example chips and the Look chips; they work.
+  </div>
+
+  <div class="phead">
+    <div>
+      <div class="eyebrow">Studio</div>
+      <h1>Create images</h1>
+      <p>Pick something that already looks right, say what you want to see, and get a new
+        image shot in the same light.</p>
+    </div>
+    <span class="hcount"><b>34</b>&nbsp;images this month</span>
+  </div>
+
+  <div class="panes">
+
+    <!-- ══════════ BRIEF ══════════ -->
+    <div class="brief">
+
+      <!-- 1 · product or not -->
+      <div class="step">
+        <div class="slab"><span class="snum">1</span><h3>What are you making?</h3></div>
+
+        <div class="kind">
+          <button class="kd on" data-kind="product">
+            <svg><use href="#i-bag"></use></svg>
+            <span class="kl">A product picture</span>
+            <span class="kdd">Something from your catalogue</span>
+          </button>
+          <button class="kd" data-kind="other">
+            <svg><use href="#i-img"></use></svg>
+            <span class="kl">Something else</span>
+            <span class="kdd">People, places, moods</span>
+          </button>
+        </div>
+
+        <!-- Picking a product is not the same as adding a reference. It tells the
+             system WHICH thing "this product" means, so the label, shape and
+             colour come out right instead of being invented. -->
+        <div class="pwrap" id="pwrap">
+          <label class="psel">
+            <select id="psel">
+              <option>SORBIFY OIL — 500ml bottle</option>
+              <option>SORBIFY OIL — 5L canister</option>
+              <option>Absorbent mat, 40 × 50cm</option>
+              <option>Spill kit, workshop</option>
+            </select>
+            <svg class="pcar"><use href="#i-chev"></use></svg>
+          </label>
+          <p class="pnote"><b>2 product photos added as reference below.</b> The label, shape and
+            colour are kept exact, and “this product” in your description means this one.</p>
+        </div>
+      </div>
+
+      <!-- 2 · reference -->
+      <div class="step">
+        <div class="slab"><span class="snum">2</span><h3>Pick your reference pictures</h3>
+          <span class="req">Needed</span></div>
+        <p class="shint">Choose pictures that show what you are after — a product from your library, or
+          a photo in the style you want, like a man on a construction site looking up at the sky.
+          Pick the best ones you have, or upload a new photo. Up to three.</p>
+
+        <div class="refs">
+          <div class="ref">
+            <span class="px" style="background:linear-gradient(150deg,#c9a882,#8a6b4a 60%,#5c4530)"></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button>
+            <span class="tagn">Site — golden hour</span>
+          </div>
+          <div class="ref fromprod">
+            <span class="px" style="background:linear-gradient(160deg,#e8dcc8,#c4b49a 55%,#9a8a72)"></span>
+            <button class="rm"><svg><use href="#i-x"></use></svg></button>
+            <span class="tagn">SORBIFY OIL · product</span>
+          </div>
+          <button class="addref"><svg><use href="#i-lib"></use></svg><span>From<br>Knowledge</span></button>
+        </div>
+
+        <!-- What it picked up. Read-only, one plain sentence. -->
+        <div class="look">
+          <span class="k"><svg><use href="#i-spark"></use></svg>What it picked up</span>
+          <p class="lkread">Your pictures are <b>warm and softly lit</b>, with <b>calm, muted colour</b>
+            and a little grain. New images will be made to match.</p>
+        </div>
+      </div>
+
+      <!-- 3 · where -->
+      <div class="step">
+        <div class="slab"><span class="snum">3</span><h3>Where is it?</h3></div>
+        <p class="shint">This is the one thing a picture cannot tell us on its own.</p>
+        <div class="wheres">
+          <button class="wh on"><span class="wi" style="background:var(--grad-more)">
+            <svg><use href="#i-studio"></use></svg></span><span class="wl">Studio</span>
+            <span class="wd">Plain background</span></button>
+          <button class="wh"><span class="wi" style="background:var(--grad-numbers)">
+            <svg><use href="#i-indoor"></use></svg></span><span class="wl">Indoors</span>
+            <span class="wd">A room, a shop</span></button>
+          <button class="wh"><span class="wi" style="background:var(--grad-assets)">
+            <svg><use href="#i-outdoor"></use></svg></span><span class="wl">Outdoors</span>
+            <span class="wd">Outside, daylight</span></button>
+        </div>
+      </div>
+
+      <!-- 4 · subject -->
+      <div class="step">
+        <div class="slab"><span class="snum">4</span><h3>What do you want to see?</h3>
+          <span class="req">Needed</span></div>
+        <p class="shint">Say it plainly, the way you would to a photographer.</p>
+        <textarea class="brf" id="brf" placeholder="One sentence is enough."></textarea>
+        <div class="exs">
+          <button class="ex" data-fill="This product on a silver background">This product on a silver background</button>
+          <button class="ex" data-fill="A girl running outside wearing a yellow dress">A girl running outside in a yellow dress</button>
+          <button class="ex" data-fill="A man on a construction site looking up at the sky">A man on a building site, looking up</button>
+          <button class="ex" data-fill="The bottle on a kitchen counter in morning light">The bottle on a kitchen counter</button>
+        </div>
+      </div>
+
+      <!-- 5 · shape -->
+      <div class="step">
+        <div class="slab"><span class="snum">5</span><h3>Shape</h3></div>
+        <div class="ratios">
+          <button class="rt r11 on"><span class="box"></span><span class="lb">1:1</span></button>
+          <button class="rt r45"><span class="box"></span><span class="lb">4:5</span></button>
+          <button class="rt r916"><span class="box"></span><span class="lb">9:16</span></button>
+          <button class="rt r169"><span class="box"></span><span class="lb">16:9</span></button>
+        </div>
+        <button class="more"><svg><use href="#i-chev"></use></svg>Anything else — props, angle, space for text</button>
+      </div>
+
+      <button class="go" id="go">Make the image</button>
+      <p class="gowhy" id="gowhy">Two references read · about 15 seconds</p>
+    </div>
+
+    <!-- ══════════ CANVAS ══════════ -->
+    <div class="canvas">
+      <div class="ctop">
+        <div>
+          <h2>This session</h2>
+          <div class="sub">Nothing is kept unless you save it</div>
+        </div>
+        <div class="seg">
+          <button class="on">Session</button>
+          <button>Saved</button>
+        </div>
+      </div>
+
+      <div class="grid">
+
+        <!-- working -->
+        <div class="shot working">
+          <div class="img"><span class="px"></span></div>
+          <div class="body">
+            <div class="wstat"><i></i>Matching the light and grade from your references…</div>
+          </div>
+        </div>
+
+        <!-- done -->
+        <div class="shot">
+          <div class="img">
+            <span class="px" style="background:linear-gradient(155deg,#d8bb8e,#a8815a 45%,#6b4f38)"></span>
+            <span class="badge">1:1</span>
+          </div>
+          <div class="body">
+            <div class="prov">
+              <span class="th" style="background:linear-gradient(150deg,#c9a882,#5c4530)"></span>
+              Warm daylight · muted · fine grain
+            </div>
+            <div class="acts">
+              <button class="act prime" data-toast="Saved to Knowledge ▸ Images"><svg><use href="#i-save"></use></svg>Save</button>
+              <button class="act" data-toast="Downloading…"><svg><use href="#i-dl"></use></svg>Get</button>
+              <button class="act" data-toast="Making another with the same brief"><svg><use href="#i-redo"></use></svg>Again</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- saved -->
+        <div class="shot">
+          <div class="img">
+            <span class="px" style="background:linear-gradient(160deg,#efe3cd,#c8b393 50%,#8f7a5e)"></span>
+            <span class="badge">1:1</span>
+          </div>
+          <div class="body">
+            <div class="prov">
+              <span class="th" style="background:linear-gradient(160deg,#e8dcc8,#9a8a72)"></span>
+              Warm daylight · muted · fine grain
+            </div>
+            <div class="acts">
+              <button class="act done"><svg><use href="#i-check"></use></svg>Saved</button>
+              <button class="act" data-toast="Downloading…"><svg><use href="#i-dl"></use></svg>Get</button>
+              <button class="act" data-toast="Making another with the same brief"><svg><use href="#i-redo"></use></svg>Again</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var t=document.getElementById("toast"),tm;
+  function toast(m){t.textContent=m;t.classList.add("on");clearTimeout(tm);tm=setTimeout(function(){t.classList.remove("on")},1900)}
+
+  document.addEventListener("click",function(e){
+    var ex=e.target.closest(".ex");
+    if(ex){document.getElementById("brf").value=ex.getAttribute("data-fill");sync();return}
+
+    var wh=e.target.closest(".wh");
+    if(wh){document.querySelectorAll(".wh").forEach(function(x){x.classList.remove("on")});wh.classList.add("on");return}
+
+    var rt=e.target.closest(".rt");
+    if(rt){document.querySelectorAll(".rt").forEach(function(x){x.classList.remove("on")});rt.classList.add("on");return}
+
+    var sg=e.target.closest(".seg button");
+    if(sg){document.querySelectorAll(".seg button").forEach(function(x){x.classList.remove("on")});sg.classList.add("on");return}
+
+    var rm=e.target.closest(".rm");
+    if(rm){rm.closest(".ref").remove();sync();return}
+
+    var a=e.target.closest("[data-toast]");
+    if(a){toast(a.getAttribute("data-toast"));return}
+
+    var kd=e.target.closest(".kd");
+    if(kd){
+      document.querySelectorAll(".kd").forEach(function(x){x.classList.remove("on")});
+      kd.classList.add("on");
+      var isProduct = kd.getAttribute("data-kind")==="product";
+      document.getElementById("pwrap").hidden = !isProduct;
+      // Product photos come and go with the choice. Leaving them behind after
+      // switching to "Something else" is how you generate a bottle nobody asked for.
+      var fp=document.querySelector(".ref.fromprod");
+      if(!isProduct && fp) fp.remove();
+      sync(); return;
+    }
+    if(e.target.closest("#go")){toast("Generating…");return}
+    if(e.target.closest(".addref")){toast("Opens Knowledge ▸ Images to pick from");return}
+    if(e.target.closest(".more")){toast("Reveals the extra field");return}
+  });
+
+  function sync(){
+    var n=document.querySelectorAll(".ref").length;
+    var has=document.getElementById("brf").value.trim().length>0;
+    var go=document.getElementById("go"),why=document.getElementById("gowhy");
+    go.disabled=!(n>0&&has);
+    why.textContent = n===0 ? "Add a reference to start"
+      : !has ? "Say what you want to see"
+      : n+" reference"+(n>1?"s":"")+" read · about 15 seconds";
+  }
+  document.getElementById("brf").addEventListener("input",sync);
+  sync();
+</script>

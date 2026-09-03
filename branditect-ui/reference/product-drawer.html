@@ -1,0 +1,801 @@
+<title>Branditect Product Drawer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ink:#1B1512;
+  --ink-2:#6E5F57;
+  --ink-3:#9C8C83;
+  --paper:#FFFFFF;
+  --surface:#FBF6F3;
+  --surface-2:#F4ECE7;
+  --line:#EDE2DC;
+  --line-2:#DFD1C9;
+  --accent:#E8541F;
+  --accent-deep:#B93C0D;
+  --accent-tint:#FDEBE1;
+  --accent-tint-2:#FBDDCD;
+  --ok:#3F7A56;
+  --ok-tint:#E6F0E9;
+  --warn:#9A6B14;
+  --warn-tint:#F7EEDC;
+  --clay:#B23A2E;
+  --clay-tint:#F8E7E4;
+  --indigo:#4A5A9E;
+  --indigo-tint:#E9EBF6;
+  --shadow:0 1px 2px rgba(27,21,18,.05), 0 12px 32px -18px rgba(27,21,18,.28);
+  --radius:14px;
+  --radius-s:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#F3EAE4;
+    --ink-2:#B6A69C;
+    --ink-3:#8A7A70;
+    --paper:#171210;
+    --surface:#1E1815;
+    --surface-2:#282019;
+    --line:#332921;
+    --line-2:#42352C;
+    --accent:#FF6D3B;
+    --accent-deep:#FFA47F;
+    --accent-tint:#2E1A11;
+    --accent-tint-2:#3D2417;
+    --ok:#6FB98C;
+    --ok-tint:#16261D;
+    --warn:#D9A74A;
+    --warn-tint:#2A2113;
+    --clay:#E4796A;
+    --clay-tint:#2C1815;
+    --indigo:#93A0E0;
+    --indigo-tint:#1A1D2E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#F3EAE4;
+  --ink-2:#B6A69C;
+  --ink-3:#8A7A70;
+  --paper:#171210;
+  --surface:#1E1815;
+  --surface-2:#282019;
+  --line:#332921;
+  --line-2:#42352C;
+  --accent:#FF6D3B;
+  --accent-deep:#FFA47F;
+  --accent-tint:#2E1A11;
+  --accent-tint-2:#3D2417;
+  --ok:#6FB98C;
+  --ok-tint:#16261D;
+  --warn:#D9A74A;
+  --warn-tint:#2A2113;
+  --clay:#E4796A;
+  --clay-tint:#2C1815;
+  --indigo:#93A0E0;
+  --indigo-tint:#1A1D2E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--surface);
+  color:var(--ink);
+  font-family:"Outfit","Segoe UI",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ---------- page frame ---------- */
+.frame{max-width:1520px;margin:0 auto;padding:20px 22px 34px}
+.bar{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+  justify-content:space-between;padding-bottom:16px;
+}
+.bar h1{font-size:17px;font-weight:600;letter-spacing:-.01em;margin:0}
+.bar p{margin:0;color:var(--ink-3);font-size:13.5px}
+.bar .right{display:flex;gap:8px;align-items:center}
+.ghost-btn{
+  border:1px solid var(--line-2);background:var(--paper);color:var(--ink-2);
+  padding:7px 13px;border-radius:99px;font-size:13px;font-weight:500;
+  transition:border-color .15s, color .15s;
+}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ghost-btn[aria-pressed="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-deep)}
+
+.app{display:grid;grid-template-columns:minmax(0,0.92fr) minmax(0,1.08fr);gap:18px;align-items:start}
+.panel{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+}
+@media (min-width:1000px){
+  .app{height:calc(100vh - 108px);min-height:720px}
+  .panel{height:100%}
+}
+@media (max-width:999px){ .app{grid-template-columns:1fr} }
+
+/* ---------- left: product list ---------- */
+.list-head{padding:20px 20px 14px;border-bottom:1px solid var(--line)}
+.list-head h2{margin:0 0 3px;font-size:24px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.count{
+  font-size:12.5px;font-weight:600;background:var(--accent-tint);color:var(--accent-deep);
+  padding:2px 9px;border-radius:99px;
+}
+.list-head .sub{margin:0 0 14px;color:var(--ink-3);font-size:13.5px}
+.controls{display:flex;gap:8px}
+.search{
+  flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius-s);padding:8px 12px;color:var(--ink-3);font-size:14px;
+}
+.btn-line{border:1px solid var(--line-2);border-radius:var(--radius-s);padding:8px 14px;font-size:14px;font-weight:500;background:var(--paper)}
+.btn-solid{background:var(--accent);color:#fff;border-radius:var(--radius-s);padding:8px 15px;font-size:14px;font-weight:600}
+.btn-solid:hover{background:var(--accent-deep)}
+
+.table-head{
+  display:grid;grid-template-columns:1fr 92px 60px 66px;gap:10px;
+  padding:11px 20px;font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-3);border-bottom:1px solid var(--line);
+}
+.rows{overflow-y:auto;flex:1}
+.row{
+  display:grid;grid-template-columns:1fr 92px 60px 66px;gap:10px;align-items:center;
+  padding:13px 20px 13px 17px;border-bottom:1px solid var(--line);border-left:3px solid transparent;
+  width:100%;text-align:left;
+}
+.row:hover{background:var(--surface)}
+.row.on{background:var(--accent-tint);border-left-color:var(--accent)}
+.row .name{display:flex;gap:12px;align-items:center;min-width:0}
+.sq{
+  width:42px;height:42px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--line);
+}
+.row h3{margin:0;font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.row .desc{
+  margin:2px 0 0;font-size:12.5px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pager{display:flex;gap:6px;align-items:center;color:var(--ink-3)}
+.pager .pg{
+  width:26px;height:26px;border-radius:99px;display:grid;place-items:center;
+  background:var(--accent-tint);color:var(--accent-deep);font-size:12.5px;font-weight:600;
+}
+.tag{
+  display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;
+  background:var(--surface-2);color:var(--ink-2);
+}
+.num{font-size:13.5px;color:var(--ink-2);text-align:right}
+.foot{
+  padding:12px 20px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12.5px;
+  display:flex;justify-content:space-between;align-items:center;background:var(--surface);
+}
+
+/* ---------- right: drawer ---------- */
+.drawer-head{padding:18px 22px 0;border-bottom:1px solid var(--line)}
+.dh-top{display:flex;gap:15px;align-items:flex-start}
+.thumb{
+  width:64px;height:64px;border-radius:12px;flex:none;position:relative;overflow:hidden;
+  background:linear-gradient(150deg,var(--surface-2),var(--accent-tint));border:1px solid var(--line);
+  display:grid;place-items:center;
+}
+.thumb .badge{
+  position:absolute;right:3px;bottom:3px;background:var(--paper);border:1px solid var(--line-2);
+  border-radius:99px;font-size:10.5px;font-weight:600;padding:1px 6px;color:var(--ink-2);
+}
+.dh-title{flex:1;min-width:0}
+.dh-title h2{margin:0;font-size:23px;font-weight:600;letter-spacing:-.02em}
+.linkbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);
+  padding:3px 10px;border-radius:99px;transition:border-color .15s,color .15s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip b{font-weight:600;color:var(--ink);font-family:"JetBrains Mono",monospace;font-size:12px}
+.chip.plain{color:var(--ink-3);border-style:dashed}
+.chip.ok{background:var(--ok-tint);border-color:transparent;color:var(--ok)}
+.x{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--ink-3);flex:none}
+.x:hover{background:var(--surface-2);color:var(--ink)}
+
+.tabs{display:flex;gap:2px;margin-top:16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:10px 13px 12px;font-size:14.5px;font-weight:500;color:var(--ink-3);
+  border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.pipcount{
+  font-size:11px;font-weight:600;background:var(--surface-2);color:var(--ink-2);
+  border-radius:99px;padding:1px 6px;font-family:"JetBrains Mono",monospace;
+}
+.tab[aria-selected="true"] .pipcount{background:var(--accent-tint-2);color:var(--accent-deep)}
+
+.body{padding:20px 22px 26px;overflow-y:auto;flex:1}
+.sec+.sec{margin-top:26px}
+.sec>h3{
+  margin:0 0 12px;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  display:flex;align-items:center;gap:9px;
+}
+.sec>h3::after{content:"";height:1px;flex:1;background:var(--line)}
+.hint{margin:8px 0 0;font-size:12.5px;color:var(--ink-3);line-height:1.5}
+
+/* form */
+.field{display:grid;grid-template-columns:132px 1fr;gap:14px;align-items:start;margin-bottom:11px}
+.field>label{font-size:14px;color:var(--ink-2);padding-top:9px}
+.inp{
+  width:100%;background:var(--paper);border:1px solid var(--line-2);border-radius:var(--radius-s);
+  padding:9px 12px;font-size:14.5px;
+}
+.inp::placeholder{color:var(--ink-3)}
+.inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint)}
+textarea.inp{resize:vertical;min-height:196px;line-height:1.55}
+.counter{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:12px;color:var(--ink-3)}
+@media (max-width:640px){ .field{grid-template-columns:1fr;gap:5px} .field>label{padding-top:0} }
+
+.specs{border:1px solid var(--line);border-radius:var(--radius-s);overflow:hidden}
+.spec{display:grid;grid-template-columns:1fr 1.25fr 34px;border-top:1px solid var(--line)}
+.spec:first-child{border-top:0}
+.spec>div{padding:9px 12px;font-size:14px}
+.spec .k{color:var(--ink-2);border-right:1px solid var(--line);background:var(--surface)}
+.spec .rm{display:grid;place-items:center;color:var(--ink-3);border-left:1px solid var(--line)}
+.addrow{
+  margin-top:9px;display:inline-flex;align-items:center;gap:7px;color:var(--accent);
+  font-size:13.5px;font-weight:600;
+}
+
+/* files */
+.drop{
+  border:1.5px dashed var(--line-2);border-radius:var(--radius);padding:20px;text-align:center;
+  background:var(--surface);
+}
+.drop:hover{border-color:var(--accent);background:var(--accent-tint)}
+.drop strong{display:block;font-size:15px;font-weight:600}
+.drop span{font-size:12.5px;color:var(--ink-3)}
+.drop .or{margin-top:11px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+.file{
+  display:grid;grid-template-columns:38px 1fr auto;gap:13px;align-items:start;
+  padding:13px 14px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--paper);
+}
+.file+.file{margin-top:8px}
+.file:hover{border-color:var(--line-2);background:var(--surface)}
+.ftype{
+  width:38px;height:44px;border-radius:6px;display:grid;place-items:center;font-size:9.5px;font-weight:600;
+  letter-spacing:.04em;font-family:"JetBrains Mono",monospace;
+}
+.ftype.pdf{background:var(--clay-tint);color:var(--clay)}
+.ftype.xls{background:var(--ok-tint);color:var(--ok)}
+.ftype.doc{background:var(--indigo-tint);color:var(--indigo)}
+.file .fn{font-size:14.5px;font-weight:600;letter-spacing:-.005em;margin:0;word-break:break-word}
+.file .fm{margin:3px 0 0;font-size:12.5px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--line-2);flex:none}
+.flabel{
+  font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:2px 8px;border-radius:5px;background:var(--surface-2);color:var(--ink-2);
+}
+.flabel.ok{background:var(--ok-tint);color:var(--ok)}
+.flabel.warn{background:var(--warn-tint);color:var(--warn)}
+.flabel.link{background:var(--accent-tint);color:var(--accent-deep)}
+.fact{display:flex;gap:4px;align-items:center}
+.iconbtn{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3)}
+.iconbtn:hover{background:var(--surface-2);color:var(--ink)}
+
+.switch{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2)}
+.track{width:30px;height:17px;border-radius:99px;background:var(--line-2);position:relative;flex:none;transition:background .18s}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--paper);transition:transform .18s}
+.switch[aria-checked="true"] .track{background:var(--accent)}
+.switch[aria-checked="true"] .track::after{transform:translateX(13px)}
+
+/* media */
+.grid-img{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:11px}
+.card-img{border:1px solid var(--line);border-radius:var(--radius-s);overflow:hidden;background:var(--paper);position:relative}
+.card-img .ph{aspect-ratio:4/3;display:grid;place-items:center;font-size:11.5px;color:#fff;font-weight:500;letter-spacing:.02em;text-align:center;padding:8px}
+.card-img .cap{padding:8px 10px;border-top:1px solid var(--line)}
+.card-img .cap p{margin:0;font-size:12.5px;font-weight:500;line-height:1.35}
+.card-img .cap span{font-size:11px;color:var(--ink-3)}
+.star{
+  position:absolute;top:7px;left:7px;background:var(--paper);border-radius:99px;padding:2px 8px;
+  font-size:10.5px;font-weight:600;color:var(--accent-deep);border:1px solid var(--accent-tint-2);
+}
+.unlink{
+  position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:99px;display:grid;place-items:center;
+  background:var(--paper);border:1px solid var(--line-2);color:var(--ink-2);opacity:0;transition:opacity .15s;
+}
+.card-img:hover .unlink{opacity:1}
+.add-img{
+  border:1.5px dashed var(--line-2);border-radius:var(--radius-s);display:grid;place-items:center;
+  gap:4px;padding:14px;min-height:132px;color:var(--ink-2);font-size:13px;font-weight:500;text-align:center;background:var(--surface);
+}
+.add-img:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
+
+/* notes */
+.composer{border:1px solid var(--line-2);border-radius:var(--radius-s);overflow:hidden}
+.composer textarea{width:100%;border:0;padding:12px 13px;min-height:82px;resize:vertical;background:var(--paper);line-height:1.5}
+.composer textarea:focus{outline:none}
+.composer .cf{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-top:1px solid var(--line);background:var(--surface)}
+.note{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.who{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--accent-tint);color:var(--accent-deep)}
+.note .nh{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin:0 0 4px}
+.note .nh b{font-size:13.5px;font-weight:600}
+.note .nh time{font-size:12px;color:var(--ink-3);font-family:"JetBrains Mono",monospace}
+.note p.txt{margin:0;font-size:14px;color:var(--ink-2);line-height:1.55;max-width:64ch}
+.pinned{background:var(--warn-tint);border-radius:5px;padding:1px 7px;font-size:11px;font-weight:600;color:var(--warn)}
+
+/* pricing */
+.money{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:var(--radius-s);padding:12px 13px;background:var(--surface)}
+.stat span{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.stat b{display:block;font-size:21px;font-weight:600;margin-top:4px;letter-spacing:-.02em;font-family:"JetBrains Mono",monospace}
+.stat.good b{color:var(--ok)}
+.stat.miss b{color:var(--warn);font-size:15px;font-weight:500;font-family:"Outfit",sans-serif;padding-top:5px}
+
+/* history */
+.ev{display:grid;grid-template-columns:14px 1fr;gap:12px;padding-bottom:16px;position:relative}
+.ev::before{content:"";position:absolute;left:6px;top:16px;bottom:0;width:1px;background:var(--line)}
+.ev:last-child::before{display:none}
+.ev .d{width:13px;height:13px;border-radius:50%;border:2px solid var(--accent);background:var(--paper);margin-top:3px}
+.ev .d.grey{border-color:var(--line-2)}
+.ev p{margin:0;font-size:14px}
+.ev time{font-size:12px;color:var(--ink-3);font-family:"JetBrains Mono",monospace}
+
+.drawer-foot{
+  padding:12px 22px;border-top:1px solid var(--line);background:var(--surface);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+}
+.saved{background:var(--surface-2);color:var(--ink-3);padding:9px 20px;border-radius:var(--radius-s);font-weight:600;font-size:14px}
+
+/* design notes */
+.dn{display:none}
+body.notes-on .dn{display:block}
+.dn{
+  margin-top:12px;border-left:2px solid var(--accent);background:var(--accent-tint);
+  border-radius:0 8px 8px 0;padding:10px 13px;font-size:13px;color:var(--ink-2);line-height:1.55;max-width:70ch;
+}
+.dn b{color:var(--accent-deep);font-weight:600}
+svg{display:block}
+</style>
+
+<div class="frame">
+  <div class="bar">
+    <div>
+      <h1>Product card — proposed</h1>
+      <p>The list on the left stays exactly as it is today. Only the opened card changes: written info, files, images, notes, all on one product.</p>
+    </div>
+    <div class="right">
+      <button class="ghost-btn" id="notesBtn" aria-pressed="false">Design notes</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <!-- ================= LEFT ================= -->
+    <section class="panel">
+      <div class="list-head">
+        <h2>Products <span class="count">3</span></h2>
+        <p class="sub">Everything Branditect can write about, price, and photograph.</p>
+        <div class="controls">
+          <div class="search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            Search products…
+          </div>
+          <button class="btn-line">Import</button>
+          <button class="btn-solid">+ Add product</button>
+        </div>
+      </div>
+
+      <div class="table-head">
+        <div>Product</div><div>Category</div><div style="text-align:right">Stock</div><div style="text-align:right">Cost</div>
+      </div>
+
+      <div class="rows">
+        <button class="row on">
+          <div class="name">
+            <div class="sq">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--ink-3)" stroke-width="1.7"><path d="M4 8h16l-1.2 11a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            </div>
+            <div style="min-width:0">
+              <h3>SORBIFY OIL</h3>
+              <p class="desc">Sorbify OIL, matching the structure and tone: From …</p>
+            </div>
+          </div>
+          <div></div>
+          <div class="num mono">—</div>
+          <div class="num mono">€3.00</div>
+        </button>
+
+        <button class="row">
+          <div class="name">
+            <div class="sq">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--ink-3)" stroke-width="1.7"><path d="M4 8h16l-1.2 11a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            </div>
+            <div style="min-width:0">
+              <h3>SORBIFY ALL</h3>
+              <p class="desc">SORBIFY ALL Suitable for a wide range of liquid spill…</p>
+            </div>
+          </div>
+          <div><span class="tag">absorbent</span></div>
+          <div class="num mono">—</div>
+          <div class="num mono">€3.00</div>
+        </button>
+
+        <button class="row">
+          <div class="name">
+            <div class="sq">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--ink-3)" stroke-width="1.7"><path d="M4 8h16l-1.2 11a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            </div>
+            <div style="min-width:0">
+              <h3>SORBIFY ULTRA</h3>
+              <p class="desc">SORBIFY ULTRA For fast-moving and spreading liqu…</p>
+            </div>
+          </div>
+          <div><span class="tag">absorbent</span></div>
+          <div class="num mono">—</div>
+          <div class="num mono">€3.00</div>
+        </button>
+      </div>
+
+      <div class="foot" style="display:block">
+        <p style="margin:0 0 12px">* Estimated — computed without a landed cost or tax rate, so it reads high. Open a product to see which figure is missing.</p>
+        <div class="pager">
+          <span>‹</span><span class="pg">1</span><span>›</span>
+          <span style="margin-left:8px">Showing 1–3 of 3 products</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RIGHT ================= -->
+    <section class="panel">
+      <div class="drawer-head">
+        <div class="dh-top">
+          <div class="thumb">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--accent-deep)"><path d="M4 8h16l-1.2 11a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            <span class="badge">6</span>
+          </div>
+          <div class="dh-title">
+            <h2>SORBIFY OIL</h2>
+            <div class="linkbar">
+              <button class="chip" data-goto="files"><b>4</b> files</button>
+              <button class="chip" data-goto="media"><b>6</b> images</button>
+              <button class="chip" data-goto="notes"><b>3</b> notes</button>
+              <span class="chip ok">Indexed ✓</span>
+              <span class="chip plain">Updated 2 days ago</span>
+            </div>
+          </div>
+          <button class="x" aria-label="Close">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-tab="details">Details</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="pricing">Pricing</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="files">Files <span class="pipcount">4</span></button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="media">Media <span class="pipcount">6</span></button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="notes">Notes <span class="pipcount">3</span></button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="history">History</button>
+        </div>
+      </div>
+
+      <div class="body">
+
+        <!-- ---------- DETAILS ---------- -->
+        <div class="pane" data-pane="details">
+          <div class="sec">
+            <h3>Product information</h3>
+            <div class="field">
+              <label for="pname">Product name</label>
+              <input class="inp" id="pname" value="SORBIFY OIL">
+            </div>
+            <div class="field">
+              <label for="pdesc">Description</label>
+              <div>
+                <textarea class="inp" id="pdesc">Oil-only absorbent pad for spills on water and hard surfaces. Repels water, so it keeps working in rain, on wet floors and floating on the surface of a tank or harbour.
+
+Absorbs 8.4 litres of hydrocarbon per kilo. Stays intact when saturated — lifts out in one piece instead of shedding fibres into the spill.
+
+Used by marinas, workshops and fuel depots. Supplied in packs of 40, 40 × 50 cm.</textarea>
+                <div class="counter">
+                  <span>Studio writes from this. Facts, not adjectives — it will find its own.</span>
+                  <span class="mono">412 / 2000</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="pcat">Category</label>
+              <input class="inp" id="pcat" value="Absorbent">
+            </div>
+            <div class="field">
+              <label for="psku">SKU</label>
+              <input class="inp mono" id="psku" value="SBF-OIL-40" placeholder="—">
+            </div>
+            <div class="field">
+              <label for="pbar">Barcode</label>
+              <input class="inp mono" id="pbar" placeholder="Not set">
+            </div>
+            <div class="field">
+              <label for="ptags">Tags</label>
+              <div>
+                <input class="inp" id="ptags" value="Professional, Marine, Hydrocarbon">
+                <p class="hint">Tags steer tone and angle when Studio writes. Separate them with commas.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Specifications</h3>
+            <div class="specs">
+              <div class="spec"><div class="k">Absorbency</div><div class="mono">8.4 L/kg</div><div class="rm">✕</div></div>
+              <div class="spec"><div class="k">Material</div><div>Meltblown polypropylene</div><div class="rm">✕</div></div>
+              <div class="spec"><div class="k">Pad size</div><div class="mono">40 × 50 cm</div><div class="rm">✕</div></div>
+              <div class="spec"><div class="k">Pack quantity</div><div class="mono">40 pads</div><div class="rm">✕</div></div>
+              <div class="spec"><div class="k">Certification</div><div>REACH compliant</div><div class="rm">✕</div></div>
+            </div>
+            <button class="addrow">+ Add specification</button>
+            <p class="hint">Structured facts Studio can quote verbatim — spec tables, comparison blocks, ad claims.</p>
+            <div class="dn"><b>New.</b> Two places for written product information, on purpose. The description is prose Studio rewrites; specifications are values it must never paraphrase. One text blob can't do both jobs.</div>
+          </div>
+        </div>
+
+        <!-- ---------- PRICING ---------- -->
+        <div class="pane" data-pane="pricing" hidden>
+          <div class="sec">
+            <h3>Cost</h3>
+            <div class="field"><label for="c1">Factory cost</label><input class="inp mono" id="c1" value="3.00"></div>
+            <div class="field"><label for="c2">Landed cost</label><div><input class="inp mono" id="c2" placeholder="Not set — shipping, duty, handling"><p class="hint">Until this is filled the margin below is estimated and reads high.</p></div></div>
+            <div class="field"><label for="c3">Sell price</label><input class="inp mono" id="c3" value="9.90"></div>
+            <div class="field"><label for="c4">Tax rate</label><input class="inp mono" id="c4" placeholder="Not set"></div>
+          </div>
+          <div class="sec">
+            <h3>What Studio is allowed to say</h3>
+            <div class="money">
+              <div class="stat good"><span>Margin</span><b>69.7%</b></div>
+              <div class="stat miss"><span>Floor price</span><b>Needs landed cost</b></div>
+              <div class="stat miss"><span>Max discount</span><b>Needs floor price</b></div>
+              <div class="stat"><span>Stock</span><b>—</b></div>
+            </div>
+            <p class="hint">Stock moved here from its own tab — it sits with cost, not on its own.</p>
+          </div>
+        </div>
+
+        <!-- ---------- FILES ---------- -->
+        <div class="pane" data-pane="files" hidden>
+          <div class="sec">
+            <h3>Documents</h3>
+            <button class="drop">
+              <strong>Drop a file, or browse</strong>
+              <span>Safety data sheets · spec sheets · marketing sheets · supplier contracts · certificates · PDF, DOCX, XLSX up to 25 MB</span>
+              <span class="or">
+                <span class="btn-line">Upload</span>
+                <span class="btn-line">Link from Knowledge</span>
+              </span>
+            </button>
+
+            <div style="margin-top:14px">
+              <div class="file">
+                <div class="ftype pdf">PDF</div>
+                <div>
+                  <p class="fn">Sorbify-Oil-Safety-Data-Sheet-EN-v3.pdf</p>
+                  <p class="fm">
+                    <span class="flabel">Safety sheet</span>
+                    <span class="mono">1.4 MB</span><span class="dot"></span>
+                    <span class="mono">12 Aug 2026</span><span class="dot"></span>
+                    <span class="flabel ok">Indexed ✓</span>
+                  </p>
+                  <p class="fm"><span>Also in Knowledge › Documents</span></p>
+                </div>
+                <div class="fact">
+                  <span class="switch" role="switch" aria-checked="true"><span class="track"></span>Feeds Studio</span>
+                  <button class="iconbtn" aria-label="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+                </div>
+              </div>
+
+              <div class="file">
+                <div class="ftype pdf">PDF</div>
+                <div>
+                  <p class="fn">Sorbify-OIL-technical-datasheet.pdf</p>
+                  <p class="fm">
+                    <span class="flabel">Spec sheet</span>
+                    <span class="mono">820 KB</span><span class="dot"></span>
+                    <span class="mono">2 Aug 2026</span><span class="dot"></span>
+                    <span class="flabel ok">Indexed ✓</span>
+                  </p>
+                  <p class="fm"><span>Also in Knowledge › Documents</span></p>
+                </div>
+                <div class="fact">
+                  <span class="switch" role="switch" aria-checked="true"><span class="track"></span>Feeds Studio</span>
+                  <button class="iconbtn" aria-label="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+                </div>
+              </div>
+
+              <div class="file">
+                <div class="ftype doc">DOCX</div>
+                <div>
+                  <p class="fn">Nordisk-Fabrik-supply-agreement-2026.docx</p>
+                  <p class="fm">
+                    <span class="flabel">Contract</span>
+                    <span class="mono">96 KB</span><span class="dot"></span>
+                    <span class="mono">3 Jul 2026</span><span class="dot"></span>
+                    <span class="flabel warn">Private</span>
+                  </p>
+                  <p class="fm"><span>Held on this product only — hidden from Knowledge and from Ask</span></p>
+                </div>
+                <div class="fact">
+                  <span class="switch" role="switch" aria-checked="false"><span class="track"></span>Feeds Studio</span>
+                  <button class="iconbtn" aria-label="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+                </div>
+              </div>
+
+              <div class="file">
+                <div class="ftype xls">XLSX</div>
+                <div>
+                  <p class="fn">Absorbents-price-list-Q3-2026.xlsx</p>
+                  <p class="fm">
+                    <span class="flabel link">Linked from Knowledge</span>
+                    <span class="mono">44 KB</span><span class="dot"></span>
+                    <span class="mono">18 Jul 2026</span><span class="dot"></span>
+                    <span class="flabel ok">Indexed ✓</span>
+                  </p>
+                  <p class="fm"><span>Shared with SORBIFY ALL, SORBIFY ULTRA — unlinking here leaves the file in Knowledge</span></p>
+                </div>
+                <div class="fact">
+                  <span class="switch" role="switch" aria-checked="true"><span class="track"></span>Feeds Studio</span>
+                  <button class="iconbtn" aria-label="More"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="dn"><b>One file, two doors.</b> Anything dropped here is stored once and appears in Knowledge › Documents tagged to this product; anything already in Knowledge can be linked here without a second copy. The row says which door it came through, because <em>delete</em> and <em>unlink</em> are different actions. <b>Feeds Studio</b> is per file — a supplier contract belongs on the card without ever being quotable in copy.</div>
+          </div>
+        </div>
+
+        <!-- ---------- MEDIA ---------- -->
+        <div class="pane" data-pane="media" hidden>
+          <div class="sec">
+            <h3>Linked images</h3>
+            <div class="grid-img">
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#2E3F52,#5C7285)">Pack shot, white</div>
+                <span class="star">Primary</span>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>sorbify-oil-pack-front.jpg</p><span class="mono">2400×2400 · Asset library</span></div>
+              </div>
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#7A5C3E,#B08A5F)">Pad, in use on water</div>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>oil-pad-harbour-01.jpg</p><span class="mono">3000×2000 · Asset library</span></div>
+              </div>
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#3F5B4A,#6E8F76)">Absorbency test</div>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>absorbency-test-8l.jpg</p><span class="mono">2000×1333 · Asset library</span></div>
+              </div>
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#5A4560,#8A7096)">Workshop floor</div>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>workshop-spill-wide.jpg</p><span class="mono">4000×2667 · Asset library</span></div>
+              </div>
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#8A3F2E,#C06A4F)">Carton, 40 pack</div>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>carton-40-angle.jpg</p><span class="mono">2400×1800 · Asset library</span></div>
+              </div>
+              <div class="card-img">
+                <div class="ph" style="background:linear-gradient(140deg,#3E4C6B,#7382A6)">Studio render, Aug</div>
+                <button class="unlink" aria-label="Unlink">✕</button>
+                <div class="cap"><p>oil-hero-render-v2.png</p><span class="mono">1536×1536 · Made in Studio</span></div>
+              </div>
+              <button class="add-img">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m4 17 5-5 4 3.5 3-2.5 4 4"/></svg>
+                Link from asset library
+              </button>
+            </div>
+            <p class="hint">Images live in Brand › Look. Linking them here tells Studio which pictures are this product, and puts the primary one on the row in the list.</p>
+            <div class="dn"><b>Link, never upload twice.</b> The library stays the single home for every image; this grid is a set of pointers. Upload from here is allowed but it writes into the library first, then links — so nothing exists only inside a product.</div>
+          </div>
+        </div>
+
+        <!-- ---------- NOTES ---------- -->
+        <div class="pane" data-pane="notes" hidden>
+          <div class="sec">
+            <h3>Memo</h3>
+            <div class="composer">
+              <textarea placeholder="What should anyone writing about this product know? Claims to avoid, supplier quirks, what customers actually ask…"></textarea>
+              <div class="cf">
+                <span class="switch" role="switch" aria-checked="true"><span class="track"></span>Studio reads these notes</span>
+                <span class="btn-solid">Add note</span>
+              </div>
+            </div>
+
+            <div style="margin-top:6px">
+              <div class="note">
+                <div class="who">SS</div>
+                <div>
+                  <p class="nh"><b>Saara</b><time>21 Aug 2026, 14:02</time><span class="pinned">Pinned</span></p>
+                  <p class="txt">Never write "biodegradable". The pad is polypropylene and the certification we hold is REACH, not OK Compost. Two competitors have been fined for this exact claim.</p>
+                </div>
+              </div>
+              <div class="note">
+                <div class="who">SS</div>
+                <div>
+                  <p class="nh"><b>Saara</b><time>12 Aug 2026, 09:40</time></p>
+                  <p class="txt">Marina buyers ask about saturated weight before they ask about price — a full pad is roughly 3.4 kg and one person can still lift it out. Lead with that in the trade emails.</p>
+                </div>
+              </div>
+              <div class="note">
+                <div class="who">SS</div>
+                <div>
+                  <p class="nh"><b>Saara</b><time>3 Jul 2026, 16:15</time></p>
+                  <p class="txt">Factory minimum is 20 cartons; below that the unit cost jumps to €4.10 and the €9.90 price stops working. Check the contract before promising small orders.</p>
+                </div>
+              </div>
+            </div>
+            <div class="dn"><b>Notes are brand rules, not scratch paper.</b> They sit in the same feed as the anti-voice: pinned notes are read before every generation about this product, which is why the toggle above says who reads them rather than just "save".</div>
+          </div>
+        </div>
+
+        <!-- ---------- HISTORY ---------- -->
+        <div class="pane" data-pane="history" hidden>
+          <div class="sec">
+            <h3>Activity</h3>
+            <div class="ev"><div class="d"></div><div><p>Price list linked from Knowledge</p><time>24 Aug 2026, 11:20 · Saara</time></div></div>
+            <div class="ev"><div class="d"></div><div><p>3 images linked from the asset library</p><time>22 Aug 2026, 17:04 · Saara</time></div></div>
+            <div class="ev"><div class="d"></div><div><p>Note pinned — "Never write biodegradable"</p><time>21 Aug 2026, 14:02 · Saara</time></div></div>
+            <div class="ev"><div class="d grey"></div><div><p>Safety data sheet v3 replaced v2 · indexed</p><time>12 Aug 2026, 08:55 · Saara</time></div></div>
+            <div class="ev"><div class="d grey"></div><div><p>Description rewritten in Studio and approved</p><time>2 Aug 2026, 13:31 · Studio</time></div></div>
+            <div class="ev"><div class="d grey"></div><div><p>Product created</p><time>3 Jul 2026, 10:02 · Saara</time></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-foot">
+        <button class="btn-line" style="color:var(--ink-3)">Revert</button>
+        <span class="saved">Saved</span>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panes = Array.prototype.slice.call(document.querySelectorAll('.pane'));
+  var body = document.querySelector('.body');
+
+  function show(name){
+    tabs.forEach(function(t){ t.setAttribute('aria-selected', String(t.dataset.tab === name)); });
+    panes.forEach(function(p){ p.hidden = (p.dataset.pane !== name); });
+    if (body) body.scrollTop = 0;
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ show(t.dataset.tab); }); });
+  document.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ show(b.dataset.goto); });
+  });
+
+  document.querySelectorAll('.switch').forEach(function(s){
+    s.setAttribute('tabindex','0');
+    function flip(){ s.setAttribute('aria-checked', s.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); }
+    s.addEventListener('click', flip);
+    s.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); flip(); } });
+  });
+
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.row'));
+  rows.forEach(function(r){
+    r.addEventListener('click', function(){
+      rows.forEach(function(x){ x.classList.remove('on'); });
+      r.classList.add('on');
+    });
+  });
+
+  var nb = document.getElementById('notesBtn');
+  nb.addEventListener('click', function(){
+    var on = document.body.classList.toggle('notes-on');
+    nb.setAttribute('aria-pressed', String(on));
+  });
+})();
+</script>

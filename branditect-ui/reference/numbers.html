@@ -1,0 +1,520 @@
+<title>Branditect Numbers</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-display:26px; --fs-h2:22px; --fs-h3:16px;
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --rule:#edecea; --rule-2:#e6e6e6; --rule-3:#ddddf1;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-2:#fdede6; --tint-4:#fbe7e2;
+    --tile:#f4f3f2;
+    --green:#2fbf71; --green-wash:#e8f6ee; --green-ink:#1c7a48; --green-line:#bfe6cf;
+    --lavender:#e8dff6; --lav-ink:#5b4a80; --lav-line:#d3c2ee;
+    --blue-wash:#e8effd; --blue-ink:#3c5a8f; --blue-line:#c3d4f2;
+    --plan-note:#a98a80;
+    --grad-mark:linear-gradient(135deg,#f16d2c,#fe4401);
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 29.59%);
+    --r-panel:16px; --r-card:12px; --r-tile:10px; --r-nav:10px; --r-pill:50px;
+    --shadow-panel:drop-shadow(0 6px 10px rgba(20,20,26,.07)) drop-shadow(0 1px 1px rgba(20,20,26,.04));
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:var(--fs-body);font-weight:500;line-height:1.4;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4,p{margin:0} button{font:inherit} svg{display:block}
+
+  .shell{max-width:1480px;margin:0 auto;padding:18px 16px 44px}
+  .caption{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:0 2px 14px}
+  .caption b{font-size:var(--fs-body);font-weight:800;letter-spacing:-.2px}
+  .caption span{font-size:var(--fs-xs);color:var(--muted-2)}
+  .caption .tag{font-size:var(--fs-micro);font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--accent);background:var(--tint-1);padding:3px 9px;border-radius:var(--r-pill)}
+
+  .app{display:grid;grid-template-columns:228px minmax(0,1fr);gap:12px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);filter:var(--shadow-panel)}
+
+  /* ---- sidebar ---- */
+  .side{padding:18px 12px 16px;display:flex;flex-direction:column;min-height:900px}
+  .logo{display:flex;align-items:center;gap:8px;padding:0 6px 20px}
+  .logo .mark{width:26px;height:26px;border-radius:8px;background:var(--grad-mark);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+  .logo .word{font-size:17px;font-weight:800;letter-spacing:-.5px;color:var(--accent)}
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .nav>button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;height:36px;padding:0 9px;border-radius:var(--r-nav);font-size:var(--fs-body);font-weight:600;color:var(--ink-2)}
+  .nav>button:hover{background:var(--tile)}
+  .nav>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .nav>button[aria-current="true"]{background:var(--tint-1);color:var(--accent)}
+  .nav>button svg{width:20px;height:20px;fill:var(--accent);flex-shrink:0}
+  .side-foot{margin-top:auto;padding-top:18px}
+  .plan{background:var(--tint-1);border-radius:var(--r-card);padding:13px}
+  .plan .k{font-size:var(--fs-xs);font-weight:600}
+  .plan .v{font-size:19px;font-weight:700;color:var(--accent);letter-spacing:-.5px;line-height:1.35}
+  .plan .r{font-size:var(--fs-2xs);font-weight:400;color:var(--plan-note)}
+  .plan .btn{display:block;text-align:center;margin-top:9px;background:#fff;border-radius:9px;padding:7px;font-size:var(--fs-xs);font-weight:600;color:var(--accent);filter:drop-shadow(0 1px 1px rgba(20,20,26,.05))}
+  .user{display:flex;align-items:center;gap:10px;margin-top:12px;padding:0 3px}
+  .user .av{width:32px;height:32px;border-radius:50%;background:var(--tint-4);display:grid;place-items:center;font-size:var(--fs-2xs);font-weight:700;color:var(--accent-dark)}
+  .user .n{font-size:var(--fs-sm);font-weight:700}
+  .user .s{font-size:var(--fs-2xs);font-weight:400;color:var(--faint)}
+  .user .c{margin-left:auto;color:var(--faint);font-size:10px}
+
+  /* ---- main ---- */
+  .main{display:flex;flex-direction:column;gap:18px;min-width:0;padding-top:4px}
+
+  .head h1{font-size:var(--fs-display);font-weight:700;letter-spacing:-.7px;line-height:1.15}
+  .head p{font-size:var(--fs-body);font-weight:400;color:var(--muted-2);margin-top:3px}
+  .head p b{color:var(--ink-2);font-weight:600}
+
+  /* row 1 — orange hero + setup panel, same split as Home */
+  .row1{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:12px;align-items:stretch}
+
+  .hero{position:relative;overflow:hidden;border-radius:var(--r-panel);background:var(--grad-hero);color:#fff;padding:22px 22px 20px;filter:drop-shadow(0 10px 18px rgba(180,50,10,.18));display:flex;flex-direction:column}
+  .hero .arc{position:absolute;right:-26px;top:-34px;width:160px;height:110px;border:1.2px solid rgba(255,255,255,.25);border-radius:50%;pointer-events:none}
+  .hero>*{position:relative;z-index:2}
+  .hero .kick{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.1px}
+  .hero .say{font-size:var(--fs-body);font-weight:600;line-height:1.5;margin-top:10px;max-width:40ch}
+  .hero .say b{font-weight:800}
+  .htiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:auto;padding-top:18px}
+  .htile{border:1.2px solid rgba(255,255,255,.4);border-radius:var(--r-tile);padding:10px 11px 11px}
+  .htile .kl{font-size:var(--fs-micro);font-weight:500;color:rgba(255,255,255,.82)}
+  .htile .kv{font-size:20px;font-weight:700;letter-spacing:-.6px;line-height:1.25;font-variant-numeric:tabular-nums;margin-top:2px}
+  .htile .kn{font-size:var(--fs-micro);font-weight:600;color:rgba(255,255,255,.72);margin-top:2px}
+  .hero .explore{display:inline-block;margin-top:14px;color:#fff;font-size:var(--fs-micro);font-weight:700;letter-spacing:.5px;text-decoration:underline;text-underline-offset:3px}
+
+  /* setup panel — lilac, to lift it off the white */
+  .setup{
+    display:flex;flex-direction:column;
+    background:linear-gradient(150deg,#f8f4fe 0%,#ece3f9 100%);
+    border-color:var(--lav-line);
+  }
+  .setup .card-head h3{color:#2f2545}
+  .setup .card-head span{color:#8b7bab}
+  .setup .grp .lab{color:#6b5b91}
+  .setup .opts button{background:rgba(255,255,255,.92);border-color:#ded0f4;color:#3f3560}
+  .setup .opts button:hover{border-color:var(--accent-line);color:var(--accent);background:#fff}
+  .setup .opts button[aria-pressed="true"]{background:var(--tint-1);border-color:var(--accent);color:var(--accent)}
+  .setup .opts button .tick{border-color:#cfc0ea}
+  .setup .readback{background:rgba(255,255,255,.75);border-color:#ded0f4;color:#5d5080}
+  .setup .readback b{color:#2f2545}
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 15px 0}
+  .card-head h3{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.2px}
+  .card-head span{font-size:var(--fs-2xs);font-weight:500;color:var(--muted-2)}
+  .setup .body{padding:12px 15px 15px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .grp .lab{font-size:var(--fs-2xs);font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted-2);margin-bottom:7px}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opts button{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--rule-2);border-radius:var(--r-pill);padding:6px 12px;font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);background:#fff;display:inline-flex;align-items:center;gap:7px}
+  .opts button:hover{border-color:var(--accent-line);color:var(--accent)}
+  .opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .opts button[aria-pressed="true"]{background:var(--tint-1);border-color:var(--accent);color:var(--accent)}
+  .opts button svg{width:13px;height:13px;fill:currentColor}
+  .opts button .tick{width:13px;height:13px;border-radius:4px;border:1.5px solid var(--rule-3);display:grid;place-items:center;flex-shrink:0}
+  .opts button[aria-pressed="true"] .tick{background:var(--accent);border-color:var(--accent)}
+  .opts button .tick svg{width:8px;height:8px;fill:#fff;opacity:0}
+  .opts button[aria-pressed="true"] .tick svg{opacity:1}
+  .readback{margin-top:auto;background:var(--tile);border:1px solid var(--rule);border-radius:var(--r-tile);padding:10px 12px;font-size:var(--fs-2xs);font-weight:500;color:var(--muted);line-height:1.5}
+  .readback b{color:var(--ink);font-weight:700}
+
+  /* ---- section headers ---- */
+  .sect{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .sect h2{font-size:var(--fs-h2);font-weight:700;letter-spacing:-.5px}
+  .sect small{font-size:var(--fs-sm);font-weight:500;color:var(--muted-2)}
+  .sect .badge{font-size:var(--fs-micro);font-weight:800;letter-spacing:.9px;text-transform:uppercase;border-radius:var(--r-pill);padding:3px 10px}
+  .sect .badge.sale{background:var(--tint-1);color:var(--accent)}
+  .sect .badge.month{background:var(--blue-wash);color:var(--blue-ink)}
+  .sect .badge.sandbox{background:var(--lavender);color:var(--lav-ink)}
+
+  /* sandbox explainer */
+  .sandbox{
+    background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+    padding:13px 15px;display:flex;gap:11px;align-items:center;flex-wrap:wrap;
+  }
+  .sandbox>svg{width:17px;height:17px;fill:var(--lav-ink);flex-shrink:0}
+  .sandbox p{font-size:var(--fs-xs);font-weight:500;color:var(--muted);line-height:1.5}
+  .sandbox p b{color:var(--ink);font-weight:700}
+  .sandbox .steps{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sandbox .steps em{
+    font-style:normal;background:var(--tile);border:1px solid var(--rule);border-radius:var(--r-pill);
+    padding:5px 11px;font-size:var(--fs-micro);font-weight:700;color:var(--ink-2);white-space:nowrap;
+  }
+  .sandbox .steps em.apply{background:var(--grad-mark);border-color:transparent;color:#fff}
+  .sandbox .steps .op{color:var(--faint);font-size:11px}
+
+  /* ---- calculator cards ---- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;align-items:stretch}
+  .calc{border:1px solid var(--rule-2);border-radius:var(--r-card);padding:16px;display:flex;flex-direction:column;background:#fff}
+  .calc.hide{display:none}
+  .ch{display:flex;gap:11px;align-items:flex-start}
+  .ico{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;position:relative}
+  .ico>svg{width:24px;height:24px}
+  .num{position:absolute;top:-6px;left:-6px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:var(--fs-micro);font-weight:800;color:#fff}
+  .ch h3{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.3px;line-height:1.2}
+  .ch .promise{font-size:var(--fs-xs);font-weight:700;margin-top:4px;line-height:1.35}
+  .calc>p.desc{font-size:var(--fs-xs);font-weight:500;color:var(--muted);line-height:1.5;margin-top:11px}
+  .need{margin-top:11px;padding-top:11px;border-top:1px solid var(--rule)}
+  .need h4{font-size:var(--fs-micro);font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted-2);margin-bottom:7px}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chips span{background:var(--tile);border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 9px;font-size:var(--fs-micro);font-weight:600;color:var(--ink-2)}
+  .chips span.new{background:var(--tint-1);border-color:var(--accent-line);color:var(--accent-dark)}
+  /* footer pinned so every button lines up */
+  .cfoot{margin-top:auto;padding-top:14px}
+  .state{font-size:var(--fs-micro);font-weight:700;display:flex;align-items:center;gap:5px;min-height:16px}
+  .state.done{color:var(--green-ink)} .state.next{color:var(--muted-2)}
+  .state svg{width:12px;height:12px;fill:currentColor}
+  .go{all:unset;box-sizing:border-box;cursor:pointer;margin-top:9px;text-align:center;border-radius:var(--r-tile);padding:10px;font-size:var(--fs-sm);font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+  .go svg{width:13px;height:13px;fill:currentColor}
+  .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .c1 .ico{background:var(--green-wash)} .c1 .ico>svg{fill:var(--green-ink)} .c1 .num{background:var(--green)}
+  .c1 .promise{color:var(--green-ink)} .c1 .go{background:var(--green-wash);color:var(--green-ink);border:1px solid var(--green-line)}
+  .c1 .go:hover{background:#ddf0e5}
+  .c2 .ico{background:var(--lavender)} .c2 .ico>svg{fill:var(--lav-ink)} .c2 .num{background:#7b5ea7}
+  .c2 .promise{color:var(--lav-ink)} .c2 .go{background:var(--grad-mark);color:#fff;filter:drop-shadow(0 5px 10px rgba(232,73,32,.3))}
+  .c2 .go:hover{filter:drop-shadow(0 7px 13px rgba(232,73,32,.4)) brightness(1.03)}
+  .c3 .ico{background:var(--tint-2)} .c3 .ico>svg{fill:var(--accent-dark)} .c3 .num{background:var(--accent)}
+  .c3 .promise{color:var(--accent-dark)} .c3 .go{background:var(--tint-1);color:var(--accent-dark);border:1px solid var(--accent-line)}
+  .c3 .go:hover{background:var(--tint-2)}
+  .c4 .ico{background:var(--blue-wash)} .c4 .ico>svg{fill:var(--blue-ink)} .c4 .num{background:#4a72b8}
+  .c4 .promise{color:var(--blue-ink)} .c4 .go{background:var(--blue-wash);color:var(--blue-ink);border:1px solid var(--blue-line)}
+  .c4 .go:hover{background:#dde8fb}
+
+  /* ---- per month panel ---- */
+  .opex{padding:16px 18px 18px;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,280px);gap:18px}
+  .opex .left .ch{display:flex;gap:11px;align-items:flex-start}
+  .opex .ico{background:var(--blue-wash)} .opex .ico>svg{fill:var(--blue-ink)} .opex .num{background:#4a72b8}
+  .opex h3{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.3px;line-height:1.2}
+  .opex .promise{font-size:var(--fs-xs);font-weight:700;color:var(--blue-ink);margin-top:4px}
+  .opex .desc{font-size:var(--fs-xs);font-weight:500;color:var(--muted);line-height:1.5;margin-top:11px;max-width:54ch}
+  .opex .need{border-top-color:var(--rule)}
+  .sums{background:var(--blue-wash);border:1px solid var(--blue-line);border-radius:var(--r-tile);padding:13px 14px;display:flex;flex-direction:column;gap:8px;align-self:start}
+  .sums .r{display:flex;align-items:baseline;gap:10px;font-size:var(--fs-xs);font-weight:600;color:var(--blue-ink)}
+  .sums .r b{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800}
+  .sums .be{border-top:1px solid var(--blue-line);padding-top:10px;margin-top:2px}
+  .sums .be .lbl{font-size:var(--fs-micro);font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-ink);opacity:.75}
+  .sums .be .big{font-size:24px;font-weight:700;letter-spacing:-.7px;color:var(--blue-ink);font-variant-numeric:tabular-nums;line-height:1.15;margin-top:2px}
+  .sums .be .sub{font-size:var(--fs-micro);font-weight:500;color:var(--blue-ink);opacity:.8;margin-top:3px;line-height:1.45}
+  .sums .go{margin-top:6px;background:#fff;color:var(--blue-ink);border:1px solid var(--blue-line)}
+  .sums .go:hover{background:#eef4fe}
+
+  .formula{display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:var(--fs-xs);font-weight:600;color:var(--muted);padding:0 2px}
+  .formula em{font-style:normal;background:#fff;border:1px solid var(--rule);border-radius:var(--r-pill);padding:5px 11px;color:var(--ink-2)}
+  .formula em.g{background:var(--green-wash);border-color:var(--green-line);color:var(--green-ink)}
+  .formula em.b{background:var(--blue-wash);border-color:var(--blue-line);color:var(--blue-ink)}
+  .formula .op{color:var(--faint)}
+
+  .disc{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:12px 15px;display:flex;gap:10px;align-items:flex-start}
+  .disc svg{width:15px;height:15px;fill:var(--muted-2);flex-shrink:0;margin-top:1px}
+  .disc p{font-size:var(--fs-xs);font-weight:500;color:var(--muted);line-height:1.55}
+
+  .notes{margin-top:20px}
+  .notes h4{font-size:var(--fs-sm);font-weight:700;margin-bottom:10px;letter-spacing:-.2px}
+  .notegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r-card);overflow:hidden}
+  .notegrid div{background:var(--page);padding:15px 17px}
+  .notegrid b{display:block;font-size:var(--fs-xs);font-weight:700;color:var(--ink);margin-bottom:3px}
+  .notegrid p{font-size:var(--fs-xs);font-weight:500;color:var(--muted-2);line-height:1.55}
+  .notegrid .add{color:var(--accent);font-weight:800;font-size:var(--fs-micro);letter-spacing:.9px;text-transform:uppercase;display:block;margin-bottom:4px}
+
+  @media (max-width:1080px){.row1{grid-template-columns:1fr}.opex{grid-template-columns:1fr}}
+  @media (max-width:900px){.app{grid-template-columns:1fr}.side{min-height:0}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M11.02 2.6a1.5 1.5 0 0 1 1.96 0l8 6.93c.33.29.52.7.52 1.13V20a2 2 0 0 1-2 2h-4.25a.75.75 0 0 1-.75-.75V16a1.5 1.5 0 0 0-1.5-1.5h-2A1.5 1.5 0 0 0 9.5 16v5.25a.75.75 0 0 1-.75.75H4.5a2 2 0 0 1-2-2v-9.34c0-.43.19-.84.52-1.13z"/></symbol>
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="M11.32 2.3a1.5 1.5 0 0 1 1.36 0l8.2 4.25c.83.43.83 1.62 0 2.05l-8.2 4.25a1.5 1.5 0 0 1-1.36 0L3.12 8.6c-.83-.43-.83-1.62 0-2.05z"/><path d="M2.9 12.03a1.2 1.2 0 0 1 1.6-.53l7.5 3.83 7.5-3.83a1.2 1.2 0 1 1 1.1 2.13l-8.05 4.11a1.2 1.2 0 0 1-1.1 0L3.4 13.63a1.2 1.2 0 0 1-.5-1.6z" opacity=".5"/></symbol>
+  <symbol id="i-know" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H11a.5.5 0 0 1 .5.5v19a.5.5 0 0 1-.72.45l-1.9-.95a2 2 0 0 0-1.79 0l-1.9.95A.5.5 0 0 1 4 21.5z"/><path d="M12.5 2.5A.5.5 0 0 1 13 2h4.5A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5H13a.5.5 0 0 1-.5-.5z" opacity=".5"/></symbol>
+  <symbol id="i-studio" viewBox="0 0 24 24"><path d="M16.4 2.9a2.9 2.9 0 0 1 4.1 4.1l-1.3 1.3-4.1-4.1zM13.7 5.6l4.1 4.1-8.4 8.4a2 2 0 0 1-.9.5l-4.6 1.3a.8.8 0 0 1-1-1l1.3-4.6a2 2 0 0 1 .5-.9z"/></symbol>
+  <symbol id="i-numbers" viewBox="0 0 24 24"><rect x="3" y="12" width="4.4" height="9" rx="1.6"/><rect x="9.8" y="4" width="4.4" height="17" rx="1.6"/><rect x="16.6" y="9" width="4.4" height="12" rx="1.6" opacity=".5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M12 3c5.2 0 9.4 3.5 9.4 7.9s-4.2 7.9-9.4 7.9a11 11 0 0 1-2.3-.24l-4.3 2.3a.7.7 0 0 1-1.03-.72l.66-3.5C3.5 15.2 2.6 13.2 2.6 10.9 2.6 6.5 6.8 3 12 3"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><path d="M6.5 2h11A2.5 2.5 0 0 1 20 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2m.9 3.2v3.1h9.2V5.2zm.4 6a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8m4.2 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8m4.2 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8m-8.4 5a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8m4.2 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8m4.2 0a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M11.3 2.6H19a2.4 2.4 0 0 1 2.4 2.4v7.7a2.4 2.4 0 0 1-.7 1.7l-7.6 7.6a2.4 2.4 0 0 1-3.4 0l-7.7-7.7a2.4 2.4 0 0 1 0-3.4l7.6-7.6a2.4 2.4 0 0 1 1.7-.7m5.3 3a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M11.32 2.3a1.5 1.5 0 0 1 1.36 0l7.7 4a1.2 1.2 0 0 1 .62 1.06v9.28a1.2 1.2 0 0 1-.62 1.06l-7.7 4a1.5 1.5 0 0 1-1.36 0l-7.7-4A1.2 1.2 0 0 1 3 16.64V7.36A1.2 1.2 0 0 1 3.62 6.3zM12 4.6 5.9 7.8 12 11l6.1-3.2z"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M12 3.6a6.4 6.4 0 0 1 6.28 5.15A4.9 4.9 0 0 1 17.5 18.4h-11a4.5 4.5 0 0 1-.9-8.9A6.4 6.4 0 0 1 12 3.6"/></symbol>
+  <symbol id="i-once" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m.9 4.4h-1.4a.8.8 0 0 0-.72.45l-1 2a.8.8 0 0 0 .72 1.15H10v9.6h2.9V7.2a.8.8 0 0 0-.8-.8z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 8.1 5.06 1.3 1.3 0 1 1-2.34 1.13A6.4 6.4 0 0 0 12 5.6a6.4 6.4 0 0 0-5.75 3.6h2.1a1.2 1.2 0 1 1 0 2.4H3.9a1.2 1.2 0 0 1-1.2-1.2V6.05a1.2 1.2 0 1 1 2.4 0v1.06A9 9 0 0 1 12 3m-8.1 11.94a1.3 1.3 0 0 1 1.74.57A6.4 6.4 0 0 0 12 18.4a6.4 6.4 0 0 0 5.75-3.6h-2.1a1.2 1.2 0 0 1 0-2.4h4.45a1.2 1.2 0 0 1 1.2 1.2v4.35a1.2 1.2 0 1 1-2.4 0v-1.06A9 9 0 0 1 3.9 15.5a1.3 1.3 0 0 1 0-.56"/></symbol>
+  <symbol id="i-pct" viewBox="0 0 24 24"><path d="M18.9 5.1a1.3 1.3 0 0 1 0 1.84L6.94 18.9a1.3 1.3 0 1 1-1.84-1.84L17.06 5.1a1.3 1.3 0 0 1 1.84 0M7.6 4.6a3 3 0 1 1 0 6 3 3 0 0 1 0-6m8.8 8.8a3 3 0 1 1 0 6 3 3 0 0 1 0-6"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path d="M4.6 2.6h9.2a1.6 1.6 0 0 1 1.6 1.6v4.4h4a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 19.4V4.2a1.6 1.6 0 0 1 1.6-1.6M6.4 6v2.2h2.2V6zm4.6 0v2.2h2.2V6zM6.4 10.6v2.2h2.2v-2.2zm4.6 0v2.2h2.2v-2.2zm-4.6 4.6v2.2h2.2v-2.2zm4.6 0v2.2h2.2v-2.2zm6.5-4.6v2.2h2.2v-2.2zm0 4.6v2.2h2.2v-2.2z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m4.9 6.6a1.2 1.2 0 0 0-1.7.06l-4.6 5-1.85-1.7a1.2 1.2 0 1 0-1.62 1.77l2.74 2.5a1.2 1.2 0 0 0 1.69-.07l5.4-5.87a1.2 1.2 0 0 0-.06-1.7"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.4 2.6h5.2a1.1 1.1 0 0 1 0 2.2h-.3v4.06a3 3 0 0 0 .43 1.55l4.36 7.13a2.6 2.6 0 0 1-2.22 3.96H7.13a2.6 2.6 0 0 1-2.22-3.96l4.36-7.13a3 3 0 0 0 .43-1.55V4.8h-.3a1.1 1.1 0 0 1 0-2.2m2.1 2.2v4.06a5.2 5.2 0 0 1-.35 1.88h1.7a5.2 5.2 0 0 1-.35-1.88V4.8z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M11.15 21.13a1.2 1.2 0 0 1 0-1.7l4.4-4.4a1.2 1.2 0 1 1 1.7 1.7l-2.35 2.35H21a1.2 1.2 0 1 1 0 2.4h-6.1l2.35 2.35H11.15zM3 3.4A1.2 1.2 0 0 1 4.2 2.2h9.6a1.2 1.2 0 0 1 0 2.4H5.4v11.5a1.2 1.2 0 1 1-2.4 0z"/></symbol>
+  <symbol id="i-tickbare" viewBox="0 0 24 24"><path d="M20.3 5.7a1.3 1.3 0 0 0-1.85.06l-8.6 9.2-3.3-3.1a1.3 1.3 0 1 0-1.78 1.9l4.24 4a1.3 1.3 0 0 0 1.84-.06l9.5-10.16a1.3 1.3 0 0 0-.05-1.84"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M13.06 4.4a1.3 1.3 0 0 0-1.84 1.84L16.98 12l-5.76 5.76a1.3 1.3 0 1 0 1.84 1.84l6.68-6.68a1.3 1.3 0 0 0 0-1.84z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 8.2a1.2 1.2 0 0 0-1.2 1.2v5a1.2 1.2 0 1 0 2.4 0v-5A1.2 1.2 0 0 0 12 10.2m0-3.9a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8"/></symbol>
+</defs></svg>
+
+<div class="shell">
+
+  <div class="caption">
+    <b>Branditect — Numbers</b>
+    <span class="tag">v6 · sandbox + lilac setup</span>
+    <span>Calculators never write back — one explicit "Apply to product" handoff</span>
+  </div>
+
+  <div class="app">
+
+    <nav class="panel side" aria-label="Primary">
+      <div class="logo"><span class="mark">B</span><span class="word">Branditect</span></div>
+      <div class="nav">
+        <button type="button"><svg><use href="#i-home"></use></svg>Home</button>
+        <button type="button"><svg><use href="#i-brand"></use></svg>Brand</button>
+        <button type="button"><svg><use href="#i-know"></use></svg>Knowledge</button>
+        <button type="button"><svg><use href="#i-studio"></use></svg>Studio</button>
+        <button type="button" aria-current="true"><svg><use href="#i-numbers"></use></svg>Numbers</button>
+        <button type="button"><svg><use href="#i-chat"></use></svg>AI Chat</button>
+      </div>
+      <div class="side-foot">
+        <div class="plan"><div class="k">Your plan</div><div class="v">Pro</div><div class="r">Renews 12 May 2027</div><span class="btn">View plan</span></div>
+        <div class="user"><span class="av">AM</span><div><div class="n">Alexis Morgan</div><div class="s">Deklan Hairdryers</div></div><span class="c">▾</span></div>
+      </div>
+    </nav>
+
+    <main class="main">
+
+      <div class="head">
+        <h1>Numbers</h1>
+        <p>Your product cards hold the real figures. <b>6 of 18 still need costs.</b></p>
+      </div>
+
+      <div class="row1">
+        <section class="hero" aria-label="What Numbers does">
+          <span class="arc" aria-hidden="true"></span>
+          <div class="kick">What Numbers does</div>
+          <p class="say">Work out what you really make on every sale, set prices that hit your target margin, and build offers that don't quietly cost you money — then <b>Studio writes inside those limits.</b></p>
+          <div class="htiles">
+            <div class="htile"><div class="kl">Products priced</div><div class="kv">12 / 18</div><div class="kn">6 missing costs</div></div>
+            <div class="htile"><div class="kl">Lowest margin</div><div class="kv">61%</div><div class="kn">Travel Case</div></div>
+            <div class="htile"><div class="kl">Break-even</div><div class="kv">83 / mo</div><div class="kn">across the range</div></div>
+          </div>
+          <a class="explore" href="#">See all live numbers →</a>
+        </section>
+
+        <section class="panel setup" aria-label="How you sell">
+          <div class="card-head"><h3>How you sell</h3><span>Set once</span></div>
+          <div class="body">
+            <div class="grp">
+              <div class="lab">What you sell</div>
+              <div class="opts" role="radiogroup" aria-label="What you sell">
+                <button type="button" data-sell="physical" aria-pressed="true"><svg><use href="#i-box"></use></svg>Physical goods</button>
+                <button type="button" data-sell="digital" aria-pressed="false"><svg><use href="#i-cloud"></use></svg>Digital &amp; access</button>
+              </div>
+            </div>
+            <div class="grp">
+              <div class="lab">How you charge</div>
+              <div class="opts" role="radiogroup" aria-label="How you charge">
+                <button type="button" data-charge="oneoff" aria-pressed="true"><svg><use href="#i-once"></use></svg>One-off</button>
+                <button type="button" data-charge="recurring" aria-pressed="false"><svg><use href="#i-repeat"></use></svg>Subscription</button>
+              </div>
+            </div>
+            <div class="grp">
+              <div class="lab">Where you sell <span style="text-transform:none;letter-spacing:0;font-weight:500">— all that apply</span></div>
+              <div class="opts" role="group" aria-label="Where you sell">
+                <button type="button" data-ch="direct" aria-pressed="true"><span class="tick"><svg><use href="#i-tickbare"></use></svg></span>Own site</button>
+                <button type="button" data-ch="trade" aria-pressed="false"><span class="tick"><svg><use href="#i-tickbare"></use></svg></span>Wholesale</button>
+                <button type="button" data-ch="store" aria-pressed="false"><span class="tick"><svg><use href="#i-tickbare"></use></svg></span>App store</button>
+              </div>
+            </div>
+            <p class="readback" id="readback"></p>
+          </div>
+        </section>
+      </div>
+
+      <div class="sect">
+        <h2>Calculators</h2>
+        <span class="badge sale">Per sale</span>
+        <span class="badge sandbox">Sandbox</span>
+        <small>Costs that move with volume.</small>
+      </div>
+
+      <div class="cards">
+        <div class="calc c1">
+          <div class="ch"><span class="ico"><span class="num">1</span><svg><use href="#i-calc"></use></svg></span>
+            <div><h3 id="t1"></h3><div class="promise" id="p1"></div></div></div>
+          <p class="desc" id="d1"></p>
+          <div class="need"><h4>What you'll need</h4><div class="chips" id="n1"></div></div>
+          <div class="cfoot">
+            <div class="state done"><svg><use href="#i-check"></use></svg>Pro 5000 currently £22.10</div>
+            <button class="go" type="button">Open calculator<svg><use href="#i-arrow"></use></svg></button>
+          </div>
+        </div>
+
+        <div class="calc c2">
+          <div class="ch"><span class="ico"><span class="num">2</span><svg><use href="#i-tag"></use></svg></span>
+            <div><h3 id="t2"></h3><div class="promise" id="p2"></div></div></div>
+          <p class="desc" id="d2"></p>
+          <div class="need"><h4>What you'll need</h4><div class="chips" id="n2"></div></div>
+          <div class="cfoot">
+            <div class="state done"><svg><use href="#i-check"></use></svg>Pro 5000 currently £149.00</div>
+            <button class="go" type="button">Open calculator<svg><use href="#i-arrow"></use></svg></button>
+          </div>
+        </div>
+
+        <div class="calc c3">
+          <div class="ch"><span class="ico"><span class="num">3</span><svg><use href="#i-pct"></use></svg></span>
+            <div><h3 id="t3"></h3><div class="promise" id="p3"></div></div></div>
+          <p class="desc" id="d3"></p>
+          <div class="need"><h4>What you'll need</h4><div class="chips" id="n3"></div></div>
+          <div class="cfoot">
+            <div class="state next">Uses the price you set in here</div>
+            <button class="go" type="button">Open calculator<svg><use href="#i-arrow"></use></svg></button>
+          </div>
+        </div>
+
+        <div class="calc c4 hide" id="card4">
+          <div class="ch"><span class="ico"><span class="num">4</span><svg><use href="#i-repeat"></use></svg></span>
+            <div><h3>Recurring revenue</h3><div class="promise">See what a customer is worth over time.</div></div></div>
+          <p class="desc" id="d4"></p>
+          <div class="need"><h4>What you'll need</h4><div class="chips" id="n4"></div></div>
+          <div class="cfoot">
+            <div class="state next">Shown because you charge a subscription</div>
+            <button class="go" type="button">Open calculator<svg><use href="#i-arrow"></use></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sect">
+        <h2>Running costs</h2>
+        <span class="badge month">Per month</span>
+        <small>What you pay whether you sell one or a thousand.</small>
+      </div>
+
+      <div class="panel opex">
+        <div class="left">
+          <div class="ch"><span class="ico"><span class="num">5</span><svg><use href="#i-building"></use></svg></span>
+            <div><h3>Running costs &amp; break-even</h3><div class="promise">What you must sell each month to keep the lights on.</div></div></div>
+          <p class="desc">Rent, salaries, software and marketing don't care how much you sell. Add them up once — shared across every product — and Branditect works out the volume that covers them, and what your real floor price is.</p>
+          <div class="need"><h4>What you'll need — monthly totals, not receipts</h4>
+            <div class="chips"><span>Rent &amp; premises</span><span>Salaries</span><span>Software &amp; tools</span><span>Marketing</span><span>Other overheads</span></div>
+          </div>
+        </div>
+        <div class="sums">
+          <div class="r">Running costs <b>£8,400 / mo</b></div>
+          <div class="r">Contribution per sale <b>£102.07</b></div>
+          <div class="be">
+            <div class="lbl">Break-even</div>
+            <div class="big">83 <span id="beunit">units</span> / mo</div>
+            <div class="sub">Below this you lose money however healthy the margin looks. At 240 a month, operating profit is <b>£16,097</b>.</div>
+          </div>
+          <button class="go" type="button">Open calculator<svg><use href="#i-arrow"></use></svg></button>
+        </div>
+      </div>
+
+      <div class="formula">
+        <em>Revenue</em><span class="op">−</span><em>cost of each sale</em><span class="op">=</span><em class="g">gross profit</em>
+        <span class="op">·</span>
+        <em class="g">gross profit</em><span class="op">−</span><em>running costs</em><span class="op">=</span><em class="b">operating profit</em>
+      </div>
+
+      <div class="disc">
+        <svg><use href="#i-info"></use></svg>
+        <p>These are calculations from the figures you enter, not advice. Check them against your own accounts before you change a price — tax treatment and platform fees vary by market and can move a margin by several points.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="notes">
+    <h4>What changed</h4>
+    <div class="notegrid">
+      <div><span class="add">Layout</span><b>Home's structure, applied</b><p>Page title, then an orange hero beside a white panel at the same 1.55 / 1 split as Home, then a section heading, then cards. Five zones instead of eight — the flow strip folded into the card states, where it was always more useful.</p></div>
+      <div><span class="add">Layout</span><b>The setup is a panel, not a row of loose toggles</b><p>Three groups inside one bordered card with its own heading, exactly like "What's next". The read-back sentence sits at the bottom of the panel where it summarises rather than floats.</p></div>
+      <div><span class="add">Layout</span><b>Buttons line up</b><p>Every card's state line and button sit in a footer pinned with <code>margin-top:auto</code>. Descriptions can run different lengths and the row still reads as one horizon.</p></div>
+      <div><span class="add">Architecture</span><b>Calculators are a sandbox</b><p>They read from a product to prefill, and they never write back. One explicit handoff — <em>Apply to product</em> — opens the product card with the field filled in, for you to confirm and save. Prefill isn't a write.</p></div>
+      <div><span class="add">Architecture</span><b>The product card is the live version</b><p>Which means no live/draft state machine and no "promote to live". Saved calculator runs are permanently what-ifs, because live isn't a state a scenario can be in. Your instinct made this simpler, not smaller.</p></div>
+      <div><b>Running costs stay shared</b><p>OpEx is one business-level set, not per product. Rent isn't a property of a hair dryer. Break-even is then computed against a product's contribution, or across the range.</p></div>
+      <div><b>The hero is the state, not the pitch</b><p>Home puts Brand Readiness in the orange. Here it's the equivalent: what's priced, what's weakest, what you must sell. The sentence explains what Numbers is; the tiles say where you stand.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var state = { sell:'physical', charge:'oneoff', ch:{direct:true, trade:false, store:false} };
+
+  function T(){
+    var phys = state.sell === 'physical', rec = state.charge === 'recurring', c = state.ch;
+    var unit = phys ? 'unit' : 'customer';
+    var t1 = phys ? 'True cost per unit' : 'Cost to serve one customer';
+    var d1 = phys
+      ? 'Everything it takes to put one unit in a customer’s hands, and what happens when a cost moves.'
+      : 'Hosting, support time and the fees other people take before the money reaches you.';
+    var n1 = phys ? ['Production cost','Freight &amp; duty','Packaging'] : ['Hosting &amp; infra','Support time'];
+    var n1new = [];
+    if(c.direct) n1new = n1new.concat(phys ? ['Shipping','Returns rate','Payment fees','Ad cost per sale'] : ['Payment fees','Refund rate','Ad cost per sale']);
+    if(c.trade)  n1new = n1new.concat(phys ? ['Carton / pallet','Payment terms'] : ['Reseller commission','Payment terms']);
+    if(c.store)  n1new = n1new.concat(['Store commission %']);
+
+    var n2 = ['Target margin','Tax rate','Cost per ' + unit], n2new = [];
+    if(c.trade) n2new.push('RRP','Retailer multiple');
+    if(c.store) n2new.push('Store commission %');
+    if(rec)     n2new.push('Billing period');
+
+    var n3 = ['Discount ceiling','Expected volume'], n3new = [];
+    if(c.direct && phys) n3new.push('Free-ship threshold','Average basket');
+    if(c.direct && !phys) n3new.push('Bundle contents');
+    if(c.trade) n3new.push('Price break tiers','MOQ');
+    if(rec)     n3new.push('Annual discount %');
+
+    return {
+      t1:t1, p1:'Know what every sale really costs.', d1:d1, n1:n1, n1new:n1new,
+      t2:'Pricing &amp; margin', p2:'Find the price that gives you the margin you want.',
+      d2:'Set a target margin and get the price to hit it — or type a price and see what you’d actually keep after tax and fees.',
+      n2:n2, n2new:n2new,
+      t3:'Offers &amp; discounts', p3:'Know what you can give away before it hurts.',
+      d3:'Model the offers you actually run, and find where each one stops being worth it.',
+      n3:n3, n3new:n3new,
+      d4:'Monthly revenue, churn and lifetime value — the numbers that decide whether a discount or an ad budget pays back.',
+      n4:['Recurring price','Churn rate %','Customers','Cost to acquire'],
+      rec:rec
+    };
+  }
+
+  function chips(el, base, extra){
+    el.innerHTML = base.map(function(s){return '<span>'+s+'</span>'}).join('')
+      + (extra||[]).map(function(s){return '<span class="new">'+s+'</span>'}).join('');
+  }
+
+  function readback(){
+    var phys = state.sell==='physical', chs = [];
+    if(state.ch.direct) chs.push('your own site');
+    if(state.ch.trade)  chs.push('wholesale');
+    if(state.ch.store)  chs.push('an app store');
+    var where = chs.length===0 ? '<b>nowhere selected</b>'
+      : chs.length===1 ? '<b>'+chs[0]+'</b>'
+      : '<b>'+chs.slice(0,-1).join('</b>, <b>')+'</b> and <b>'+chs[chs.length-1]+'</b>';
+    return 'Deklan sells <b>'+(phys?'physical goods':'digital products')+'</b>, charged <b>'
+      + (state.charge==='recurring'?'as a subscription':'one-off')+'</b>, through '+where+'.';
+  }
+
+  function render(){
+    var c = T();
+    document.getElementById('readback').innerHTML = readback();
+    document.getElementById('beunit').textContent =
+      state.sell==='physical' ? 'units' : (state.charge==='recurring' ? 'subscribers' : 'sales');
+    [1,2,3].forEach(function(i){
+      document.getElementById('t'+i).innerHTML = c['t'+i];
+      document.getElementById('p'+i).innerHTML = c['p'+i];
+      document.getElementById('d'+i).innerHTML = c['d'+i];
+      chips(document.getElementById('n'+i), c['n'+i], c['n'+i+'new']);
+    });
+    var card4 = document.getElementById('card4');
+    if(c.rec){
+      card4.classList.remove('hide');
+      document.getElementById('d4').innerHTML = c.d4;
+      chips(document.getElementById('n4'), c.n4, []);
+    } else card4.classList.add('hide');
+  }
+
+  document.querySelectorAll('[data-sell]').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('[data-sell]').forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true'); state.sell=b.dataset.sell; render(); });
+  });
+  document.querySelectorAll('[data-charge]').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('[data-charge]').forEach(function(x){x.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true'); state.charge=b.dataset.charge; render(); });
+  });
+  document.querySelectorAll('[data-ch]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.ch; state.ch[k]=!state.ch[k];
+      b.setAttribute('aria-pressed', state.ch[k]?'true':'false'); render(); });
+  });
+
+  render();
+</script>

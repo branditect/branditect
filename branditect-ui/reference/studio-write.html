@@ -1,0 +1,376 @@
+<title>Studio · Write</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6; --rule-3:#ddddf1;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0; --tint-1:#fef0ea;
+    --green:#2fbf71; --green-wash:#e8f6ee; --green-ink:#1c7a48;
+    --navy:#1d2748; --slate:#4a6ea8; --purple:#6b53ac;
+    --lav-line:#ddd0f4; --lav-ink:#5b4a80; --lav-wash:#f5f0fd;
+    --blue-ink:#3c5a8f; --teal-ink:#2f6b62;
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 92%);
+    --grad-mark:linear-gradient(135deg,#f16d2c,#fe4401);
+    --grad-images:linear-gradient(129deg,#ede6fc 17%,#d8c9f9 83%);
+    --grad-numbers:linear-gradient(128deg,#e8effd 22%,#d0dbf7 95%);
+    --grad-assets:linear-gradient(123deg,#e6f4f1 28%,#b3cfcb 83%);
+    --grad-more:linear-gradient(120deg,#fdf3f0 18%,#fbe0d9 92%);
+    --grad-pink:linear-gradient(126deg,#fdeef3 14%,#f7dbe6 88%);
+    --r-panel:16px; --r-card:12px; --r-tile:10px; --r-pill:50px;
+    --shadow:0 6px 10px rgba(20,20,26,.06),0 1px 1px rgba(20,20,26,.04);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,p{margin:0} svg{display:block} button{font:inherit}
+    /* This mockup shows the CONTENT AREA only. In the app it renders inside
+     app/(app)/layout.tsx — the sidebar stays, exactly as on every other page.
+     Width matches the space left beside the 228px sidebar. */
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 22px 70px}
+
+  /* ---------- head ---------- */
+  .head{display:flex;align-items:flex-start;gap:18px;margin-bottom:20px}
+  .kick{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent)}
+  .head h1{font-size:30px;font-weight:700;letter-spacing:-1px;margin-top:6px}
+  .head .sub{font-size:var(--fs-body);font-weight:400;color:var(--muted);margin-top:6px;max-width:62ch}
+  .libbtn{
+    margin-left:auto;display:inline-flex;align-items:center;gap:8px;background:#fff;
+    border:1px solid var(--rule-2);border-radius:var(--r-tile);padding:11px 17px;
+    font-size:var(--fs-sm);font-weight:700;color:var(--ink-2);cursor:pointer;flex:none;
+  }
+  .libbtn svg{width:15px;height:15px;fill:var(--accent)}
+  .libbtn .n{background:var(--tint-1);color:var(--accent-dark);border-radius:var(--r-pill);padding:1px 8px;font-size:var(--fs-2xs);font-weight:800}
+
+  /* ---------- layout ---------- */
+  .cols{display:grid;grid-template-columns:372px minmax(0,1fr);gap:18px;align-items:start}
+  .brief{position:sticky;top:20px;background:#fff;border:1px solid var(--rule-2);border-radius:var(--r-panel);padding:20px;box-shadow:var(--shadow)}
+
+  .step{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+  .step .n{
+    width:22px;height:22px;flex:none;border-radius:7px;background:var(--tint-1);
+    display:grid;place-items:center;font-size:var(--fs-2xs);font-weight:800;color:var(--accent);
+  }
+  .step h3{font-size:var(--fs-h3,16px);font-weight:700;letter-spacing:-.3px}
+  .step .opt{margin-left:auto;font-size:var(--fs-2xs);font-weight:600;color:var(--faint)}
+
+  /* format cards */
+  .fmts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .fmt{
+    all:unset;box-sizing:border-box;cursor:pointer;border-radius:var(--r-card);
+    padding:12px 13px;display:flex;flex-direction:column;gap:8px;min-height:74px;position:relative;
+  }
+  .fmt .ic{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.66);display:grid;place-items:center}
+  .fmt .ic svg{width:14px;height:14px;fill:currentColor}
+  .fmt .t{font-size:var(--fs-sm);font-weight:700;letter-spacing:-.2px;line-height:1.25}
+  .f-ad{background:var(--grad-more);color:var(--accent-dark)}
+  .f-em{background:var(--grad-images);color:var(--purple)}
+  .f-ig{background:var(--grad-pink);color:#8f3d60}
+  .f-li{background:var(--grad-numbers);color:var(--blue-ink)}
+  .f-pd{background:var(--grad-assets);color:var(--teal-ink)}
+  .f-cs{background:#f1f0ee;color:var(--muted)}
+  .fmt.on{box-shadow:inset 0 0 0 2px var(--accent)}
+  .fmt.on::after{
+    content:"";position:absolute;top:9px;right:9px;width:16px;height:16px;border-radius:50%;
+    background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 19 2 12l2.1-2.1L9 14.8 19.9 3.9 22 6z'/%3E%3C/svg%3E") center/9px no-repeat;
+  }
+  .fmt.other{
+    background:#fff;box-shadow:inset 0 0 0 1.5px var(--rule-3);color:var(--muted);
+    grid-column:1 / -1;flex-direction:row;align-items:center;gap:10px;min-height:0;padding:11px 13px;
+  }
+  .fmt.other .t{font-weight:600}
+
+  /* about */
+  .ta{
+    width:100%;min-height:104px;resize:vertical;margin-top:2px;
+    border:1.5px solid var(--rule-2);border-radius:var(--r-card);background:#fff;
+    padding:13px 15px;font:inherit;font-size:var(--fs-body);font-weight:500;color:var(--ink);line-height:1.55;
+  }
+  .ta::placeholder{color:var(--faint);font-weight:400}
+  .ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-1)}
+  .egs{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .eg{
+    all:unset;box-sizing:border-box;cursor:pointer;background:var(--lav-wash);
+    border:1px solid var(--lav-line);border-radius:var(--r-pill);padding:6px 11px;
+    font-size:var(--fs-2xs);font-weight:600;color:var(--lav-ink);
+  }
+  .eg:hover{border-color:var(--accent-line);color:var(--accent-dark);background:var(--tint-1)}
+  .eghint{font-size:var(--fs-2xs);font-weight:500;color:var(--faint);margin-top:8px}
+
+  /* options */
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .orow{display:flex;align-items:center;gap:10px}
+  .orow .k{font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);width:96px;flex:none}
+  .seg{display:flex;gap:5px;background:var(--tile);border-radius:var(--r-tile);padding:3px}
+  .seg button{
+    all:unset;cursor:pointer;padding:6px 12px;border-radius:8px;
+    font-size:var(--fs-xs);font-weight:700;color:var(--muted);
+  }
+  .seg button.on{background:#fff;color:var(--accent-dark);box-shadow:0 1px 2px rgba(20,20,26,.08)}
+  .sel{
+    flex:1;border:1px solid var(--rule-2);border-radius:var(--r-tile);background:#fff;
+    padding:9px 12px;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);cursor:pointer;
+    display:flex;align-items:center;gap:8px;
+  }
+  .sel .th{width:22px;height:22px;border-radius:6px;background:var(--tile);flex:none}
+  .sel .ch{margin-left:auto;color:var(--faint);font-size:9px}
+
+  .gen{
+    all:unset;box-sizing:border-box;cursor:pointer;width:100%;margin-top:18px;
+    display:flex;align-items:center;justify-content:center;gap:9px;height:50px;
+    border-radius:var(--r-card);background:var(--grad-hero);color:#fff;font-size:15px;font-weight:700;
+    filter:drop-shadow(0 8px 14px rgba(200,60,20,.3));
+  }
+  .gen svg{width:17px;height:17px;fill:currentColor}
+
+  .source{
+    display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding-top:13px;
+    border-top:1px solid var(--rule);font-size:var(--fs-2xs);font-weight:500;color:var(--muted);line-height:1.5;
+  }
+  .source svg{width:14px;height:14px;fill:var(--accent);flex:none;margin-top:1px}
+  .source b{color:var(--ink-2);font-weight:700}
+
+  /* ---------- output ---------- */
+  .outhead{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .outhead h2{font-size:20px;font-weight:700;letter-spacing:-.5px}
+  .outhead .meta{font-size:var(--fs-xs);font-weight:500;color:var(--muted-2)}
+  .outhead .re{
+    margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:#fff;
+    border:1px solid var(--rule-2);border-radius:var(--r-pill);padding:8px 14px;
+    font-size:var(--fs-xs);font-weight:700;color:var(--ink-2);cursor:pointer;
+  }
+  .outhead .re svg{width:13px;height:13px;fill:var(--accent)}
+
+  .draft{
+    background:#fff;border:1px solid var(--rule-2);border-radius:var(--r-panel);
+    padding:20px 22px;margin-bottom:12px;box-shadow:var(--shadow);position:relative;
+  }
+  .draft.pinned{border-color:var(--accent-line);background:linear-gradient(180deg,#fffaf8,#fff 120px)}
+  .dtop{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+  .dtag{
+    font-size:var(--fs-micro);font-weight:800;letter-spacing:1px;text-transform:uppercase;
+    color:var(--accent);background:var(--tint-1);border-radius:var(--r-pill);padding:4px 10px;
+  }
+  .dlen{font-size:var(--fs-2xs);font-weight:600;color:var(--faint)}
+  .dacts{margin-left:auto;display:flex;gap:6px}
+  .act{
+    all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--rule-2);border-radius:9px;padding:7px 11px;
+    font-size:var(--fs-xs);font-weight:700;color:var(--ink-2);background:#fff;
+  }
+  .act:hover{border-color:var(--accent-line);color:var(--accent-dark)}
+  .act svg{width:13px;height:13px;fill:currentColor}
+  .act.on{background:var(--tint-1);border-color:var(--accent-line);color:var(--accent-dark)}
+
+  .body{font-size:15.5px;font-weight:500;line-height:1.68;color:var(--ink-2);white-space:pre-wrap}
+  .body strong{font-weight:700;color:var(--ink)}
+  .dfoot{
+    display:flex;align-items:center;gap:8px;margin-top:15px;padding-top:13px;border-top:1px solid var(--rule);
+    font-size:var(--fs-2xs);font-weight:600;color:var(--muted-2);flex-wrap:wrap;
+  }
+  .chipsrc{background:var(--tile);border-radius:var(--r-pill);padding:4px 10px;font-weight:600}
+  .chipsrc.warn{background:#fdf2e6;color:#9a6a1a}
+
+  /* skeleton draft */
+  .sk{background:linear-gradient(90deg,#f1eff4 25%,#f9f7fb 50%,#f1eff4 75%);background-size:200% 100%;
+      animation:sh 1.2s infinite;border-radius:5px;display:block}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  /* notes */
+  .notes{margin-top:30px;background:#fff;border:1px solid var(--rule-2);border-radius:var(--r-panel);padding:22px 24px}
+  .notes h3{font-size:16px;font-weight:700}
+  .notes .s{font-size:var(--fs-xs);color:var(--muted-2);font-weight:400;margin-top:3px}
+  .notes ul{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+  .notes li{font-size:var(--fs-sm);color:var(--ink-2);line-height:1.55;padding-left:15px;position:relative}
+  .notes li::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .notes li b{color:var(--ink)}
+
+  @media (max-width:1080px){ .cols{grid-template-columns:1fr} .brief{position:static} }
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="i-ad" viewBox="0 0 24 24"><path d="M3 10v4h3l5 4V6L6 10zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4M14 2.2v2.1a7.7 7.7 0 0 1 0 15.4v2.1a9.8 9.8 0 0 0 0-19.6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5zm2.2-.3 6.8 5 6.8-5z"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5m5 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9m0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5M17.8 6a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4"/></symbol>
+  <symbol id="i-li" viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m2.5 2.4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2M5 18h3v-8H5zm5 0h3v-4.4c0-1.2.5-1.8 1.4-1.8s1.3.6 1.3 1.8V18h3v-5c0-2.4-1.2-3.4-2.9-3.4-1.3 0-1.9.7-2.3 1.3V10h-3.5z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M7 7V6a5 5 0 0 1 10 0v1h3v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7zm2 0h6V6a3 3 0 0 0-6 0z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 4z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.2 6.1L20.5 10l-6.3 2.2L12 18.4 9.8 12.2 3.5 10l6.3-1.9z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M14 2 22 10l-3.2 1.1-3 3 .5 4.7L14 21l-4.2-4.2L4 22l-1-1 5.2-5.8L4 10l2.2-2.3 4.7.5 3-3z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 3h10a2 2 0 0 1 2 2v12h-2V5H8zM5 7h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M18.4 7.6A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4z"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24"><path d="M4 3h4v18H4zm6 0h4v18h-4zm7.2.6 3.6 17.6-3.9.8L13.3 4.4z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M9 2a3.5 3.5 0 0 0-3.4 2.7A3.5 3.5 0 0 0 3 8a3.5 3.5 0 0 0 1 2.5A3.5 3.5 0 0 0 3 13a3.5 3.5 0 0 0 2.6 3.4A3.5 3.5 0 0 0 9 22h2V2zm4 0v20h2a3.5 3.5 0 0 0 3.4-2.6A3.5 3.5 0 0 0 21 13a3.5 3.5 0 0 0-1-2.5A3.5 3.5 0 0 0 21 8a3.5 3.5 0 0 0-2.6-3.3A3.5 3.5 0 0 0 15 2z"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+
+  <div class="head">
+    <div>
+      <div class="kick">Studio</div>
+      <h1>Write</h1>
+      <p class="sub">Two answers and you have a draft. Everything it writes obeys your strategy, your tone of voice and your real product facts.</p>
+    </div>
+    <button class="libbtn"><svg><use href="#i-lib"></use></svg>Library<span class="n">12</span></button>
+  </div>
+
+  <div class="cols">
+
+    <!-- =================== BRIEF =================== -->
+    <aside class="brief">
+
+      <div class="step"><span class="n">1</span><h3>What are we writing?</h3></div>
+      <div class="fmts">
+        <button class="fmt f-ad on"><span class="ic"><svg><use href="#i-ad"></use></svg></span><span class="t">Ad copy</span></button>
+        <button class="fmt f-em"><span class="ic"><svg><use href="#i-mail"></use></svg></span><span class="t">Email</span></button>
+        <button class="fmt f-ig"><span class="ic"><svg><use href="#i-ig"></use></svg></span><span class="t">Instagram caption</span></button>
+        <button class="fmt f-li"><span class="ic"><svg><use href="#i-li"></use></svg></span><span class="t">LinkedIn post</span></button>
+        <button class="fmt f-pd"><span class="ic"><svg><use href="#i-bag"></use></svg></span><span class="t">Product description</span></button>
+        <button class="fmt f-cs"><span class="ic"><svg><use href="#i-help"></use></svg></span><span class="t">Customer message</span></button>
+        <button class="fmt other"><svg style="width:14px;height:14px;fill:currentColor"><use href="#i-plus"></use></svg><span class="t">Something else — tell us what</span></button>
+      </div>
+
+      <div class="step" style="margin-top:20px"><span class="n">2</span><h3>What's it about?</h3></div>
+      <textarea class="ta" id="about" placeholder="One or two lines is enough. Say what happened and who it's for."></textarea>
+      <div class="egs">
+        <button class="eg">The new SORBIFY OIL launch</button>
+        <button class="eg">A price change, going out to distributors</button>
+        <button class="eg">Warehouse closed for maintenance next week</button>
+      </div>
+      <p class="eghint">Tap an example to fill it in, then edit. These change with the format you picked.</p>
+
+      <div class="step" style="margin-top:20px"><span class="n">3</span><h3>Options</h3><span class="opt">optional</span></div>
+      <div class="opts">
+        <div class="orow">
+          <span class="k">About a product</span>
+          <button class="sel"><span class="th"></span>SORBIFY OIL<span class="ch">▾</span></button>
+        </div>
+        <div class="orow">
+          <span class="k">Length</span>
+          <div class="seg"><button>Short</button><button class="on">Medium</button><button>Long</button></div>
+        </div>
+        <div class="orow">
+          <span class="k">Drafts</span>
+          <div class="seg"><button>1</button><button class="on">3</button></div>
+        </div>
+      </div>
+
+      <button class="gen"><svg><use href="#i-spark"></use></svg>Write it</button>
+
+      <div class="source">
+        <svg><use href="#i-book"></use></svg>
+        <div>Writes from <b>your strategy, tone of voice, Boundaries and 3 product records</b>. It won't invent a fact that isn't in there — if something's missing it says so instead of guessing.</div>
+      </div>
+    </aside>
+
+    <!-- =================== DRAFTS =================== -->
+    <main>
+      <div class="outhead">
+        <h2>Drafts</h2>
+        <span class="meta">Ad copy · SORBIFY OIL · 14:22</span>
+        <button class="re"><svg><use href="#i-redo"></use></svg>Write 3 more</button>
+      </div>
+
+      <!-- pinned -->
+      <article class="draft pinned">
+        <div class="dtop">
+          <span class="dtag">Draft 1</span><span class="dlen">38 words</span>
+          <div class="dacts">
+            <button class="act on"><svg><use href="#i-pin"></use></svg>Saved</button>
+            <button class="act"><svg><use href="#i-copy"></use></svg>Copy</button>
+            <button class="act"><svg><use href="#i-redo"></use></svg>Again</button>
+          </div>
+        </div>
+        <div class="body">The spill happens at 6am. You need it gone before the shift starts.
+
+SORBIFY OIL lifts oil off smooth and uneven floors in one pass. Non-toxic, biodegradable, and it holds 12 times its own weight.
+
+See the absorbency test</div>
+        <div class="dfoot">
+          <span class="chipsrc">Tone: Confident &amp; precise</span>
+          <span class="chipsrc">Fact: 12× weight, from Product range specs</span>
+        </div>
+      </article>
+
+      <article class="draft">
+        <div class="dtop">
+          <span class="dtag">Draft 2</span><span class="dlen">31 words</span>
+          <div class="dacts">
+            <button class="act"><svg><use href="#i-pin"></use></svg>Save</button>
+            <button class="act"><svg><use href="#i-copy"></use></svg>Copy</button>
+            <button class="act"><svg><use href="#i-redo"></use></svg>Again</button>
+          </div>
+        </div>
+        <div class="body">Most absorbents smear. This one lifts.
+
+SORBIFY OIL clears oil from smooth and uneven surfaces without spreading it, holds 12 times its weight, and breaks down after.
+
+Read the test results</div>
+        <div class="dfoot">
+          <span class="chipsrc">Tone: Confident &amp; precise</span>
+          <span class="chipsrc">Fact: 12× weight, from Product range specs</span>
+        </div>
+      </article>
+
+      <article class="draft">
+        <div class="dtop">
+          <span class="dtag">Draft 3</span><span class="dlen">writing…</span>
+          <div class="dacts">
+            <button class="act" disabled style="opacity:.4"><svg><use href="#i-pin"></use></svg>Save</button>
+          </div>
+        </div>
+        <span class="sk" style="height:15px;width:72%"></span>
+        <span class="sk" style="height:15px;width:94%;margin-top:9px"></span>
+        <span class="sk" style="height:15px;width:56%;margin-top:9px"></span>
+        <div class="dfoot"><span class="chipsrc warn">Checking every claim against your product records…</span></div>
+      </article>
+    </main>
+  </div>
+
+  <!-- =================== NOTES =================== -->
+  <div class="notes">
+    <h3>What this design decides</h3>
+    <p class="s">Reference for Studio ▸ Write. Colours are the Home gradients; no new families.</p>
+    <p style="margin-top:12px;font-size:13px;font-weight:600;color:var(--accent-dark);background:var(--tint-1);border:1px solid var(--accent-line);border-radius:10px;padding:11px 14px">
+      This file shows the content area only. In the app it renders inside
+      <code>app/(app)/layout.tsx</code> — <b>the left sidebar stays</b>, same as every other page.
+      Do not build a full-screen layout for this route.
+    </p>
+    <ul>
+      <li><b>Two required answers, everything else optional.</b> Format and subject are steps 1 and 2; product, length and draft count sit under "Options" and are pre-filled. Someone who wants copy in ten seconds gets it, and someone who wants control has it in the same panel.</li>
+      <li><b>The brief stays on screen while drafts appear beside it.</b> Writing is iterating on the brief, not filling a form once — a wizard that hides the brief behind the result forces a back-navigation on every attempt.</li>
+      <li><b>Examples are tappable and format-specific.</b> "Warehouse closed for maintenance next week" teaches the shape of a good subject line faster than any helper text, and it changes when you switch format. Same principle as the onboarding placeholder matrix: show the standard, don't describe it.</li>
+      <li><b>"Something else — tell us what" is a real seventh option,</b> not a hidden dropdown. The six named formats cover most work; the seventh is what stops the tool feeling like it can only do six things.</li>
+      <li><b>Save, not Pin.</b> Saved drafts go to Studio ▸ Library, which is the one home for saved outputs — the same word the nav already uses. Library carries a count in the header so the button means something before you've clicked it.</li>
+      <li><b>Three drafts by default, not one.</b> Choosing between options is faster and more honest than judging a single draft in isolation, and it stops the user editing the first thing they see out of politeness.</li>
+      <li><b>Every draft shows what it drew on.</b> "Fact: 12× weight, from Product range specs" is the line that makes the output trustworthy — and it's how someone spots a claim that came from nowhere. It's the Knowledge page's closed-book promise, kept at the point of output.</li>
+      <li><b>The source line under the button says what it can't do.</b> "It won't invent a fact that isn't in there" sets the expectation before generation, which is where expectations actually get set.</li>
+      <li><b>Streaming draft shows a status, not a spinner.</b> "Checking every claim against your product records" tells the user what the wait is buying them.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".fmt").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".fmt").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+  }));
+  document.querySelectorAll(".seg").forEach(g=>g.querySelectorAll("button").forEach(b=>
+    b.addEventListener("click",()=>{g.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");})));
+  document.querySelectorAll(".eg").forEach(e=>e.addEventListener("click",()=>{
+    document.getElementById("about").value = e.textContent;
+  }));
+  document.querySelectorAll(".act").forEach(a=>{
+    if(a.textContent.trim().startsWith("Save")||a.textContent.trim()==="Saved")
+      a.addEventListener("click",()=>{
+        const on=a.classList.toggle("on");
+        a.lastChild.textContent = on ? "Saved" : "Save";
+        a.closest(".draft").classList.toggle("pinned",on);
+      });
+  });
+</script>

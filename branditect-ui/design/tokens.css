@@ -1,0 +1,111 @@
+/* ============================================================
+   Branditect design tokens
+   Colours and radii lifted from Figma WyphBCrLRfCaUkqZb2Fskf,
+   frame 58:13755. Type scale set to Airbnb density.
+
+   Import once at the app root. Never write a raw hex in a
+   component — if a colour is missing here, that's a design
+   decision, not a CSS one.
+   ============================================================ */
+
+:root{
+  /* ---- type scale ---------------------------------------- */
+  --fs-display: 26px;   /* page title — "Good morning, Alex"      */
+  --fs-h2:      22px;   /* section heading — "Studio"             */
+  --fs-h3:      16px;   /* card heading — "What's next"           */
+  --fs-body:    14px;   /* default body                            */
+  --fs-sm:      13px;   /* dense body, list titles                 */
+  --fs-xs:      12px;   /* meta, timestamps, card descriptions     */
+  --fs-2xs:     11px;   /* sublabels                               */
+  --fs-micro:   10px;   /* uppercase labels, tile captions         */
+  --fs-score:   46px;   /* the readiness number — one use only     */
+
+  /* Weights. Body default is 500, not 400 — the brand runs
+     slightly heavier than a stock UI. 400 is for meta only. */
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semi:    600;
+  --fw-bold:    700;
+  --fw-black:   800;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* ---- ink ------------------------------------------------ */
+  --ink:       #15151b;
+  --ink-2:     #3a3a45;
+  --ink-3:     #3f3f4a;
+  --muted:     #6f6f8a;
+  --muted-2:   #8b8b97;
+  --faint:     #aeaeb8;
+  --faint-2:   #9a9aa4;
+
+  /* ---- surfaces ------------------------------------------- */
+  --page:      #f4f3f2;
+  --card:      #ffffff;
+  --tile:      #f4f3f2;
+  --tile-2:    #f1f0ee;
+  --rule:      #edecea;
+  --rule-2:    #e6e6e6;
+  --rule-3:    #ddddf1;
+
+  /* ---- accent --------------------------------------------- */
+  --accent:      #f0562a;
+  --accent-dark: #e8481f;
+  --accent-line: #f6b7a0;
+
+  /* The warm tint ladder. Five deliberate steps — icon tiles
+     walk down it so a list of rows reads as a set, not a stripe. */
+  --tint-1: #fef0ea;
+  --tint-2: #fdede6;
+  --tint-3: #fdeee7;
+  --tint-4: #fbe7e2;
+  --tint-5: #fcedeb;
+
+  /* ---- semantic / accent-adjacent ------------------------- */
+  --green:     #2fbf71;   /* passed checks, "TRAINED" */
+  --navy:      #1d2748;   /* chat bubble */
+  --lavender:  #e8dff6;   /* cited-source chip */
+  --plan-note: #a98a80;   /* plan card secondary text */
+
+  /* ---- gradients ------------------------------------------ */
+  --grad-hero:    linear-gradient(92.52deg, #f16d2c 11.42%, #fe4401 29.59%);
+  --grad-mark:    linear-gradient(135deg, #f16d2c, #fe4401);
+  --grad-write:   linear-gradient(116.565deg, rgb(103,139,191) 17.664%, rgb(67,99,148) 79.542%);
+  --grad-images:  linear-gradient(128.944deg, rgb(237,230,252) 17.382%, rgb(216,201,249) 83.306%);
+  --grad-numbers: linear-gradient(127.831deg, rgb(232,239,253) 21.838%, rgb(208,219,247) 94.881%);
+  --grad-assets:  linear-gradient(123.041deg, rgb(230,244,241) 28.392%, rgb(179,207,203) 83.262%);
+  --grad-more:    linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%);
+  --grad-chat:    linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%);
+
+  /* ---- radii ---------------------------------------------- */
+  --r-panel: 16px;  /* sidebar, hero, white panels */
+  --r-card:  12px;  /* studio cards, plan card     */
+  --r-tile:  10px;  /* icon tiles, chips, buttons  */
+  --r-nav:   10px;  /* nav rows                    */
+  --r-pill:  50px;
+
+  /* ---- elevation ------------------------------------------ */
+  /* Use filter: var(--shadow-panel) rather than box-shadow so the
+     shadow follows the rounded corners of gradient-filled cards. */
+  --shadow-panel: drop-shadow(0 6px 10px rgba(20,20,26,.07)) drop-shadow(0 1px 1px rgba(20,20,26,.04));
+  --shadow-hero:  drop-shadow(0 10px 18px rgba(180,50,10,.18));
+  --shadow-chat:  0 6px 18px -12px rgba(20,20,26,.10), 0 1px 2px rgba(20,20,26,.04);
+  --shadow-btn:   drop-shadow(0 1px 1px rgba(20,20,26,.05));
+
+  /* ---- form controls -------------------------------------- */
+  --h-control:   46px;   /* inputs, submit, SSO buttons on auth */
+  --r-control:   12px;
+  --ring-focus:  0 0 0 3px var(--tint-1);   /* with border-color:var(--accent) */
+
+  /* ---- layout --------------------------------------------- */
+  --w-shell:   1480px;
+  --w-authform: 392px;   /* form column max width on /login and /signup */
+  --w-sidebar: 228px;
+  --w-chat:    296px;
+  --gap-app:   12px;
+  --gap-main:  18px;
+
+  /* ---- breakpoints (documentation; use in media queries) --- */
+  /* 1180px — AI Chat rail hides
+      900px — layout stacks to one column */
+}

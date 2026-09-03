@@ -1,0 +1,436 @@
+<title>Knowledge — Images</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-4:#fbe7e2;
+    --green:#2fbf71; --green-wash:#e8f6ee; --green-ink:#1c7a48;
+    --violet:#6a4fb0; --lav-line:#ddd0f4; --lav-ink:#5b4a80; --lav-wash:#f5f0fd;
+    --blue-ink:#3c5a8f; --blue-wash:#e8effd;
+    --grad-hero:linear-gradient(92.52deg,#f16d2c 11.42%,#fe4401 92%);
+    --grad-images:linear-gradient(129deg,#ede6fc 17%,#d8c9f9 83%);
+    --r-panel:18px; --r-card:12px; --r-tile:10px; --r-pill:50px;
+    --shadow-panel:0 6px 10px rgba(20,20,26,.06),0 1px 1px rgba(20,20,26,.04);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,p{margin:0} svg{display:block} button{font:inherit;cursor:pointer}
+  .wrap{max-width:1240px;margin:0 auto;padding:26px 22px 70px}
+
+  /* ============ HEADER ============ */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}
+  .crumb{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted-2)}
+  .head h1{font-size:26px;font-weight:800;letter-spacing:-.6px;margin-top:7px}
+  .head .sub{font-size:var(--fs-sm);color:var(--muted);margin-top:5px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;border:0;border-radius:var(--r-pill);
+    background:var(--accent);color:#fff;padding:10px 18px;font-size:var(--fs-sm);font-weight:700;
+  }
+  .btn:hover{background:var(--accent-dark)}
+  .btn svg{width:17px;height:17px;fill:currentColor}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule-2)}
+  .btn.ghost:hover{background:var(--tint-1);border-color:var(--accent-line)}
+  .btn.ghost svg{fill:var(--accent)}
+
+  /* ============ DROP ZONE ============ */
+  .drop{
+    border:1.5px dashed var(--accent-line);background:var(--tint-1);border-radius:var(--r-panel);
+    padding:22px 24px;display:flex;align-items:center;gap:16px;margin-bottom:18px;
+  }
+  .drop .ic{
+    width:44px;height:44px;border-radius:12px;background:var(--grad-images);
+    display:grid;place-items:center;flex:none;
+  }
+  .drop .ic svg{width:22px;height:22px;fill:var(--violet)}
+  .drop h3{font-size:var(--fs-body);font-weight:700}
+  .drop p{font-size:var(--fs-xs);color:var(--muted);margin-top:3px}
+  .drop .sp{flex:1}
+
+  /* ============ FILTERS ============ */
+  .filters{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:8px}
+  .fld{
+    border:1px solid var(--rule-2);background:var(--card);border-radius:9px;
+    padding:8px 12px;font-size:var(--fs-sm);font-weight:500;color:var(--ink);
+  }
+  .fld:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-4)}
+  .search{flex:1;min-width:230px;display:flex;align-items:center;gap:8px;
+    border:1px solid var(--rule-2);background:var(--card);border-radius:9px;padding:0 12px}
+  .search svg{width:15px;height:15px;fill:var(--muted-2);flex:none}
+  .search input{border:0;outline:0;background:none;flex:1;padding:9px 0;font:inherit;font-size:var(--fs-sm);color:var(--ink)}
+  .search input::placeholder{color:var(--faint)}
+  .toggle{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule-2);background:var(--card);
+    border-radius:var(--r-pill);padding:7px 14px;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);
+  }
+  .toggle.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .toggle .n{font-weight:800}
+  .count{font-size:var(--fs-xs);color:var(--muted);margin-left:auto}
+
+  /* ============ SELECTION BAR ============ */
+  .selbar{
+    display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;
+    border-radius:var(--r-pill);padding:9px 10px 9px 20px;margin:14px 0 18px;
+    box-shadow:0 10px 22px -12px rgba(20,20,26,.5);
+  }
+  .selbar .n{font-size:var(--fs-sm);font-weight:700}
+  .selbar .sp{flex:1}
+  .selbar button{
+    border:0;border-radius:var(--r-pill);padding:8px 15px;font-size:var(--fs-sm);font-weight:700;
+    background:rgba(255,255,255,.14);color:#fff;display:inline-flex;align-items:center;gap:7px;
+  }
+  .selbar button:hover{background:rgba(255,255,255,.24)}
+  .selbar button.primary{background:var(--accent)}
+  .selbar button.primary:hover{background:var(--accent-dark)}
+  .selbar button svg{width:15px;height:15px;fill:currentColor}
+  .selbar .x{background:none;padding:8px 10px}
+
+  /* ============ GRID ============ */
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  @media(max-width:980px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:680px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  .tile{
+    background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+    overflow:hidden;position:relative;transition:border-color .15s,box-shadow .15s;
+  }
+  .tile:hover{border-color:var(--accent-line);box-shadow:var(--shadow-panel)}
+  .tile.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-4)}
+
+  .shot{aspect-ratio:1;position:relative;background:var(--tile);display:grid;place-items:center}
+  .shot .ph{width:100%;height:100%;display:grid;place-items:center;font-size:34px}
+  .a{background:linear-gradient(150deg,#f3ede2,#dcd0bd)}
+  .b{background:linear-gradient(150deg,#e4ecf6,#c2d4ea)}
+  .c{background:linear-gradient(150deg,#efe6f8,#d6c6ef)}
+  .d{background:linear-gradient(150deg,#e9f2ec,#c8dfd1)}
+  .e{background:linear-gradient(150deg,#faece7,#f1cdc0)}
+  .f{background:linear-gradient(150deg,#eceaf3,#cfcbdd)}
+
+  .check{
+    position:absolute;top:9px;left:9px;width:22px;height:22px;border-radius:6px;
+    background:rgba(255,255,255,.9);border:1.5px solid rgba(20,20,26,.18);
+    display:grid;place-items:center;
+  }
+  .check svg{width:13px;height:13px;fill:#fff;opacity:0}
+  .tile.sel .check{background:var(--accent);border-color:var(--accent)}
+  .tile.sel .check svg{opacity:1}
+
+  .flag{
+    position:absolute;top:9px;right:9px;display:inline-flex;align-items:center;gap:5px;
+    background:rgba(20,20,26,.72);color:#fff;border-radius:var(--r-pill);
+    padding:4px 9px;font-size:var(--fs-micro);font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  }
+  .flag svg{width:11px;height:11px;fill:currentColor}
+  .flag.vid{background:rgba(20,20,26,.72)}
+
+  .meta{padding:10px 11px 11px}
+  .fname{
+    font-size:var(--fs-xs);font-weight:600;color:var(--ink-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .kw{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .kw span{
+    font-size:var(--fs-micro);font-weight:600;color:var(--muted);
+    background:var(--tile);border-radius:var(--r-pill);padding:3px 8px;
+  }
+
+  .prod{margin-top:9px;padding-top:9px;border-top:1px solid var(--rule)}
+  .plabel{font-size:var(--fs-micro);font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;background:var(--lav-wash);
+    border:1px solid var(--lav-line);color:var(--lav-ink);border-radius:var(--r-pill);
+    padding:3px 5px 3px 9px;font-size:var(--fs-micro);font-weight:700;
+  }
+  .chip button{border:0;background:none;padding:0;display:grid;place-items:center;
+    width:14px;height:14px;border-radius:50%;color:var(--lav-ink);opacity:.55}
+  .chip button:hover{opacity:1;background:rgba(0,0,0,.07)}
+  .chip svg{width:9px;height:9px;fill:currentColor}
+
+  .tagbtn{
+    display:inline-flex;align-items:center;gap:5px;margin-top:6px;
+    border:1px dashed var(--rule-2);background:none;border-radius:var(--r-pill);
+    padding:4px 10px;font-size:var(--fs-micro);font-weight:700;color:var(--muted);
+  }
+  .tagbtn:hover{border-color:var(--accent);color:var(--accent);border-style:solid}
+  .tagbtn svg{width:11px;height:11px;fill:currentColor}
+
+  .hint{
+    margin-top:6px;font-size:var(--fs-micro);font-weight:600;color:var(--green-ink);
+    background:var(--green-wash);border-radius:7px;padding:5px 8px;line-height:1.35;
+  }
+  .hint b{font-weight:800}
+
+  /* ============ PICKER ============ */
+  .picker{
+    margin-top:26px;background:var(--card);border:1px solid var(--rule-2);
+    border-radius:var(--r-panel);box-shadow:var(--shadow-panel);max-width:430px;overflow:hidden;
+  }
+  .pk-h{padding:16px 18px 13px;border-bottom:1px solid var(--rule)}
+  .pk-h h3{font-size:var(--fs-body);font-weight:800}
+  .pk-h p{font-size:var(--fs-xs);color:var(--muted);margin-top:3px}
+  .pk-s{padding:12px 18px;border-bottom:1px solid var(--rule)}
+  .pk-list{padding:7px 8px;max-height:250px;overflow:auto}
+  .row{
+    display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;
+  }
+  .row:hover{background:var(--tile)}
+  .row .bx{width:19px;height:19px;border-radius:5px;border:1.5px solid var(--rule-2);
+    display:grid;place-items:center;flex:none;background:#fff}
+  .row .bx svg{width:11px;height:11px;fill:#fff;opacity:0}
+  .row.on .bx{background:var(--accent);border-color:var(--accent)}
+  .row.on .bx svg{opacity:1}
+  .row .th{width:32px;height:32px;border-radius:7px;flex:none}
+  .row .nm{font-size:var(--fs-sm);font-weight:700;flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .sku{font-size:var(--fs-micro);font-weight:600;color:var(--faint)}
+  .row .why{font-size:var(--fs-micro);font-weight:700;color:var(--green-ink);
+    background:var(--green-wash);border-radius:var(--r-pill);padding:2px 8px}
+  .pk-f{padding:13px 18px;border-top:1px solid var(--rule);display:flex;gap:9px;align-items:center}
+  .pk-f .sp{flex:1}
+  .pk-f .lnk{font-size:var(--fs-xs);font-weight:700;color:var(--muted);background:none;border:0}
+  .pk-f .lnk:hover{color:var(--ink)}
+
+  .note{
+    margin-top:26px;border-left:3px solid var(--accent-line);background:var(--tint-1);
+    border-radius:0 10px 10px 0;padding:13px 16px;max-width:640px;
+  }
+  .note h4{font-size:var(--fs-sm);font-weight:800}
+  .note p{font-size:var(--fs-xs);color:var(--ink-2);margin-top:5px;line-height:1.55}
+  .sechead{margin:34px 0 14px;font-size:var(--fs-micro);font-weight:800;
+    letter-spacing:1.4px;text-transform:uppercase;color:var(--muted-2)}
+</style>
+
+<div class="wrap">
+
+  <div class="head">
+    <div>
+      <div class="crumb">Knowledge</div>
+      <h1>Images</h1>
+      <div class="sub">Photography, screenshots and video. Tag them to a product and they appear on its card.</div>
+    </div>
+    <button class="btn">
+      <svg viewBox="0 0 24 24"><path d="M12 4l6 6h-4v7h-4v-7H6l6-6zM5 19h14v2H5z"/></svg>
+      Upload
+    </button>
+  </div>
+
+  <div class="drop">
+    <div class="ic">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm2 11h12l-4-5-3 4-2-2-3 3zm2.5-6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+    </div>
+    <div>
+      <h3>Drop images or video here</h3>
+      <p>JPG, PNG, WebP, MP4 · up to 25 MB each</p>
+    </div>
+    <div class="sp"></div>
+    <button class="btn ghost">Choose files</button>
+  </div>
+
+  <div class="filters">
+    <div class="search">
+      <svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 015.5 11.3l4.6 4.6-1.4 1.4-4.6-4.6A7 7 0 1110 3zm0 2a5 5 0 100 10 5 5 0 000-10z"/></svg>
+      <input placeholder="Search names, tags and campaigns">
+    </div>
+    <select class="fld"><option>All categories</option><option>Product</option><option>Brand</option><option>Video</option></select>
+    <select class="fld"><option>All products</option><option>SORBIFY OIL 500ml</option><option>SORBIFY REFILL</option><option>Spill kit</option></select>
+    <button class="toggle on">Untagged <span class="n">14</span></button>
+    <span class="count">6 of 41 images</span>
+  </div>
+
+  <div class="selbar">
+    <span class="n">3 selected</span>
+    <div class="sp"></div>
+    <button class="primary">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/></svg>
+      Tag to a product
+    </button>
+    <button>
+      <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h4V3h4v7h4l-6 6zM5 19h14v2H5z"/></svg>
+      Download
+    </button>
+    <button class="x">
+      <svg viewBox="0 0 24 24"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg>
+    </button>
+  </div>
+
+  <div class="grid">
+
+    <div class="tile sel">
+      <div class="shot">
+        <div class="ph a">🧴</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+        <div class="flag"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/></svg>Primary</div>
+      </div>
+      <div class="meta">
+        <div class="fname">sorbify-500ml-front.jpg</div>
+        <div class="kw"><span>sorbify</span><span>oil</span><span>packshot</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <div class="chips">
+            <span class="chip">SORBIFY OIL 500ml
+              <button><svg viewBox="0 0 24 24"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile sel">
+      <div class="shot">
+        <div class="ph e">🧴</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+      </div>
+      <div class="meta">
+        <div class="fname">sorbify-oil-lifestyle-02.jpg</div>
+        <div class="kw"><span>sorbify</span><span>lifestyle</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <div class="chips">
+            <span class="chip">SORBIFY OIL 500ml
+              <button><svg viewBox="0 0 24 24"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg></button>
+            </span>
+            <span class="chip">Spill kit
+              <button><svg viewBox="0 0 24 24"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile sel">
+      <div class="shot">
+        <div class="ph b">🎬</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+        <div class="flag vid"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z"/></svg>0:24</div>
+      </div>
+      <div class="meta">
+        <div class="fname">absorbency-demo.mp4</div>
+        <div class="kw"><span>demo</span><span>ugc</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <button class="tagbtn">
+            <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+            Tag to a product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="shot">
+        <div class="ph c">🧪</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+      </div>
+      <div class="meta">
+        <div class="fname">sorbify-refill-pack.png</div>
+        <div class="kw"><span>sorbify</span><span>refill</span><span>packshot</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <button class="tagbtn">
+            <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+            Tag to a product
+          </button>
+          <div class="hint">Its tags match <b>SORBIFY REFILL</b>. One click in the picker adds it.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="shot"><div class="ph d">🌿</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+      </div>
+      <div class="meta">
+        <div class="fname">brand-texture-green.jpg</div>
+        <div class="kw"><span>texture</span><span>background</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <button class="tagbtn">
+            <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+            Tag to a product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="shot"><div class="ph f">📦</div>
+        <div class="check"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></div>
+      </div>
+      <div class="meta">
+        <div class="fname">spill-kit-open-detail.jpg</div>
+        <div class="kw"><span>spill kit</span><span>detail</span></div>
+        <div class="prod">
+          <div class="plabel">On these products</div>
+          <div class="chips">
+            <span class="chip">Spill kit
+              <button><svg viewBox="0 0 24 24"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sechead">The picker — the same component the product card's “Tag more” opens</div>
+
+  <div class="picker">
+    <div class="pk-h">
+      <h3>Tag 3 images to a product</h3>
+      <p>They stay in Knowledge. Tagging adds them to the product's card.</p>
+    </div>
+    <div class="pk-s">
+      <div class="search" style="min-width:0">
+        <svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 015.5 11.3l4.6 4.6-1.4 1.4-4.6-4.6A7 7 0 1110 3zm0 2a5 5 0 100 10 5 5 0 000-10z"/></svg>
+        <input placeholder="Search products by name or SKU">
+      </div>
+    </div>
+    <div class="pk-list">
+      <div class="row on">
+        <span class="bx"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <span class="th a"></span>
+        <span class="nm">SORBIFY OIL 500ml <span class="sku">SRB-500</span></span>
+        <span class="why">matches “sorbify”</span>
+      </div>
+      <div class="row">
+        <span class="bx"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <span class="th c"></span>
+        <span class="nm">SORBIFY REFILL <span class="sku">SRB-RF</span></span>
+        <span class="why">matches “sorbify”</span>
+      </div>
+      <div class="row">
+        <span class="bx"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <span class="th f"></span>
+        <span class="nm">Spill kit <span class="sku">SRB-KIT</span></span>
+      </div>
+      <div class="row">
+        <span class="bx"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <span class="th d"></span>
+        <span class="nm">Workshop mat <span class="sku">SRB-MAT</span></span>
+      </div>
+    </div>
+    <div class="pk-f">
+      <button class="lnk">Clear</button>
+      <div class="sp"></div>
+      <button class="btn ghost">Cancel</button>
+      <button class="btn">Tag to 1 product</button>
+    </div>
+  </div>
+
+  <div class="note">
+    <h4>Why the chips are on every tile</h4>
+    <p>An image knowing which products it belongs to is what makes the library trustworthy. Without it
+    you can see what a product has, but never what a file is for — and the only way to check your
+    tagging is to open every product card in turn. The chips answer it at a glance, and removing one
+    unlinks it without touching the file.</p>
+  </div>
+
+</div>

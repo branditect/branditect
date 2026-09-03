@@ -23,6 +23,30 @@ import { join } from "node:path";
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const ROUTES = ["/login", "/signup", "/start", "/start/q/1", "/start/q/7", "/start/resume",
                 "/home", "/brand/strategy", "/brand/visual-identity", "/knowledge/products", "/numbers"];
+
+// A non-empty body was the whole bar, and it was too low. Signed out, the app
+// routes still serve the shell: the sidebar alone is ~750 characters, so
+// /brand/visual-identity "passed" with bodyText=759 while rendering none of the
+// page. Five of the eleven routes were being checked for their nav.
+//
+// Each app route now has to show something only its own <main> can produce.
+// Signed out these routes do not redirect: they render their own empty state,
+// so the marker is a real assertion without a session, and a shell-only render
+// fails instead of passing.
+// Matched against <main>, never the whole document. "Products" is a nav item,
+// so a body-wide match passed on the sidebar — the first version of this check
+// went green on all eleven routes while proving nothing.
+const MARKERS = {
+  "/home":                   /checks left|Brand Rea|What\u2019s next|Whats next/i,
+  "/brand/strategy":         /No strategy yet|Positioning|Audience/i,
+  "/brand/visual-identity":  /logos, colours and typefaces|Logo|Typeface|Palette/i,
+  "/knowledge/products":     /Everything Branditect can write about|No products yet|Add product/i,
+  "/numbers":                /Your product cards hold the real figures|What Numbers does|Break-even/i,
+};
+
+// Set SMOKE_EMAIL and SMOKE_PASSWORD to check the five app routes for real.
+const EMAIL = process.env.SMOKE_EMAIL ?? null;
+const PASSWORD = process.env.SMOKE_PASSWORD ?? null;
 const CHROME = process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
@@ -66,6 +90,30 @@ await send("Runtime.enable");
 
 let failed = 0;
 const lengths = [];
+
+if (EMAIL && PASSWORD) {
+  await send("Page.navigate", { url: BASE + "/login" });
+  await sleep(4000);
+  await send("Runtime.evaluate", {
+    expression: `document.querySelector('input[type=email]').focus()`,
+  });
+  await send("Input.insertText", { text: EMAIL });
+  await send("Runtime.evaluate", {
+    expression: `document.querySelector('input[type=password]').focus()`,
+  });
+  await send("Input.insertText", { text: PASSWORD });
+  await send("Runtime.evaluate", { expression: `document.querySelector('button[type=submit]').click()` });
+  await sleep(7000);
+  const who = await send("Runtime.evaluate", {
+    expression: `location.pathname`, returnByValue: true,
+  });
+  const landed = who.result?.result?.value ?? "";
+  if (landed === "/login") {
+    console.log("could not sign in — the app routes will be reported SKIP");
+  } else {
+    console.log(`signed in, landed on ${landed}`);
+  }
+}
 for (const route of ROUTES) {
   errors = [];
   await send("Page.navigate", { url: BASE + route });
@@ -185,11 +233,40 @@ for (const route of ROUTES) {
     }
   }
 
-  const ok = len > 0 && fatal.length === 0 && !blocked && !railWhy && !chipWhy;
-  if (!ok) failed++;
+  // The marker is read from the whole body, not the 120-character preview,
+  // because the sidebar occupies the first ~750 characters of every app route.
+  const marker = MARKERS[route];
+  let mainText = "", mainLen = 0;
+  if (marker) {
+    const full = await send("Runtime.evaluate", {
+      expression: `JSON.stringify((() => { const m = document.querySelector('main');
+        return { t: m ? m.innerText : "", n: m ? m.innerText.trim().length : 0 }; })())`,
+      returnByValue: true,
+    });
+    try {
+      const parsed = JSON.parse(full.result?.result?.value ?? "{}");
+      mainText = parsed.t ?? ""; mainLen = parsed.n ?? 0;
+    } catch { /* keep defaults */ }
+  }
+  const reachedPage = marker ? marker.test(mainText) : true;
+
+  const hardFail = len === 0 || fatal.length > 0 || blocked || railWhy || chipWhy;
+  const ok = !hardFail && reachedPage;
   const why = blocked ? `  BLOCKED: ${text.slice(0, 60)}`
     : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : railWhy || chipWhy;
-  console.log(`${ok ? "PASS" : "FAIL"}  ${route.padEnd(22)} bodyText=${len}${why}`);
+
+  if (hardFail) {
+    failed++;
+    console.log(`FAIL  ${route.padEnd(22)} bodyText=${len}${why}`);
+  } else if (!reachedPage) {
+    // The shell rendered but the page did not. This is the case the old
+    // bodyText > 0 bar could not see.
+    failed++;
+    console.log(`FAIL  ${route.padEnd(22)} bodyText=${len}  main=${mainLen} — the shell rendered but the page did not`);
+  } else {
+    const scope = marker ? `  main=${mainLen}` : "";
+    console.log(`PASS  ${route.padEnd(22)} bodyText=${len}${scope}${why}`);
+  }
   lengths.push(len);
 }
 

@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { margin, sortByMargin, categoryStyle, type Product } from "./products.ts";
+import { readFileSync } from "node:fs";
+import { margin, sortByMargin, categoryStyle, fromRow, type Product } from "./products.ts";
 
 /** The spec's worked example: the Deklan Pro 5000. */
 const PRO_5000 = {
@@ -67,7 +68,7 @@ function product(over: Partial<Product>): Product {
   return {
     id: "x", name: "x", description: "", category: "", sku: "", tags: [], imageUrl: null,
     retailPrice: 100, taxRatePct: 0, landedCost: 50, currency: "GBP",
-    stockStatus: null, indexed: false, sourceFileCount: 0, imageCount: 0,
+    stockStatus: null, indexed: false,
     usedInOutputCount: 0, ...over,
   };
 }
@@ -107,5 +108,30 @@ describe("categoryStyle", () => {
   it("falls back to neutral rather than picking a colour at random", () => {
     assert.equal(categoryStyle("Something New"), "bg-tile text-ink-2");
     assert.equal(categoryStyle(null), "bg-tile text-muted");
+  });
+});
+
+/**
+ * The stale attachment counts. catalog_products.image_count and
+ * source_file_count are written at import and never updated, so a product with
+ * four tagged images read 0. They are off the Product type; the live numbers
+ * come from product_attachment_counts. This fails if the mapper starts copying
+ * them through again, which is how a number nobody maintains comes back.
+ */
+describe("the product mapper does not carry stale attachment counts", () => {
+  const src = readFileSync("lib/products.ts", "utf8");
+
+  it("does not read image_count off the row", () => {
+    assert.ok(!/row\.image_count/.test(src), "lib/products.ts reads row.image_count again");
+  });
+
+  it("does not read source_file_count off the row", () => {
+    assert.ok(!/row\.source_file_count/.test(src));
+  });
+
+  it("a mapped product exposes neither field", () => {
+    const p = fromRow({ id: "p1", brand_id: "b", name: "N", image_count: 4, source_file_count: 9 });
+    assert.ok(!("imageCount" in p), "imageCount is back on the Product type");
+    assert.ok(!("sourceFileCount" in p));
   });
 });

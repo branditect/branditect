@@ -58,9 +58,14 @@ export interface Product {
   stockSource?: string | null;
 
   // what the brain has
+  //
+  // No imageCount or sourceFileCount here. catalog_products carries columns by
+  // those names, but nothing has written to them since the tagging feature
+  // landed: they are set once at import and never maintained, so a product with
+  // four tagged images still read 0. Nothing in the UI consumed them. The live
+  // numbers come from the product_attachment_counts view, or are derived from
+  // the rows already on screen — see app/api/products/attachments/route.ts.
   indexed: boolean;
-  sourceFileCount: number;
-  imageCount: number;
   usedInOutputCount: number;
   lastUsedAt?: string | null;
 
@@ -265,8 +270,6 @@ export function fromRow(row: any): Product {
     stockSource: row.stock_source ?? null,
 
     indexed: Boolean(row.indexed),
-    sourceFileCount: Number(row.source_file_count ?? 0),
-    imageCount: Number(row.image_count ?? 0),
     usedInOutputCount: Number(row.used_in_output_count ?? 0),
     lastUsedAt: row.last_used_at ?? null,
 

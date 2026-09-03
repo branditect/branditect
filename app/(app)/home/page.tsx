@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import { useUser } from "@/lib/useUser";
 import { useReadiness } from "@/lib/useReadiness";
 import { readinessHeadline } from "@/lib/readiness";
+import { greeting, GREETING_BEFORE_MOUNT } from "@/lib/greeting";
 import Icon from "@/components/icon";
 import ReadinessCard from "@/components/readiness-card";
 import WhatsNextPanel from "@/components/whats-next-panel";
@@ -53,18 +54,19 @@ const SUGGESTIONS = [
   "What's missing from my brand?",
 ];
 
-function greeting(hour: number): string {
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
 export default function HomePage() {
   const { brandId } = useBrand();
   const { user } = useUser();
   const { readiness, counts, onboarding } = useReadiness(brandId);
 
-  const now = useMemo(() => new Date(), []);
+  // The hour is read after mount, never during render. A client component still
+  // renders on the server, so computing it inline took the hour from the
+  // server's clock (UTC on Vercel) and then from the browser's, and the two
+  // print different words into this heading for nine hours a day — React error
+  // #425. See lib/greeting.ts for the windows.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
+  const hour = now === null ? null : now.getHours();
   // Greet the person, not the brand. Falls back to a nameless greeting rather
   // than inventing one — "Good afternoon, Your" is worse than no name.
   const firstName = user?.firstName ?? null;
@@ -75,7 +77,7 @@ export default function HomePage() {
         <header className="flex items-start gap-4">
           <div className="min-w-0">
             <h1 className="text-display font-bold leading-[1.15] stack:text-h2">
-              {greeting(now.getHours())}
+              {hour === null ? GREETING_BEFORE_MOUNT : greeting(hour)}
               {firstName ? `, ${firstName}` : ""}
             </h1>
             <p className="mt-[3px] text-base font-normal text-muted-2">

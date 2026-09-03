@@ -18,7 +18,14 @@ const ICONS: Record<ActivityType, IconName> = {
   chat: "chat",
 };
 
-function relative(at: Date, now: Date): string {
+/**
+ * `now` is null until the page has mounted. Relative times are the same
+ * hydration hazard as the greeting: the server would render "3h ago" from its
+ * own clock and the browser something else. Rendering nothing until the clock
+ * is known keeps the two renders identical.
+ */
+function relative(at: Date, now: Date | null): string {
+  if (now === null) return "";
   const mins = Math.max(0, Math.round((now.getTime() - at.getTime()) / 60000));
   if (mins < 60) return mins <= 1 ? "Just now" : `${mins}m ago`;
   const hours = Math.round(mins / 60);
@@ -40,7 +47,7 @@ export default function ActivityList({
   now,
 }: {
   items: ActivityItem[];
-  now: Date;
+  now: Date | null;
 }) {
   return (
     <section className="rounded-panel border border-rule bg-card drop-shadow-panel">

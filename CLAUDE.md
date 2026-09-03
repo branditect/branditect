@@ -12,7 +12,7 @@ Every screen belongs to exactly one of those. Anything that belongs to none of t
 Home        the landing screen: readiness, then what to make
 Brand       define · Strategy · Tone of voice · Visual identity · Channels
 Knowledge   feed   · Products · Documents · Images · Presentations · Links
-Studio      make   · Write · Create images · Brand assets
+Studio      make   · Write · Create images
 Numbers     define · Profitability · Product costs · Pricing & offers
 AI Chat     the brand-trained assistant
 ```
@@ -23,7 +23,7 @@ Rules that hold across changes:
 - **Max depth 3.** Section → sub-section → detail. No fourth level.
 - **Max 6 primary items.** Adding a seventh means something else merges or leaves.
 - **No dead entries.** A nav item that 404s is worse than a missing feature. The old app shipped three.
-- **One home per concept.** A thing belongs in exactly one place. If assets live in Knowledge, there is no "Brand Assets" destination elsewhere — a Studio card may *link* there, but it isn't a second home.
+- **One home per concept.** A thing belongs in exactly one place. Logos, colours and typefaces live on **Brand ▸ Visual identity**; the Studio "Brand assets" tab was the same library reached a second way and was retired on 2026-09-03. The page survives only as the upload destination Visual identity links to, and is being folded into Visual identity next.
 
 ## Naming
 

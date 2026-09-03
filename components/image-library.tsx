@@ -3,6 +3,9 @@
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { imageMatches } from "@/lib/product-attachments";
+import ProductPicker from "@/components/products/product-picker";
+import { productsForImage, selectionLabel, type PickableProduct } from "@/lib/product-picker";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -39,6 +42,10 @@ const DEFAULT_BRAND_ID = "default";
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+/* Step 2 of branditect-ui/spec/knowledge-images.md: what a file is for, and
+   tagging many at once. Until now the library could show what a product had
+   but never what an image was for, and the only way to audit tagging was to
+   open every product card in turn. */
 export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?: string }) {
   const BRAND_ID = brandId;
   const [images, setImages] = useState<BrandImage[]>([]);
@@ -63,6 +70,15 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
   // Lightbox
   const [previewImg, setPreviewImg] = useState<BrandImage | null>(null);
+
+  /* What each image is tagged to, and the products to name them. Loaded here
+     rather than per tile: forty tiles each fetching their own links is forty
+     round trips for one join. */
+  const [links, setLinks] = useState<{ product_id: string; image_id: string }[]>([]);
+  const [products, setProducts] = useState<PickableProduct[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pickerFor, setPickerFor] = useState<string[] | null>(null);
+  const [tagNote, setTagNote] = useState<string | null>(null);
 
   /* ---- Fetch images ---- */
 
@@ -217,6 +233,40 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     setImages((prev) => prev.map((i) => (i.id === editingId ? { ...i, tags } : i)));
     setEditingId(null);
   }, [editingId, editTags]);
+
+  /* ---- What is tagged to what ---- */
+
+  const loadLinks = useCallback(async () => {
+    if (!brandId || brandId === "default") return;
+    const [l, p] = await Promise.all([
+      supabase.from("product_images").select("product_id, image_id").eq("brand_id", brandId),
+      supabase.from("catalog_products").select("id, name, sku").eq("brand_id", brandId).order("name"),
+    ]);
+    // supabase-js resolves { data, error } and never throws, so an unchecked
+    // read here would silently render every image as untagged.
+    if (!l.error) setLinks((l.data ?? []) as { product_id: string; image_id: string }[]);
+    if (!p.error) setProducts((p.data ?? []) as PickableProduct[]);
+  }, [brandId]);
+
+  useEffect(() => { loadLinks(); }, [loadLinks]);
+
+  /** The chip's ×. Removes the link, never the file. */
+  async function untag(imageId: string, productId: string) {
+    const res = await authedFetch(
+      `/api/products/attachments?product_id=${productId}&brand_id=${brandId}&image_id=${imageId}`,
+      { method: "DELETE" },
+    );
+    if (!res.ok) { setTagNote("Could not remove that link."); return; }
+    await loadLinks();
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   /* ---- Filtering ---- */
 
@@ -432,6 +482,36 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           </p>
         </div>
       ) : (
+        <div>
+        {/* Select many, tag once. There is an existing library of untagged
+            images; tagging forty of them one at a time is not something a
+            person does twice. */}
+        {selected.size > 0 && (
+          <div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-ink text-white">
+            <span className="text-[13px] font-bold">{selectionLabel(selected.size)}</span>
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={() => setPickerFor(Array.from(selected))}
+              className="text-[13px] font-bold rounded-md px-3 py-1.5 bg-brand-orange text-white"
+            >
+              Tag to a product
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelected(new Set())}
+              aria-label="Clear selection"
+              className="text-[13px] font-bold rounded-md px-2 py-1.5 bg-white/15 hover:bg-white/25"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {tagNote && (
+          <div className="mb-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-[13px] text-red-600">
+            {tagNote}
+          </div>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map((img) => (
             <div
@@ -442,6 +522,22 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
             >
               {/* Image */}
               <div className="relative aspect-square bg-pale cursor-pointer" onClick={() => setPreviewImg(img)}>
+                {/* Selecting is its own control rather than the whole tile:
+                    clicking the picture already opens the lightbox, and taking
+                    that over would trade one gesture for another. */}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); toggleSelect(img.id); }}
+                  aria-label={selected.has(img.id) ? `Deselect ${img.file_name}` : `Select ${img.file_name}`}
+                  aria-pressed={selected.has(img.id)}
+                  className={`absolute top-1.5 left-1.5 z-10 grid place-items-center w-6 h-6 rounded-md border text-[12px] font-bold ${
+                    selected.has(img.id)
+                      ? "bg-brand-orange border-brand-orange text-white"
+                      : "bg-white/85 border-light text-transparent hover:text-muted"
+                  }`}
+                >
+                  ✓
+                </button>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img.file_url}
@@ -527,12 +623,79 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                         📁 {img.campaign_name}
                       </div>
                     )}
+
+                    {/* The half that is usually left out, and the half that
+                        makes the library trustworthy: what this file is FOR.
+                        Without it you can see what a product has but never
+                        what an image belongs to. */}
+                    <div className="mt-2 pt-2 border-t border-light">
+                      <div className="text-[12px] font-semibold text-muted mb-1">On these products</div>
+                      {(() => {
+                        const on = productsForImage(img.id, links, products);
+                        if (on.length === 0) {
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => setPickerFor([img.id])}
+                              className="w-full text-[12px] font-semibold text-muted border border-dashed border-light rounded-md px-2 py-1.5 hover:text-brand-orange hover:border-brand-orange"
+                            >
+                              Tag to a product
+                            </button>
+                          );
+                        }
+                        return (
+                          <div className="flex flex-wrap gap-1 items-center">
+                            {on.map((prod) => (
+                              <span
+                                key={prod.id}
+                                className="inline-flex items-center gap-1 text-[12px] font-semibold text-ink bg-pale border border-light rounded px-1.5 py-0.5"
+                              >
+                                {prod.name}
+                                <button
+                                  type="button"
+                                  onClick={() => untag(img.id, prod.id)}
+                                  aria-label={`Remove ${prod.name} from ${img.file_name}`}
+                                  title="Removes the link, not the file."
+                                  className="text-muted hover:text-red-600 leading-none"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setPickerFor([img.id])}
+                              className="text-[12px] font-semibold text-muted border border-dashed border-light rounded px-1.5 py-0.5 hover:text-brand-orange hover:border-brand-orange"
+                            >
+                              Tag to a product
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </>
                 )}
               </div>
             </div>
           ))}
         </div>
+        </div>
+      )}
+
+      {/* One component, three entry points — a tile, a selection, and the
+          product card's Media tab. Criterion 8. */}
+      {pickerFor && (
+        <ProductPicker
+          brandId={brandId}
+          imageIds={pickerFor}
+          onClose={() => setPickerFor(null)}
+          onTagged={async () => {
+            setPickerFor(null);
+            setSelected(new Set());
+            setTagNote(null);
+            await loadLinks();
+          }}
+        />
       )}
 
       {/* Lightbox */}

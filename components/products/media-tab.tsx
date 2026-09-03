@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/icon";
 import { docRoleLabel, fileSize, isVideo, UNTAG_NOTE } from "@/lib/product-attachments";
+import ProductPicker from "@/components/products/product-picker";
 
 interface MediaImage {
   id: string; file_url: string; file_name: string;
@@ -34,6 +35,9 @@ export default function MediaTab({
   const [documents, setDocuments] = useState<MediaDoc[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [untagging, setUntagging] = useState<string | null>(null);
+  /* Criterion 8: the same picker the Images screen opens, from the other end.
+     An image tagged here shows on that image's tile in Knowledge too. */
+  const [tagMoreFor, setTagMoreFor] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<MediaImage | null>(null);
 
   const load = useCallback(async () => {
@@ -127,6 +131,15 @@ export default function MediaTab({
                 )}
                 <button
                   type="button"
+                  title="Tag this image to another product"
+                  aria-label={`Tag ${img.file_name} to another product`}
+                  onClick={() => setTagMoreFor(img.id)}
+                  className="absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                >
+                  <Icon name="plus" size={9} />
+                </button>
+                <button
+                  type="button"
                   title={UNTAG_NOTE}
                   aria-label={`Untag ${img.file_name}`}
                   disabled={untagging === img.id}
@@ -201,6 +214,14 @@ export default function MediaTab({
           <img src={lightbox.file_url} alt={lightbox.file_name}
             className="max-h-full max-w-full rounded-panel object-contain" />
         </div>
+      )}
+      {tagMoreFor && (
+        <ProductPicker
+          brandId={brandId}
+          imageIds={[tagMoreFor]}
+          onClose={() => setTagMoreFor(null)}
+          onTagged={() => { setTagMoreFor(null); void load(); }}
+        />
       )}
     </>
   );

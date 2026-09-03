@@ -1,0 +1,58 @@
+/* The product picker. One component, three entry points — see the header of
+ * product-picker.tsx. Styled from the design system rather than the ad-hoc
+ * utilities on the Images screen: 14px body, 12px meta, no monospace. */
+
+.backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center;
+  background: rgba(20, 20, 26, .42); padding: 24px; }
+
+.panel { box-sizing: border-box; width: min(520px, 100%); max-height: min(640px, 88vh);
+  display: flex; flex-direction: column; gap: 12px; padding: 18px 20px 16px;
+  background: theme('colors.card'); border: 1px solid theme('colors.rule.DEFAULT');
+  border-radius: theme('borderRadius.panel'); box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .5); }
+
+.head { display: flex; align-items: flex-start; gap: 12px; }
+.title { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+.sub { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.muted.2');
+  margin-top: 3px; line-height: 1.45; }
+.close { all: unset; box-sizing: border-box; cursor: pointer; margin-left: auto; flex: none;
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px;
+  color: theme('colors.faint.DEFAULT'); }
+.close:hover { background: theme('colors.tile.DEFAULT'); color: theme('colors.ink.2'); }
+
+.match { font-size: theme('fontSize.2xs[0]'); font-weight: 500; line-height: 1.5;
+  color: theme('colors.accent.dark'); background: theme('colors.tint.1');
+  border-radius: 8px; padding: 8px 10px; }
+.match b { font-weight: 800; }
+
+.search { box-sizing: border-box; width: 100%; border: 1px solid theme('colors.rule.2');
+  border-radius: 9px; padding: 9px 11px; font-size: theme('fontSize.sm[0]'); font-weight: 500;
+  color: theme('colors.ink.DEFAULT'); background: #fff; font-family: inherit; }
+.search:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+
+.rows { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; min-height: 0; }
+.row { display: flex; align-items: center; gap: 10px; cursor: pointer;
+  border: 1px solid transparent; border-radius: 9px; padding: 9px 11px; }
+.row:hover { background: theme('colors.tile.DEFAULT'); }
+.rowOn { background: theme('colors.tint.1'); border-color: theme('colors.accent.line'); }
+.nm { font-size: theme('fontSize.sm[0]'); font-weight: 700; color: theme('colors.ink.DEFAULT'); }
+.sku { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.faint.DEFAULT');
+  margin-left: auto; }
+
+.note { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.muted.2');
+  padding: 14px 2px; line-height: 1.5; }
+
+.err { font-size: theme('fontSize.2xs[0]'); font-weight: 700; color: var(--v-red-ink);
+  background: var(--v-red-wash); border-radius: 8px; padding: 8px 10px; line-height: 1.45; }
+
+.foot { display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid theme('colors.rule.DEFAULT');
+  padding-top: 12px; }
+.cancel { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; border-radius: 8px; padding: 9px 15px;
+  font-size: theme('fontSize.sm[0]'); font-weight: 700; color: theme('colors.muted.DEFAULT');
+  border: 1px solid theme('colors.rule.2'); background: #fff; }
+.cancel:hover { color: theme('colors.ink.2'); }
+.go { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center;
+  justify-content: center; border-radius: 8px; padding: 9px 16px; font-size: theme('fontSize.sm[0]');
+  font-weight: 700; background: theme('backgroundImage.grad-mark'); color: #fff; }
+.go[disabled], .cancel[disabled] { opacity: .5; cursor: default; }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { decideAccess } from "@/lib/ownership";
+import { resolveBrand } from "@/lib/api-auth";
+import { rowsToInsert } from "@/lib/product-picker";
 
 /**
  * What is tagged to one product.
@@ -102,4 +104,68 @@ export async function DELETE(req: NextRequest) {
   // supabase-js resolves { data, error } and never throws.
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ untagged: true });
+}
+
+/**
+ * Tag images to products. The write path that did not exist.
+ *
+ * product_images was shipped, read by GET above and rendered by the Media tab,
+ * and nothing in the application ever inserted a row into it — so Media was
+ * structurally unable to contain data. This is step 1 of
+ * branditect-ui/spec/knowledge-images.md, and criterion 1 is the reason the
+ * feature exists.
+ *
+ * Every product AND every image is checked against the caller's brand before
+ * anything is written. The brand is taken from the caller's token, never from
+ * the body: this route runs on the service key, so a brand_id in the payload
+ * would be an instruction to tag into someone else's catalogue.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await resolveBrand(req);
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
+
+  let body: { imageIds?: unknown; productIds?: unknown };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad JSON" }, { status: 400 }); }
+
+  const imageIds = Array.isArray(body.imageIds) ? body.imageIds.map(String) : [];
+  const productIds = Array.isArray(body.productIds) ? body.productIds.map(String) : [];
+  if (!imageIds.length || !productIds.length) {
+    return NextResponse.json({ error: "Pick at least one image and one product" }, { status: 400 });
+  }
+
+  // Ownership, both sides. A foreign id is reported as not found rather than
+  // as forbidden — the same rule as the download route, so probing this
+  // endpoint cannot tell you whether an id exists.
+  const [{ data: ownedProducts }, { data: ownedImages }] = await Promise.all([
+    supabase.from("catalog_products").select("id").eq("brand_id", brandId).in("id", productIds),
+    supabase.from("brand_images").select("id").eq("brand_id", brandId).in("id", imageIds),
+  ]);
+  const okProducts = new Set((ownedProducts ?? []).map((r) => String(r.id)));
+  const okImages = new Set((ownedImages ?? []).map((r) => String(r.id)));
+  if (okProducts.size !== productIds.length || okImages.size !== imageIds.length) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Skip pairs that already exist. A duplicate would violate the
+  // (product_id, image_id) primary key and fail the whole batch, so tagging
+  // four images to a product that already has one of them would write none.
+  const { data: existing } = await supabase
+    .from("product_images")
+    .select("product_id, image_id")
+    .in("product_id", productIds)
+    .in("image_id", imageIds);
+
+  const rows = rowsToInsert(
+    { imageIds, productIds },
+    brandId,
+    (existing ?? []) as { product_id: string; image_id: string }[],
+  );
+  if (!rows.length) return NextResponse.json({ inserted: 0, alreadyLinked: true });
+
+  const { error } = await supabase.from("product_images").insert(rows);
+  // supabase-js resolves with an error rather than throwing, so an unchecked
+  // insert reports success and writes nothing.
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ inserted: rows.length });
 }

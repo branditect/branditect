@@ -1,0 +1,83 @@
+/* The "what is this?" panel on Knowledge ▸ Documents. It sits in the page
+ * rather than over it: the upload is already running behind it, and a modal
+ * would imply the bytes are waiting. */
+
+.panel { display: flex; flex-direction: column; gap: 13px; padding: 17px 18px 16px;
+  background: theme('colors.card'); border: 1px solid theme('colors.rule.DEFAULT');
+  border-radius: theme('borderRadius.panel'); box-shadow: theme('dropShadow.panel');
+  margin-bottom: 14px; }
+
+.head { display: flex; align-items: flex-start; gap: 14px; }
+.title { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+.sub { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.muted.2');
+  margin-top: 3px; }
+.headActs { display: flex; gap: 8px; margin-left: auto; flex: none; }
+
+.save { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; border-radius: 8px; padding: 8px 18px;
+  font-size: theme('fontSize.sm[0]'); font-weight: 700;
+  background: theme('backgroundImage.grad-mark'); color: #fff; }
+.save[disabled] { opacity: .55; cursor: default; }
+
+.skip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; border-radius: 8px; padding: 8px 14px;
+  font-size: theme('fontSize.sm[0]'); font-weight: 700; color: theme('colors.muted.DEFAULT');
+  border: 1px solid theme('colors.rule.2'); background: #fff; }
+.skip:hover { color: theme('colors.ink.2'); }
+.skip[disabled] { opacity: .55; cursor: default; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.lab { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: .8px;
+  text-transform: uppercase; color: theme('colors.faint.DEFAULT'); }
+.help { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.muted.2'); }
+
+.textarea { box-sizing: border-box; width: 100%; resize: vertical; min-height: 62px;
+  border: 1px solid theme('colors.rule.2'); border-radius: 9px; padding: 9px 11px;
+  font-size: theme('fontSize.sm[0]'); font-weight: 500; line-height: 1.55;
+  color: theme('colors.ink.DEFAULT'); background: #fff; font-family: inherit; }
+.textarea:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+
+.select, .fsel { box-sizing: border-box; border: 1px solid theme('colors.rule.2');
+  border-radius: 8px; padding: 8px 10px; font-size: theme('fontSize.sm[0]'); font-weight: 600;
+  color: theme('colors.ink.DEFAULT'); background: #fff; font-family: inherit; }
+.select { width: 100%; max-width: 320px; }
+.select:focus, .fsel:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+
+.contract { font-size: theme('fontSize.2xs[0]'); font-weight: 500; line-height: 1.5;
+  color: var(--v-amber-ink); background: var(--v-amber-wash); border-radius: 8px;
+  padding: 9px 11px; }
+.contract strong { font-weight: 800; }
+
+.per { border-top: 1px solid theme('colors.rule.DEFAULT'); padding-top: 11px; }
+.disclose { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 6px; font-size: theme('fontSize.2xs[0]'); font-weight: 800;
+  color: theme('colors.accent.dark'); }
+/* Fixed size, so it must declare display — a span with height and no display is
+ * an inline box and paints nothing. */
+.dot { display: block; width: 6px; height: 6px; border-radius: 50%;
+  background: theme('colors.accent.DEFAULT'); }
+
+.files { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+.file { display: grid; grid-template-columns: minmax(0, 1.1fr) 170px minmax(0, 1.3fr) auto;
+  gap: 8px; align-items: center; }
+.fname { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: theme('colors.ink.2');
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fdesc { box-sizing: border-box; width: 100%; border: 1px solid theme('colors.rule.2');
+  border-radius: 8px; padding: 7px 9px; font-size: theme('fontSize.2xs[0]'); font-weight: 500;
+  color: theme('colors.ink.DEFAULT'); background: #fff; font-family: inherit; }
+.fdesc:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+.pending { font-size: 9.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+  color: theme('colors.faint.DEFAULT'); }
+
+.foot { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.muted.2');
+  line-height: 1.5; }
+.foot strong { font-weight: 800; color: theme('colors.ink.2'); }
+
+.hiddenState { display: none; }
+
+@media (max-width: 900px) {
+  .file { grid-template-columns: 1fr; }
+}

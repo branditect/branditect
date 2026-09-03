@@ -4,7 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
-import { detectCategory } from "@/lib/document-types";
+import { askedFields, DOC_TYPES } from "@/lib/document-types";
+import {
+  makeBatch, attachDocument, saveUpdates, undescribedFirst, type Batch,
+} from "@/lib/document-batch";
+import AskPanel from "@/components/documents/ask-panel";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -20,6 +24,11 @@ interface BrandDocument {
   pages_count: number;
   status: "processing" | "ready" | "error";
   created_at: string;
+  // Added by supabase/document-upload-asks.sql. Optional on the type because
+  // rows written before that migration have none.
+  description?: string | null;
+  doc_type?: string | null;
+  use_in_output?: boolean | null;
 }
 
 interface UploadingFile {
@@ -176,10 +185,17 @@ export default function KnowledgeVaultPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Text editor
+  // The answers panel. It never gates the upload — see onFilesChosen.
+  const [batch, setBatch] = useState<Batch | null>(null);
+  const [askSaving, setAskSaving] = useState(false);
+
   const [textOpen, setTextOpen] = useState(false);
   const [textTitle, setTextTitle] = useState("");
   const [textContent, setTextContent] = useState("");
-  const [textCategory, setTextCategory] = useState<CategoryKey>("other");
+  // The paste path asks for a type, not a category — same list as the file
+  // path, so the two cannot drift apart again. Criterion 9.
+  const [textDocType, setTextDocType] = useState<string>("other");
+  const [textDescription, setTextDescription] = useState("");
   const [textSaving, setTextSaving] = useState(false);
   const [textError, setTextError] = useState<string | null>(null);
 
@@ -217,15 +233,18 @@ export default function KnowledgeVaultPage() {
   }, [brandLoading, brandId, loadDocuments]);
 
   // Upload files
-  async function uploadFiles(files: File[]) {
+  async function uploadFiles(files: File[], tempIds?: string[]) {
     setError(null);
-    for (const file of files) {
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
       if (file.size > MAX_BYTES) {
         setError(`${file.name} exceeds the 50 MB limit.`);
         continue;
       }
 
-      const tempId = Math.random().toString(36).slice(2);
+      // The panel opened with these ids, so the row can be attached to the
+      // right line when the insert returns.
+      const tempId = tempIds?.[index] ?? Math.random().toString(36).slice(2);
       const ext = fileExtension(file.name);
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const storagePath = `${brandId}/${Date.now()}_${safeName}`;
@@ -247,7 +266,10 @@ export default function KnowledgeVaultPage() {
             brand_id: brandId,
             file_name: file.name,
             file_type: ext,
-            category: detectCategory(file.name),
+            // Criterion 2: the row carries the same guess the panel is showing,
+            // so nothing is ever written with a type nobody saw. Criterion 5:
+            // category comes from the type, never typed.
+            ...askedFields({ filename: file.name }),
             storage_path: storagePath,
             status: "processing",
             pages_count: 0,
@@ -260,6 +282,7 @@ export default function KnowledgeVaultPage() {
         // 3. Show document as processing
         setUploading((prev) => prev.filter((u) => u.tempId !== tempId));
         setDocuments((prev) => [docRow as BrandDocument, ...prev]);
+        setBatch((prev) => (prev ? attachDocument(prev, tempId, docRow.id as string) : prev));
 
         // 4. Fire extract (async — updates row on server, we update UI when done)
         fetch("/api/vault/extract", {
@@ -324,7 +347,9 @@ export default function KnowledgeVaultPage() {
           brand_id: brandId,
           file_name: textTitle.trim(),
           file_type: "txt",
-          category: textCategory,
+          // Criterion 9: the same builder as the file path, so the two rows
+          // cannot drift apart again.
+          ...askedFields({ docTypeId: textDocType, description: textDescription }),
           storage_path: "",
           status: "ready",
           extracted_text: textContent.trim(),
@@ -338,7 +363,8 @@ export default function KnowledgeVaultPage() {
       setTextOpen(false);
       setTextTitle("");
       setTextContent("");
-      setTextCategory("other");
+      setTextDocType("other");
+      setTextDescription("");
     } catch (err) {
       setTextError(err instanceof Error ? err.message : "Save failed");
     }
@@ -372,13 +398,53 @@ export default function KnowledgeVaultPage() {
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       /\.(pdf|pptx|docx|xlsx|jpg|jpeg|png|webp)$/i.test(f.name)
     );
-    if (files.length) uploadFiles(files);
+    if (files.length) onFilesChosen(files);
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
-    if (files.length) uploadFiles(files);
+    if (files.length) onFilesChosen(files);
     e.target.value = "";
+  }
+
+  /**
+   * CRITERION 1. The panel opens and the bytes start moving in the same tick.
+   * uploadFiles is deliberately not awaited: awaiting it here would hold a
+   * 40 MB PDF until someone finished typing, which is how a person learns to
+   * hit Skip every time.
+   */
+  function onFilesChosen(files: File[]) {
+    const tempIds = files.map(() => Math.random().toString(36).slice(2));
+    setBatch(makeBatch(files.map((f, i) => ({ tempId: tempIds[i], name: f.name }))));
+    void uploadFiles(files, tempIds);
+  }
+
+  /** Save patches rows that already exist. Files still in flight are picked up
+   *  by a second pass once their inserts have returned. */
+  async function saveAsks() {
+    if (!batch) return;
+    setAskSaving(true);
+    const updates = saveUpdates(batch);
+    for (const u of updates) {
+      const { error: upErr } = await supabase
+        .from("brand_documents")
+        .update(u.fields)
+        .eq("id", u.documentId)
+        .eq("brand_id", brandId);
+      // supabase-js resolves with an error rather than throwing, so an
+      // unchecked call reports success and saves nothing.
+      if (upErr) { setError(upErr.message); setAskSaving(false); return; }
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === u.documentId ? { ...d, ...u.fields } as BrandDocument : d)));
+    }
+    setAskSaving(false);
+    setBatch(null);
+  }
+
+  /** CRITERION 4. Skip writes nothing: the rows already carry the guessed type,
+   *  and a null description is what keeps them in the Not described yet queue. */
+  function skipAsks() {
+    setBatch(null);
   }
 
   // Derived stats
@@ -549,18 +615,32 @@ export default function KnowledgeVaultPage() {
                 />
               </div>
 
-              {/* Category */}
+              {/* Type — the category is derived from it. Criterion 5. */}
               <div>
-                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Category</label>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Type</label>
                 <select
-                  value={textCategory}
-                  onChange={e => setTextCategory(e.target.value as CategoryKey)}
+                  value={textDocType}
+                  onChange={e => setTextDocType(e.target.value)}
                   className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange bg-white transition-colors"
                 >
-                  {CATEGORIES.filter(c => c.key !== "all").map(c => (
-                    <option key={c.key} value={c.key}>{c.label}</option>
+                  {DOC_TYPES.map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* The same question the file path asks, in the same words. */}
+              <div>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">
+                  What is this?
+                </label>
+                <textarea
+                  rows={2}
+                  value={textDescription}
+                  onChange={e => setTextDescription(e.target.value)}
+                  placeholder="Studio reads this to decide when to cite it."
+                  className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange bg-white transition-colors"
+                />
               </div>
 
               {/* Content */}
@@ -612,6 +692,17 @@ export default function KnowledgeVaultPage() {
         </div>
       )}
 
+      {/* CRITERION 1: this is already on screen while the bytes are moving. */}
+      {batch && (
+        <AskPanel
+          batch={batch}
+          onChange={setBatch}
+          onSave={saveAsks}
+          onSkip={skipAsks}
+          saving={askSaving}
+        />
+      )}
+
       {/* Document list */}
       {uploading.length === 0 &&
       (filter === "all" ? documents : filteredDocs).length === 0 ? (
@@ -628,7 +719,9 @@ export default function KnowledgeVaultPage() {
           ))}
 
           {/* Loaded documents */}
-          {(filter === "all" ? documents : filteredDocs).map((doc) => (
+          {/* CRITERION 4: files with no description wait at the top — a queue,
+              not a scolding. */}
+          {undescribedFirst(filter === "all" ? documents : filteredDocs).map((doc) => (
             <DocumentRow key={doc.id} doc={doc} onDelete={deleteDocument} />
           ))}
         </div>

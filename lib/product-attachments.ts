@@ -131,3 +131,37 @@ export function suggestionCopy(product: { name: string }, fileCount: number): st
 
 /** Untag says what it does not do, because that is the worrying part. */
 export const UNTAG_NOTE = "Removes it from this product. The file stays in Knowledge.";
+
+/* ------------------------------------------------------------------ */
+/*  Searching the image library                                        */
+/* ------------------------------------------------------------------ */
+
+/** The three fields the library's search box has always read. */
+export interface SearchableImage {
+  file_name?: string | null;
+  tags?: string[] | null;
+  campaign_name?: string | null;
+}
+
+/**
+ * One match, used by both search boxes.
+ *
+ * The library searched tags, file names and campaign names; the product
+ * picker searched file names and category. Two controls that look the same
+ * behaved differently, and the picker could not find an image by the tag
+ * somebody had typed on it. Extracting the rule is what stops them drifting
+ * apart again.
+ */
+export function imageMatches(image: SearchableImage, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const tags = Array.isArray(image.tags) ? image.tags : [];
+  return (
+    tags.some((t) => String(t).toLowerCase().includes(q)) ||
+    (image.file_name ?? "").toLowerCase().includes(q) ||
+    (image.campaign_name ?? "").toLowerCase().includes(q)
+  );
+}
+
+/** The columns both search boxes need. Selecting fewer is how this broke. */
+export const IMAGE_SEARCH_COLUMNS = "id, file_url, file_name, category, tags, campaign_name";

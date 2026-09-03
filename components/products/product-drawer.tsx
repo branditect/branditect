@@ -6,6 +6,7 @@ import Icon from "@/components/icon";
 // Specifications section is gone from the card.
 import { DescriptionField } from "@/components/products/specs-editor";
 import PricingTab from "@/components/products/pricing-tab";
+import MediaTab from "@/components/products/media-tab";
 import {
   derivedLandedCost, parseCustomLines, visibleLines,
   type CustomLine, type LineId,
@@ -553,37 +554,41 @@ export default function ProductDrawer({
             )}
 
             {tab === "Media" && (
-              <Section title="Product image">
-                <button
-                  type="button"
-                  onClick={() => setPickerOpen(true)}
-                  className="flex w-full items-center gap-3 rounded-card border border-rule bg-tile p-3 text-left hover:border-accent-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                >
-                  <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-tile border border-rule bg-white">
-                    {draft.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={draft.imageUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-muted">
-                        <Icon name="img" size={22} />
+              <>
+                <Section title="Product image">
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(true)}
+                    className="flex w-full items-center gap-3 rounded-card border border-rule bg-tile p-3 text-left hover:border-accent-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  >
+                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-tile border border-rule bg-white">
+                      {draft.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={draft.imageUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-muted">
+                          <Icon name="img" size={22} />
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-ink">
+                        {draft.imageUrl ? "Change product image" : "Choose a product image"}
                       </span>
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-bold text-ink">
-                      {draft.imageUrl ? "Change product image" : "Choose a product image"}
+                      <span className="mt-0.5 block text-2xs font-medium text-muted">
+                        Picked from your image library in Knowledge ▸ Images
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-2xs font-medium text-muted">
-                      Picked from your image library in Knowledge ▸ Images
-                    </span>
-                  </span>
-                </button>
-                <p className="mt-3 text-xs font-medium leading-[1.6] text-muted">
-                  {product.imageCount > 0
-                    ? `${product.imageCount} images in Knowledge are tagged to this product. These are what the image creator reads when you ask for a new shot.`
-                    : "No images tagged to this product yet, so the image creator has nothing to work from."}
-                </p>
-              </Section>
+                  </button>
+                </Section>
+
+                {/* Everything tagged to this product, read from the link
+                    tables rather than from the counts on catalog_products,
+                    which are written once and never maintained. */}
+                <div className="mt-[22px]">
+                  <MediaTab productId={product.id} brandId={brandId} />
+                </div>
+              </>
             )}
 
             {tab === "History" && (

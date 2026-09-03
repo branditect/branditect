@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import {
   decideDownloadAccess, suggestProduct, suggestionCopy, zipName,
   isVideo, durationBadge, fileSize, docRoleLabel, isDocRole, DOC_ROLES, UNTAG_NOTE,
+  imageMatches, IMAGE_SEARCH_COLUMNS,
 } from "./product-attachments.ts";
 
 /** CRITERION 10, MERGE BLOCKER. */
@@ -229,5 +230,70 @@ describe("the migration", () => {
     const last = statements.split(";").map((x) => x.trim()).filter(Boolean).pop() ?? "";
     assert.ok(!/^SELECT/i.test(last), `the paste ends on: ${last.slice(0, 60)}`);
     assert.ok(!/ORDER BY/i.test(statements), "a trailing ORDER BY is what got mangled before");
+  });
+});
+
+/**
+ * Criterion 13 of spec/product-attachments-tags.md.
+ *
+ * The picker searched file names and category; the library searched tags,
+ * names and campaigns. Two controls that look the same behaved differently,
+ * and the picker could not find an image by a tag somebody had typed on it.
+ */
+describe("the image search both boxes use", () => {
+  /* The fixture the criterion names: the tag matches, the filename does not. */
+  const TAGGED = { file_name: "IMG_4821.jpg", tags: ["sorbify", "oil"], campaign_name: null };
+
+  it("matches on a tag when the filename does not", () => {
+    assert.equal(imageMatches(TAGGED, "sorbify"), true);
+    assert.equal(TAGGED.file_name.toLowerCase().includes("sorbify"), false,
+      "the fixture must not match by filename, or it proves nothing");
+  });
+
+  it("matches on the file name", () => {
+    assert.equal(imageMatches({ file_name: "sorbify-front.jpg", tags: [] }, "front"), true);
+  });
+
+  it("matches on the campaign name", () => {
+    assert.equal(imageMatches({ file_name: "a.jpg", tags: [], campaign_name: "Spring launch" }, "spring"), true);
+  });
+
+  it("is case insensitive and ignores surrounding space", () => {
+    assert.equal(imageMatches(TAGGED, "  SORBIFY "), true);
+  });
+
+  it("matches part of a tag, as the library always did", () => {
+    assert.equal(imageMatches(TAGGED, "sorb"), true);
+  });
+
+  it("returns everything for an empty query", () => {
+    assert.equal(imageMatches({ file_name: "a.jpg" }, ""), true);
+    assert.equal(imageMatches({ file_name: "a.jpg" }, "   "), true);
+  });
+
+  it("says no when nothing matches", () => {
+    assert.equal(imageMatches(TAGGED, "packaging"), false);
+  });
+
+  it("survives a row with no tags, no name and no campaign", () => {
+    assert.equal(imageMatches({}, "anything"), false);
+    assert.equal(imageMatches({ tags: null, file_name: null, campaign_name: null }, "x"), false);
+  });
+
+  /* Selecting fewer columns is exactly how the picker broke. */
+  it("names every column the match reads", () => {
+    for (const c of ["tags", "campaign_name", "file_name"]) {
+      assert.ok(IMAGE_SEARCH_COLUMNS.includes(c), `${c} is not selected`);
+    }
+  });
+
+  it("is the only match either box uses", () => {
+    const picker = readFileSync(new URL("../components/products/image-picker.tsx", import.meta.url), "utf8");
+    const library = readFileSync(new URL("../components/image-library.tsx", import.meta.url), "utf8");
+    for (const [name, src] of [["picker", picker], ["library", library]] as const) {
+      assert.ok(/imageMatches\(/.test(src), `${name} does not use the shared match`);
+      assert.ok(!/matchesTags/.test(src), `${name} still has its own copy of the match`);
+    }
+    assert.ok(picker.includes("IMAGE_SEARCH_COLUMNS"), "the picker still selects its own column list");
   });
 });

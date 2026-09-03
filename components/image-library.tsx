@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { imageMatches } from "@/lib/product-attachments";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -223,11 +224,8 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     if (filterCategory && img.category !== filterCategory) return false;
     if (filterFormat && img.format !== filterFormat) return false;
     if (filterTags) {
-      const search = filterTags.toLowerCase();
-      const matchesTags = img.tags.some((t) => t.toLowerCase().includes(search));
-      const matchesName = img.file_name.toLowerCase().includes(search);
-      const matchesCampaign = img.campaign_name?.toLowerCase().includes(search);
-      if (!matchesTags && !matchesName && !matchesCampaign) return false;
+      // Shared with the product picker, so the two boxes behave the same.
+      if (!imageMatches(img, filterTags)) return false;
     }
     return true;
   });

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { IMAGE_SEARCH_COLUMNS, imageMatches } from "@/lib/product-attachments";
 import Icon from "@/components/icon";
 
 interface BrandImage {
@@ -10,6 +11,10 @@ interface BrandImage {
   file_url: string;
   file_name: string;
   category: string;
+  /* Without these the search box could not match a tag, while the box two
+     screens away could. Same-looking control, different behaviour. */
+  tags: string[] | null;
+  campaign_name: string | null;
 }
 
 /**
@@ -69,7 +74,7 @@ export default function ImagePicker({
     let cancelled = false;
     supabase
       .from("brand_images")
-      .select("id, file_url, file_name, category")
+      .select(IMAGE_SEARCH_COLUMNS)
       .eq("brand_id", brandId)
       .order("uploaded_at", { ascending: false })
       .then(({ data }) => {
@@ -80,10 +85,9 @@ export default function ImagePicker({
     };
   }, [brandId]);
 
-  const q = query.trim().toLowerCase();
-  const shown = (images ?? []).filter(
-    (i) => !q || i.file_name.toLowerCase().includes(q) || i.category?.toLowerCase().includes(q),
-  );
+  // The same match the library uses, from one place, so the two boxes cannot
+  // drift apart again.
+  const shown = (images ?? []).filter((i) => imageMatches(i, query));
 
   return (
     <div

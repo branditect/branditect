@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
+import { detectCategory } from "@/lib/document-types";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -49,17 +50,6 @@ const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
-
-function detectCategory(filename: string): string {
-  const lower = filename.toLowerCase();
-  if (/product|service|catalogue|catalog|offering|range/.test(lower))
-    return "product-info";
-  if (/pric|rate|fee|invoice|cost|tariff/.test(lower)) return "pricing";
-  if (/company|about|team|brand|mission|vision|annual|report|overview/.test(lower))
-    return "company-info";
-  if (/present|deck|slide|pitch|pptx/.test(lower)) return "presentations";
-  return "other";
-}
 
 function fileExtension(filename: string): string {
   return filename.split(".").pop()?.toLowerCase() || "file";

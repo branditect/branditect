@@ -46,7 +46,7 @@ Then add one line to `CLAUDE.md` so the split is stated rather than inferred:
 |---|---|---|
 | `spec/routes.md` | Numbers routes | **docs/handoff** — it lists `cost · offers · pricing · recurring · running-costs`, which is what shipped. `branditect-ui` invents `/numbers/profitability` and `/numbers/product-costs`, neither of which exists |
 | `spec/components.md` | `<AccountMenu>` | **branditect-ui** — both say "eleven components", only branditect-ui defines eleven |
-| `spec/auth.md` | SSO buttons, feature cards | Undecided — see finding 9 |
+| `spec/auth.md` | SSO buttons, feature cards | **branditect-ui** — three demo-tagged SSO buttons is what ships; see finding 9. Its `:211` feature-card list still needs finding 8's fix |
 | `README.md`, `IMPLEMENTATION.md` | handoff has a Numbers section | **docs/handoff** is more complete |
 
 Before deleting anything, port the Numbers route list from `docs/handoff/spec/routes.md` into
@@ -144,10 +144,12 @@ longer exists.
 
 ## MED · stale, not dangerous
 
-**9 · `spec/auth.md` — two copies disagree about sign-in and neither was checked against the app.**
-`branditect-ui` specifies three SSO buttons (Google, Microsoft, Apple, all demo-tagged);
-`docs/handoff` specifies one Google button, *"a decision, not a default"*. Look at the live login
-page and keep whichever matches, then delete the other.
+**9 · `spec/auth.md` — RESOLVED 2026-09-03, no code change.**
+~~Two copies disagree about sign-in and neither was checked against the app.~~
+`components/auth/sso-buttons.tsx` renders three providers — Google, Microsoft and Apple, all
+carrying a `Demo` tag and the note *"Demo version. Sign in with email for now."* So
+**`branditect-ui/spec/auth.md` is correct** and the `docs/handoff` single-Google version is the
+stale one. Delete the handoff copy with the other duplicates in step 5 of the order below.
 
 **10 · `spec/product-card.md` proposes `document_links` and `asset_links` as new tables.**
 They shipped as `product_documents` and `product_images`, with RLS, a partial unique index on
@@ -193,4 +195,15 @@ written this week — `product-card-rebuild.md`, `product-attachments.md`,
    that lose nothing.
 6. The MED list.
 
-Findings 9 needs you to look at the login page. Everything else is decided.
+Finding 9 is closed — the login page renders three demo-tagged SSO buttons, so `branditect-ui`
+wins. Everything is decided.
+
+### Progress
+
+- **0 · done** — `8b17c04` tracked all 69 files of `branditect-ui/`; `CLAUDE.md` states the
+  authority split. The Numbers-route port and the duplicate deletions are still open (step 5).
+- **1 · done** — `f6dbf19` fixed the Numbers nav row and added a test that compares the CLAUDE.md
+  nav table against `lib/nav.ts` as an exact ordered list.
+- **9 · closed** — no code change; see above.
+- **14 · done** — the CLAUDE.md:26 sentence landed in `2531703`, the same commit as the move,
+  which is what this finding asked for. It was written against the tree before that commit.

@@ -121,7 +121,7 @@ export default function LandingClient() {
         <section className={`${s.sec} ${s.anchor}`} id="how">
           <div className={`${s.sechead}`} style={{ textAlign: "center", margin: "0 auto 34px" }}>
             <div className={s.eyebrow}>How it works</div>
-            <h2>Branditect builds your strategy and helps you reach your business goals, every day.</h2>
+            <h2>Your whole business lives in your head. Branditect is where you put it instead.</h2>
             <p>
               Each one is usable by everything else, which is the whole difference between a brand
               brain and a folder of documents.

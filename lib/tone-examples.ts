@@ -1,134 +1,134 @@
 /**
- * Twelve registers, one message, twelve ways.
+ * One message, written in each of the six archetypes' own voices.
  *
- * Step 1 of branditect-ui/spec/tone-examples.md, which amends the
- * tone-of-voice step in spec/onboarding.md. The step used to ask a person to
- * describe their voice into a box, which is a blank page, and blank pages are
- * where onboarding stops. Recognition is easy where description is hard: the
- * picks become the answer and the box is demoted to "in your own words".
+ * Step 1 of branditect-ui/spec/tone-examples.md, which amends onboarding Q18
+ * step A only. The tiles used to carry a description of each voice, and a
+ * description of a voice is the thing people cannot evaluate — which is why
+ * the step gets skipped. Every tile now carries the same message written in
+ * that archetype's rubric, so the difference is shown rather than inferred.
  *
- * EVERY LINE HERE IS OURS. Nothing is quoted from any company, and nothing may
- * be presented as though it were. The comparators are comparisons — saying a
- * register is "like Duolingo" needs no source and puts nothing in anyone's
- * mouth — but a sentence of our own set in quotation marks directly under a
- * real company's name reads as that company's copy, which would be a
- * fabrication printed under their name. That is criterion 6, and it is the one
- * failure on this screen that actually matters. So:
+ * THE SIX ARE UNCHANGED. An earlier draft of the spec proposed twelve new
+ * registers; that was withdrawn, and rightly. The six are not labels, they are
+ * rubrics Studio obeys, and Q19's anti-voice is derived from the four tiles
+ * nobody picked. Twelve labels would have traded six enforceable rubrics for
+ * none and broken Q19's mechanism. Nothing here adds a seventh.
  *
- *   - `line` holds a bare sentence with no quotation marks of any kind.
- *   - `comparators` are names only, never attached to a line.
- *   - The renderer must not attribute. See toneExampleProblems() below, which
- *     the data test runs over every entry.
+ * ANCHORS ARE NAMED, NEVER QUOTED. Saying a voice is like Glossier is ordinary
+ * comparison and needs no source. Putting a sentence in Glossier's mouth needs
+ * a source that secondary material cannot honestly provide, and a
+ * plausible-looking quotation nobody published is a fabrication under a real
+ * company's name. So `line` carries no quotation marks and never names an
+ * anchor, and toneExampleProblems() below is the test of that, not a promise.
  *
- * Holding the message constant is the teaching mechanism, not a consolation
- * for dropping real quotes. Twelve unrelated slogans would mean reading twelve
- * different things and inferring the difference; twelve versions of one
- * sentence shows it. The shipping notification was chosen because it is a
- * message every one of these customers actually sends, so the register is
- * demonstrated on their own work rather than on a perfume tagline.
- *
- * Fixed for every account. No generation, no personalisation, no cost — this
- * is a static file, which is why it is cheap to build and cheap to keep.
- *
- * NOTE for step 3, when this is wired to the answer: lib/onboarding-questions.ts
- * already carries six ARCHETYPES with their own `think` comparators, used by
- * question 18. These twelve are a different, finer vocabulary. They are not
- * merged here on purpose — reconciling them is a decision about what gets
- * stored on the brand, not a data-file detail.
+ * The lines are validated against each archetype's rubric by lib/tone-rubric.ts.
+ * Read that file's header first: the governing document the spec names is not
+ * in this repository, so the validator enforces the house rules in full and
+ * only those per-archetype properties the in-repo definitions actually state.
+ * Where a line was rewritten from the spec's draft, the reason is on the entry.
  */
 
-/** The message every register below is a version of. */
+import { ARCHETYPES, type ArchetypeId } from "./onboarding-questions.ts";
+
+/** The message every line below is a version of. Stated once above the grid. */
 export const BASE_MESSAGE = "Telling a customer their order has shipped.";
 
 export interface ToneExample {
-  /** Stored on the brand. Criterion 5: this, never a comparator name. */
-  id: string;
-  /** The heading on the card, and what is being chosen. */
-  register: string;
-  /** Smallest type on the card. Names only — nothing is attributed to them. */
-  comparators: string[];
-  /** BASE_MESSAGE written in this register. Ours. Never quoted, never quotable. */
+  /** The archetype this demonstrates. Criterion 5 stores the rubric, not a label. */
+  id: ArchetypeId;
+  /** Anchor brands, named only. Smallest type on the card. */
+  anchors: string[];
+  /** BASE_MESSAGE in this archetype's voice. Ours. Never attributed. */
   line: string;
 }
 
+/**
+ * Anchors come from ARCHETYPES.think, not from a second list here. The spec's
+ * layout section writes "Rhode, Mercedes-Benz, Aesop" where the repo has
+ * "Rhode, Mercedes, Aesop"; keeping both would be two sources that can
+ * disagree, and this repo has already been bitten twice this week by exactly
+ * that. The repo wins, and a test asserts the two stay in step.
+ */
+function anchorsFor(id: ArchetypeId): string[] {
+  return ARCHETYPES[id].think.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * Order is the archetype document's: service, digital, physical. TILE_ORDER in
+ * lib/onboarding-questions.ts already varies this per track, and criterion 1
+ * defers to it — this array is the data, not the running order.
+ */
 export const TONE_EXAMPLES: ToneExample[] = [
-  { id: "playful", register: "Playful", comparators: ["Duolingo", "Innocent"],
-    line: "It's out the door and it's not looking back. Track it →" },
-  { id: "warm", register: "Warm", comparators: ["Headspace", "Glossier"],
-    line: "Good news — your order's on its way. Here's where it is." },
-  { id: "plain-spoken", register: "Plain-spoken", comparators: ["Slack", "GitHub"],
-    line: "Your order shipped today. Track it here." },
-  { id: "bold", register: "Bold", comparators: ["Virgin", "Red Bull"],
-    line: "Shipped. Go get it." },
-  { id: "premium", register: "Premium", comparators: ["Louis Vuitton", "Aesop"],
-    line: "Your order has left us. Follow its journey." },
-  { id: "expert", register: "Expert", comparators: ["IBM", "Cisco"],
-    line: "Dispatched today and tracked end to end. Follow it here." },
-  { id: "purposeful", register: "Purposeful", comparators: ["Patagonia", "WWF"],
-    line: "On its way, in packaging you can compost. Track it here." },
-  { id: "witty", register: "Witty", comparators: ["Netflix", "Oatly"],
-    line: "Your order has left the building. No encore." },
-  { id: "rugged", register: "Rugged", comparators: ["Harley-Davidson", "Carhartt"],
-    line: "Packed, loaded and rolling. Track it." },
-  { id: "homely", register: "Homely", comparators: ["IKEA", "Ben & Jerry's"],
-    line: "It's on its way to you. Pop the kettle on." },
-  { id: "encouraging", register: "Encouraging", comparators: ["Peloton", "Nike"],
-    line: "It's on its way. You're going to love it." },
-  { id: "candid", register: "Candid", comparators: ["Buffer", "Monzo"],
-    line: "It shipped a day late — sorry about that. Here's the tracking." },
+  {
+    id: "confident",
+    anchors: anchorsFor("confident"),
+    line: "Shipped this morning. Track it.",
+  },
+  {
+    id: "warm",
+    anchors: anchorsFor("warm"),
+    line: "Good news. It's on its way to you, and you can see where it's got to here.",
+  },
+  {
+    id: "bold",
+    anchors: anchorsFor("bold"),
+    line: "It's out the door and it's not looking back. Go on, watch it travel.",
+  },
+  {
+    id: "calm",
+    anchors: anchorsFor("calm"),
+    line: "Your order was dispatched today. Most arrive within three working days, though weather can add one.",
+  },
+  {
+    id: "visionary",
+    anchors: anchorsFor("visionary"),
+    line: "On its way. One less thing between you and the work.",
+  },
+  {
+    id: "expert",
+    anchors: anchorsFor("expert"),
+    line: "Dispatched 14:20 today, tracked end to end. Delivery estimate Thursday, based on the last 200 orders.",
+  },
 ];
 
 /**
- * The comparator line as the card shows it. "like" is doing real work: it
- * frames the names as comparison rather than as a source.
+ * The cross-category callout the archetype doc specifies, and the thing that
+ * makes the picker teach: three beauty brands sitting in three different tiles.
  */
-export function comparatorLabel(example: ToneExample): string {
-  return `like ${example.comparators.join(", ")}`;
-}
+export const CROSS_CATEGORY_CALLOUT = {
+  anchors: ["Rhode", "Glossier", "CeraVe"],
+  note: "Three beauty brands, three different tiles. The category is not the voice.",
+};
 
-export function toneExample(id: string): ToneExample | null {
+export function toneExample(id: ArchetypeId): ToneExample | null {
   return TONE_EXAMPLES.find((e) => e.id === id) ?? null;
 }
 
-/** Criterion 5: only these ever reach the saved row. */
-export const REGISTER_IDS: readonly string[] = TONE_EXAMPLES.map((e) => e.id);
-
-export function isRegisterId(value: string): boolean {
-  return REGISTER_IDS.includes(value);
+/** "like Rhode, Mercedes-Benz, Aesop" — comparison, not attribution. */
+export function anchorLabel(example: ToneExample): string {
+  return `like ${example.anchors.join(", ")}`;
 }
 
-/**
- * Names that must never be stored as a tone value. Downstream should read
- * "premium", not "Aesop".
- */
-export function isComparatorName(value: string): boolean {
+export function isAnchorName(value: string): boolean {
   const v = value.trim().toLowerCase();
-  return TONE_EXAMPLES.some((e) => e.comparators.some((c) => c.toLowerCase() === v));
+  return TONE_EXAMPLES.some((e) => e.anchors.some((a) => a.toLowerCase() === v));
 }
 
 /**
- * Criterion 6, as a function rather than a promise in a comment.
- *
- * Returns every way an entry would be presenting itself as a quotation from
- * its comparator. Empty for all twelve is the only acceptable result, and the
- * data test asserts exactly that.
+ * Criterion 4, as a function rather than a promise in a comment: every way an
+ * entry would be presenting its line as something an anchor brand said.
  */
 export function toneExampleProblems(e: ToneExample): string[] {
   const problems: string[] = [];
 
   // Straight and typographic quote marks both. The reference page wraps each
-  // line in “…” directly beneath the comparator names, which is precisely the
-  // impression this rules out — so the quoting, if any, is the renderer's
-  // decision to defend, and never baked into the data.
-  if (/["'‘’“”«»]/.test(e.line)) {
-    // An apostrophe inside a word is not a quotation mark. Only flag ones that
-    // could open or close a quote.
-    const asQuote = /(^|[\s(\-])["'‘“«]|["'’”»]([\s.,!?)\-]|$)/.test(e.line);
-    if (asQuote) problems.push("line is wrapped in quotation marks");
+  // line in curly quotes directly beneath the anchor names, which is exactly
+  // the impression this rules out — so no quoting is baked into the data, and
+  // the card must not add it back.
+  if (/(^|[\s(\-])["'‘“«]|["'’”»]([\s.,!?)\-]|$)/.test(e.line)) {
+    problems.push("line is wrapped in quotation marks");
   }
 
-  // Attribution in any of the shapes people write it.
-  for (const name of e.comparators) {
+  for (const name of e.anchors) {
     const n = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (new RegExp(`—\\s*${n}\\b|\\bby ${n}\\b|\\b${n}\\s*(said|says|wrote)\\b|\\(${n}\\)`, "i").test(e.line)) {
       problems.push(`line attributes itself to ${name}`);
@@ -137,7 +137,7 @@ export function toneExampleProblems(e: ToneExample): string[] {
   }
 
   if (!e.line.trim()) problems.push("line is empty");
-  if (e.comparators.length === 0) problems.push("no comparator");
-  if (e.comparators.some((c) => !c.trim())) problems.push("blank comparator");
+  if (e.anchors.length === 0) problems.push("no anchor");
+  if (!ARCHETYPES[e.id]) problems.push(`${e.id} is not one of the six archetypes`);
   return problems;
 }

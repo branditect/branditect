@@ -1,0 +1,270 @@
+<title>Tone of voice — examples</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-2xs:11px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-4:#fbe7e2;
+    --violet:#6a4fb0; --lav-line:#ddd0f4; --lav-ink:#5b4a80; --lav-wash:#f5f0fd;
+    --grad-rail:linear-gradient(168deg,#6b53ac 0%,#4a3585 52%,#2f2159 100%);
+    --r-panel:18px; --r-card:12px; --r-pill:50px;
+    --shadow-panel:0 6px 10px rgba(20,20,26,.06),0 1px 1px rgba(20,20,26,.04);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,p{margin:0} svg{display:block} button{font:inherit;cursor:pointer}
+
+  .shell{max-width:1240px;margin:0 auto;padding:22px;
+    display:grid;grid-template-columns:352px minmax(0,1fr);gap:22px;align-items:start}
+  @media(max-width:1000px){.shell{grid-template-columns:1fr}}
+
+  /* ============ RAIL ============ */
+  .rail{
+    position:relative;overflow:hidden;border-radius:var(--r-panel);
+    background:var(--grad-rail);color:#fff;padding:26px 24px 30px;min-height:520px;
+  }
+  .rail>*:not(.blob){position:relative;z-index:2}
+  .blob{position:absolute;left:-90px;bottom:-130px;width:330px;height:330px;border-radius:50%;
+    background:rgba(255,255,255,.07);z-index:1}
+  .step{font-size:var(--fs-micro);font-weight:800;letter-spacing:1.4px;text-transform:uppercase;
+    color:rgba(255,255,255,.62)}
+  .rail h2{font-size:23px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-top:10px}
+  .rail .lede{font-size:var(--fs-sm);line-height:1.6;color:rgba(255,255,255,.82);margin-top:12px}
+  .rail .why{margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+  .rail .why h3{font-size:var(--fs-xs);font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    color:rgba(255,255,255,.62)}
+  .rail .why p{font-size:var(--fs-sm);line-height:1.6;color:rgba(255,255,255,.86);margin-top:8px}
+  .prog{margin-top:26px;display:flex;gap:5px}
+  .prog i{height:3px;flex:1;border-radius:3px;background:rgba(255,255,255,.22)}
+  .prog i.on{background:#fff}
+
+  /* ============ MAIN ============ */
+  .main{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);
+    padding:26px 26px 28px;box-shadow:var(--shadow-panel)}
+  .q{font-size:20px;font-weight:800;letter-spacing:-.3px}
+  .hint{font-size:var(--fs-sm);color:var(--muted);margin-top:6px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+  .v{
+    text-align:left;background:var(--card);border:1px solid var(--rule-2);
+    border-radius:var(--r-card);padding:13px 14px 14px;position:relative;
+    transition:border-color .15s,box-shadow .15s,background .15s;
+  }
+  .v:hover{border-color:var(--accent-line);background:var(--tint-1)}
+  .v.on{border-color:var(--accent);background:var(--tint-1);box-shadow:0 0 0 2px var(--tint-4)}
+  .v .tick{position:absolute;top:11px;right:11px;width:19px;height:19px;border-radius:50%;
+    border:1.5px solid var(--rule-2);background:#fff;display:grid;place-items:center}
+  .v .tick svg{width:11px;height:11px;fill:#fff;opacity:0}
+  .v.on .tick{background:var(--accent);border-color:var(--accent)}
+  .v.on .tick svg{opacity:1}
+
+  .v .adj{font-size:var(--fs-body);font-weight:800;letter-spacing:-.2px;padding-right:24px}
+  .v .who{font-size:var(--fs-micro);font-weight:600;color:var(--faint);margin-top:4px}
+  .v .say{
+    margin-top:10px;padding-left:11px;border-left:2px solid var(--lav-line);
+    font-size:var(--fs-sm);font-weight:600;line-height:1.5;color:var(--ink-2);
+  }
+
+  .base{
+    display:flex;align-items:center;gap:10px;background:var(--lav-wash);
+    border:1px solid var(--lav-line);border-radius:10px;padding:10px 13px;margin:16px 0 14px;
+  }
+  .base b{font-size:var(--fs-micro);font-weight:800;letter-spacing:1px;text-transform:uppercase;
+    color:var(--lav-ink);flex:none}
+  .base span{font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)}
+
+  .more{display:flex;align-items:center;gap:12px;margin-top:14px}
+  .more button{border:1px solid var(--rule-2);background:var(--card);border-radius:var(--r-pill);
+    padding:8px 16px;font-size:var(--fs-sm);font-weight:700;color:var(--ink-2)}
+  .more button:hover{border-color:var(--accent);color:var(--accent)}
+  .more .c{font-size:var(--fs-xs);color:var(--muted)}
+
+  .own{margin-top:22px;padding-top:20px;border-top:1px solid var(--rule)}
+  .own label{font-size:var(--fs-sm);font-weight:700}
+  .own p{font-size:var(--fs-xs);color:var(--muted);margin-top:3px}
+  .own textarea{
+    width:100%;margin-top:9px;border:1px solid var(--rule-2);border-radius:10px;
+    padding:11px 12px;font:inherit;font-size:var(--fs-sm);color:var(--ink);resize:vertical;min-height:76px;
+  }
+  .own textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--tint-4)}
+
+  .foot{display:flex;align-items:center;gap:10px;margin-top:22px}
+  .foot .sp{flex:1}
+  .btn{border:0;border-radius:var(--r-pill);background:var(--accent);color:#fff;
+    padding:11px 22px;font-size:var(--fs-sm);font-weight:700}
+  .btn:hover{background:var(--accent-dark)}
+  .btn.ghost{background:var(--card);color:var(--ink-2);border:1px solid var(--rule-2)}
+  .skip{background:none;border:0;font-size:var(--fs-sm);font-weight:600;color:var(--muted)}
+  .skip:hover{color:var(--ink)}
+
+  .note{margin:26px auto 0;max-width:1240px;padding:0 22px 50px}
+  .note div{border-left:3px solid var(--accent-line);background:var(--tint-1);
+    border-radius:0 10px 10px 0;padding:13px 16px;max-width:760px}
+  .note h4{font-size:var(--fs-sm);font-weight:800}
+  .note p{font-size:var(--fs-xs);color:var(--ink-2);margin-top:5px;line-height:1.55}
+</style>
+
+<div class="shell">
+
+  <aside class="rail">
+    <span class="blob"></span>
+    <div class="step">Strategy · step 6 of 9</div>
+    <h2>How should your brand sound?</h2>
+    <p class="lede">Tone of voice is the difference between “Submit your request” and “Tell us what
+      you need.” Same meaning, different company.</p>
+    <div class="why">
+      <h3>Why we ask</h3>
+      <p>Everything Studio writes for you is written in this voice. Get it right once and every
+        product description, email and caption comes out sounding like you rather than like
+        software.</p>
+    </div>
+    <div class="why">
+      <h3>No wrong answer</h3>
+      <p>Pick two or three that feel close. You are not choosing a brand to copy — you are showing
+        us the register you want to be read in.</p>
+    </div>
+    <div class="prog">
+      <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+      <i class="on"></i><i></i><i></i><i></i>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1 class="q">Which of these sound like you?</h1>
+    <p class="hint">The same message, written twelve ways. Pick two or three that sound like you.</p>
+
+    <div class="base"><b>The message</b><span>Telling a customer their order has shipped.</span></div>
+
+
+    <div class="grid">
+
+      <button class="v on">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Playful</div>
+        <div class="who">like Duolingo, Innocent</div>
+        <div class="say">“It's out the door and it's not looking back. Track it →”</div>
+      </button>
+
+      <button class="v on">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Warm</div>
+        <div class="who">like Headspace, Glossier</div>
+        <div class="say">“Good news — your order's on its way. Here's where it is.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Plain-spoken</div>
+        <div class="who">like Slack, GitHub</div>
+        <div class="say">“Your order shipped today. Track it here.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Bold</div>
+        <div class="who">like Virgin, Red Bull</div>
+        <div class="say">“Shipped. Go get it.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Premium</div>
+        <div class="who">like Louis Vuitton, Aesop</div>
+        <div class="say">“Your order has left us. Follow its journey.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Expert</div>
+        <div class="who">like IBM, Cisco</div>
+        <div class="say">“Dispatched today and tracked end to end. Follow it here.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Purposeful</div>
+        <div class="who">like Patagonia, WWF</div>
+        <div class="say">“On its way, in packaging you can compost. Track it here.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Witty</div>
+        <div class="who">like Netflix, Oatly</div>
+        <div class="say">“Your order has left the building. No encore.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Rugged</div>
+        <div class="who">like Harley-Davidson, Carhartt</div>
+        <div class="say">“Packed, loaded and rolling. Track it.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Homely</div>
+        <div class="who">like IKEA, Ben &amp; Jerry's</div>
+        <div class="say">“It's on its way to you. Pop the kettle on.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Encouraging</div>
+        <div class="who">like Peloton, Nike</div>
+        <div class="say">“It's on its way. You're going to love it.”</div>
+      </button>
+
+      <button class="v">
+        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
+        <div class="adj">Candid</div>
+        <div class="who">like Buffer, Monzo</div>
+        <div class="say">“It shipped a day late — sorry about that. Here's the tracking.”</div>
+      </button>
+
+    </div>
+
+    <div class="more">
+      <button>Show me these as product descriptions</button>
+      <span class="c">12 registers · 2 chosen</span>
+    </div>
+
+    <div class="own">
+      <label for="ownwords">In your own words</label>
+      <p>Optional. Anything the examples miss — words you always use, words you never use.</p>
+      <textarea id="ownwords" placeholder="We never say “solutions”. We talk to workshop owners like one of them, not like a supplier."></textarea>
+    </div>
+
+    <div class="foot">
+      <button class="skip">Skip for now</button>
+      <div class="sp"></div>
+      <button class="btn ghost">Back</button>
+      <button class="btn">Continue</button>
+    </div>
+  </main>
+
+</div>
+
+<div class="note">
+  <div>
+    <h4>One message, twelve ways — and why the lines are ours</h4>
+    <p>“Describe your tone of voice” is a blank page, and blank pages are where onboarding stops.
+    Recognition is easy where description is hard. Holding the message constant is what makes the
+    registers comparable: twelve unrelated slogans would mean reading twelve different things and
+    inferring the difference, where twelve versions of one sentence show it. The lines are written
+    for this screen rather than quoted, so nothing has to be sourced, nothing goes stale when a brand
+    rebrands, and no other company’s copy lives permanently in the product. The brand names are
+    comparators, in the smallest type on the card — you are choosing a register, not a brand to
+    imitate.</p>
+  </div>
+</div>

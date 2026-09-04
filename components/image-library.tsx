@@ -4,7 +4,10 @@ import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from
 import { supabase } from "@/lib/supabase";
 import { imageMatches } from "@/lib/product-attachments";
 import ProductPicker from "@/components/products/product-picker";
-import { productsForImage, selectionLabel, type PickableProduct } from "@/lib/product-picker";
+import {
+  productsForImage, selectionLabel, passesTagFilter, untaggedCount,
+  type PickableProduct,
+} from "@/lib/product-picker";
 import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
@@ -59,6 +62,9 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
   const [filterCategory, setFilterCategory] = useState("");
   const [filterFormat, setFilterFormat] = useState("");
   const [filterTags, setFilterTags] = useState("");
+  /* Criteria 4 and 5. Between them these answer "what have I not done yet". */
+  const [filterProduct, setFilterProduct] = useState<string | null>(null);
+  const [untaggedOnly, setUntaggedOnly] = useState(false);
 
   // Hover state
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -270,7 +276,10 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
   /* ---- Filtering ---- */
 
-  const filtered = images.filter((img) => {
+  /* Everything except the tag filters, so the Untagged count is taken from the
+     same set the grid is about to render rather than from all images. A count
+     computed over a different set is how a badge reads 14 above twelve tiles. */
+  const beforeTagFilters = images.filter((img) => {
     if (filterCategory && img.category !== filterCategory) return false;
     if (filterFormat && img.format !== filterFormat) return false;
     if (filterTags) {
@@ -279,6 +288,12 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     }
     return true;
   });
+
+  const untaggedHere = untaggedCount(beforeTagFilters, links);
+
+  const filtered = beforeTagFilters.filter((img) =>
+    passesTagFilter(img.id, { productId: filterProduct, untaggedOnly }, links),
+  );
 
   /* ---- Render ---- */
 
@@ -483,6 +498,36 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         </div>
       ) : (
         <div>
+        {/* All products ▾ and Untagged N. Two controls, one question. */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <select
+            value={filterProduct ?? ""}
+            onChange={(e) => { setFilterProduct(e.target.value || null); setUntaggedOnly(false); }}
+            aria-label="Filter by product"
+            className="text-[13px] font-semibold border border-light rounded-md px-2 py-1.5 bg-white text-ink"
+          >
+            <option value="">All products</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => { setUntaggedOnly((v) => !v); setFilterProduct(null); }}
+            aria-pressed={untaggedOnly}
+            className={`text-[13px] font-semibold rounded-md px-2.5 py-1.5 border ${
+              untaggedOnly
+                ? "bg-brand-orange border-brand-orange text-white"
+                : "bg-white border-light text-ink hover:border-brand-orange"
+            }`}
+          >
+            Untagged <span data-untagged-count>{untaggedHere}</span>
+          </button>
+          <span className="text-[13px] text-muted" data-shown-count>
+            {filtered.length} of {images.length} images
+          </span>
+        </div>
+
         {/* Select many, tag once. There is an existing library of untagged
             images; tagging forty of them one at a time is not something a
             person does twice. */}

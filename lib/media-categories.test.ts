@@ -63,6 +63,31 @@ describe("the page and the list cannot drift apart", () => {
       assert.ok(isAllowedCategory(c), `the page passes category="${c}", which the constraint rejects`);
     }
   });
+
+  /**
+   * The first version of this was not enough. The tab BUTTONS came from
+   * TYPE_TABS while each panel still passed its own hardcoded category= prop,
+   * so there were still two sources and they could still disagree — a browser
+   * run caught it by mutating the list and watching the page write the old
+   * value anyway.
+   */
+  it("no panel hardcodes a category at all", () => {
+    const hardcoded = [...src.matchAll(/category="([a-z-]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(hardcoded, [],
+      `these are still literals in the page rather than fields of TYPE_TABS: ${hardcoded.join(", ")}`);
+  });
+
+  it("the panels take their category from the same row that drew the button", () => {
+    assert.ok(/category=\{t\.category\}/.test(src),
+      "the panel does not read its category from the tab row");
+  });
+
+  it("and every other upload rule with it, so none of them can drift either", () => {
+    for (const field of ["accept", "acceptLabel", "maxSize", "previewType", "emptyMessage"]) {
+      assert.ok(new RegExp(`${field}=\\{t\\.${field}\\}`).test(src),
+        `${field} is still hardcoded per panel`);
+    }
+  });
 });
 
 /** The recorded state, so the next reader does not re-run the probe. */
@@ -76,6 +101,18 @@ describe("the finding is written down", () => {
   it("has no live statement to run", () => {
     const active = sql.split("\n").filter((l) => !l.trim().startsWith("--")).join("").trim();
     assert.equal(active, "", `the file has runnable SQL in it: ${active.slice(0, 80)}`);
+  });
+
+  it("the stale migration file points at it", () => {
+    const stale = readFileSync("supabase/brand_images.sql", "utf8");
+    assert.ok(/NO LONGER DESCRIBES PRODUCTION/i.test(stale),
+      "brand_images.sql still reads as if it were accurate");
+    assert.ok(stale.includes("brand-images-categories.sql"),
+      "it does not point at the file that records the live state");
+    // The pointer has to be at the top. A warning below the CREATE TABLE is a
+    // warning nobody reaches.
+    assert.ok(stale.indexOf("NO LONGER DESCRIBES") < stale.indexOf("CREATE TABLE"),
+      "the warning is below the schema it is warning about");
   });
 
   it("warns that the spec's DROP-then-ADD could narrow the constraint", () => {

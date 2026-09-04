@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { summariseUpload, anyLanded, type UploadFailure } from "@/lib/upload-report";
 
 interface FileItem {
   id: string;
@@ -37,6 +38,10 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTags, setEditTags] = useState("");
   const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
+  /* An upload that fails has to say so. This path used to discard the insert
+     result entirely, so a rejected row produced no exception, no message and
+     no file. */
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = useCallback(async () => {
@@ -55,8 +60,19 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
 
   const uploadFiles = useCallback(async (fileList: FileList | File[]) => {
-    const valid = Array.from(fileList).filter((f) => f.size <= maxSize * 1024 * 1024);
-    if (valid.length === 0) return;
+    const all = Array.from(fileList);
+    const failures: UploadFailure[] = [];
+
+    // Oversize files used to be filtered out in silence, so dropping a 200 MB
+    // video looked identical to a working upload that produced nothing.
+    const valid = all.filter((f) => {
+      if (f.size <= maxSize * 1024 * 1024) return true;
+      failures.push({ fileName: f.name, kind: "too-big" });
+      return false;
+    });
+
+    setUploadError(null);
+    if (all.length === 0) return;
 
     setUploading(true);
     for (const file of valid) {
@@ -64,12 +80,19 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
       const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const path = `${BRAND_ID}/${category}/${uniqueName}`;
 
-      const { error } = await supabase.storage.from("brand-images").upload(path, file, { upsert: true });
-      if (error) continue;
+      const { error: storageError } = await supabase.storage
+        .from("brand-images").upload(path, file, { upsert: true });
+      if (storageError) {
+        // Was a bare `continue`, which skipped the file without a word.
+        failures.push({ fileName: file.name, kind: "storage", detail: storageError.message });
+        continue;
+      }
 
       const { data: urlData } = supabase.storage.from("brand-images").getPublicUrl(path);
 
-      await supabase.from("brand_images").insert({
+      // supabase-js resolves { data, error } and never throws. Discarding this
+      // is what made a rejected row indistinguishable from a successful one.
+      const { error: insertError } = await supabase.from("brand_images").insert({
         brand_id: BRAND_ID,
         file_url: urlData.publicUrl,
         file_name: file.name,
@@ -79,9 +102,13 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
         campaign_name: "",
         tags: [category],
       });
+      if (insertError) {
+        failures.push({ fileName: file.name, kind: "row", detail: insertError.message });
+      }
     }
     setUploading(false);
-    fetchFiles();
+    setUploadError(summariseUpload(failures, all.length));
+    if (anyLanded(failures, all.length)) fetchFiles();
   }, [category, maxSize, fetchFiles, BRAND_ID]);
 
   const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -137,6 +164,26 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
 
   return (
     <div>
+      {/* Captured is not the same as reported. A failure the person cannot see
+          is the same silence, one layer further in. */}
+      {uploadError && (
+        <div
+          role="alert"
+          data-upload-error="true"
+          className="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-[13px] text-red-700"
+        >
+          <span className="flex-1">{uploadError}</span>
+          <button
+            type="button"
+            onClick={() => setUploadError(null)}
+            aria-label="Dismiss"
+            className="font-bold text-red-400 hover:text-red-700 leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Search / filter */}
       <div className="mb-4">
         <input

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   productMatches, rowsToInsert, productsForImage, isUntagged,
-  selectionLabel, confirmState,
+  selectionLabel, confirmState, passesTagFilter, untaggedCount,
 } from "./product-picker.ts";
 
 const P = [
@@ -151,5 +151,73 @@ describe("something writes to product_images", () => {
     const post = route.slice(route.indexOf("export async function POST"));
     assert.ok(post.includes('from("catalog_products")'), "products are not checked");
     assert.ok(post.includes('from("brand_images")'), "images are not checked");
+  });
+});
+
+/**
+ * CRITERION 4: the Untagged filter shows exactly the images with no row in
+ * product_images, and its count matches the number of tiles rendered.
+ * CRITERION 5: filtering by a product shows exactly that product's images.
+ */
+describe("the two filters", () => {
+  const imgs = [{ id: "i1" }, { id: "i2" }, { id: "i3" }, { id: "i4" }];
+  const links = [
+    { product_id: "p1", image_id: "i1" },
+    { product_id: "p2", image_id: "i1" },
+    { product_id: "p1", image_id: "i2" },
+  ];
+  const show = (f: { productId: string | null; untaggedOnly: boolean }) =>
+    imgs.filter((i) => passesTagFilter(i.id, f, links)).map((i) => i.id);
+
+  it("5 · a product shows exactly its own images", () => {
+    assert.deepEqual(show({ productId: "p1", untaggedOnly: false }), ["i1", "i2"]);
+    assert.deepEqual(show({ productId: "p2", untaggedOnly: false }), ["i1"]);
+  });
+
+  it("5 · a product with none shows none, not everything", () => {
+    assert.deepEqual(show({ productId: "p9", untaggedOnly: false }), []);
+  });
+
+  it("4 · Untagged shows exactly the images with no row", () => {
+    assert.deepEqual(show({ productId: null, untaggedOnly: true }), ["i3", "i4"]);
+  });
+
+  it("4 · and its count matches what is rendered", () => {
+    const rendered = show({ productId: null, untaggedOnly: true });
+    assert.equal(untaggedCount(imgs, links), rendered.length,
+      "the badge and the grid disagree");
+  });
+
+  it("4 · the count is taken from the filtered set, not from every image", () => {
+    // Two images survive an upstream filter; only one of them is untagged.
+    const narrowed = [{ id: "i2" }, { id: "i3" }];
+    assert.equal(untaggedCount(narrowed, links), 1);
+    assert.notEqual(untaggedCount(narrowed, links), untaggedCount(imgs, links));
+  });
+
+  it("neither filter set shows everything", () => {
+    assert.deepEqual(show({ productId: null, untaggedOnly: false }), ["i1", "i2", "i3", "i4"]);
+  });
+
+  it("Untagged wins over a product, so the pair is empty rather than contradictory", () => {
+    assert.deepEqual(show({ productId: "p1", untaggedOnly: true }), ["i3", "i4"]);
+  });
+});
+
+describe("the filters are wired to those rules", () => {
+  const src = readFileSync("components/image-library.tsx", "utf8");
+
+  it("the grid uses passesTagFilter rather than its own copy", () => {
+    assert.ok(src.includes("passesTagFilter("), "the component filters by hand");
+  });
+
+  it("the badge and the grid are counted from the same set", () => {
+    assert.ok(/untaggedCount\(beforeTagFilters, links\)/.test(src),
+      "the count is computed over a different set from the one rendered");
+  });
+
+  it("both controls exist and are labelled", () => {
+    assert.ok(/aria-label="Filter by product"/.test(src));
+    assert.ok(/aria-pressed=\{untaggedOnly\}/.test(src));
   });
 });

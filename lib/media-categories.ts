@@ -38,15 +38,28 @@ export const ALLOWED_CATEGORIES: readonly string[] = [
  */
 export const TYPE_TABS = [
   { key: "images", label: "Images", icon: "IMG", category: "product",
-    desc: "Photos, screenshots, brand imagery" },
+    desc: "Photos, screenshots, brand imagery",
+    accept: "", acceptLabel: "", maxSize: 0, previewType: "image", emptyMessage: "" },
   { key: "videos", label: "Videos", icon: "VID", category: "video",
-    desc: "Brand videos, reels, ads" },
+    desc: "Brand videos, reels, ads",
+    accept: ".mp4,.mov,.webm,.avi", acceptLabel: "MP4, MOV, WEBM, AVI", maxSize: 100,
+    previewType: "video",
+    emptyMessage: "No videos uploaded yet. Drop video files above to get started." },
   { key: "sounds", label: "Sounds", icon: "SND", category: "audio",
-    desc: "Audio logos, jingles, podcasts" },
+    desc: "Audio logos, jingles, podcasts",
+    accept: ".mp3,.wav,.aac,.ogg,.m4a", acceptLabel: "MP3, WAV, AAC, OGG, M4A", maxSize: 50,
+    previewType: "audio",
+    emptyMessage: "No audio files yet. Upload audio logos, jingles, or podcast clips." },
   { key: "graphics", label: "Graphics", icon: "GFX", category: "graphic",
-    desc: "Logos, icons, illustrations, vectors" },
+    desc: "Logos, icons, illustrations, vectors",
+    accept: ".svg,.png,.ai,.eps,.pdf,.psd", acceptLabel: "SVG, PNG, AI, EPS, PDF, PSD", maxSize: 50,
+    previewType: "image",
+    emptyMessage: "No graphics yet. Upload logos, icons, illustrations, and vectors." },
   { key: "web", label: "Website / App", icon: "WEB", category: "web",
-    desc: "Screenshots, wireframes, UI components" },
+    desc: "Screenshots, wireframes, UI components",
+    accept: ".png,.jpg,.jpeg,.webp,.svg,.pdf,.fig", acceptLabel: "PNG, JPG, WEBP, SVG, PDF, FIG",
+    maxSize: 20, previewType: "image",
+    emptyMessage: "No website or app assets yet. Upload screenshots, wireframes, and UI references." },
 ] as const;
 
 export function isAllowedCategory(category: string): boolean {

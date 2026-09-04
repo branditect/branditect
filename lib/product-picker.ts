@@ -108,3 +108,46 @@ export function confirmState(imageCount: number, productCount: number): {
 
 /** Never the file. The chip's × removes the link only. */
 export const UNTAG_CHIP_NOTE = "Removes the link, not the file.";
+
+
+/**
+ * The two filters on the Media screen, which between them answer the only
+ * question the page gets asked twice: what have I not tagged yet.
+ *
+ * Criteria 4 and 5. Kept here rather than inline in the component so the count
+ * on the toggle and the tiles it renders come from ONE rule — a count computed
+ * separately from the list it describes is how a badge says 14 above twelve
+ * tiles.
+ */
+export interface TagFilter {
+  /** A product id, or null for "All products". */
+  productId: string | null;
+  /** Only images with no row in product_images. */
+  untaggedOnly: boolean;
+}
+
+export function passesTagFilter(
+  imageId: string,
+  filter: TagFilter,
+  links: { product_id: string; image_id: string }[],
+): boolean {
+  // Untagged wins when both are set: an image on a product is by definition
+  // not untagged, so the combination is empty rather than contradictory.
+  if (filter.untaggedOnly) return isUntagged(imageId, links);
+  if (filter.productId) {
+    return links.some((l) => l.image_id === imageId && l.product_id === filter.productId);
+  }
+  return true;
+}
+
+/**
+ * The number on the `Untagged` toggle. Counted from the same images the grid
+ * is about to render, after every other filter, so it cannot disagree with
+ * what is on screen.
+ */
+export function untaggedCount(
+  images: { id: string }[],
+  links: { image_id: string }[],
+): number {
+  return images.filter((i) => isUntagged(i.id, links)).length;
+}

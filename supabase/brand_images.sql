@@ -1,3 +1,23 @@
+-- ⚠ THIS FILE NO LONGER DESCRIBES PRODUCTION. Read
+-- supabase/brand-images-categories.sql before trusting anything below.
+--
+-- The category CHECK constraint in this file lists six values. The live
+-- constraint accepts ten: the four media types — video, audio, graphic, web —
+-- were added by hand, outside these migration files, and nothing here records
+-- it. Probed on 2026-09-03, one attempted insert per value.
+--
+-- That gap is what made finding 0 of branditect-ui/spec/knowledge-images.md
+-- read as a live bug. This file said four of the five media tabs must reject
+-- every upload; the database disagreed. Two people read the same file and drew
+-- the same wrong conclusion from it.
+--
+-- Do not widen the constraint by pasting a new list over the old one. Read the
+-- live definition first —
+--   SELECT pg_get_constraintdef(oid) FROM pg_constraint
+--   WHERE conname = 'brand_images_category_check';
+-- — and union with what it returns, or you will drop a value that live rows
+-- are using.
+
 -- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
 
 CREATE TABLE IF NOT EXISTS brand_images (

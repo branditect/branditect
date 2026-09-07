@@ -120,6 +120,38 @@ Expert bans fragments outright.
 **These are still drafts. Re-run the validator; do not assume the counting above is right.** If a
 line fails, rewrite the line, never the rubric.
 
+### `sentences_per_para` applies to body paragraphs, not the CTA
+
+Warm's closing paragraph is one sentence against a `2-3` band. It stays, and the rule is scoped
+rather than the line rewritten. **The evidence is inside the archetype document itself:**
+
+| Archetype | `sentences_per_para` | `cta_style` |
+|---|---|---|
+| Confident & precise | 1-2 | bare imperative, **1-3 words** |
+| Calm & reassuring | **2-4** | low-pressure, informative |
+| Expert & direct | **3-5** | specific next action |
+
+If the band governed the CTA paragraph, Calm would need a two-to-four-sentence call to action and
+Expert a three-to-five-sentence one. Both rubrics would then contradict their own `cta_style`. The
+band is about body prose.
+
+**This is an interpretation, not a relaxation, and the distinction matters** — scoping a rule
+immediately after it catches something is exactly how checks quietly stop meaning anything. So it
+gets the same treatment as the fragment detector: pinned in both directions, in the same commit.
+
+- A **body** paragraph outside its band still fails. Add a case that proves it.
+- A final paragraph consisting only of the CTA does not.
+- A one-sentence paragraph in the **middle** of a note is a body paragraph and still fails.
+
+Keep the failing cases even where they are inconvenient.
+
+**This belongs in the canonical document eventually, not only here.** `claude/brand-voice-archetypes.md`
+in the project is the source of truth, and the repo copy is not to be edited in place. Proposed
+wording for section 2, for Saara to add there:
+
+> `sentences_per_para` applies to body paragraphs. A closing paragraph containing only the CTA is
+> exempt, since several archetypes specify a CTA shorter than their own paragraph band.
+
 That check is mechanical, so make it a test rather than a review: see criterion 3.
 
 ### Keep the anchors already specified

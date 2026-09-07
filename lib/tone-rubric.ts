@@ -189,6 +189,44 @@ export function fragmentsIn(line: string): string[] {
   });
 }
 
+export function paragraphsOf(line: string): string[] {
+  return line.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean);
+}
+
+export function sentencesPerParagraph(line: string): number[] {
+  return paragraphsOf(line).map((p) => sentencesOf(p).length);
+}
+
+/**
+ * `sentences_per_para`, scoped to body paragraphs.
+ *
+ * The evidence is inside the archetype document: Calm's band is 2-4 and
+ * Expert's is 3-5, while both specify a CTA that is naturally one sentence. If
+ * the band governed the closing paragraph, those two rubrics would contradict
+ * their own cta_style. The band is about body prose.
+ *
+ * This is an interpretation, not a relaxation, and the difference is only
+ * visible if the check still bites everywhere else — so a body paragraph
+ * outside its band fails, INCLUDING a one-sentence paragraph in the middle of
+ * a note, and only a final paragraph of exactly one sentence is exempt. A note
+ * that is a single paragraph has no CTA paragraph and is governed throughout.
+ */
+export function perParaProblems(line: string, band: [number, number]): string[] {
+  const counts = sentencesPerParagraph(line);
+  const problems: string[] = [];
+  counts.forEach((n, i) => {
+    const isFinal = i === counts.length - 1;
+    const isCtaParagraph = isFinal && counts.length > 1 && n === 1;
+    if (isCtaParagraph) return;
+    if (n < band[0] || n > band[1]) {
+      const where = isFinal ? "the closing paragraph" : `paragraph ${i + 1}`;
+      problems.push(
+        `sentences_per_para: ${where} has ${n}, outside ${band[0]}-${band[1]}`);
+    }
+  });
+  return problems;
+}
+
 export function exclamationsIn(line: string): number {
   return (line.match(/!/g) ?? []).length;
 }
@@ -216,6 +254,8 @@ export interface Rubric {
   avg: [number, number];
   /** sentence_words_max. */
   maxWords: number;
+  /** sentences_per_para, as [min, max]. Body paragraphs only. */
+  perPara: [number, number];
   /** fragments: never | allowed | occasional | encouraged | heavy. */
   fragments: "never" | "allowed" | "occasional" | "encouraged" | "heavy";
   /** contractions: sparingly | moderate | always | yes. */
@@ -242,6 +282,7 @@ export interface Rubric {
  */
 export const RUBRICS: Record<ArchetypeId, Rubric> = {
   confident: {
+    perPara: [1, 2],
     avg: [8, 12], maxWords: 18, fragments: "allowed", contractions: "sparingly",
     hedging: "banned", humour: 0, exclamations: "never", emoji: "never",
     ctaStyle: "bare imperative, 1-3 words", ctaMaxWords: 3,
@@ -250,6 +291,7 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
       "obsessed", "literally", "so good", "we're excited to"],
   },
   warm: {
+    perPara: [2, 3],
     avg: [12, 16], maxWords: 25, fragments: "occasional", contractions: "always",
     hedging: "allowed", humour: 2, exclamations: 1, emoji: "allowed",
     ctaStyle: "invitation",
@@ -257,6 +299,7 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
       "robust", "stakeholder", "going forward", "at scale"],
   },
   bold: {
+    perPara: [1, 2],
     avg: [6, 14], maxWords: 20, fragments: "encouraged", contractions: "always",
     hedging: "banned", humour: 5, exclamations: 2, emoji: "allowed",
     ctaStyle: "dare or shrug",
@@ -264,6 +307,7 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
       "we are pleased to", "nestled", "passionate about", "delighted"],
   },
   calm: {
+    perPara: [2, 4],
     avg: [12, 18], maxWords: 22, fragments: "never", contractions: "moderate",
     hedging: "required", humour: 0, exclamations: "never", emoji: "never",
     ctaStyle: "low-pressure, informative",
@@ -271,6 +315,7 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
       "cure", "guaranteed", "transform", "instantly"],
   },
   visionary: {
+    perPara: [1, 3],
     avg: [7, 12], maxWords: 16, fragments: "heavy", contractions: "yes",
     hedging: "banned", humour: 1, exclamations: "never", emoji: "never",
     ctaStyle: "2-4 words, present tense", ctaMaxWords: 4,
@@ -279,6 +324,7 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
       "industry-leading", "value-add", "disrupt", "next-generation"],
   },
   expert: {
+    perPara: [3, 5],
     avg: [14, 20], maxWords: 28, fragments: "never", contractions: "moderate",
     hedging: "banned", humour: 1, exclamations: "never", emoji: "never",
     ctaStyle: "specific next action",
@@ -319,6 +365,8 @@ export function validateLine(line: string, id: ArchetypeId): Validation {
   if (longest > rubric.maxWords) {
     problems.push(`longest sentence is ${longest} words, over ${name}'s max of ${rubric.maxWords}`);
   }
+
+  for (const p of perParaProblems(line, rubric.perPara)) problems.push(p);
 
   const frags = fragmentsIn(line);
   if (rubric.fragments === "never" && frags.length) {

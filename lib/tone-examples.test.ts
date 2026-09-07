@@ -12,6 +12,7 @@ import {
   usesSecondPerson, hasNumeral, hasCaveat, hedgesIn, hypeIn,
   RUBRICS, RUBRICS_ARE_COMPLETE, RUBRIC_SOURCE, RUBRIC_CANONICAL_SOURCE,
   PENDING_REDRAFT, failedFields, maxSentenceWords, fragmentsIn,
+  perParaProblems, sentencesPerParagraph,
 } from "./tone-rubric.ts";
 
 const IDS = Object.keys(ARCHETYPES) as ArchetypeId[];
@@ -210,6 +211,95 @@ describe("what counts as a fragment", () => {
     assert.equal(fragmentsIn("Go.").length, 0);
     // The same word is finite in a longer sentence.
     assert.equal(fragmentsIn("Your order shipped today.").length, 0);
+  });
+});
+
+/**
+ * sentences_per_para, scoped to body paragraphs.
+ *
+ * The band is about body prose: Calm's is 2-4 and Expert's 3-5 while both
+ * specify a CTA that is naturally one sentence, so a band governing the
+ * closing paragraph would contradict those rubrics' own cta_style.
+ *
+ * Scoping a rule immediately after it catches something is how checks quietly
+ * stop meaning anything, so this is pinned in both directions. The failing
+ * cases are kept even where they are inconvenient.
+ */
+describe("sentences_per_para applies to body paragraphs, not the CTA", () => {
+  const WARM: [number, number] = [2, 3];
+  const CALM: [number, number] = [2, 4];
+  const EXPERT: [number, number] = [3, 5];
+
+  const p = (...counts: number[]) =>
+    counts.map((n) => Array.from({ length: n },
+      (_, i) => `This is body sentence number ${i + 1} and it runs to a normal length.`).join(" "))
+      .join("\n\n");
+
+  it("a closing paragraph of one sentence is exempt", () => {
+    assert.deepEqual(perParaProblems(p(2, 1), WARM), []);
+    assert.deepEqual(perParaProblems(p(3, 1), WARM), []);
+  });
+
+  /* ── and everywhere else it still bites ── */
+
+  it("a body paragraph over its band still fails", () => {
+    assert.notDeepEqual(perParaProblems(p(4, 1), WARM), []);
+    assert.match(perParaProblems(p(4, 1), WARM)[0], /paragraph 1 has 4/);
+  });
+
+  it("a body paragraph under its band still fails", () => {
+    assert.notDeepEqual(perParaProblems(p(2, 1), EXPERT), [],
+      "a two-sentence body paragraph passed a 3-5 band");
+  });
+
+  it("a ONE-SENTENCE paragraph in the middle is body, and still fails", () => {
+    const problems = perParaProblems(p(2, 1, 2), WARM);
+    assert.notDeepEqual(problems, [], "a one-sentence middle paragraph was exempted");
+    assert.match(problems[0], /paragraph 2 has 1/);
+  });
+
+  it("a note of a single paragraph has no CTA paragraph and is governed throughout", () => {
+    assert.notDeepEqual(perParaProblems(p(1), CALM), [],
+      "a one-sentence single-paragraph note was exempted");
+    assert.deepEqual(perParaProblems(p(3), CALM), []);
+  });
+
+  it("a closing paragraph of more than one sentence is not a CTA and must be in band", () => {
+    assert.notDeepEqual(perParaProblems(p(2, 5), WARM), [],
+      "a five-sentence closing paragraph was exempted");
+  });
+
+  it("the rule is wired into validateLine, not just available", () => {
+    const warm = toneExample("warm")!;
+    assert.ok(validateLine(warm.line, "warm").ok, "the real Warm line should pass");
+
+    // The same line with a one-sentence paragraph wedged into the middle.
+    const [body, cta] = warm.line.split("\n\n");
+    const broken = `${body}\n\nWe packed it carefully.\n\n${cta}`;
+    const v = validateLine(broken, "warm");
+    assert.ok(!v.ok, "a one-sentence middle paragraph passed validateLine");
+    assert.match(v.problems.join(" "), /sentences_per_para/);
+  });
+
+  it("the six real lines all satisfy it", () => {
+    for (const e of TONE_EXAMPLES) {
+      assert.deepEqual(perParaProblems(e.line, RUBRICS[e.id].perPara), [],
+        `${e.id}: ${perParaProblems(e.line, RUBRICS[e.id].perPara).join("; ")}`);
+    }
+  });
+
+  it("the bands are the document's", () => {
+    assert.deepEqual(RUBRICS.confident.perPara, [1, 2]);
+    assert.deepEqual(RUBRICS.warm.perPara, [2, 3]);
+    assert.deepEqual(RUBRICS.bold.perPara, [1, 2]);
+    assert.deepEqual(RUBRICS.calm.perPara, [2, 4]);
+    assert.deepEqual(RUBRICS.visionary.perPara, [1, 3]);
+    assert.deepEqual(RUBRICS.expert.perPara, [3, 5]);
+  });
+
+  it("counts paragraphs and their sentences", () => {
+    assert.deepEqual(sentencesPerParagraph("A one. A two.\n\nA three."), [2, 1]);
+    assert.deepEqual(sentencesPerParagraph("Only one."), [1]);
   });
 });
 

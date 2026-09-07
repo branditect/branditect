@@ -288,6 +288,19 @@ describe("sentences_per_para applies to body paragraphs, not the CTA", () => {
     }
   });
 
+  it("the document itself carries the scoping sentence", () => {
+    // The code's interpretation and the document must not drift apart. If this
+    // ever fails, the repo copy was re-copied from a project copy that does
+    // not say it, and perParaProblems is enforcing something unwritten.
+    const doc = readFileSync("branditect-ui/spec/brand-voice-archetypes.md", "utf8")
+      .replace(/\s+/g, " ");
+    assert.ok(doc.includes("`sentences_per_para` applies to body paragraphs"),
+      "the document does not carry the scoping sentence");
+    assert.ok(doc.includes("closing paragraph containing only the CTA is exempt"),
+      "the document does not carry the CTA exemption");
+    assert.ok(doc.includes("project copy is canonical"), "the provenance header was lost");
+  });
+
   it("the bands are the document's", () => {
     assert.deepEqual(RUBRICS.confident.perPara, [1, 2]);
     assert.deepEqual(RUBRICS.warm.perPara, [2, 3]);

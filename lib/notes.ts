@@ -174,3 +174,34 @@ export function isRestorable(deletedAt: string | null | undefined, now: Date): b
   if (Number.isNaN(gone)) return false;
   return now.getTime() - gone <= RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 }
+
+/* ── autosave, criterion 3 ───────────────────────────────────────────────── */
+
+export interface NotePatch {
+  title?: string;
+  blocks?: NoteBlock[];
+}
+
+/**
+ * Merge a new edit into whatever is already waiting to be saved.
+ *
+ * The editor debounces, and the first version of it REPLACED the pending patch
+ * on every keystroke instead of merging. Typing a title and then typing a
+ * paragraph queued a title save, then a blocks save that cancelled it, and the
+ * title was silently lost — the note kept saying Untitled while the screen
+ * showed what had been typed and the indicator said Saved.
+ *
+ * Every unit test passed and the route returned 200 throughout. It took typing
+ * into the real editor and reading the row back to see it.
+ */
+export function mergePatch(pending: NotePatch, next: NotePatch): NotePatch {
+  return { ...pending, ...next };
+}
+
+/**
+ * Whether a queued save belongs to the note now open. Switching notes with an
+ * edit still in flight must not carry one note's title onto another.
+ */
+export function patchBelongsTo(pendingId: string | null, openId: string | null): boolean {
+  return pendingId !== null && pendingId === openId;
+}

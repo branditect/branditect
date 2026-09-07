@@ -3,6 +3,11 @@
 > **Provenance.** Copied into the repo from `claude/brand-voice-archetypes.md` in the Branditect
 > project on 2026-09-04, so that code and tests can read it. **The project copy is canonical.** If
 > the two ever disagree, the project wins and this file is re-copied — do not edit this one in place.
+>
+> Synced 2026-09-07: the `sentences_per_para` sentence in section 2. Added from the wording proposed
+> in `spec/tone-examples.md`, which is what the project copy was asked to carry — the project copy
+> itself is not readable from here, so if its wording differs, this file needs re-copying properly
+> rather than trusting this line.
 
 For onboarding Q18 (voice picker) and Q19 (anti-voice), and the contract `branditect-copywriter`
 obeys.
@@ -93,6 +98,9 @@ this is a real choice, not a vibe.
 ## 2. The rubrics
 
 Every field is what Studio reads. Numbers are targets, not hard fails, except where marked `never`.
+
+`sentences_per_para` applies to body paragraphs. A closing paragraph containing only the CTA is
+exempt, since several archetypes specify a CTA shorter than their own paragraph band.
 
 ### House rules: every archetype inherits these
 

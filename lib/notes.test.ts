@@ -6,6 +6,7 @@ import { NAV } from "./nav.ts";
 import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
+  mergePatch, patchBelongsTo,
   pinLabel, isRestorable, RESTORE_WINDOW_DAYS, type NoteBlock,
 } from "./notes.ts";
 
@@ -242,6 +243,45 @@ describe("studio-library is superseded", () => {
   });
   it("and its reference with it, since nothing else pointed at it", () => {
     assert.ok(!existsSync("branditect-ui/reference/studio-library.html"));
+  });
+});
+
+/**
+ * The autosave merge. Found by typing into the real editor, not by a test.
+ *
+ * The first version of queueSave REPLACED the pending patch on every edit.
+ * Typing a title and then typing a paragraph queued a title save, then a
+ * blocks save that cancelled it, and the title was silently lost: the note
+ * stayed "Untitled" in the database while the screen showed what had been
+ * typed and the indicator said Saved. Every unit test passed and the route
+ * returned 200 throughout.
+ */
+describe("a queued save merges rather than replacing", () => {
+  it("a title edit survives a later block edit", () => {
+    const merged = mergePatch({ title: "October plan" }, { blocks: [] });
+    assert.equal(merged.title, "October plan", "the title was dropped");
+    assert.deepEqual(merged.blocks, []);
+  });
+
+  it("a later edit of the same field wins", () => {
+    assert.equal(mergePatch({ title: "a" }, { title: "b" }).title, "b");
+  });
+
+  it("blocks survive a later title edit", () => {
+    const blocks = [{ kind: "text" as const, body: "kept" }];
+    assert.deepEqual(mergePatch({ blocks }, { title: "t" }).blocks, blocks);
+  });
+
+  it("an edit belongs to the note it was made in", () => {
+    assert.ok(patchBelongsTo("note-a", "note-a"));
+    assert.ok(!patchBelongsTo("note-a", "note-b"), "a patch would carry across notes");
+    assert.ok(!patchBelongsTo(null, "note-a"));
+  });
+
+  it("the page merges instead of replacing", () => {
+    const src = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.ok(src.includes("mergePatch("), "the page replaces the pending patch again");
+    assert.ok(src.includes("patchBelongsTo("), "a pending edit can cross notes");
   });
 });
 

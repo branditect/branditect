@@ -22,7 +22,8 @@ import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import Icon from "@/components/icon";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
-  MISSING_IMAGE_NOTE, type NoteBlock,
+  MISSING_IMAGE_NOTE, mergePatch, patchBelongsTo,
+  type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
 
@@ -78,12 +79,25 @@ export default function NotesPage() {
    * thirty times a sentence.
    */
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const queueSave = useCallback((next: { title?: string; blocks?: NoteBlock[] }) => {
+  const pendingPatch = useRef<{ id: string | null; patch: NotePatch }>({ id: null, patch: {} });
+
+  const queueSave = useCallback((next: NotePatch) => {
     if (!openId) return;
+    if (pendingPatch.current.id && !patchBelongsTo(pendingPatch.current.id, openId)) {
+      const stale = pendingPatch.current;
+      void authedJson("/api/notes", "PATCH", { id: stale.id, ...stale.patch });
+      pendingPatch.current = { id: null, patch: {} };
+    }
+    pendingPatch.current = {
+      id: openId,
+      patch: mergePatch(pendingPatch.current.patch, next),
+    };
     if (timer.current) clearTimeout(timer.current);
     setSaving("saving");
     timer.current = setTimeout(async () => {
-      const res = await authedJson("/api/notes", "PATCH", { id: openId, ...next });
+      const { id, patch } = pendingPatch.current;
+      pendingPatch.current = { id: null, patch: {} };
+      const res = await authedJson("/api/notes", "PATCH", { id, ...patch });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         // A save that fails must say so. Silence here is how an afternoon's

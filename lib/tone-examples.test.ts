@@ -166,6 +166,53 @@ describe("the measurements", () => {
   });
 });
 
+/**
+ * The fragment detector, pinned in both directions.
+ *
+ * It wrongly called "Nothing in the forecast changes the date" a fragment,
+ * because `changes` was missing from its verb list — and that would have
+ * rejected a valid Expert line for a defect in the checker rather than in the
+ * writing. Fixing a broken detector is not the same as relaxing a rule, but
+ * the way to tell the difference is to pin both directions in the same commit:
+ * sentences that MUST be flagged, and sentences that MUST NOT be.
+ */
+describe("what counts as a fragment", () => {
+  const MUST_FLAG = [
+    "Delivery estimate Thursday, based on the last 200 orders.",
+    "Thursday.",
+    "Shipped.",
+    "Out the door.",
+    "Packed and gone.",
+  ];
+  const MUST_NOT_FLAG = [
+    "Nothing in the current weather forecast for that route changes the date.",
+    "It is on its way.",
+    "Your order left the workshop this morning.",
+    "Most deliveries arrive within three working days.",
+    "A workshop floor should never be the reason somebody slips.",
+    "Go.",
+    "Track it.",
+  ];
+
+  for (const f of MUST_FLAG) {
+    it(`fragment: ${JSON.stringify(f)}`, () => {
+      assert.equal(fragmentsIn(f).length, 1, "not flagged as a fragment");
+    });
+  }
+  for (const f of MUST_NOT_FLAG) {
+    it(`whole sentence: ${JSON.stringify(f)}`, () => {
+      assert.equal(fragmentsIn(f).length, 0, "wrongly flagged as a fragment");
+    });
+  }
+
+  it("a one-word participle is a fragment, a one-word imperative is not", () => {
+    assert.equal(fragmentsIn("Shipped.").length, 1);
+    assert.equal(fragmentsIn("Go.").length, 0);
+    // The same word is finite in a longer sentence.
+    assert.equal(fragmentsIn("Your order shipped today.").length, 0);
+  });
+});
+
 /** CRITERION 4. Named, never quoted. */
 describe("no line is attributed to an anchor", () => {
   for (const e of TONE_EXAMPLES) {
@@ -285,8 +332,6 @@ describe("the rubrics come from the archetype document", () => {
   it("the measurements the bands rest on are pinned", () => {
     assert.equal(maxSentenceWords("One two. Three four five."), 3);
     assert.equal(maxSentenceWords(""), 0);
-    assert.equal(fragmentsIn("Delivery estimate Thursday.").length, 1);
-    assert.equal(fragmentsIn("It is on its way.").length, 0);
   });
 
   it("the bands are the document's, not rounded or widened", () => {

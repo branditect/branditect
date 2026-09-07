@@ -148,10 +148,45 @@ export function maxSentenceWords(line: string): number {
 /**
  * A sentence with no finite verb. `fragments: never` on Calm and Expert makes
  * this a real check rather than a stylistic note.
+ *
+ * The list is a whitelist rather than an inflection rule on purpose. "Delivery
+ * estimate Thursday, based on the last 200 orders" IS a fragment, and "based"
+ * ends in -ed, so any rule that treats a verb-looking suffix as a finite verb
+ * accepts it. A whitelist is wrong in the other direction — it called
+ * "Nothing in the forecast changes the date" a fragment because `changes` was
+ * missing — so the list has to be maintained, and both failure directions are
+ * pinned by tests below rather than left to be discovered by a line it
+ * wrongly rejects.
  */
+const FINITE_VERBS = [
+  // auxiliaries and copulas
+  "is", "are", "was", "were", "am", "be", "been", "being",
+  "has", "have", "had", "do", "does", "did",
+  "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+  // ordinary verbs, third person and bare, that turn up in this kind of copy
+  "arrive", "arrives", "add", "adds", "affect", "affects", "apply", "applies",
+  "change", "changes", "come", "comes", "cost", "costs", "cover", "covers",
+  "dispatched", "get", "gets", "go", "goes", "happen", "happens", "help",
+  "helps", "include", "includes", "keep", "keeps", "land", "lands", "leave",
+  "leaves", "left", "let", "lets", "make", "makes", "mean", "means", "need",
+  "needs", "reach", "reaches", "run", "runs", "say", "says", "see", "sees",
+  "send", "sends", "ship", "ships", "shipped", "show", "shows", "slip",
+  "slips", "start", "starts", "stop", "stops", "take", "takes", "talk",
+  "talks", "tell", "tells", "track", "tracks", "watch", "watches", "work",
+  "works", "exist", "exists", "sit", "sits",
+];
+const FINITE = new RegExp(`\\b(${FINITE_VERBS.join("|")})\\b`, "i");
+
 export function fragmentsIn(line: string): string[] {
-  const FINITE = /\b(is|are|was|were|am|be|been|being|has|have|had|do|does|did|can|could|will|would|shall|should|may|might|must|arrives?|tracks?|watch|see|sees|go|goes|get|gets|add|adds|sends?|ships?|shipped|dispatched|left|lets?|talks?|takes?|makes?|comes?|runs?|shows?)\b/i;
-  return sentencesOf(line).filter((x) => !FINITE.test(x));
+  return sentencesOf(line).filter((x) => {
+    const words = wordsOf(x);
+    // A one-word sentence that is a participle is a fragment even though the
+    // same word is finite in a longer sentence: "Your order shipped today" is
+    // a sentence, "Shipped." is not. Base forms are left alone, because "Go."
+    // and "Track." are imperatives and therefore whole sentences.
+    if (words.length === 1 && /(ed|ing)$/i.test(words[0])) return true;
+    return !FINITE.test(x);
+  });
 }
 
 export function exclamationsIn(line: string): number {
@@ -349,11 +384,9 @@ export const RUBRIC_CANONICAL_SOURCE = "claude/brand-voice-archetypes.md";
  * Vetted 2026-09-07 against branditect-ui/spec/brand-voice-archetypes.md.
  */
 export const PENDING_REDRAFT: Partial<Record<ArchetypeId, string[]>> = {
-  confident: ["sentence_words_avg"],
-  warm: ["sentence_words_avg"],
-  calm: ["sentence_words_avg"],
-  visionary: ["sentence_words_avg", "cta_style"],
-  expert: ["sentence_words_avg", "fragments"],
+  // Empty since the second draft, 2026-09-07. All six pass. Kept rather than
+  // deleted because the mechanism is what makes a failing line visible instead
+  // of quietly tolerated, and the next redraft will need it again.
 };
 
 /** Which rubric fields a validation complained about, as field names. */

@@ -44,21 +44,81 @@ things and inferring the difference, where six versions of one sentence shows it
 A dispatch note, deliberately — every one of these customers sends one, and none of them sends a
 perfume tagline. The voice is demonstrated on their own work.
 
-### Draft lines, to be validated before use
+### Second draft, counted against the bands
 
-| Archetype | Line |
-|---|---|
-| **Confident & precise** | *"Shipped this morning. Track it."* |
-| **Warm & human** | *"Good news. It's on its way to you, and you can see where it's got to here."* |
-| **Bold & playful** | *"It's out the door and it's not looking back. Go on, watch it travel."* |
-| **Calm & reassuring** | *"Your order was dispatched today. Most arrive within three working days, though weather can add one."* |
-| **Visionary & inspiring** | *"On its way. One less thing between you and the work."* |
-| **Expert & direct** | *"Dispatched 14:20 today, tracked end to end. Delivery estimate Thursday, based on the last 200 orders."* |
+The first draft was rejected on five of six, correctly. It was written for terseness and broke
+`sentence_words_avg` on nearly every line: *"Shipped this morning. Track it."* averages 2.5 words
+against a floor of 8. The lesson is that a dispatch note is naturally shorter than most of these
+rubrics allow, so the sentences have to carry more than the message strictly needs.
 
-**These are drafts and must be checked against their own rubrics before they ship** — sentence-length
-band, fragments, contractions, person, humour, CTA style, banned words, and the house rules. An
-example line that violates the rubric it is illustrating teaches the wrong thing to every founder who
-reads it, and it is the one defect on this screen that compounds.
+Word counts below are per sentence, and paragraph breaks are shown, because `sentences_per_para` is
+a separate constraint from the average.
+
+**Confident & precise** — `avg 8-12 · max 18 · 1-2 per para · fragments ok · no hedging · CTA bare imperative 1-3 words · opens on the product`
+
+> Your order left the workshop this morning and is now with the courier. It is scheduled to arrive
+> on Thursday before noon.
+>
+> Track it.
+
+`13 · 9 · 2` → average **8.0**, max 13. Paragraphs of 2 and 1.
+
+**Warm & human** — `avg 12-16 · max 25 · 2-3 per para · contractions always · we + you · CTA invitation`
+
+> Good news, your order's on its way to you and should reach you on Thursday. It went out this
+> morning, packed by the same people who make it.
+>
+> Have a look at where it's got to.
+
+`15 · 13 · 8` → average **12.0**, max 15.
+
+**Bold & playful** — `avg 6-14 · max 20 · fragments encouraged · humour 5 · no hedging · CTA dare or shrug`
+
+> It's out the door and it's not looking back. Thursday it lands on your mat.
+>
+> Go on, watch the little van do its thing.
+
+`9 · 6 · 9` → average **8.0**, max 9. The first draft's joke used *"unless"*, which a hedging
+detector would flag whatever it means.
+
+**Calm & reassuring** — `avg 12-18 · max 22 · 2-4 per para · fragments never · hedging required · no urgency`
+
+> Your order was dispatched this morning and is now with the courier. Most deliveries arrive within
+> three working days, though winter weather can add one. You can see where it is at any point, and
+> we will tell you if anything changes.
+
+`12 · 13 · 17` → average **14.0**, max 17. One paragraph of three. No fragments.
+
+**Visionary & inspiring** — `avg 7-12 · max 16 · fragments heavy · contractions yes · no hedging · CTA 2-4 words present tense · opens on a belief, then the proof`
+
+> A workshop floor should never be the reason somebody slips on their way to the bench. That's why
+> this exists, and why it's on its way to you now.
+>
+> Thursday. Watch it come.
+
+`15 · 13 · 1 · 3` → average **8.0**, max 15.
+
+**This is the line the whole `claim_type` distinction rests on.** Confident opens on the order.
+Visionary opens on how a workshop ought to be and only then arrives at the product. At a dispatch
+note's length the two would otherwise read identically, which is exactly the collision the archetype
+document warns about, and length alone cannot separate them.
+
+**Expert & direct** — `avg 14-20 · max 28 · 3-5 per para · fragments never · hedging banned, state confidence numerically · CTA specific next action`
+
+> Your order was dispatched at 14:20 today and is tracked at every handover between here and your
+> door. Delivery is Thursday, on the evidence of the last 200 orders through this route, which
+> arrived in a median of two days. Nothing in the current weather forecast for that route changes
+> the date. Full tracking, including every scan, is on the order page.
+
+`18 · 22 · 12 · 10` → average **15.5**, max 22. One paragraph of four.
+
+The first draft opened *"Dispatched 14:20 today, tracked end to end"*, which is a fragment, and
+Expert bans fragments outright.
+
+---
+
+**These are still drafts. Re-run the validator; do not assume the counting above is right.** If a
+line fails, rewrite the line, never the rubric.
 
 That check is mechanical, so make it a test rather than a review: see criterion 3.
 

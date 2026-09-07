@@ -61,32 +61,32 @@ export const TONE_EXAMPLES: ToneExample[] = [
   {
     id: "confident",
     anchors: anchorsFor("confident"),
-    line: "Shipped this morning. Track it.",
+    line: "Your order left the workshop this morning and is now with the courier. It is scheduled to arrive on Thursday before noon.\n\nTrack it.",
   },
   {
     id: "warm",
     anchors: anchorsFor("warm"),
-    line: "Good news. It's on its way to you, and you can see where it's got to here.",
+    line: "Good news, your order's on its way to you and should reach you on Thursday. It went out this morning, packed by the same people who make it.\n\nHave a look at where it's got to.",
   },
   {
     id: "bold",
     anchors: anchorsFor("bold"),
-    line: "It's out the door and it's not looking back. Go on, watch it travel.",
+    line: "It's out the door and it's not looking back. Thursday it lands on your mat.\n\nGo on, watch the little van do its thing.",
   },
   {
     id: "calm",
     anchors: anchorsFor("calm"),
-    line: "Your order was dispatched today. Most arrive within three working days, though weather can add one.",
+    line: "Your order was dispatched this morning and is now with the courier. Most deliveries arrive within three working days, though winter weather can add one. You can see where it is at any point, and we will tell you if anything changes.",
   },
   {
     id: "visionary",
     anchors: anchorsFor("visionary"),
-    line: "On its way. One less thing between you and the work.",
+    line: "A workshop floor should never be the reason somebody slips on their way to the bench. That's why this exists, and why it's on its way to you now.\n\nThursday. Watch it come.",
   },
   {
     id: "expert",
     anchors: anchorsFor("expert"),
-    line: "Dispatched 14:20 today, tracked end to end. Delivery estimate Thursday, based on the last 200 orders.",
+    line: "Your order was dispatched at 14:20 today and is tracked at every handover between here and your door. Delivery is Thursday, on the evidence of the last 200 orders through this route, which arrived in a median of two days. Nothing in the current weather forecast for that route changes the date. Full tracking, including every scan, is on the order page.",
   },
 ];
 

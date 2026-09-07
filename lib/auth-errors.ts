@@ -14,6 +14,7 @@ export const AUTH_COPY = {
   alreadyRegistered: "That email already has an account.",
   rateLimited: "Too many attempts. Try again in 15 minutes.",
   serverError: "Something went wrong at our end. Try again.",
+  timedOut: "That took too long. Check your connection and try again.",
   resetSent: "If that email has an account, a reset link is on its way.",
   resetExpired: "That link has expired. Request a new one.",
   confirmSent: "Check your email to confirm your address, then sign in. Your questionnaire is waiting.",

@@ -8,6 +8,7 @@ import AuthForm, { type AuthValues } from "@/components/auth/auth-form";
 import { mapAuthError, AUTH_COPY, type AuthError } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
 import { ensureBrand } from "@/lib/brand-bootstrap";
+import { withTimeout, mapThrown } from "@/lib/auth-timeout";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -19,10 +20,19 @@ export default function SignUpPage() {
     setError(null);
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
-
-    if (error) {
-      setError(mapAuthError(error));
+    let data: Awaited<ReturnType<typeof supabase.auth.signUp>>["data"];
+    try {
+      // Same bound as sign-in. An unbounded await leaves the person on a
+      // spinner with nothing said.
+      const res = await withTimeout(supabase.auth.signUp({ email, password }), "Sign-up");
+      if (res.error) {
+        setError(mapAuthError(res.error));
+        setLoading(false);
+        return;
+      }
+      data = res.data;
+    } catch (e) {
+      setError(mapThrown(e));
       setLoading(false);
       return;
     }
@@ -39,8 +49,13 @@ export default function SignUpPage() {
     }
 
     // A brand row is what every /start screen writes against, and only the old
-    // /onboarding wizard ever created one.
-    await ensureBrand();
+    // /onboarding wizard ever created one. Bounded, and a failure here does
+    // not strand them: they have a session, and /start creates what it needs.
+    try {
+      await withTimeout(ensureBrand(), "Brand setup");
+    } catch {
+      // Deliberately silent: they are signed in and /start is still correct.
+    }
     router.push("/start");
   }
 

@@ -1,0 +1,211 @@
+<title>Studio — Notes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fs-body:14px; --fs-sm:13px; --fs-xs:12px; --fs-micro:10px;
+    --ink:#15151b; --ink-2:#3a3a45; --muted:#6f6f8a; --muted-2:#8b8b97; --faint:#aeaeb8;
+    --page:#f4f3f2; --card:#fff; --tile:#f4f3f2; --rule:#edecea; --rule-2:#e6e6e6;
+    --accent:#f0562a; --accent-dark:#e8481f; --accent-line:#f6b7a0;
+    --tint-1:#fef0ea; --tint-4:#fbe7e2;
+    --r-panel:18px; --r-card:12px; --r-pill:50px;
+    --shadow-panel:0 6px 10px rgba(20,20,26,.06),0 1px 1px rgba(20,20,26,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:var(--fs-body);font-weight:500;line-height:1.45;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,p{margin:0} svg{display:block} button{font:inherit;cursor:pointer}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:22px}
+  .cols{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+  @media(max-width:980px){.cols{grid-template-columns:1fr}}
+
+  /* ================= LEFT ================= */
+  .side{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);
+    box-shadow:var(--shadow-panel);overflow:hidden}
+  .sh{display:flex;align-items:baseline;gap:9px;padding:18px 16px 12px}
+  .sh h1{font-size:20px;font-weight:800;letter-spacing:-.4px}
+  .sh .n{font-size:var(--fs-sm);color:var(--faint);font-weight:700}
+  .sh .sp{flex:1}
+  .newb{border:0;background:var(--accent);color:#fff;border-radius:50%;width:28px;height:28px;
+    display:grid;place-items:center}
+  .newb:hover{background:var(--accent-dark)}
+  .newb svg{width:15px;height:15px;fill:#fff}
+
+  .search{display:flex;align-items:center;gap:8px;margin:0 12px 12px;padding:0 11px;
+    background:var(--tile);border-radius:9px}
+  .search svg{width:14px;height:14px;fill:var(--muted-2);flex:none}
+  .search input{border:0;outline:0;background:none;flex:1;padding:9px 0;font:inherit;font-size:var(--fs-sm)}
+  .search input::placeholder{color:var(--faint)}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px 14px;
+    max-height:620px;overflow:auto}
+  .c{text-align:left;background:var(--card);border:1px solid var(--rule-2);border-radius:var(--r-card);
+    padding:12px 12px 10px;min-height:150px;display:flex;flex-direction:column}
+  .c:hover{border-color:var(--accent-line)}
+  .c.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--tint-4)}
+  .c h3{font-size:var(--fs-sm);font-weight:800;line-height:1.3}
+  .c p{font-size:var(--fs-xs);color:var(--muted);line-height:1.5;margin-top:6px;flex:1;
+    display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+  .c .d{font-size:var(--fs-micro);color:var(--faint);margin-top:9px}
+  .c .d b{color:var(--accent);font-weight:800}
+
+  /* ================= RIGHT ================= */
+  .doc{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-panel);
+    box-shadow:var(--shadow-panel);min-height:700px;display:flex;flex-direction:column}
+  .tools{display:flex;align-items:center;gap:4px;padding:11px 14px;border-bottom:1px solid var(--rule)}
+  .t{border:0;background:none;border-radius:8px;height:32px;padding:0 10px;
+    display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)}
+  .t:hover{background:var(--tile)}
+  .t svg{width:16px;height:16px;fill:var(--ink-2)}
+  .t.pin svg{fill:var(--accent)}
+  .sep{width:1px;height:20px;background:var(--rule-2);margin:0 6px}
+  .tools .sp{flex:1}
+  .saved{font-size:var(--fs-micro);color:var(--faint);padding-right:6px}
+
+  .body{padding:30px 40px 44px;max-width:760px}
+  @media(max-width:720px){.body{padding:24px 22px 36px}}
+  .body h2{font-size:30px;font-weight:800;letter-spacing:-.8px;line-height:1.15}
+  .body .h{font-size:17px;font-weight:800;letter-spacing:-.2px;margin-top:26px}
+  .body p{font-size:15px;line-height:1.7;color:var(--ink-2);margin-top:13px}
+  .body ul{margin:11px 0 0;padding-left:19px}
+  .body li{font-size:15px;line-height:1.7;color:var(--ink-2);margin-top:4px}
+
+  figure{margin:20px 0 0}
+  figure.half{float:left;width:250px;margin:20px 22px 6px 0}
+  @media(max-width:620px){figure.half{float:none;width:100%;margin-right:0}}
+  .ph{border-radius:10px;aspect-ratio:4/5;display:grid;place-items:center;font-size:44px;
+    background:linear-gradient(150deg,#f3ede2,#dcd0bd)}
+  .ph.w{aspect-ratio:16/9;background:linear-gradient(150deg,#e4ecf6,#c2d4ea)}
+  figcaption{font-size:var(--fs-xs);color:var(--faint);margin-top:7px}
+  .clear{clear:both}
+
+  .why{max-width:1240px;margin:0 auto;padding:22px 22px 50px}
+  .why div{border-left:3px solid var(--accent-line);background:var(--tint-1);
+    border-radius:0 10px 10px 0;padding:13px 16px;max-width:780px}
+  .why h4{font-size:var(--fs-sm);font-weight:800}
+  .why p{font-size:var(--fs-xs);color:var(--ink-2);margin-top:5px;line-height:1.55}
+</style>
+
+<div class="wrap">
+  <div class="cols">
+
+    <!-- ============ LEFT ============ -->
+    <aside class="side">
+      <div class="sh">
+        <h1>Notes</h1>
+        <span class="n">24</span>
+        <span class="sp"></span>
+        <button class="newb" title="New note">
+          <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+        </button>
+      </div>
+
+      <div class="search">
+        <svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 015.5 11.3l4.6 4.6-1.4 1.4-4.6-4.6A7 7 0 1110 3zm0 2a5 5 0 100 10 5 5 0 000-10z"/></svg>
+        <input placeholder="Search notes">
+      </div>
+
+      <div class="cards">
+        <button class="c on">
+          <h3>14-day copy plan — October</h3>
+          <p>Day 1 · the problem, plainly. Sawdust was never a plan. It was just what was in the corner. 500ml. Soaks 1.2 litres. Sweeps up in one pass…</p>
+          <div class="d">2 min ago · <b>collecting</b></div>
+        </button>
+
+        <button class="c">
+          <h3>Refill launch — angles to try</h3>
+          <p>Before and after. Cost per litre. The bin nobody wants to fill. Ask the garages which one they'd actually put on the wall…</p>
+          <div class="d">Yesterday</div>
+        </button>
+
+        <button class="c">
+          <h3>Supplier call, 3 Sept</h3>
+          <p>Lid moulding lead time up to 6 weeks from October. Ask about the 5k run price. They mentioned a second tool…</p>
+          <div class="d">3 Sept</div>
+        </button>
+
+        <button class="c">
+          <h3>Competitor watch</h3>
+          <p>Absorbex dropped their 400ml to €18.90. Ours is 500ml at €24.90, so per litre absorbed we're still cheaper…</p>
+          <div class="d">1 Sept</div>
+        </button>
+
+        <button class="c">
+          <h3>Trade fair — Hannover</h3>
+          <p>Stand 4B. Bring the demo tray and two cases. Print the spec sheet on matte, the gloss looked cheap last time…</p>
+          <div class="d">28 Aug</div>
+        </button>
+
+        <button class="c">
+          <h3>Packaging notes</h3>
+          <p>Sleeve vs printed bottle. Sleeve is cheaper under 5k, printed wins above. Get both quoted before the October run…</p>
+          <div class="d">22 Aug</div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============ RIGHT ============ -->
+    <main class="doc">
+      <div class="tools">
+        <button class="t">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4V5zm2 12h12l-4-5-3 4-2-2-3 3zm2.5-6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
+          Image
+        </button>
+        <div class="sep"></div>
+        <button class="t"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h10v2H4v-2z"/></svg>Heading</button>
+        <button class="t"><svg viewBox="0 0 24 24"><path d="M4 6h2v2H4V6zm4 0h12v2H8V6zM4 11h2v2H4v-2zm4 0h12v2H8v-2zM4 16h2v2H4v-2zm4 0h12v2H8v-2z"/></svg>List</button>
+        <span class="sp"></span>
+        <span class="saved">Saved</span>
+        <button class="t pin" title="Pinned"><svg viewBox="0 0 24 24"><path d="M14 3l7 7-3 1-3 6-2-2-4 4-1-1 4-4-2-2 6-3 1-3z"/></svg></button>
+        <button class="t" title="Download as PDF">
+          <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h4V3h4v7h4l-6 6zM5 19h14v2H5z"/></svg>
+          PDF
+        </button>
+        <button class="t" title="More"><svg viewBox="0 0 24 24"><path d="M12 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4z"/></svg></button>
+      </div>
+
+      <div class="body">
+        <h2>14-day copy plan — October</h2>
+
+        <div class="h">Day 1 · the problem, plainly</div>
+        <p>Sawdust was never a plan. It was just what was in the corner.</p>
+
+        <figure class="half">
+          <div class="ph">🧴</div>
+          <figcaption>sorbify-500ml-front.jpg</figcaption>
+        </figure>
+
+        <p>500ml. Soaks 1.2 litres. Sweeps up in one pass, and the floor is dry enough to work on.</p>
+        <p>Alternative opener, shorter: one bottle, one pass, dry floor. Test both on the Thursday post and see which one people actually reply to.</p>
+        <div class="clear"></div>
+
+        <div class="h">Day 2 · the number nobody believes</div>
+        <ul>
+          <li>One bottle does what half a bag of granules does</li>
+          <li>Per litre absorbed we are cheaper — check the floor price before saying it out loud</li>
+          <li>Photograph the two side by side. The bag is the hero of that shot, not us.</li>
+        </ul>
+
+        <figure>
+          <div class="ph w">🎬</div>
+          <figcaption>absorbency-demo.mp4 · 0:24</figcaption>
+        </figure>
+
+        <p>Pour, sweep, done. No voiceover, just the sound of the shop.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="why">
+  <div>
+    <h4>What came out, and the one thing that stayed invisible</h4>
+    <p>No source pills, no product chips, no voice panel. It is a document. Images sit in it at full
+    width or half width with text beside them, and that is the whole layout vocabulary.
+    <b>Where a pinned line came from is still recorded, just not drawn</b> — it costs nothing to
+    store and it cannot be recovered later if it was never kept, so if you ever want to see it, it is
+    a display change rather than a rebuild.</p>
+  </div>
+</div>

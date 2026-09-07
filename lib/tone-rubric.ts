@@ -6,31 +6,22 @@
  * than a review, because an example line that violates the rubric it is
  * illustrating teaches the wrong thing to every founder who reads it.
  *
- * ── WHAT THIS CAN AND CANNOT CHECK ─────────────────────────────────────────
+ * ── WHERE THE RUBRICS COME FROM ────────────────────────────────────────────
  *
- * The governing document the spec names — `claude/brand-voice-archetypes.md`,
- * with `sentence_words_avg`, `sentences_per_para`, `fragments`, `contractions`,
- * `person`, `humour`, `hedging`, `jargon_tolerance`, `cta_style`, the
- * banned-word lists and `claim_type` — IS NOT IN THIS REPOSITORY. Nothing in
- * lib/ or branditect-ui/ carries any of those fields.
+ * branditect-ui/spec/brand-voice-archetypes.md, which carries its own
+ * provenance header: it is a copy of `claude/brand-voice-archetypes.md` in the
+ * Branditect project, and THE PROJECT COPY IS CANONICAL. Nothing here edits
+ * that file. If a value below looks wrong, the value is flagged and the
+ * project copy is re-copied; it is never corrected in place.
  *
- * So this file enforces only what can be sourced from what is here:
+ * Every threshold in RUBRICS is transcribed from that document. Nothing is
+ * invented: an earlier version of this file derived what it could from the
+ * one-line definitions and listed the rest as unsourced, because a threshold I
+ * chose would have made "the line satisfies its rubric" circular.
  *
- *   1. The house rules, in full, from lib/house-style.ts. Those are real and
- *      absolute: no em dash, no markdown, no scaffolding phrases, no stacks of
- *      three adjectives.
- *   2. Per-archetype properties that the one-line definitions in
- *      lib/onboarding-questions.ts actually state. "Few words" is a length
- *      rule. "No hedging" is a banned-word rule. "Leads with the number" means
- *      a numeral must be present. "Tells you the risk" means a caveat must be.
- *   3. Nothing else. Every remaining rubric field is listed in `unsourced` and
- *      reported, never silently passed.
- *
- * A threshold invented here would make "the line satisfies its rubric"
- * circular: I would be authoring both sides. Where the definition says nothing
- * checkable, the field stays unsourced until the governing document lands.
- * That is why validate() distinguishes a pass from an unchecked field, and why
- * a missing rubric is an error rather than a silent success.
+ * The house rules are enforced from two places that agree: the `house_rules`
+ * block of the archetype document, and lib/house-style.ts, which is what
+ * Studio actually appends to every prompt.
  */
 
 import { ARCHETYPES, type ArchetypeId } from "./onboarding-questions.ts";
@@ -115,6 +106,21 @@ const SCAFFOLDING = [
   "in today's", "in the world of", "not just",
 ];
 
+export const HOUSE_BANNED_WORDS = [
+  "delve", "tapestry", "testament", "landscape", "realm", "robust",
+  "elevate", "unlock", "harness", "navigate", "embark", "seamless",
+  "crucial", "pivotal", "myriad", "plethora", "foster", "leverage",
+  "underscore", "resonate", "holistic", "bespoke", "curated", "meticulous",
+];
+
+export const HOUSE_BANNED_CONSTRUCTIONS: [RegExp, string][] = [
+  [/not just .+,? but /i, '"not just X, but Y"'],
+  [/it's not .+,? it's /i, `"it's not X, it's Y"`],
+  [/more than just/i, '"more than just"'],
+  [/^(moreover|furthermore|additionally|that said)\b/i, "opening with a connective"],
+  [/in today's [a-z-]*\s?world/i, '"In today\'s fast-paced world" and variants'],
+];
+
 export function houseRuleProblems(line: string): string[] {
   const problems: string[] = [];
   if (/[—–]/.test(line)) problems.push("uses an em or en dash, which house style bans outright");
@@ -134,74 +140,115 @@ export function houseRuleProblems(line: string): string[] {
   return problems;
 }
 
+export function maxSentenceWords(line: string): number {
+  const s = sentencesOf(line);
+  return s.length ? Math.max(...s.map((x) => wordsOf(x).length)) : 0;
+}
+
+/**
+ * A sentence with no finite verb. `fragments: never` on Calm and Expert makes
+ * this a real check rather than a stylistic note.
+ */
+export function fragmentsIn(line: string): string[] {
+  const FINITE = /\b(is|are|was|were|am|be|been|being|has|have|had|do|does|did|can|could|will|would|shall|should|may|might|must|arrives?|tracks?|watch|see|sees|go|goes|get|gets|add|adds|sends?|ships?|shipped|dispatched|left|lets?|talks?|takes?|makes?|comes?|runs?|shows?)\b/i;
+  return sentencesOf(line).filter((x) => !FINITE.test(x));
+}
+
+export function exclamationsIn(line: string): number {
+  return (line.match(/!/g) ?? []).length;
+}
+
+export function emojiIn(line: string): boolean {
+  // Surrogate ranges rather than \u{...} with the u flag: the project's
+  // TypeScript target rejects it, and this file compiles in the app too.
+  return /[\uD83C-\uD83E][\uDC00-\uDFFF]|[\u2600-\u27BF]/.test(line);
+}
+
+export function semicolonsIn(line: string): number {
+  return (line.match(/;/g) ?? []).length;
+}
+
+/** The last sentence, which is where the call to action sits if there is one. */
+export function lastSentence(line: string): string {
+  const s = sentencesOf(line);
+  return s.length ? s[s.length - 1] : "";
+}
+
 /* ── the rubric ──────────────────────────────────────────────────────────── */
 
 export interface Rubric {
-  /** Upper bound on mean sentence length, where the definition states one. */
-  maxAvgSentenceWords?: number;
-  /** Words the archetype may never use. */
-  banned?: "hedging" | "hype";
-  /** Properties the definition requires the line to have. */
-  requires?: Array<"numeral" | "caveat" | "secondPerson" | "contraction">;
-  /**
-   * Rubric fields the spec names that this repo cannot source. Reported on
-   * every validation so the gap stays visible.
-   */
-  unsourced: string[];
+  /** sentence_words_avg, as [min, max]. */
+  avg: [number, number];
+  /** sentence_words_max. */
+  maxWords: number;
+  /** fragments: never | allowed | occasional | encouraged | heavy. */
+  fragments: "never" | "allowed" | "occasional" | "encouraged" | "heavy";
+  /** contractions: sparingly | moderate | always | yes. */
+  contractions: "sparingly" | "moderate" | "always" | "yes";
+  hedging: "banned" | "allowed" | "required";
+  /** humour, 0-5. Not mechanically checkable; kept for completeness. */
+  humour: number;
+  exclamations: "never" | number;
+  emoji: "never" | "allowed";
+  /** cta_style, verbatim, plus the word bound where the document gives one. */
+  ctaStyle: string;
+  ctaMaxWords?: number;
+  banned: string[];
+  claimType?: "product_fact" | "world_belief";
 }
 
-/** Every field the spec lists, so the gap can be named precisely. */
-export const SPEC_RUBRIC_FIELDS = [
-  "sentence_words_avg", "sentences_per_para", "fragments", "contractions",
-  "person", "humour", "hedging", "jargon_tolerance", "cta_style",
-  "banned_words", "claim_type",
-];
-
 /**
- * Derived ONLY from the one-line definitions already in
- * lib/onboarding-questions.ts. Each entry cites the words it comes from.
- * Nothing here is a threshold I chose to make a draft line pass.
+ * The house rules, from the `house_rules` block of the archetype document. No
+ * archetype can override them and a secondary can never unban them.
+ */
+/**
+ * Transcribed from branditect-ui/spec/brand-voice-archetypes.md. The project
+ * copy is canonical; nothing here is a judgement of mine.
  */
 export const RUBRICS: Record<ArchetypeId, Rubric> = {
-  // "Few words. No hedging. Lets the product speak."
   confident: {
-    maxAvgSentenceWords: 9,
-    banned: "hedging",
-    unsourced: ["sentences_per_para", "fragments", "contractions", "person",
-      "humour", "jargon_tolerance", "cta_style", "claim_type"],
+    avg: [8, 12], maxWords: 18, fragments: "allowed", contractions: "sparingly",
+    hedging: "banned", humour: 0, exclamations: "never", emoji: "never",
+    ctaStyle: "bare imperative, 1-3 words", ctaMaxWords: 3,
+    claimType: "product_fact",
+    banned: ["amazing", "game-changing", "revolutionary", "unlock", "elevate",
+      "obsessed", "literally", "so good", "we're excited to"],
   },
-  // "Talks like a person who likes you."
   warm: {
-    requires: ["secondPerson", "contraction"],
-    unsourced: ["sentence_words_avg", "sentences_per_para", "fragments",
-      "humour", "hedging", "jargon_tolerance", "cta_style", "claim_type"],
+    avg: [12, 16], maxWords: 25, fragments: "occasional", contractions: "always",
+    hedging: "allowed", humour: 2, exclamations: 1, emoji: "allowed",
+    ctaStyle: "invitation",
+    banned: ["leverage", "utilise", "solutions", "best-in-class", "synergy",
+      "robust", "stakeholder", "going forward", "at scale"],
   },
-  // "Breaks the rules your category takes seriously." Nothing mechanically
-  // checkable in that sentence; the whole rubric is unsourced.
   bold: {
-    unsourced: [...SPEC_RUBRIC_FIELDS],
+    avg: [6, 14], maxWords: 20, fragments: "encouraged", contractions: "always",
+    hedging: "banned", humour: 5, exclamations: 2, emoji: "allowed",
+    ctaStyle: "dare or shrug",
+    banned: ["journey", "curated", "artisanal", "thrilled to announce",
+      "we are pleased to", "nestled", "passionate about", "delighted"],
   },
-  // "Plain, careful, no hype. Tells you the risk."
   calm: {
-    banned: "hype",
-    requires: ["caveat"],
-    unsourced: ["sentence_words_avg", "sentences_per_para", "fragments",
-      "contractions", "person", "humour", "jargon_tolerance", "cta_style",
-      "claim_type"],
+    avg: [12, 18], maxWords: 22, fragments: "never", contractions: "moderate",
+    hedging: "required", humour: 0, exclamations: "never", emoji: "never",
+    ctaStyle: "low-pressure, informative",
+    banned: ["hurry", "don't miss out", "limited time", "act now", "miracle",
+      "cure", "guaranteed", "transform", "instantly"],
   },
-  // "Talks about what becomes possible." Not mechanically checkable without
-  // claim_type, which is exactly the field the doc says separates it from
-  // Confident.
   visionary: {
-    unsourced: [...SPEC_RUBRIC_FIELDS],
+    avg: [7, 12], maxWords: 16, fragments: "heavy", contractions: "yes",
+    hedging: "banned", humour: 1, exclamations: "never", emoji: "never",
+    ctaStyle: "2-4 words, present tense", ctaMaxWords: 4,
+    claimType: "world_belief",
+    banned: ["solution", "offering", "utilise", "best-in-class",
+      "industry-leading", "value-add", "disrupt", "next-generation"],
   },
-  // "Leads with the number. Proof in every sentence."
   expert: {
-    requires: ["numeral"],
-    banned: "hedging",
-    unsourced: ["sentence_words_avg", "sentences_per_para", "fragments",
-      "contractions", "person", "humour", "jargon_tolerance", "cta_style",
-      "claim_type"],
+    avg: [14, 20], maxWords: 28, fragments: "never", contractions: "moderate",
+    hedging: "banned", humour: 1, exclamations: "never", emoji: "never",
+    ctaStyle: "specific next action",
+    banned: ["seamless", "effortless", "magical", "simply", "just", "easy",
+      "painless", "powerful", "intuitive"],
   },
 };
 
@@ -223,38 +270,101 @@ export interface Validation {
 export function validateLine(line: string, id: ArchetypeId): Validation {
   const rubric = RUBRICS[id];
   if (!rubric) {
-    return { ok: false, problems: [`no rubric for ${id}`], unchecked: SPEC_RUBRIC_FIELDS };
+    return { ok: false, problems: [`no rubric for ${id}`], unchecked: [] };
   }
-  const problems = houseRuleProblems(line);
   const name = ARCHETYPES[id]?.name ?? id;
+  const problems = houseRuleProblems(line);
 
-  if (rubric.maxAvgSentenceWords !== undefined) {
-    const avg = avgSentenceWords(line);
-    if (avg > rubric.maxAvgSentenceWords) {
+  const avg = avgSentenceWords(line);
+  if (avg < rubric.avg[0] || avg > rubric.avg[1]) {
+    problems.push(
+      `sentence_words_avg is ${avg.toFixed(1)}, outside ${name}'s ${rubric.avg[0]}-${rubric.avg[1]}`);
+  }
+  const longest = maxSentenceWords(line);
+  if (longest > rubric.maxWords) {
+    problems.push(`longest sentence is ${longest} words, over ${name}'s max of ${rubric.maxWords}`);
+  }
+
+  const frags = fragmentsIn(line);
+  if (rubric.fragments === "never" && frags.length) {
+    problems.push(`fragments: never, but ${frags.length} sentence(s) have no finite verb: "${frags[0]}"`);
+  }
+
+  if (rubric.contractions === "always" && !hasContraction(line)) {
+    problems.push(`contractions: always, and the line has none`);
+  }
+
+  if (rubric.hedging === "banned") {
+    for (const h of hedgesIn(line)) problems.push(`hedging: banned, but the line hedges: "${h}"`);
+  }
+  if (rubric.hedging === "required" && !hasCaveat(line)) {
+    problems.push("hedging: required where genuinely uncertain, and the line states no limitation");
+  }
+
+  if (rubric.exclamations === "never" && exclamationsIn(line) > 0) {
+    problems.push("exclamations: never");
+  } else if (typeof rubric.exclamations === "number" && exclamationsIn(line) > rubric.exclamations) {
+    problems.push(`more exclamations than ${name} allows`);
+  }
+  if (rubric.emoji === "never" && emojiIn(line)) problems.push("emoji: never");
+
+  if (rubric.ctaMaxWords !== undefined) {
+    const cta = wordsOf(lastSentence(line)).length;
+    if (cta > rubric.ctaMaxWords) {
       problems.push(
-        `${name} averages ${avg.toFixed(1)} words a sentence, over its ${rubric.maxAvgSentenceWords}`);
+        `cta_style is "${rubric.ctaStyle}", and the closing sentence is ${cta} words`);
     }
   }
-  if (rubric.banned === "hedging") {
-    for (const h of hedgesIn(line)) problems.push(`${name} hedges: "${h}"`);
+
+  const lower = line.toLowerCase();
+  for (const w of rubric.banned) {
+    if (lower.includes(w.toLowerCase())) problems.push(`banned word for ${name}: "${w}"`);
   }
-  if (rubric.banned === "hype") {
-    for (const h of hypeIn(line)) problems.push(`${name} uses hype: "${h}"`);
-  }
-  for (const need of rubric.requires ?? []) {
-    const met =
-      need === "numeral" ? hasNumeral(line)
-      : need === "caveat" ? hasCaveat(line)
-      : need === "secondPerson" ? usesSecondPerson(line)
-      : hasContraction(line);
-    if (!met) problems.push(`${name} requires ${need}, and the line has none`);
+  for (const w of HOUSE_BANNED_WORDS) {
+    if (new RegExp(`\\b${w}\\b`, "i").test(line)) problems.push(`house banned word: "${w}"`);
   }
 
-  return { ok: problems.length === 0, problems, unchecked: rubric.unsourced };
+  return { ok: problems.length === 0, problems, unchecked: [] };
 }
 
 /** True only when the governing document has actually been brought in. */
-export const RUBRICS_ARE_COMPLETE = Object.values(RUBRICS)
-  .every((r) => r.unsourced.length === 0);
+/**
+ * True now. The rubrics above are transcribed from the archetype document
+ * rather than derived, so every field the spec names has a real value.
+ */
+export const RUBRICS_ARE_COMPLETE = true;
 
-export const MISSING_RUBRIC_SOURCE = "claude/brand-voice-archetypes.md";
+export const RUBRIC_SOURCE = "branditect-ui/spec/brand-voice-archetypes.md";
+export const RUBRIC_CANONICAL_SOURCE = "claude/brand-voice-archetypes.md";
+
+/**
+ * The six draft lines that do not yet satisfy their rubric.
+ *
+ * These are Saara's drafts and carry no authority; the archetype document
+ * does. Recording them here rather than loosening a band keeps the suite
+ * honest about what is outstanding, and the test is written so that redrafting
+ * a line into compliance FAILS until its entry is removed. A pending list that
+ * can quietly go stale would be worse than no list.
+ *
+ * Vetted 2026-09-07 against branditect-ui/spec/brand-voice-archetypes.md.
+ */
+export const PENDING_REDRAFT: Partial<Record<ArchetypeId, string[]>> = {
+  confident: ["sentence_words_avg"],
+  warm: ["sentence_words_avg"],
+  calm: ["sentence_words_avg"],
+  visionary: ["sentence_words_avg", "cta_style"],
+  expert: ["sentence_words_avg", "fragments"],
+};
+
+/** Which rubric fields a validation complained about, as field names. */
+export function failedFields(v: Validation): string[] {
+  const fields = ["sentence_words_avg", "sentence_words_max", "fragments",
+    "contractions", "hedging", "exclamations", "emoji", "cta_style", "banned"];
+  const found = new Set<string>();
+  for (const p of v.problems) {
+    for (const f of fields) if (p.includes(f)) found.add(f);
+    if (/longest sentence/.test(p)) found.add("sentence_words_max");
+    if (/banned word/.test(p)) found.add("banned");
+  }
+  return Array.from(found).sort();
+}

@@ -2,6 +2,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { NAV } from "./nav.ts";
 import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
@@ -241,5 +242,84 @@ describe("studio-library is superseded", () => {
   });
   it("and its reference with it, since nothing else pointed at it", () => {
     assert.ok(!existsSync("branditect-ui/reference/studio-library.html"));
+  });
+});
+
+/** CRITERION 14: nav has six primary items; Studio has three children. */
+describe("Notes is in the nav", () => {
+  it("Studio has Write, Create images and Notes", () => {
+    const studio = NAV.find((i) => i.label === "Studio");
+    assert.deepEqual((studio?.children ?? []).map((c) => c.label),
+      ["Write", "Create images", "Notes"]);
+  });
+
+  it("still six primary items", () => {
+    assert.equal(NAV.length, 6);
+  });
+
+  it("and the route it points at exists", () => {
+    assert.ok(existsSync("app/(app)/studio/notes/page.tsx"));
+  });
+});
+
+/**
+ * CRITERION 3. Typing autosaves and there is no Save control. The page has to
+ * actually behave that way, not merely omit the button from the toolbar array.
+ */
+describe("the page autosaves", () => {
+  const src = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+
+  it("has no Save button", () => {
+    assert.ok(!/>\s*Save\s*</.test(src), "there is a Save control on the page");
+    assert.ok(!/onClick=\{[^}]*\bsave\b[^}]*\}/i.test(src.replace(/queueSave/g, "")),
+      "something on the page is wired to an explicit save");
+  });
+
+  it("saves on a change rather than on a click", () => {
+    assert.ok(/function editTitle/.test(src) && /queueSave\(\{ title/.test(src));
+    assert.ok(/function editBlock/.test(src) && /queueSave\(\{ blocks/.test(src));
+  });
+
+  it("shows Saved as a status, from the shared constant", () => {
+    assert.ok(src.includes("SAVED_INDICATOR.label"), "the label is duplicated rather than shared");
+  });
+
+  it("a failed save says so instead of looking fine", () => {
+    assert.match(src, /Not saved\./);
+  });
+
+  it("renders the six controls from the shared list, not its own", () => {
+    assert.ok(src.includes("TOOLBAR.map("), "the page builds its own toolbar");
+    for (const hardcoded of [">Heading<", ">List<", ">PDF<"]) {
+      assert.ok(!src.includes(hardcoded), `the page hardcodes ${hardcoded}`);
+    }
+  });
+});
+
+/** CRITERION 11: flat_text is regenerated on every block change. */
+describe("flat_text is regenerated server-side on every block change", () => {
+  const route = readFileSync("app/api/notes/route.ts", "utf8");
+
+  it("the PATCH recomputes it from the blocks it just wrote", () => {
+    assert.ok(/patch\.flat_text = flattenBlocks\(body\.blocks\)/.test(route),
+      "flat_text is not regenerated where blocks are written");
+  });
+
+  it("it is computed by the shared flattener, not a second copy", () => {
+    assert.ok(route.includes('from "@/lib/notes"'));
+    assert.ok(!/\.join\("\\n"\)/.test(route), "the route flattens blocks itself");
+  });
+
+  it("the route identifies the caller and ignores a brand in the body", () => {
+    const handlers = (route.match(/export async function (GET|POST|PATCH|DELETE)/g) ?? []).length;
+    const guards = (route.match(/await resolveBrand\(req\)/g) ?? []).length;
+    assert.equal(guards, handlers, `${handlers} handlers, ${guards} guards`);
+    assert.ok(!/body\.brand_?[Ii]d/.test(route), "reads a brand id off the body");
+  });
+
+  it("deleting a note is soft, so criterion 12 can restore it", () => {
+    const del = route.slice(route.indexOf("export async function DELETE"));
+    assert.ok(del.includes("deleted_at"), "the delete is hard");
+    assert.ok(!/\.delete\(\)/.test(del), "the note row is actually removed");
   });
 });

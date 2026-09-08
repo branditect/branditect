@@ -6,7 +6,7 @@ import { NAV } from "./nav.ts";
 import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
-  mergePatch, patchBelongsTo,
+  mergePatch, patchBelongsTo, titleInputValue, titleToSave, DEFAULT_TITLE,
   pinLabel, isRestorable, RESTORE_WINDOW_DAYS, type NoteBlock,
 } from "./notes.ts";
 
@@ -243,6 +243,58 @@ describe("studio-library is superseded", () => {
   });
   it("and its reference with it, since nothing else pointed at it", () => {
     assert.ok(!existsSync("branditect-ui/reference/studio-library.html"));
+  });
+});
+
+/**
+ * The title input. The placeholder is "Untitled", so rendering the same word
+ * as the value made a person delete it before naming anything — and typing
+ * without deleting produced "UntitledOctober plan", which is what a person
+ * gets and what the browser check hit.
+ */
+describe("the title input is empty, and Untitled is only the placeholder", () => {
+  it("a note at the column default shows an empty input", () => {
+    assert.equal(titleInputValue(DEFAULT_TITLE), "");
+    assert.equal(titleInputValue(null), "");
+    assert.equal(titleInputValue(undefined), "");
+    assert.equal(titleInputValue(""), "");
+  });
+
+  it("a named note shows its name", () => {
+    assert.equal(titleInputValue("October plan"), "October plan");
+    // Only the exact default is blanked. Somebody who deliberately types
+    // Untitled Draft keeps it.
+    assert.equal(titleInputValue("Untitled Draft"), "Untitled Draft");
+  });
+
+  it("a blank title is never written", () => {
+    assert.equal(titleToSave(""), null);
+    assert.equal(titleToSave("   "), null);
+    assert.equal(titleToSave("\n "), null);
+  });
+
+  it("a real title is written, trimmed", () => {
+    assert.equal(titleToSave("  October plan  "), "October plan");
+  });
+
+  it("the row keeps its default so the card has something to show", () => {
+    assert.equal(DEFAULT_TITLE, "Untitled");
+    const sql = readFileSync("supabase/studio-notes.sql", "utf8");
+    assert.match(sql, /title\s+TEXT NOT NULL DEFAULT 'Untitled'/,
+      "the column default was removed; the card would show an empty line");
+  });
+
+  it("the page uses both rules rather than its own", () => {
+    const src = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.ok(src.includes("titleInputValue("), "the page renders the stored title raw");
+    assert.ok(src.includes("titleToSave("), "the page can still queue a blank title");
+    assert.ok(!/setTitle\(json\.note\.title\)/.test(src), "a raw title is still assigned");
+  });
+
+  it("and the route refuses a blank as a backstop", () => {
+    const route = readFileSync("app/api/notes/route.ts", "utf8");
+    assert.match(route, /body\.title\.trim\(\) !== ""/,
+      "the route would write an empty string");
   });
 });
 

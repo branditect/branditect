@@ -69,7 +69,12 @@ export async function PATCH(req: NextRequest) {
   if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const patch: Record<string, unknown> = {};
-  if (typeof body.title === "string") patch.title = body.title.trim() || "Untitled";
+  // A blank title is skipped rather than written. The backstop matters even
+  // though the editor already skips: an empty string here would put an empty
+  // line on the card where a name should be.
+  if (typeof body.title === "string" && body.title.trim() !== "") {
+    patch.title = body.title.trim();
+  }
   if (typeof body.pinned === "boolean") patch.pinned = body.pinned;
 
   if (Array.isArray(body.blocks)) {

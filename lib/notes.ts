@@ -175,6 +175,38 @@ export function isRestorable(deletedAt: string | null | undefined, now: Date): b
   return now.getTime() - gone <= RESTORE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 }
 
+/* ── the title ───────────────────────────────────────────────────────────── */
+
+/** The column default. The card needs something to show, so the row keeps it. */
+export const DEFAULT_TITLE = "Untitled";
+
+/**
+ * What the title input shows.
+ *
+ * The placeholder is already "Untitled", so rendering the same word as the
+ * VALUE made a person delete it before they could name anything — and typing
+ * without deleting produced "UntitledOctober plan", which is what the browser
+ * check hit and what a person gets.
+ *
+ * Empty for the default, the real title otherwise. The row still reads
+ * Untitled; only the input is blank.
+ */
+export function titleInputValue(stored: string | null | undefined): string {
+  return !stored || stored === DEFAULT_TITLE ? "" : stored;
+}
+
+/**
+ * What to write, or null to write nothing.
+ *
+ * A blank title must never be saved as an empty string: the card would show an
+ * empty line where a name should be. Skipping the write leaves the row at
+ * whatever it had, which for a new note is Untitled.
+ */
+export function titleToSave(input: string): string | null {
+  const trimmed = input.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
 /* ── autosave, criterion 3 ───────────────────────────────────────────────── */
 
 export interface NotePatch {

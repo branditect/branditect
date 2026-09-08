@@ -22,7 +22,7 @@ import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import Icon from "@/components/icon";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
-  MISSING_IMAGE_NOTE, mergePatch, patchBelongsTo,
+  MISSING_IMAGE_NOTE, mergePatch, patchBelongsTo, titleInputValue, titleToSave,
   type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
@@ -69,7 +69,7 @@ export default function NotesPage() {
     const res = await authedFetch(`/api/notes/blocks?note_id=${id}`);
     const json = await res.json().catch(() => ({}));
     if (!res.ok) { setError(json.error ?? "Could not open that note."); return; }
-    setTitle(json.note?.title ?? "");
+    setTitle(titleInputValue(json.note?.title));
     setBlocks(json.blocks ?? []);
   }, []);
 
@@ -116,7 +116,11 @@ export default function NotesPage() {
 
   function editTitle(value: string) {
     setTitle(value);
-    queueSave({ title: value });
+    const next = titleToSave(value);
+    // A blank title is not written. The row keeps what it had, so the card
+    // never shows an empty line where a name should be.
+    if (next === null) return;
+    queueSave({ title: next });
   }
 
   function editBlock(index: number, body: string) {
@@ -136,7 +140,7 @@ export default function NotesPage() {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) { setError(json.error ?? "Could not make a note."); return; }
     setNotes((prev) => [json.note, ...prev]);
-    setTitle(json.note.title);
+    setTitle(titleInputValue(json.note.title));
     setBlocks([]);
     setOpenId(json.note.id);
   }

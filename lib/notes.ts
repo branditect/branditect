@@ -202,6 +202,12 @@ export function titleInputValue(stored: string | null | undefined): string {
  * empty line where a name should be. Skipping the write leaves the row at
  * whatever it had, which for a new note is Untitled.
  */
+/**
+ * DECISION, not a consequence: clearing the title of a named note leaves the
+ * name. Reverting to Untitled mid-edit would be worse with a debounce — clear
+ * the field to retype it and a save could fire between the two, flipping the
+ * card to Untitled while you are mid-word.
+ */
 export function titleToSave(input: string): string | null {
   const trimmed = input.trim();
   return trimmed === "" ? null : trimmed;
@@ -211,6 +217,7 @@ export function titleToSave(input: string): string | null {
 
 export interface NotePatch {
   title?: string;
+  pinned?: boolean;
   blocks?: NoteBlock[];
 }
 
@@ -236,4 +243,65 @@ export function mergePatch(pending: NotePatch, next: NotePatch): NotePatch {
  */
 export function patchBelongsTo(pendingId: string | null, openId: string | null): boolean {
   return pendingId !== null && pendingId === openId;
+}
+
+/* ── one save at a time ──────────────────────────────────────────────────── */
+
+/**
+ * Two autosave requests could be in flight at once and land out of order. The
+ * handler recomputed flat_text from the blocks IT was sent, so a slower
+ * earlier request overwrote a newer one: the block body reached the database
+ * while flat_text came from the older payload. One editor check in three lost
+ * both the title and flat_text that way.
+ *
+ * Never more than one request in flight. Edits made while one is running
+ * coalesce into a single pending patch and go out when it settles. Written as
+ * a state machine rather than a pair of refs so the rule is testable — a
+ * "never two at once" claim that only exists inside a component is a claim
+ * nothing checks.
+ */
+export interface SaveQueue {
+  inFlight: boolean;
+  pendingId: string | null;
+  pending: NotePatch;
+}
+
+export const emptyQueue: SaveQueue = { inFlight: false, pendingId: null, pending: {} };
+
+/** Merge an edit in. An edit for a different note replaces rather than mixes. */
+export function enqueue(q: SaveQueue, id: string, patch: NotePatch): SaveQueue {
+  const sameNote = q.pendingId === null || q.pendingId === id;
+  return {
+    inFlight: q.inFlight,
+    pendingId: id,
+    pending: sameNote ? mergePatch(q.pending, patch) : { ...patch },
+  };
+}
+
+/**
+ * What to send now, if anything. Returns null while a request is in flight or
+ * when there is nothing waiting — those are the two cases that must not start
+ * a second request.
+ */
+export function takeNext(q: SaveQueue): {
+  next: SaveQueue;
+  send: { id: string; patch: NotePatch } | null;
+} {
+  if (q.inFlight || !q.pendingId || Object.keys(q.pending).length === 0) {
+    return { next: q, send: null };
+  }
+  return {
+    next: { inFlight: true, pendingId: null, pending: {} },
+    send: { id: q.pendingId, patch: q.pending },
+  };
+}
+
+/** The request finished, however it went. Anything queued behind it may go. */
+export function settle(q: SaveQueue): SaveQueue {
+  return { ...q, inFlight: false };
+}
+
+/** True when a save is running or waiting, so the indicator can say so. */
+export function isBusy(q: SaveQueue): boolean {
+  return q.inFlight || Object.keys(q.pending).length > 0;
 }

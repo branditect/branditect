@@ -7,6 +7,7 @@ import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
   mergePatch, patchBelongsTo, titleInputValue, titleToSave, DEFAULT_TITLE,
+  emptyQueue, enqueue, takeNext, settle, isBusy,
   pinLabel, isRestorable, RESTORE_WINDOW_DAYS, type NoteBlock,
 } from "./notes.ts";
 
@@ -330,10 +331,90 @@ describe("a queued save merges rather than replacing", () => {
     assert.ok(!patchBelongsTo(null, "note-a"));
   });
 
-  it("the page merges instead of replacing", () => {
+  it("the page coalesces through the queue, which merges", () => {
     const src = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
-    assert.ok(src.includes("mergePatch("), "the page replaces the pending patch again");
+    assert.ok(src.includes("enqueue(queue.current"), "the page replaces the pending patch again");
     assert.ok(src.includes("patchBelongsTo("), "a pending edit can cross notes");
+  });
+});
+
+/**
+ * One save at a time.
+ *
+ * Two autosave requests could be in flight and land out of order; the loser
+ * overwrote the winner. One editor check in three lost both the title and
+ * flat_text that way.
+ */
+describe("the save queue never runs two requests at once", () => {
+  it("nothing goes out while a request is in flight", () => {
+    let q = enqueue(emptyQueue, "n1", { title: "a" });
+    const first = takeNext(q);
+    assert.ok(first.send, "the first save did not go out");
+    q = first.next;
+    assert.equal(q.inFlight, true);
+
+    q = enqueue(q, "n1", { blocks: [] });
+    const second = takeNext(q);
+    assert.equal(second.send, null, "a second request started while one was in flight");
+  });
+
+  it("edits made during a request coalesce and go out when it settles", () => {
+    let q = takeNext(enqueue(emptyQueue, "n1", { title: "a" })).next;
+    q = enqueue(q, "n1", { title: "b" });
+    q = enqueue(q, "n1", { blocks: [{ kind: "text", body: "x" }] });
+    q = settle(q);
+    const out = takeNext(q);
+    assert.deepEqual(out.send?.patch.title, "b", "the later title was lost");
+    assert.equal(out.send?.patch.blocks?.length, 1, "the blocks were lost");
+  });
+
+  it("an empty queue sends nothing", () => {
+    assert.equal(takeNext(emptyQueue).send, null);
+    assert.equal(takeNext(settle(takeNext(enqueue(emptyQueue, "n1", { title: "a" })).next)).send, null);
+  });
+
+  it("an edit for another note replaces rather than mixing", () => {
+    let q = enqueue(emptyQueue, "n1", { title: "one" });
+    q = enqueue(q, "n2", { blocks: [] });
+    const out = takeNext(q);
+    assert.equal(out.send?.id, "n2");
+    assert.equal(out.send?.patch.title, undefined, "note one's title followed note two");
+  });
+
+  it("busy covers both running and waiting", () => {
+    assert.equal(isBusy(emptyQueue), false);
+    assert.equal(isBusy(enqueue(emptyQueue, "n1", { title: "a" })), true);
+    assert.equal(isBusy(takeNext(enqueue(emptyQueue, "n1", { title: "a" })).next), true);
+  });
+
+  it("the page drains through the queue rather than firing directly", () => {
+    const src = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.ok(src.includes("takeNext(queue.current)"), "the page does not gate on the queue");
+    assert.ok(src.includes("settle(queue.current)"), "the queue is never released");
+    const patches = (src.match(/authedJson\("\/api\/notes", "PATCH"/g) ?? []).length;
+    assert.equal(patches, 1, `${patches} places issue a PATCH; there must be exactly one`);
+  });
+});
+
+/** flat_text comes from the database, not from what the request carried. */
+describe("flat_text is recomputed from the rows that were written", () => {
+  const route = readFileSync("app/api/notes/route.ts", "utf8");
+
+  it("the route re-reads the blocks before flattening", () => {
+    const post = route.slice(route.indexOf("if (Array.isArray(body.blocks))"));
+    assert.ok(/from\("note_blocks"\)[\s\S]{0,200}\.order\("sort_order"\)/.test(post),
+      "the blocks are not read back");
+    assert.ok(/flattenBlocks\(\(written/.test(post),
+      "flat_text still comes from the request payload");
+  });
+
+  it("it does not flatten the payload any more", () => {
+    assert.ok(!/flattenBlocks\(body\.blocks\)/.test(route),
+      "a partial block set would produce a wrong flat_text whatever the order");
+  });
+
+  it("a failed read is reported rather than writing a wrong flat_text", () => {
+    assert.match(route, /readErr[\s\S]{0,80}status: 500/);
   });
 });
 
@@ -393,8 +474,8 @@ describe("flat_text is regenerated server-side on every block change", () => {
   const route = readFileSync("app/api/notes/route.ts", "utf8");
 
   it("the PATCH recomputes it from the blocks it just wrote", () => {
-    assert.ok(/patch\.flat_text = flattenBlocks\(body\.blocks\)/.test(route),
-      "flat_text is not regenerated where blocks are written");
+    assert.ok(/patch\.flat_text = flattenBlocks\(\(written/.test(route),
+      "flat_text is not regenerated from the rows that were written");
   });
 
   it("it is computed by the shared flattener, not a second copy", () => {

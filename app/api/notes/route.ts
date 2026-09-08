@@ -100,7 +100,20 @@ export async function PATCH(req: NextRequest) {
       const { error: insErr } = await supabase.from("note_blocks").insert(rows);
       if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 });
     }
-    patch.flat_text = flattenBlocks(body.blocks);
+    // Recomputed from the database, not from the payload.
+    //
+    // Flattening body.blocks meant a request carrying a partial block set
+    // produced a wrong flat_text whatever order it arrived in, and step 3 adds
+    // image insertion as a second writer to the same rows, so client-side
+    // ordering alone stops being enough the moment it lands. One extra read a
+    // save is worth it.
+    const { data: written, error: readErr } = await supabase
+      .from("note_blocks")
+      .select("kind, body, caption, sort_order")
+      .eq("note_id", body.id)
+      .order("sort_order");
+    if (readErr) return NextResponse.json({ error: readErr.message }, { status: 500 });
+    patch.flat_text = flattenBlocks((written ?? []) as NoteBlock[]);
   }
 
   if (Object.keys(patch).length === 0) return NextResponse.json({ note: null, changed: false });

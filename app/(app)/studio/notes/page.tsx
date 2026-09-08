@@ -22,7 +22,9 @@ import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import Icon from "@/components/icon";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
-  MISSING_IMAGE_NOTE, mergePatch, patchBelongsTo, titleInputValue, titleToSave,
+  type SaveQueue,
+  MISSING_IMAGE_NOTE, patchBelongsTo, titleInputValue, titleToSave,
+  emptyQueue, enqueue, takeNext, settle, isBusy,
   type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
@@ -79,38 +81,50 @@ export default function NotesPage() {
    * thirty times a sentence.
    */
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingPatch = useRef<{ id: string | null; patch: NotePatch }>({ id: null, patch: {} });
+  /**
+   * One request at a time. Two could be in flight at once and land out of
+   * order, and the loser overwrote the winner — an editor check in three lost
+   * both the title and flat_text that way. Edits made while a save is running
+   * coalesce and go out when it settles.
+   */
+  const queue = useRef<SaveQueue>(emptyQueue);
+
+  const drain = useCallback(async () => {
+    const { next, send } = takeNext(queue.current);
+    queue.current = next;
+    if (!send) return;
+
+    setSaving("saving");
+    const res = await authedJson("/api/notes", "PATCH", { id: send.id, ...send.patch });
+    const json = await res.json().catch(() => ({}));
+    queue.current = settle(queue.current);
+
+    if (!res.ok) {
+      // A save that fails must say so. Silence here is how an afternoon's
+      // writing is lost while the screen looks fine.
+      setError(json.error ?? "Not saved. Your changes are still on screen.");
+      setSaving("idle");
+      return;
+    }
+    setError(null);
+    setNotes((prev) => prev.map((n) => (n.id === send.id ? { ...n, ...json.note } : n)));
+    // Anything typed while that was running goes out now.
+    if (isBusy(queue.current)) { void drain(); return; }
+    setSaving("saved");
+  }, []);
 
   const queueSave = useCallback((next: NotePatch) => {
     if (!openId) return;
-    if (pendingPatch.current.id && !patchBelongsTo(pendingPatch.current.id, openId)) {
-      const stale = pendingPatch.current;
-      void authedJson("/api/notes", "PATCH", { id: stale.id, ...stale.patch });
-      pendingPatch.current = { id: null, patch: {} };
+    // An edit queued against a different note must not be merged into this
+    // one; enqueue replaces rather than mixing when the id changes.
+    if (queue.current.pendingId && !patchBelongsTo(queue.current.pendingId, openId)) {
+      void drain();
     }
-    pendingPatch.current = {
-      id: openId,
-      patch: mergePatch(pendingPatch.current.patch, next),
-    };
+    queue.current = enqueue(queue.current, openId, next);
     if (timer.current) clearTimeout(timer.current);
     setSaving("saving");
-    timer.current = setTimeout(async () => {
-      const { id, patch } = pendingPatch.current;
-      pendingPatch.current = { id: null, patch: {} };
-      const res = await authedJson("/api/notes", "PATCH", { id, ...patch });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        // A save that fails must say so. Silence here is how an afternoon's
-        // writing is lost while the screen looks fine.
-        setError(json.error ?? "Not saved. Your changes are still on screen.");
-        setSaving("idle");
-        return;
-      }
-      setError(null);
-      setSaving("saved");
-      setNotes((prev) => prev.map((n) => (n.id === openId ? { ...n, ...json.note } : n)));
-    }, AUTOSAVE_MS);
-  }, [openId]);
+    timer.current = setTimeout(() => { void drain(); }, AUTOSAVE_MS);
+  }, [openId, drain]);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
@@ -158,12 +172,13 @@ export default function NotesPage() {
     window.setTimeout(() => setPending(null), 2600);
   }
 
-  async function togglePin() {
+  function togglePin() {
     const note = notes.find((n) => n.id === openId);
     if (!note) return;
-    const res = await authedJson("/api/notes", "PATCH", { id: openId, pinned: !note.pinned });
-    if (!res.ok) { setError("Could not pin that."); return; }
-    await loadNotes();
+    // Through the queue like everything else. Its own PATCH was a second
+    // writer to the same row and could race a save in flight.
+    queueSave({ pinned: !note.pinned });
+    setNotes((prev) => prev.map((n) => (n.id === openId ? { ...n, pinned: !note.pinned } : n)));
   }
 
   /** Criterion 2 is step 5; this is the same match over what is already loaded. */

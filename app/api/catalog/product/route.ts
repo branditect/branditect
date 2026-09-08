@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 /**
  * Uses the service-role client, not the anon one.
@@ -81,11 +82,14 @@ const NUMERIC = new Set([
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, brand_id: brandId, changes } = body as {
+    const { id, brand_id: requested, changes } = body as {
       id?: string;
       brand_id?: string;
       changes?: Record<string, unknown>;
     };
+  const auth = await resolveBrand(req, requested);
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
 
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
     if (!brandId) return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
@@ -179,7 +183,11 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
     const id = searchParams.get("id");
-    const brandId = searchParams.get("brand_id");
+    // Ownership from the caller's token. The query parameter is checked
+    // against the brand they own, never trusted as the scope.
+    const auth = await resolveBrand(req, req.nextUrl.searchParams.get("brand_id"));
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    const brandId = auth.brandId;
     const restore = searchParams.get("restore") === "1";
 
     if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });

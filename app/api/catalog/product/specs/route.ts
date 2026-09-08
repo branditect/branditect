@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 /**
  * Specifications for one product.
@@ -21,7 +22,11 @@ async function ownsProduct(productId: string, brandId: string) {
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product_id");
-  const brandId = req.nextUrl.searchParams.get("brand_id");
+  // Ownership from the caller's token. The query parameter is checked
+  // against the brand they own, never trusted as the scope.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get("brand_id"));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!productId || !brandId) {
     return NextResponse.json({ error: "product_id and brand_id are required" }, { status: 400 });
   }
@@ -47,8 +52,12 @@ export async function GET(req: NextRequest) {
  * nothing — the bug that left brand_strategies empty.
  */
 export async function PUT(req: NextRequest) {
-  const { product_id: productId, brand_id: brandId, specs } =
+  const { product_id: productId, brand_id: requested, specs } =
     (await req.json()) as { product_id?: string; brand_id?: string; specs?: SpecRow[] };
+
+  const auth = await resolveBrand(req, requested ?? null);
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
 
   if (!productId || !brandId || !Array.isArray(specs)) {
     return NextResponse.json({ error: "product_id, brand_id and specs are required" }, { status: 400 });

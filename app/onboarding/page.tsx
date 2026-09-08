@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/logo";
 import { supabase } from "@/lib/supabase";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
@@ -191,7 +192,7 @@ export default function OnboardingPage() {
       if (brandError) throw brandError;
 
       // 2. Save visual identity (logos, colors, fonts)
-      await fetch("/api/visual", {
+      await authedFetch("/api/visual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

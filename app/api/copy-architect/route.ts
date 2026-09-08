@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildBrandContext } from '@/lib/brandContext'
 import { serviceClient as supabase } from '@/lib/supabase-admin'
+import { resolveBrand } from "@/lib/api-auth";
 import { HOUSE_STYLE } from '@/lib/house-style'
 import { findFormat, normaliseDraft, isThinBrief, type Draft, type Length } from '@/lib/studio-write'
 
@@ -139,8 +140,10 @@ function parseJson(rawText: string): Record<string, unknown> | null {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    const auth = await resolveBrand(req, body?.brand_id ?? null)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
     const {
-      brand_id: brandId,
       format,
       format_other: formatOther,
       brief,

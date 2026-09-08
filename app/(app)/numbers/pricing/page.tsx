@@ -8,6 +8,7 @@ import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, numStr, toNum,
 } from "@/components/numbers/calc-shell";
 import GuardrailsPanel from "@/components/numbers/guardrails-panel";
+import { authedFetch } from "@/lib/authed-fetch";
 
 type Direction = "fromPrice" | "fromMargin";
 
@@ -24,7 +25,7 @@ export default function PricingCalculator() {
   useEffect(() => {
     if (!brandId) return;
     let cancelled = false;
-    fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
+    authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
       .then((r) => r.json())
       .then((c) => !cancelled && setProducts((c.products ?? []).map(fromRow)))
       .catch(() => {});

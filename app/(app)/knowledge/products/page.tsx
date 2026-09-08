@@ -16,6 +16,7 @@ import {
   STOCK_STYLES,
   type Product,
 } from "@/lib/products";
+import { authedFetch } from "@/lib/authed-fetch";
 
 const PAGE_SIZE = 12;
 
@@ -40,7 +41,7 @@ export default function ProductsPage() {
   useEffect(() => {
     if (!brandId) return;
     let cancelled = false;
-    fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
+    authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
@@ -108,7 +109,7 @@ export default function ProductsPage() {
     setRemoving(true);
     setRemoveError(null);
     try {
-      const res = await fetch(
+      const res = await authedFetch(
         `/api/catalog/product?id=${encodeURIComponent(p.id)}&brand_id=${encodeURIComponent(brandId)}`,
         { method: "DELETE" },
       );
@@ -132,7 +133,7 @@ export default function ProductsPage() {
 
   async function restore(p: Product) {
     setUndo(null);
-    const res = await fetch(
+    const res = await authedFetch(
       `/api/catalog/product?id=${encodeURIComponent(p.id)}&brand_id=${encodeURIComponent(brandId)}&restore=1`,
       { method: "DELETE" },
     );

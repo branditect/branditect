@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 import { HOUSE_STYLE } from "@/lib/house-style";
 import { sanitiseOutput } from "@/lib/sanitise-output";
 
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as Body;
     brandId = body.brandId;
+    const auth = await resolveBrand(req, brandId);
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    brandId = auth.brandId;
     const { storagePath, bucket, documentId, sourceName, images } = body;
 
     if (!brandId) {

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
+import { authedFetch } from "@/lib/authed-fetch";
 
 export interface ChatMsg {
   role: "user" | "assistant";
@@ -29,7 +30,7 @@ export function useBrandChat(onReply?: (all: ChatMsg[]) => void) {
       setLoading(true);
 
       try {
-        const res = await fetch("/api/andy", {
+        const res = await authedFetch("/api/andy", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: next, brandId }),

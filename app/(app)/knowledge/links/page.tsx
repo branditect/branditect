@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -83,7 +84,7 @@ export default function TemplatesPage() {
         setLoading(false)
       })
     // Fetch note
-    fetch(`/api/templates/note?brandId=${brandId}`)
+    authedFetch(`/api/templates/note?brandId=${brandId}`)
       .then(r => r.json())
       .then(d => { if (d.note) setNote(d.note) })
       .catch(() => {})
@@ -96,7 +97,7 @@ export default function TemplatesPage() {
     setNoteSaved(false)
     if (noteTimer.current) clearTimeout(noteTimer.current)
     noteTimer.current = setTimeout(async () => {
-      await fetch('/api/templates/note', {
+      await authedFetch('/api/templates/note', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brandId, note: value }),
@@ -118,12 +119,12 @@ export default function TemplatesPage() {
     if (!error) {
       const { data: urlData } = supabase.storage.from('brand-assets').getPublicUrl(path)
       const thumbUrl = urlData.publicUrl + `?t=${Date.now()}`
-      await fetch('/api/templates', {
+      await authedFetch('/api/templates', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: templateId, field: 'thumbnail_url', value: urlData.publicUrl }),
       })
-      await fetch('/api/templates', {
+      await authedFetch('/api/templates', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: templateId, field: 'thumbnail_path', value: path }),
@@ -136,7 +137,7 @@ export default function TemplatesPage() {
   /* ── Save name / URL edits ──────────────────────────────────────────────── */
 
   async function saveField(templateId: string, field: 'name' | 'url', value: string) {
-    const res = await fetch('/api/templates', {
+    const res = await authedFetch('/api/templates', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: templateId, field, value }),
@@ -158,7 +159,7 @@ export default function TemplatesPage() {
   /* ── Delete ──────────────────────────────────────────────────────────────── */
 
   async function deleteTemplate(template: Template) {
-    await fetch('/api/templates', {
+    await authedFetch('/api/templates', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: template.id, thumbnail_path: template.thumbnail_path }),
@@ -171,7 +172,7 @@ export default function TemplatesPage() {
   async function saveNewTemplate() {
     if (!modalName.trim() || !brandId) return
     setSaving(true)
-    const res = await fetch('/api/templates', {
+    const res = await authedFetch('/api/templates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brand_id: brandId, name: modalName.trim(), platform: modalPlat, url: modalUrl.trim() }),

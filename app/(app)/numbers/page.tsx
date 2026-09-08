@@ -11,6 +11,7 @@ import {
   runningCostsUnset, totalRunningCosts, unitNoun,
   type BusinessProfile, type Channel, type RunningCosts,
 } from "@/lib/numbers";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /**
  * Each calculator owns a colour. It is not decoration: it is what lets someone
@@ -134,8 +135,8 @@ export default function NumbersPage() {
     if (!brandId) return;
     let cancelled = false;
     Promise.all([
-      fetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
-      fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
     ])
       .then(([n, c]) => {
         if (cancelled) return;
@@ -162,7 +163,7 @@ export default function NumbersPage() {
   const save = useCallback(
     (patch: Record<string, unknown>) => {
       if (!brandId) return;
-      fetch("/api/numbers", {
+      authedFetch("/api/numbers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand_id: brandId, ...patch }),

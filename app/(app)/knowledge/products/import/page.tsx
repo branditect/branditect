@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/lib/useBrand";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -481,7 +482,7 @@ export default function CatalogPage() {
       setLoading(false);
       return;
     }
-    fetch(`/api/catalog?brand_id=${brandId}`)
+    authedFetch(`/api/catalog?brand_id=${brandId}`)
       .then(r => r.json())
       .then(json => {
         if (json.products?.length) {
@@ -498,7 +499,7 @@ export default function CatalogPage() {
     const kinds = Array.from(new Set(list.map(p => p.kind)));
     const businessTypes = kinds.map(k => k === "services" ? "service" : k === "saas" ? "saas_tier" : k);
     try {
-      await fetch("/api/catalog", {
+      await authedFetch("/api/catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

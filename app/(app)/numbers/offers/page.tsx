@@ -7,6 +7,7 @@ import { marginPct, maxDiscountPct, netPrice } from "@/lib/numbers";
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, numStr, toNum,
 } from "@/components/numbers/calc-shell";
+import { authedFetch } from "@/lib/authed-fetch";
 
 export default function OffersCalculator() {
   const { brandId } = useBrand();
@@ -21,7 +22,7 @@ export default function OffersCalculator() {
   useEffect(() => {
     if (!brandId) return;
     let cancelled = false;
-    fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
+    authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
       .then((r) => r.json())
       .then((c) => !cancelled && setProducts((c.products ?? []).map(fromRow)))
       .catch(() => {});

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import { supabase } from "@/lib/supabase";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -103,7 +104,7 @@ export default function ToneOfVoicePage() {
   const fetchTone = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/tone?brand_id=${brandId}`);
+      const res = await authedFetch(`/api/tone?brand_id=${brandId}`);
       const json = await res.json();
       if (json.tone && json.tone.setup_complete) {
         setToneData(json.tone as ToneData);
@@ -132,7 +133,7 @@ export default function ToneOfVoicePage() {
       // Destructure out brand_id so it can't override the correct brandId from useBrand
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { brand_id: _ignored, ...safeFields } = fields as ToneData;
-      const res = await fetch("/api/tone", {
+      const res = await authedFetch("/api/tone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand_id: brandId, ...safeFields }),

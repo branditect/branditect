@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { parseStrategy, strategyPromptContext } from '@/lib/strategy'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 import { HOUSE_STYLE } from "@/lib/house-style";
 import { sanitiseOutput } from "@/lib/sanitise-output";
 
@@ -240,7 +241,14 @@ async function getBrandContext(brandId: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { messages, brandId } = await req.json()
+  const { messages, brandId: requested } = await req.json()
+
+  // The brand comes from the caller's token. This route reads the whole brand
+  // context — strategy, tone, products, costs — so a supplied id was a way to
+  // read somebody else's.
+  const auth = await resolveBrand(req, requested)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  const brandId = auth.brandId
 
   if (!messages || !Array.isArray(messages)) {
     return NextResponse.json({ error: 'Missing messages' }, { status: 400 })

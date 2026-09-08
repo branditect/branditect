@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
-  const brandId = req.nextUrl.searchParams.get('brandId')
+  // Ownership from the caller's token. The query parameter is checked
+  // against the brand they own, never trusted as the scope.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get('brandId'));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
 
   const { data, error } = await supabase
@@ -17,7 +22,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { brandId, goalId, title, assignedTo, dueDate } = body
+  const { brandId: requested, goalId, title, assignedTo, dueDate } = body
+  const auth = await resolveBrand(req, requested)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  const brandId = auth.brandId
 
   const { data, error } = await supabase
     .from('mission_tasks')
@@ -39,6 +47,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const body = await req.json()
   const { id, ...fields } = body
+  const auth = await resolveBrand(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
@@ -46,6 +56,7 @@ export async function PATCH(req: NextRequest) {
     .from('mission_tasks')
     .update(fields)
     .eq('id', id)
+      .eq('brand_id', auth.brandId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
@@ -53,11 +64,14 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const { id } = await req.json()
+  const auth = await resolveBrand(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
   const { error } = await supabase
     .from('mission_tasks')
     .delete()
     .eq('id', id)
+      .eq('brand_id', auth.brandId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })

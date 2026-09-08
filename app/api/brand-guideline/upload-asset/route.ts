@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export const maxDuration = 60
 
@@ -43,7 +44,9 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
-    const brandId = formData.get('brandId') as string
+    const auth = await resolveBrand(req, formData.get('brandId') as string | null)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
     const category = (formData.get('category') as string) || 'logo'
     const imageType = (formData.get('imageType') as string) || ''
     const analyze = formData.get('analyze') === 'true'
@@ -110,7 +113,10 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { id, brandId } = await req.json() as { id: string | number; brandId: string }
+    const { id, brandId: requested } = await req.json() as { id: string | number; brandId: string }
+    const auth = await resolveBrand(req, requested)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
     if (!id || !brandId) return NextResponse.json({ success: false, error: 'Missing id or brandId' }, { status: 400 })
 
     const { data: row } = await supabase

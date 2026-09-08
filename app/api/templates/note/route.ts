@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 // Get note
 export async function GET(req: NextRequest) {
-  const brandId = req.nextUrl.searchParams.get('brandId')
+  // Ownership from the caller's token. The query parameter is checked
+  // against the brand they own, never trusted as the scope.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get('brandId'));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
 
   const { data } = await supabase
@@ -17,7 +22,10 @@ export async function GET(req: NextRequest) {
 
 // Save note
 export async function PATCH(req: NextRequest) {
-  const { brandId, note } = await req.json()
+  const { brandId: requested, note } = await req.json()
+  const auth = await resolveBrand(req, requested)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  const brandId = auth.brandId
   if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
 
   const { error } = await supabase

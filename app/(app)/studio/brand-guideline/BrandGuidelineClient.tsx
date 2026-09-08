@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -352,7 +353,7 @@ export default function BrandGuidelineClient() {
   // Fetch brand text from strategy tables
   useEffect(() => {
     if (!brandId || !bd) return
-    fetch('/api/brand-guideline/brand-text', {
+    authedFetch('/api/brand-guideline/brand-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brandId }),
@@ -409,7 +410,7 @@ export default function BrandGuidelineClient() {
     fd.append('imageType', slotId)
     fd.append('analyze', 'true')
     try {
-      const res = await fetch('/api/brand-guideline/upload-asset', { method: 'POST', body: fd })
+      const res = await authedFetch('/api/brand-guideline/upload-asset', { method: 'POST', body: fd })
       const json = await res.json()
       if (json.success) {
         setBd(prev => prev ? {
@@ -437,7 +438,7 @@ export default function BrandGuidelineClient() {
     fd.append('category', category)
     fd.append('imageType', `${category}-${Date.now()}`)
     try {
-      const res = await fetch('/api/brand-guideline/upload-asset', { method: 'POST', body: fd })
+      const res = await authedFetch('/api/brand-guideline/upload-asset', { method: 'POST', body: fd })
       const json = await res.json()
       if (json.success) {
         setGalleryAssets(p => ({ ...p, [category]: [...(p[category] || []), { id: json.id, url: json.url }] }))
@@ -450,7 +451,7 @@ export default function BrandGuidelineClient() {
   async function removeGalleryAsset(category: string, id: string | number | undefined) {
     setGalleryAssets(p => ({ ...p, [category]: (p[category] || []).filter(a => a.id !== id) }))
     if (id && brandId) {
-      await fetch('/api/brand-guideline/upload-asset', {
+      await authedFetch('/api/brand-guideline/upload-asset', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, brandId }),

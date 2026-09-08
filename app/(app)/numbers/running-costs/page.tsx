@@ -10,6 +10,7 @@ import {
   floorPriceBasis, operatingProfit, RUNNING_COST_LINES, runningCostsUnset,
   totalRunningCosts, unitNoun, type BusinessProfile, type RunningCosts,
 } from "@/lib/numbers";
+import { authedFetch } from "@/lib/authed-fetch";
 
 const toNum = (s: string): number | null => {
   const t = s.trim().replace(",", ".");
@@ -36,8 +37,8 @@ export default function RunningCostsPage() {
     if (!brandId) return;
     let cancelled = false;
     Promise.all([
-      fetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
-      fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
     ]).then(([n, c]) => {
       if (cancelled) return;
       const r = n.rules;
@@ -100,7 +101,7 @@ export default function RunningCostsPage() {
   async function save() {
     setSaving(true); setError(null); setSaved(false);
     try {
-      const res = await fetch("/api/numbers", {
+      const res = await authedFetch("/api/numbers", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand_id: brandId, runningCosts: parsed, expectedVolume: vol }),

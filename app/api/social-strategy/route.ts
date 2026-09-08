@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export const maxDuration = 30
 
@@ -67,7 +68,11 @@ async function getBrandContextSummary(brandId: string): Promise<BrandContextSumm
 /* ------------------------------------------------------------------ */
 
 export async function GET(req: NextRequest) {
-  const brandId = req.nextUrl.searchParams.get('brandId')
+  // Ownership from the caller's token. The query parameter is checked
+  // against the brand they own, never trusted as the scope.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get('brandId'));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!brandId) return NextResponse.json({ error: 'Missing brandId' }, { status: 400 })
 
   const [recordRes, ctx] = await Promise.all([
@@ -111,6 +116,8 @@ const ALLOWED_FIELDS = new Set([
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
+  const auth = await resolveBrand(req, body?.brandId ?? null)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
   const action = body.action
 
   if (action === 'start') {

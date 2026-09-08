@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useBrand } from '@/lib/useBrand'
 import { supabase } from '@/lib/supabase'
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -226,7 +227,7 @@ export default function SocialStrategyPage() {
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/social-strategy', {
+      const res = await authedFetch('/api/social-strategy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'start', brandId }),
@@ -260,7 +261,7 @@ export default function SocialStrategyPage() {
   const saveField = useCallback(
     async (field: string, value: string | string[] | null) => {
       if (!record) return
-      const res = await fetch('/api/social-strategy', {
+      const res = await authedFetch('/api/social-strategy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'answer', id: record.id, field, value }),
@@ -343,7 +344,7 @@ export default function SocialStrategyPage() {
       } else {
         // Q5 finished → kick off (stub) generation
         setPhase('generating')
-        await fetch('/api/social-strategy', {
+        await authedFetch('/api/social-strategy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'generate', id: record!.id }),

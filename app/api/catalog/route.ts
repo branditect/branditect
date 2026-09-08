@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 import { liveOnly, deletedOnly } from "@/lib/product-delete";
 
 export async function GET(req: NextRequest) {
   try {
-    const brandId = req.nextUrl.searchParams.get("brand_id");
+    // Ownership from the caller's token. The query parameter is checked
+    // against the brand they own, never trusted as the scope.
+    const auth = await resolveBrand(req, req.nextUrl.searchParams.get("brand_id"));
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    const brandId = auth.brandId;
     if (!brandId) {
       return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
     }
@@ -45,7 +50,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { businessTypes, products, financialRules, brand_id: brandId } = body;
+    const { businessTypes, products, financialRules, brand_id: requested } = body;
+    const auth = await resolveBrand(req, requested);
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    const brandId = auth.brandId;
     if (!brandId) {
       return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
     }

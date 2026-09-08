@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
 
     const file = formData.get('file') as File | null
-    const brandId = formData.get('brandId') as string
+    const auth = await resolveBrand(req, formData.get('brandId') as string | null)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
     const uploadType = formData.get('uploadType') as string
     const pageNumber = formData.get('pageNumber') as string | null
 

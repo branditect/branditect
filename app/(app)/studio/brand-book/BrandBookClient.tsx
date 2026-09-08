@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
+import { authedFetch } from "@/lib/authed-fetch";
 type PDFJSLib = typeof import('pdfjs-dist')
 let pdfjsLib: PDFJSLib | null = null
 
@@ -170,7 +171,7 @@ export default function BrandBookClient() {
       fd.append('pageNumber', String(pages.length + i + 1))
 
       try {
-        const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
+        const res = await authedFetch('/api/brand-book/upload', { method: 'POST', body: fd })
         const json = await res.json()
         if (json.success) {
           uploaded++
@@ -193,7 +194,7 @@ export default function BrandBookClient() {
 
   async function deletePage(id: number) {
     setPages(prev => prev.filter(p => p.id !== id))
-    await fetch('/api/brand-book/delete', {
+    await authedFetch('/api/brand-book/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, table: 'brand_book_pages', brandId }),
@@ -213,7 +214,7 @@ export default function BrandBookClient() {
       fd.append('uploadType', category)
 
       try {
-        const res = await fetch('/api/brand-book/upload', { method: 'POST', body: fd })
+        const res = await authedFetch('/api/brand-book/upload', { method: 'POST', body: fd })
         const json = await res.json()
         if (json.success) {
           setAssets(prev => [...prev, { id: json.id, category, file_url: json.url, file_name: f.name }])
@@ -229,7 +230,7 @@ export default function BrandBookClient() {
 
   async function deleteAsset(id: number) {
     setAssets(prev => prev.filter(a => a.id !== id))
-    await fetch('/api/brand-book/delete', {
+    await authedFetch('/api/brand-book/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, table: 'brand_book_assets', brandId }),
@@ -266,7 +267,7 @@ export default function BrandBookClient() {
 
   async function deleteColor(id: number) {
     setColors(prev => prev.filter(c => c.id !== id))
-    await fetch('/api/brand-book/delete', {
+    await authedFetch('/api/brand-book/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, table: 'brand_book_colors', brandId }),

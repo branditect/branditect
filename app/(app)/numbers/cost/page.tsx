@@ -7,6 +7,7 @@ import { costCalculatorTitle, costLines, DEFAULT_PROFILE, type BusinessProfile }
 import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, clean, numStr, toNum,
 } from "@/components/numbers/calc-shell";
+import { authedFetch } from "@/lib/authed-fetch";
 
 export default function CostCalculator() {
   const { brandId } = useBrand();
@@ -20,8 +21,8 @@ export default function CostCalculator() {
     if (!brandId) return;
     let cancelled = false;
     Promise.all([
-      fetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
-      fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/numbers?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
+      authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`).then((r) => r.json()),
     ]).then(([n, c]) => {
       if (cancelled) return;
       const r = n.rules;

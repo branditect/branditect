@@ -21,6 +21,7 @@ import {
   FORMATS, type Format, type Kind, type Where,
 } from "@/lib/image-brief";
 import s from "@/components/studio/create-images.module.css";
+import { authedFetch } from "@/lib/authed-fetch";
 
 type RefSource = "knowledge" | "product" | "upload";
 
@@ -199,7 +200,7 @@ export default function CreateImagesPage() {
 
     try {
       const images = await Promise.all(refs.map(async (r) => ({ data: await referenceToBase64(r), mimeType: "image/jpeg" })));
-      const res = await fetch("/api/brand/generate-from-reference", {
+      const res = await authedFetch("/api/brand/generate-from-reference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 // A 40-page image-heavy guideline PDF measured 104s. At the old 60s the
 // function was killed mid-flight, so the row below stayed "processing" with
@@ -15,17 +16,36 @@ const SYSTEM_PROMPT = `You are a brand data extractor. Extract ALL text content 
 
 export async function POST(req: NextRequest) {
   try {
-    const { documentId, storagePath, brandId } = await req.json() as {
+    const { documentId, storagePath, brandId: requested } = await req.json() as {
       documentId: string;
       storagePath: string;
       brandId: string;
     };
 
-    if (!documentId || !storagePath || !brandId) {
+    if (!documentId || !storagePath || !requested) {
       return NextResponse.json(
         { error: "documentId, storagePath, and brandId are required" },
         { status: 400 }
       );
+    }
+
+    // The brand comes from the caller's token. This route writes back to a
+    // document row, so a caller-supplied id was a way to write into somebody
+    // else's library.
+    const auth = await resolveBrand(req, requested);
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    // The document must belong to the caller's brand. This route works from a
+    // documentId and a storagePath, so without this check any signed-in user
+    // could extract, and mark as errored, any document in the system — the
+    // brand id it was handed was never used for anything.
+    const { data: owned } = await supabase
+      .from("brand_documents")
+      .select("id")
+      .eq("id", documentId)
+      .eq("brand_id", auth.brandId)
+      .maybeSingle();
+    if (!owned) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // Download file from Supabase Storage

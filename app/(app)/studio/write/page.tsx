@@ -25,6 +25,7 @@ import {
   type Length,
 } from "@/lib/studio-write";
 import s from "@/components/studio/write.module.css";
+import { authedFetch } from "@/lib/authed-fetch";
 
 interface Product {
   id: string;
@@ -71,7 +72,7 @@ export default function WritePage() {
   useEffect(() => {
     if (brandLoading || !brandId || brandId === "default") return;
     let live = true;
-    fetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
+    authedFetch(`/api/catalog?brand_id=${encodeURIComponent(brandId)}`)
       .then((r) => (r.ok ? r.json() : { products: [] }))
       .then((d) => {
         if (!live) return;
@@ -105,7 +106,7 @@ export default function WritePage() {
       );
 
       try {
-        const res = await fetch("/api/copy-architect", {
+        const res = await authedFetch("/api/copy-architect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

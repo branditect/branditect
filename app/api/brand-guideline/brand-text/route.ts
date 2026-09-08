@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 export const maxDuration = 30
 
@@ -8,7 +9,10 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
-    const { brandId } = await req.json() as { brandId: string }
+    const { brandId: requested } = await req.json() as { brandId: string }
+    const auth = await resolveBrand(req, requested)
+    if (!auth.ok) return NextResponse.json({ success: false, error: auth.message }, { status: auth.status })
+    const brandId = auth.brandId
 
     if (!brandId) {
       return NextResponse.json({ success: false, error: 'Missing brandId' }, { status: 400 })

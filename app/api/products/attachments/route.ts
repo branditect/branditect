@@ -24,7 +24,11 @@ async function ownsProduct(productId: string, brandId: string) {
 
 export async function GET(req: NextRequest) {
   const productId = req.nextUrl.searchParams.get("product_id");
-  const brandId = req.nextUrl.searchParams.get("brand_id");
+  // ownsProduct compared the product's brand to whatever the caller sent, so
+  // supplying both ids passed the check. The brand comes from the token now.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get("brand_id"));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!productId || !brandId) {
     return NextResponse.json({ error: "product_id and brand_id are required" }, { status: 400 });
   }
@@ -85,7 +89,9 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const productId = searchParams.get("product_id");
-  const brandId = searchParams.get("brand_id");
+  const auth = await resolveBrand(req, searchParams.get("brand_id"));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   const imageId = searchParams.get("image_id");
   const documentId = searchParams.get("document_id");
 

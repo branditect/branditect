@@ -9,6 +9,7 @@ import {
   makeBatch, attachDocument, saveUpdates, undescribedFirst, type Batch,
 } from "@/lib/document-batch";
 import AskPanel from "@/components/documents/ask-panel";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -285,7 +286,7 @@ export default function KnowledgeVaultPage() {
         setBatch((prev) => (prev ? attachDocument(prev, tempId, docRow.id as string) : prev));
 
         // 4. Fire extract (async — updates row on server, we update UI when done)
-        fetch("/api/vault/extract", {
+        authedFetch("/api/vault/extract", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

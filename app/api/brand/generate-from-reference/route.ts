@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 import { isLive } from "@/lib/product-delete";
 import {
   buildImagePrompt, buildParts, productIdentity, decideProductAccess,
@@ -80,7 +81,10 @@ export async function POST(req: NextRequest) {
 
     let product: ProductIdentity | null = null;
     if (productId) {
-      const brandId = typeof body.brandId === "string" && body.brandId !== "default" ? body.brandId : null;
+      const requested = typeof body.brandId === "string" && body.brandId !== "default" ? body.brandId : null;
+      const auth = await resolveBrand(req, requested);
+      if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+      const brandId = auth.brandId;
       if (!brandId) {
         return NextResponse.json({ error: "forbidden", message: "That product is not available." }, { status: 403 });
       }

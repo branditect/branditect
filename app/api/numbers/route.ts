@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
+import { resolveBrand } from "@/lib/api-auth";
 
 /**
- * Uses the service-role client, not the anon one.
+ * Numbers: the business profile, running costs and expected volume.
  *
- * A route handler carries no user session: nothing in this app sends an
- * Authorization header, so `auth.uid()` is null here. With RLS on the table
- * below, the anon client would read and write nothing and the route would
- * report "not found" for rows that exist. Ownership is enforced by the
- * explicit brand_id scoping on every query instead.
+ * The brand is resolved from the caller's token by lib/api-auth.ts. This file
+ * used to carry a comment asserting that nothing in the app sends an
+ * Authorization header and that scoping a query by a caller-supplied brand_id
+ * was ownership enforcement. The first was false — lib/authed-fetch.ts sends
+ * it — and the second was never true: scoping by an id the caller chose is
+ * doing what the caller asked. That comment is why nobody looked again.
  */
 
 /**
@@ -27,7 +29,11 @@ const num = (v: unknown): number | null => {
 };
 
 export async function GET(req: NextRequest) {
-  const brandId = req.nextUrl.searchParams.get("brand_id");
+  // Ownership from the caller's token. The query parameter is checked
+  // against the brand they own, never trusted as the scope.
+  const auth = await resolveBrand(req, req.nextUrl.searchParams.get("brand_id"));
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+  const brandId = auth.brandId;
   if (!brandId) {
     return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
   }
@@ -45,7 +51,10 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { brand_id: brandId, profile, runningCosts, expectedVolume } = body;
+    const { brand_id: requested, profile, runningCosts, expectedVolume } = body;
+    const auth = await resolveBrand(req, requested);
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    const brandId = auth.brandId;
     if (!brandId) {
       return NextResponse.json({ error: "brand_id is required" }, { status: 400 });
     }

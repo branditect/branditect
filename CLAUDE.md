@@ -122,6 +122,20 @@ thing: CDP `Input.insertText` after `focus()`. And beware escaping — a
 JSON-encoded `\n` types a literal backslash-n, which then "proves" that
 newlines are being stripped.
 
+**A wedged `supabase.auth` in the CDP harness is a sandbox artefact, not a bug.**
+On 2026-09-07 sign-in stopped resolving in the headless browser: no error, no
+navigation, `useBrand` stuck on "Loading…" forever. The network was fine, the
+Supabase host reachable, and a raw password grant from the same page returned
+200 with a token — only the app's own `supabase.auth` call hung. It did not
+reproduce the next day, on localhost or on production, with a freshly recreated
+`cdp.mjs`. Recreate the harness before chasing it.
+
+What it did produce is worth keeping: `app/login/page.tsx` awaited
+`signInWithPassword` with no try/catch and no timeout, so a hang showed the
+person a spinner and nothing else. Both auth handlers are bounded now
+(`lib/auth-timeout.ts`), and a test counts awaits against bounded awaits so a
+new one cannot be added without a bound.
+
 **Never run `npm run build` while `npm run dev` is up.** The build rewrites
 `.next` underneath the dev server, which then serves 404s for its own JS
 chunks. The page renders from server HTML and never hydrates: forms submit

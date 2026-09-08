@@ -202,3 +202,80 @@ describe("the standing RLS audit", () => {
     assert.ok(/process\.exit\(result\.exitCode\)/.test(script), "it does not exit on the decision");
   });
 });
+
+/**
+ * The cross-tenant read.
+ *
+ * A policy audit checks what is written down. This checks what happens over
+ * the wire: sign in as user A with the anon key and a real JWT, the same path
+ * the browser uses, and try to select user B's rows from every table.
+ * scripts/cross-tenant.mjs does that; these guard the properties that make its
+ * result mean something.
+ */
+describe("the cross-tenant check cannot pass vacuously", () => {
+  const src = readFileSync("scripts/cross-tenant.mjs", "utf8");
+
+  it("seeds B before looking, so an empty table is not mistaken for a closed one", () => {
+    assert.ok(/Seed BOTH brands/.test(src) || /seedRow\(t, B\.brandId/.test(src) || src.includes("parents["),
+      "B is never given a row to find");
+    assert.ok(src.includes("__unseedable"), "a table that cannot be seeded is not tracked");
+  });
+
+  it("a table it could not seed is UNVERIFIED, never PASS", () => {
+    assert.match(src, /verdict: "UNVERIFIED"/);
+    const passBranch = src.slice(src.indexOf('verdict: "PASS"') - 400, src.indexOf('verdict: "PASS"'));
+    assert.ok(passBranch.includes("seesOwn"),
+      "a table passes without A being able to read its own row");
+  });
+
+  it("requires A to read its own row, or the pass proves nothing", () => {
+    assert.ok(src.includes("A cannot read its own row either"),
+      "there is no guard against A being able to read nothing anywhere");
+  });
+
+  it("signs in with the anon key, not the service key", () => {
+    assert.ok(/createClient\(URL_, ANON/.test(src), "it queries as the service role");
+    assert.ok(src.includes("signInWithPassword"), "there is no real session");
+  });
+
+  it("exits non-zero when anything leaks", () => {
+    assert.match(src, /process\.exit\(leaks\.length \? 1 : 0\)/);
+  });
+
+  it("covers every table the app touches", () => {
+    const listed = (src.match(/TABLES = \[([\s\S]*?)\]/)?.[1] ?? "")
+      .split(",").map((x) => x.trim().replace(/['"]/g, "")).filter(Boolean);
+    // The list is checked for duplicates and shape; the grep that produced it
+    // is recorded in the script's header.
+    assert.equal(new Set(listed).size, listed.length, "duplicate table in the list");
+    assert.ok(listed.length >= 25, `only ${listed.length} tables listed`);
+    for (const t of ["catalog_products", "brands", "brand_images", "notes"]) {
+      assert.ok(listed.includes(t), `${t} is not covered`);
+    }
+  });
+});
+
+/** What the run found, recorded so a regression is visible as a diff. */
+describe("the four tables close-rls-3 exists to close", () => {
+  const sql = readFileSync("supabase/close-rls-3.sql", "utf8");
+
+  for (const t of ["brand_book_assets", "mission_goals", "mission_notes", "mission_tasks"]) {
+    it(`${t} gets RLS and a brand-scoped policy`, () => {
+      assert.ok(new RegExp(`ALTER TABLE ${t}\\s+ENABLE ROW LEVEL SECURITY`).test(sql), t);
+      assert.ok(new RegExp(`CREATE POLICY ${t}_own_brand`).test(sql), `${t} has no policy`);
+    });
+  }
+
+  it("drops existing policies by discovery, not by name", () => {
+    assert.match(sql, /FROM pg_policies/,
+      "close-rls.sql dropped only the name it creates, and nine open policies survived it");
+  });
+
+  it("adds no USING (true)", () => {
+    // Comments stripped first: the file explains that nine `USING (true)`
+    // policies survived close-rls.sql, and matching that flagged the fix as
+    // the defect it describes.
+    const active = sql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    assert.deepEqual(active.match(/USING\s*\(\s*true\s*\)/gi) ?? [], []);
+  });
+});

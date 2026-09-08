@@ -31,8 +31,15 @@ const PLATFORM_STYLE: Record<Platform, React.CSSProperties> = {
 /* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function TemplatesPage() {
-  const { brand } = useBrand()
-  const brandId = brand?.id || ''
+  // brand.brand_id, the TEXT slug — not brand.id, the UUID.
+  //
+  // This page was written when brand_templates keyed brands by UUID. Every
+  // other table keys them by the slug, and supabase/brand-templates-key.sql
+  // moved brand_templates over, so the UUID matched nothing here while Visual
+  // identity, which always used the slug, started working. The page rendered
+  // its empty state either way, which is why nobody noticed.
+  const { brand, brandId } = useBrand()
+  void brand
 
   const [templates, setTemplates]   = useState<Template[]>([])
   const [loading, setLoading]       = useState(true)

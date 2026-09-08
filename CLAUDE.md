@@ -122,13 +122,22 @@ thing: CDP `Input.insertText` after `focus()`. And beware escaping — a
 JSON-encoded `\n` types a literal backslash-n, which then "proves" that
 newlines are being stripped.
 
-**A wedged `supabase.auth` in the CDP harness is a sandbox artefact, not a bug.**
+**A "wedged `supabase.auth`" is almost always the page not hydrating.**
 On 2026-09-07 sign-in stopped resolving in the headless browser: no error, no
-navigation, `useBrand` stuck on "Loading…" forever. The network was fine, the
-Supabase host reachable, and a raw password grant from the same page returned
-200 with a token — only the app's own `supabase.auth` call hung. It did not
-reproduce the next day, on localhost or on production, with a freshly recreated
-`cdp.mjs`. Recreate the harness before chasing it.
+navigation, `useBrand` stuck on "Loading…" forever. It was recorded then as an
+unexplained sandbox artefact. It recurred on 2026-09-08 and the cause turned
+out to be mundane: **React had not attached.** The submit button never went
+pending, so `handleSignIn` was never called at all — there was nothing to hang.
+`document.querySelector('form')` had no `__react` fiber.
+
+The cause is the hazard two paragraphs down: `npm run build` while `npm run dev`
+is up. The page renders from server HTML and never hydrates, so forms do
+nothing, clicks do nothing, and every client hook stays in its initial state.
+From the outside it is indistinguishable from a hung network call.
+
+`scripts/cdp.mjs` has `waitForHydration()`, which fails with that explanation
+rather than letting a harness spend a day on it. Check it before diagnosing
+anything as an auth or network problem.
 
 What it did produce is worth keeping: `app/login/page.tsx` awaited
 `signInWithPassword` with no try/catch and no timeout, so a hang showed the

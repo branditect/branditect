@@ -56,6 +56,32 @@ export async function launch({ port = 9444, profile = "/tmp/cdp-default", tz = n
       if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? "eval threw");
       return r.result.value;
     },
+    /**
+     * Wait for React to attach. A page that has not hydrated renders from
+     * server HTML and has no handlers: forms do nothing, clicks do nothing,
+     * and useBrand never resolves — which reads exactly like a hung auth call
+     * or a broken page. It is usually .next being rewritten by `npm run build`
+     * while `npm run dev` is up.
+     *
+     * Fail here, loudly, rather than let a harness spend a day on it.
+     */
+    async waitForHydration(selector = "form, main", ms = 15000) {
+      const started = Date.now();
+      while (Date.now() - started < ms) {
+        const attached = await this.eval(`(() => {
+          const el = document.querySelector(${JSON.stringify(selector)});
+          if (!el) return false;
+          return Object.keys(el).some((k) => k.startsWith("__react"));
+        })()`);
+        if (attached) return true;
+        await sleep(300);
+      }
+      throw new Error(
+        "the page never hydrated — React attached no handlers. Stop the dev " +
+        "server, rm -rf .next, and restart it; `npm run build` while dev is up " +
+        "rewrites the chunks underneath it. See CLAUDE.md.");
+    },
+
     async type(selector, text) {
       await this.eval(`document.querySelector(${JSON.stringify(selector)}).focus()`);
       await S("Input.insertText", { text });

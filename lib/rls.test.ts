@@ -344,4 +344,32 @@ describe("brand_templates: the key type nothing could read through", () => {
     assert.match(sql, /^BEGIN;/m);
     assert.match(sql, /^COMMIT;/m);
   });
+
+  /**
+   * The first version of this file failed on its first run. The policy sweep
+   * sat after COMMIT, and brand_templates_own_brand already existed from
+   * close-rls-2.sql — a policy referencing a column blocks dropping it.
+   */
+  it("drops the policies BEFORE the column they reference", () => {
+    const sweep = sql.indexOf("FROM pg_policies");
+    const drop = sql.indexOf("DROP COLUMN brand_id");
+    assert.ok(sweep > -1 && drop > -1);
+    assert.ok(sweep < drop, "the policy sweep runs after the column drop and will fail");
+  });
+
+  it("everything happens inside the transaction, policy included", () => {
+    const begin = sql.indexOf("BEGIN;");
+    const commit = sql.indexOf("COMMIT;");
+    for (const [what, needle] of [
+      ["the policy sweep", "FROM pg_policies"],
+      ["the column drop", "DROP COLUMN brand_id"],
+      ["the rename", "RENAME COLUMN brand_slug"],
+      ["enabling RLS", "ENABLE ROW LEVEL SECURITY"],
+      ["the new policy", "CREATE POLICY brand_templates_own_brand"],
+    ] as [string, string][]) {
+      const at = sql.indexOf(needle);
+      assert.ok(at > begin && at < commit,
+        `${what} is outside the transaction; the table could commit with RLS on and no policy`);
+    }
+  });
 });

@@ -12,14 +12,23 @@
 --
 -- So every read errors rather than returning nothing. Visual identity's
 -- Templates section, Knowledge ▸ Links and /api/templates have never shown a
--- template. Eight real rows are in there, belonging to Vetra and Deklan.
+-- template. Eight rows are in there, belonging to three real brands.
 --
 -- Aligning the column with the rest of the schema, rather than changing four
 -- call sites to resolve a slug to a UUID first: every other table keys by TEXT
 -- brand_id, and every RLS policy in this directory is written against that
 -- shape.
 --
--- The eight rows are mapped, not dropped.
+-- ORDERING, which the first version of this file got wrong and which cost a
+-- failed run. brand_templates_own_brand already exists from close-rls-2.sql,
+-- and a policy that references a column blocks dropping that column — so the
+-- sweep has to happen BEFORE the drop, not after COMMIT. The CREATE POLICY is
+-- inside the transaction too, so the table is never live with RLS enabled and
+-- no policy on it: that state is readable by nobody and writable by nobody,
+-- and it would be committed if anything after COMMIT failed.
+--
+-- Snapshot before the change: 8 rows — 3 vetra-6zc3, 3 deklan-zvkw,
+-- 2 sorbify-13t9, no orphans.
 
 BEGIN;
 
@@ -43,18 +52,9 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TABLE brand_templates DROP CONSTRAINT IF EXISTS brand_templates_brand_id_fkey;
-ALTER TABLE brand_templates DROP COLUMN brand_id;
-ALTER TABLE brand_templates RENAME COLUMN brand_slug TO brand_id;
-ALTER TABLE brand_templates ALTER COLUMN brand_id SET NOT NULL;
-
-CREATE INDEX IF NOT EXISTS brand_templates_brand_idx ON brand_templates (brand_id);
-
-COMMIT;
-
--- ── RLS, which was never verifiable while the column type disagreed ────────
-ALTER TABLE brand_templates ENABLE ROW LEVEL SECURITY;
-
+-- Policies first: one of them references brand_id and would block the drop.
+-- By discovery rather than by name, because close-rls.sql dropped only the
+-- name it creates and nine open policies survived it.
 DO $$
 DECLARE r record;
 BEGIN
@@ -65,10 +65,23 @@ BEGIN
   END LOOP;
 END $$;
 
+ALTER TABLE brand_templates DROP CONSTRAINT IF EXISTS brand_templates_brand_id_fkey;
+ALTER TABLE brand_templates DROP COLUMN brand_id;
+ALTER TABLE brand_templates RENAME COLUMN brand_slug TO brand_id;
+ALTER TABLE brand_templates ALTER COLUMN brand_id SET NOT NULL;
+
+CREATE INDEX IF NOT EXISTS brand_templates_brand_idx ON brand_templates (brand_id);
+
+-- RLS and its policy in the same transaction as the swap, so the table is
+-- never committed with RLS on and nothing to allow anyone through.
+ALTER TABLE brand_templates ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY brand_templates_own_brand ON brand_templates
   FOR ALL
   USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
   WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
+
+COMMIT;
 
 -- The foreign key is left off deliberately: brands.brand_id needs a unique
 -- constraint before one can point at it, and adding that is a separate change

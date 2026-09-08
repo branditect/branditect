@@ -147,6 +147,52 @@ for (const route of ROUTES) {
   // logo, the eyebrow, the question and the guide card below the fold — which
   // npm test cannot see, because it is computed style in a real browser, and
   // which a user sees immediately as a third of empty lavender.
+  /**
+   * CRITICAL: /login must be hydrated, not merely rendered.
+   *
+   * A page that renders from server HTML and never hydrates has no React
+   * handlers: the form does nothing, no error appears, no timeout fires and
+   * nothing reaches a log. The person clicks Log in, watches nothing happen,
+   * and leaves. bodyText and a marker in <main> both look perfect throughout.
+   *
+   * The 15s auth timeout in lib/auth-timeout.ts does not cover this — it
+   * covers a SLOW call, and here the handler is never entered at all. This is
+   * the only assertion that can tell the difference.
+   *
+   * Not a dev-server-only problem: /home shipped React #425 from a new Date()
+   * mismatch, and a hydration error on a real deploy leaves exactly this.
+   * /login is the page where it costs a customer rather than an inconvenience.
+   */
+  let hydrationWhy = "";
+  if (route === "/login" || route === "/signup") {
+    const hydRes = await send("Runtime.evaluate", {
+      expression: `JSON.stringify((() => {
+        const form = document.querySelector("form");
+        if (!form) return { form: false };
+        const attached = Object.keys(form).some((k) => k.startsWith("__react"));
+        const btn = form.querySelector("button[type=submit]");
+        return {
+          form: true,
+          attached,
+          // A React-managed input carries a value tracker. Its absence is a
+          // second, independent sign that nothing hydrated.
+          tracked: [...form.querySelectorAll("input")].some(
+            (i) => Object.keys(i).some((k) => k.startsWith("__react")) || !!i._valueTracker),
+          submit: !!btn,
+        };
+      })())`,
+      returnByValue: true,
+    });
+    let hyd = { form: false };
+    try { hyd = JSON.parse(hydRes.result?.result?.value ?? "{}"); } catch { /* keep default */ }
+
+    if (!hyd.form) hydrationWhy = "  no form on the page";
+    else if (!hyd.submit) hydrationWhy = "  the form has no submit button";
+    else if (!hyd.attached && !hyd.tracked) {
+      hydrationWhy = "  RENDERED BUT NOT HYDRATED — the sign-in form has no handlers";
+    }
+  }
+
   let railWhy = "";
   if (route === "/start/q/7") {
     const railRes = await send("Runtime.evaluate", {
@@ -250,10 +296,10 @@ for (const route of ROUTES) {
   }
   const reachedPage = marker ? marker.test(mainText) : true;
 
-  const hardFail = len === 0 || fatal.length > 0 || blocked || railWhy || chipWhy;
+  const hardFail = len === 0 || fatal.length > 0 || blocked || railWhy || chipWhy || hydrationWhy;
   const ok = !hardFail && reachedPage;
   const why = blocked ? `  BLOCKED: ${text.slice(0, 60)}`
-    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : railWhy || chipWhy;
+    : fatal.length ? `  ${fatal[0].split("\n")[0].slice(0, 90)}` : hydrationWhy || railWhy || chipWhy;
 
   if (hardFail) {
     failed++;

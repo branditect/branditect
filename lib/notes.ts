@@ -120,6 +120,15 @@ export function previewOf(flatText: string | null | undefined, lines = 5): strin
  * The block must still render, still hold its caption, and say the image is
  * gone — deleting a picture must never delete the paragraph beside it.
  */
+/** Criterion 5. Half floats left and the text runs beside it; full does not. */
+export function nextWidth(current: BlockWidth | undefined): BlockWidth {
+  return current === "half" ? "full" : "half";
+}
+
+export function widthLabel(w: BlockWidth | undefined): string {
+  return w === "half" ? "Half width" : "Full width";
+}
+
 export function imageIsMissing(block: NoteBlock): boolean {
   return block.kind === "image" && (block.image_id === null || block.image_id === undefined);
 }

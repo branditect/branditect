@@ -75,6 +75,9 @@ try {
   const LATENCY = Number(process.env.LATENCY ?? 1500);
 
   await b.go(`${BASE}/login`, 6000);
+  // Fail on a page React never attached to rather than calling it a login
+  // that would not sign in. See CLAUDE.md.
+  await b.waitForHydration("form");
   await b.type('input[type=email]', EMAIL);
   await b.type('input[type=password]', "TestPassword!2026");
   await b.eval(`document.querySelector('form').requestSubmit()`);
@@ -100,7 +103,32 @@ try {
   const noteId = (await db()).notes[0]?.id;
   if (!noteId) throw new Error("no note row");
 
+  /**
+   * Make the FIRST save of each round the slow one.
+   *
+   * Emulated network latency is uniform, so requests complete in the order
+   * they were issued and a later write always wins — which is why removing the
+   * client serialisation changed nothing for four rounds. Real networks are
+   * not uniform. Delaying only the first PATCH of a round reproduces the case
+   * the serialisation exists for: an older request landing after a newer one
+   * and overwriting it.
+   */
+  await b.eval(`(() => {
+    const real = window.fetch;
+    window.__roundFirst = false;
+    window.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/api/notes") && init?.method === "PATCH" && !window.__roundFirst) {
+        window.__roundFirst = true;
+        await new Promise((r) => setTimeout(r, 6000));
+      }
+      return real(input, init);
+    };
+    return true;
+  })()`);
+
   for (let round = 1; round <= ROUNDS; round++) {
+    await b.eval(`window.__roundFirst = false`);
     const title = `Race ${round}`;
     const body  = `Body for round ${round}, the last thing typed.`;
 
@@ -126,15 +154,60 @@ try {
     await b.sleep(GAP);
     await retype('textarea[aria-label="text block"]', body);
 
-    // Let everything queued drain.
-    await b.sleep(6000);
+    /**
+     * A SECOND WRITER, made concurrent.
+     *
+     * Inserting an image writes the whole block list, so it races the text
+     * edits rather than following them. Until step 3 there was only one
+     * writer, which is why the client serialisation had no failing test — the
+     * server-side recompute alone kept every assertion green.
+     *
+     * The picker is OPENED FIRST and its images allowed to load. Opening it
+     * after the last edit meant its own query, slowed by the same latency, ran
+     * long enough for the text save to land, and nothing overlapped: four
+     * rounds passed with the serialisation removed. Pre-opened, the pick is
+     * instantaneous and lands while the text save is still in flight.
+     */
+    await b.eval(`(() => {
+      const btn = [...document.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Insert an image');
+      if (btn) btn.click();
+      return !!btn;
+    })()`);
+    for (let i = 0; i < 24; i++) {
+      if (await b.eval(`!!document.querySelector('[role=dialog] button img')`)) break;
+      await b.sleep(250);
+    }
+
+    // Text edit with the picker open — programmatic focus reaches the field.
+    await retype('textarea[aria-label="text block"]', `${body} racing`);
+    await b.sleep(GAP);
+    // …and pick, with no pause, while that save is still going.
+    await b.eval(`(() => {
+      const el = document.querySelector('[role=dialog] button img');
+      if (el) { el.closest('button').click(); return true; }
+      const close = document.querySelector('[role=dialog] button');
+      if (close) close.click();
+      return false;
+    })()`);
+
+    /**
+     * Let everything queued drain.
+     *
+     * Long enough for the injected 6s delay on the round's first request PLUS
+     * the serialised follow-up behind it. Waiting only 6s reported failures
+     * that were the probe reading mid-drain, not work being lost — the drain
+     * is necessarily slower once requests are serialised, which is the whole
+     * point of them.
+     */
+    const SETTLE = Number(process.env.SETTLE ?? 16000);
+    await b.sleep(SETTLE);
 
     const row = (await db()).notes.find((n) => n.id === noteId);
     const blocks = (await db()).blocks.filter((x) => x.note_id === noteId);
 
     const titleOk = row?.title === title;
-    const flatOk  = (row?.flat_text ?? "").includes(body);
-    const blockOk = blocks.some((x) => (x.body ?? "").includes(body));
+    const flatOk  = (row?.flat_text ?? "").includes(`${body} racing`);
+    const blockOk = blocks.some((x) => (x.body ?? "").includes(`${body} racing`));
 
     if (titleOk && flatOk && blockOk) {
       ok(`r${round} the last edit of each field is what the database holds`);
@@ -142,6 +215,17 @@ try {
       bad(`r${round} an edit was lost or overwritten`,
         `title=${JSON.stringify(row?.title)} flatOk=${flatOk} blockOk=${blockOk}`);
     }
+
+    // The image inserted mid-round must survive. This is what the client
+    // serialisation protects: an older request carrying the pre-image block
+    // list landing after the newer one and erasing it. The server-side
+    // recompute cannot help here — it faithfully flattens whatever rows the
+    // losing request wrote.
+    const hasImage = blocks.some((x) => x.kind === "image");
+    hasImage
+      ? ok(`r${round} the image inserted mid-save survived`)
+      : bad(`r${round} the image inserted mid-save survived`,
+            `blocks: ${JSON.stringify(blocks.map((x) => x.kind))}`);
 
     // flat_text must agree with the block rows, whatever order things arrived.
     const fromBlocks = blocks.sort((a, c) => a.sort_order - c.sort_order)

@@ -93,3 +93,30 @@
   .wrap { grid-template-columns: 1fr; }
   .left { border-right: none; padding-right: 0; }
 }
+
+/* ── images, step 3 ──────────────────────────────────────────────────────── */
+
+.imageBlock { margin: 0; border: 1px solid theme('colors.rule.2');
+  border-radius: theme('borderRadius.card'); padding: 10px; background: #fff;
+  position: relative; }
+.imageBlock img { display: block; width: 100%; height: auto; border-radius: 8px; }
+
+/* Criterion 5. Half floats left and the text runs beside it; full does not. */
+.full { float: none; width: 100%; clear: both; }
+.half { float: left; width: 48%; margin: 0 14px 10px 0; }
+
+.widthBtn { all: unset; box-sizing: border-box; cursor: pointer; position: absolute;
+  top: 16px; right: 16px; border-radius: 7px; padding: 5px 9px;
+  font-size: theme('fontSize.2xs[0]'); font-weight: 800; color: #fff;
+  background: rgba(21, 21, 27, .72); opacity: 0; transition: opacity .12s; }
+.imageBlock:hover .widthBtn, .widthBtn:focus-visible { opacity: 1; }
+
+.captionInput { box-sizing: border-box; width: 100%; margin-top: 7px; border: 1px solid transparent;
+  border-radius: 6px; padding: 4px 6px; font-size: theme('fontSize.2xs[0]'); font-weight: 500;
+  color: theme('colors.muted.DEFAULT'); background: transparent; font-family: inherit; }
+.captionInput:hover { border-color: theme('colors.rule.DEFAULT'); }
+.captionInput:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
+  box-shadow: 0 0 0 3px theme('colors.tint.1'); background: #fff; }
+
+.dropping { outline: 2px dashed theme('colors.accent.DEFAULT'); outline-offset: 6px;
+  border-radius: theme('borderRadius.card'); }

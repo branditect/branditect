@@ -32,7 +32,13 @@ export default function ImagePicker({
 }: {
   brandId: string;
   currentUrl: string | null;
-  onPick: (url: string | null) => void;
+  /**
+   * Both, not just the URL. note_blocks.image_id is a foreign key with
+   * ON DELETE SET NULL, and that is what lets a note survive its picture being
+   * deleted from Knowledge — a block holding only a URL would render a broken
+   * image instead. Callers that want the URL alone can ignore the id.
+   */
+  onPick: (picked: { id: string; url: string } | null) => void;
   onClose: () => void;
 }) {
   const [images, setImages] = useState<BrandImage[] | null>(null);
@@ -169,7 +175,7 @@ export default function ImagePicker({
                     key={img.id}
                     type="button"
                     onClick={() => {
-                      onPick(img.file_url);
+                      onPick({ id: img.id, url: img.file_url });
                       onClose();
                     }}
                     aria-pressed={active}

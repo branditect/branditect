@@ -7,7 +7,7 @@ import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
   mergePatch, patchBelongsTo, titleInputValue, titleToSave, DEFAULT_TITLE,
-  emptyQueue, enqueue, takeNext, settle, isBusy,
+  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabel,
   pinLabel, isRestorable, RESTORE_WINDOW_DAYS, type NoteBlock,
 } from "./notes.ts";
 
@@ -494,5 +494,73 @@ describe("flat_text is regenerated server-side on every block change", () => {
     const del = route.slice(route.indexOf("export async function DELETE"));
     assert.ok(del.includes("deleted_at"), "the delete is hard");
     assert.ok(!/\.delete\(\)/.test(del), "the note row is actually removed");
+  });
+});
+
+/** CRITERION 4: no image may exist only inside a note. */
+describe("a dragged file reaches Knowledge before it reaches the note", () => {
+  const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+  const upload = readFileSync("lib/brand-image-upload.ts", "utf8");
+
+  it("the editor has no uploader of its own", () => {
+    assert.ok(!/storage\s*\n?\s*\.from\(/.test(page), "the note editor uploads to storage itself");
+    assert.ok(!/from\("brand_images"\)[\s\S]{0,40}\.insert\(/.test(page),
+      "the note editor writes brand_images itself");
+    assert.ok(page.includes("uploadBrandImage("), "it does not use the shared uploader");
+  });
+
+  it("the block is placed only after the row exists", () => {
+    const drop = page.slice(page.indexOf("async function onDrop"), page.indexOf("function toggleWidth"));
+    const failAt = drop.indexOf('"failure" in result');
+    const insertAt = drop.indexOf("insertImage(");
+    assert.ok(failAt > -1 && insertAt > failAt,
+      "a block can be placed before the upload is known to have worked");
+    assert.ok(/return;/.test(drop.slice(failAt, insertAt)), "a failed upload still places a block");
+  });
+
+  it("the uploader writes the row and returns its id", () => {
+    assert.ok(upload.includes('.from("brand_images")'));
+    assert.ok(/\.select\("id, file_url, file_name"\)/.test(upload), "the id is not returned");
+  });
+
+  it("and reports a failure rather than returning a block to place", () => {
+    assert.ok(upload.includes("storageError"), "the storage error is discarded");
+    assert.ok(/Uploaded, but not saved to Knowledge/.test(upload),
+      "an orphaned upload is not distinguished from a working one");
+  });
+
+  it("the block stores the id, not the URL", () => {
+    assert.ok(/kind: "image", image_id: picked\.id/.test(page),
+      "the block would keep pointing at a dead file after a delete");
+  });
+});
+
+/** CRITERION 5. */
+describe("the width toggle", () => {
+  it("flips between full and half", () => {
+    assert.equal(nextWidth("full"), "half");
+    assert.equal(nextWidth("half"), "full");
+    assert.equal(nextWidth(undefined), "half", "a block with no width defaults to full");
+  });
+
+  it("names the state it is in", () => {
+    assert.equal(widthLabel("half"), "Half width");
+    assert.equal(widthLabel("full"), "Full width");
+    assert.equal(widthLabel(undefined), "Full width");
+  });
+
+  it("half floats left and full does not", () => {
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    const half = css.slice(css.indexOf(".half {"), css.indexOf("}", css.indexOf(".half {")));
+    const full = css.slice(css.indexOf(".full {"), css.indexOf("}", css.indexOf(".full {")));
+    assert.match(half, /float:\s*left/, "half does not float, so text cannot run beside it");
+    assert.match(full, /float:\s*none/, "full floats, so text would wrap around it too");
+    assert.match(half, /width:\s*4\d%/, "half is not roughly half the column");
+  });
+
+  it("the toggle is on the image, on hover", () => {
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    assert.match(css, /\.imageBlock:hover \.widthBtn/, "the control is not revealed on hover");
+    assert.match(css, /\.widthBtn:focus-visible/, "the control is unreachable by keyboard");
   });
 });

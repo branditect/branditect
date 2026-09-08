@@ -18,13 +18,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
+import { supabase } from "@/lib/supabase";
 import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import Icon from "@/components/icon";
+import ImagePicker from "@/components/products/image-picker";
+import { uploadBrandImage, isImageFile } from "@/lib/brand-image-upload";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
   type SaveQueue,
   MISSING_IMAGE_NOTE, patchBelongsTo, titleInputValue, titleToSave,
-  emptyQueue, enqueue, takeNext, settle, isBusy,
+  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabel,
   type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
@@ -51,6 +54,14 @@ export default function NotesPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [dropping, setDropping] = useState(false);
+  /**
+   * image_id → file_url. Blocks store the id, not the URL, so that deleting a
+   * picture from Knowledge nulls the reference instead of leaving the block
+   * pointing at a dead file. The URLs are looked up for display only.
+   */
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
   const loadNotes = useCallback(async () => {
     if (!brandId || brandId === "default") { setLoading(false); return; }
@@ -72,7 +83,22 @@ export default function NotesPage() {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) { setError(json.error ?? "Could not open that note."); return; }
     setTitle(titleInputValue(json.note?.title));
-    setBlocks(json.blocks ?? []);
+    const loaded: NoteBlock[] = json.blocks ?? [];
+    setBlocks(loaded);
+
+    const ids = loaded.map((b) => b.image_id).filter(Boolean) as string[];
+    if (ids.length) {
+      const { data, error: imgErr } = await supabase
+        .from("brand_images").select("id, file_url").in("id", ids);
+      // A failed lookup must not render as a missing image: that is criterion
+      // 10's message, and it would be a lie here.
+      if (imgErr) setError("Some images could not be loaded.");
+      const map: Record<string, string> = {};
+      for (const row of data ?? []) map[row.id as string] = row.file_url as string;
+      setImageUrls(map);
+    } else {
+      setImageUrls({});
+    }
   }, []);
 
   /**
@@ -143,6 +169,54 @@ export default function NotesPage() {
     queueSave({ blocks: next });
   }
 
+  /** Criterion 4: place a block that references a row in brand_images. */
+  function insertImage(picked: { id: string; url: string }) {
+    const next: NoteBlock[] = [
+      ...blocks,
+      { kind: "image", image_id: picked.id, width: "full", caption: "", sort_order: blocks.length },
+    ];
+    setBlocks(next);
+    setImageUrls((prev) => ({ ...prev, [picked.id]: picked.url }));
+    queueSave({ blocks: next });
+  }
+
+  /**
+   * CRITERION 4. A dragged file goes into Knowledge ▸ Media FIRST, and the
+   * block is only placed once there is a row to point at. No image may exist
+   * only inside a note, and the order here is what makes that true rather than
+   * intended — a failed upload places nothing.
+   */
+  async function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDropping(false);
+    if (!openId) return;
+    const files = Array.from(e.dataTransfer.files).filter(isImageFile);
+    if (!files.length) return;
+
+    setError(null);
+    for (const file of files) {
+      const result = await uploadBrandImage(brandId, file);
+      if ("failure" in result) {
+        setError(`${result.failure.fileName}: ${result.failure.reason}`);
+        return;
+      }
+      insertImage({ id: result.image.id, url: result.image.url });
+    }
+  }
+
+  /** Criterion 5. */
+  function toggleWidth(index: number) {
+    const next = blocks.map((b, i) => (i === index ? { ...b, width: nextWidth(b.width) } : b));
+    setBlocks(next);
+    queueSave({ blocks: next });
+  }
+
+  function editCaption(index: number, caption: string) {
+    const next = blocks.map((b, i) => (i === index ? { ...b, caption } : b));
+    setBlocks(next);
+    queueSave({ blocks: next });
+  }
+
   function addBlock(kind: NoteBlock["kind"]) {
     const next = [...blocks, { kind, body: "", sort_order: blocks.length }];
     setBlocks(next);
@@ -163,12 +237,11 @@ export default function NotesPage() {
     if (id === "heading") return addBlock("heading");
     if (id === "list") return addBlock("list");
     if (id === "pin") return togglePin();
-    // Image and PDF are steps 3 and 6. Say so rather than doing nothing.
-    setPending(id === "image"
-      ? "Inserting an image lands with the library picker."
-      : id === "pdf"
-        ? "Download as PDF is built server-side, and is not wired up yet."
-        : "Nothing else lives here yet.");
+    if (id === "image") return setPickerOpen(true);
+    // PDF is step 6. Say so rather than doing nothing.
+    setPending(id === "pdf"
+      ? "Download as PDF is built server-side, and is not wired up yet."
+      : "Nothing else lives here yet.");
     window.setTimeout(() => setPending(null), 2600);
   }
 
@@ -276,19 +349,51 @@ export default function NotesPage() {
               aria-label="Note title"
             />
 
-            <div className={s.body}>
+            <div
+              className={`${s.body} ${dropping ? s.dropping : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDropping(true); }}
+              onDragLeave={() => setDropping(false)}
+              onDrop={onDrop}
+              data-drop-target
+            >
               {blocks.length === 0 && (
                 <p className={s.note}>Start typing. It saves as you go.</p>
               )}
               {blocks.map((b, i) => (
                 <div key={b.id ?? i}>
                   {b.kind === "image" ? (
-                    <div className={s.imageBlock}>
-                      {imageIsMissing(b)
-                        ? <p className={s.missing}>{MISSING_IMAGE_NOTE}</p>
-                        : <p className={s.note}>Image</p>}
-                      {b.caption && <p className={s.caption}>{b.caption}</p>}
-                    </div>
+                    <figure
+                      className={`${s.imageBlock} ${b.width === "half" ? s.half : s.full}`}
+                      data-image-block
+                      data-width={b.width ?? "full"}
+                    >
+                      {imageIsMissing(b) ? (
+                        // CRITERION 10. The block stays, keeps its caption, and
+                        // says the image is gone. The paragraphs either side are
+                        // untouched.
+                        <p className={s.missing} data-image-missing>{MISSING_IMAGE_NOTE}</p>
+                      ) : (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={imageUrls[b.image_id ?? ""] ?? ""} alt={b.caption ?? "Image"} />
+                          <button
+                            type="button"
+                            className={s.widthBtn}
+                            onClick={() => toggleWidth(i)}
+                            aria-label={`${widthLabel(b.width)}. Switch to ${widthLabel(nextWidth(b.width))}`}
+                          >
+                            {widthLabel(b.width)}
+                          </button>
+                        </>
+                      )}
+                      <input
+                        className={s.captionInput}
+                        value={b.caption ?? ""}
+                        onChange={(e) => editCaption(i, e.target.value)}
+                        placeholder="Caption"
+                        aria-label="Image caption"
+                      />
+                    </figure>
                   ) : (
                     <textarea
                       className={`${s.block} ${b.kind === "heading" ? s.heading : ""} ${b.kind === "list" ? s.list : ""}`}
@@ -307,6 +412,18 @@ export default function NotesPage() {
             </div>
 
             <p className={s.flat} data-flat-length={flattenBlocks(blocks).length} aria-hidden="true" />
+
+            {pickerOpen && (
+              <ImagePicker
+                brandId={brandId}
+                currentUrl={null}
+                onClose={() => setPickerOpen(false)}
+                onPick={(picked) => {
+                  setPickerOpen(false);
+                  if (picked) insertImage(picked);
+                }}
+              />
+            )}
           </>
         )}
       </section>

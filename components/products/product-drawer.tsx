@@ -635,7 +635,7 @@ export default function ProductDrawer({
         <ImagePicker
           brandId={brandId}
           currentUrl={draft.imageUrl}
-          onPick={(url) => set("imageUrl", url)}
+          onPick={(picked) => set("imageUrl", picked?.url ?? null)}
           onClose={() => setPickerOpen(false)}
         />
       )}

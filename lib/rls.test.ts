@@ -279,3 +279,69 @@ describe("the four tables close-rls-3 exists to close", () => {
     assert.deepEqual(active.match(/USING\s*\(\s*true\s*\)/gi) ?? [], []);
   });
 });
+
+/**
+ * Two tables the cross-tenant run could not prove anything about, and what
+ * turned out to be behind each.
+ */
+describe("social_strategy: the table Channels reads", () => {
+  const sql = readFileSync("supabase/social-strategy.sql", "utf8");
+
+  it("is created with every column the code already uses", () => {
+    for (const col of ["channels", "primary_goal", "secondary_goal", "capacity_volume",
+                       "production_setup", "reference_accounts", "anti_patterns", "status"]) {
+      assert.ok(new RegExp(`\\b${col}\\b`).test(sql), `${col} is missing`);
+    }
+  });
+
+  it("has RLS from the start rather than as a later sweep", () => {
+    assert.match(sql, /ALTER TABLE social_strategy\s+ENABLE ROW LEVEL SECURITY/);
+    assert.match(sql, /CREATE POLICY social_strategy_own_brand/);
+    const active = sql.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    assert.deepEqual(active.match(/USING\s*\(\s*true\s*\)/gi) ?? [], []);
+  });
+
+  it("the columns match what the route is allowed to write", () => {
+    const route = readFileSync("app/api/social-strategy/route.ts", "utf8");
+    const allowed = (route.match(/ALLOWED_FIELDS = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? "")
+      .split(",").map((x) => x.trim().replace(/['"]/g, "")).filter(Boolean);
+    assert.ok(allowed.length >= 7, `only ${allowed.length} editable fields found`);
+    for (const f of allowed) assert.ok(sql.includes(f), `${f} is editable but not a column`);
+  });
+
+  it("the page reports a failed read instead of showing an empty state", () => {
+    const page = readFileSync("app/(app)/brand/channels/page.tsx", "utf8");
+    assert.ok(/if \(recordRes\.error\)/.test(page), "the read error is discarded again");
+    assert.ok(page.includes("data-channels-error"), "the failure is never rendered");
+    assert.ok(page.includes('role="alert"'), "the failure is not announced");
+  });
+});
+
+describe("brand_templates: the key type nothing could read through", () => {
+  const sql = readFileSync("supabase/brand-templates-key.sql", "utf8");
+
+  it("moves brand_id to TEXT, matching every other table", () => {
+    assert.match(sql, /RENAME COLUMN brand_slug TO brand_id/);
+    assert.match(sql, /ALTER COLUMN brand_id SET NOT NULL/);
+  });
+
+  it("maps the existing rows rather than dropping them", () => {
+    assert.match(sql, /UPDATE brand_templates[\s\S]{0,200}FROM brands/);
+    assert.match(sql, /RAISE EXCEPTION/,
+      "an orphaned row would be silently dropped instead of stopping the migration");
+  });
+
+  it("closes RLS while it is in there", () => {
+    assert.match(sql, /ALTER TABLE brand_templates\s+ENABLE ROW LEVEL SECURITY/);
+    assert.match(sql, /CREATE POLICY brand_templates_own_brand/);
+  });
+
+  it("drops policies by discovery, not by name", () => {
+    assert.match(sql, /FROM pg_policies/);
+  });
+
+  it("runs the swap in a transaction", () => {
+    assert.match(sql, /^BEGIN;/m);
+    assert.match(sql, /^COMMIT;/m);
+  });
+});

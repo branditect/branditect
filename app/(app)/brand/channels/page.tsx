@@ -95,6 +95,7 @@ export default function SocialStrategyPage() {
 
   const [phase, setPhase] = useState<Phase>('loading')
   const [record, setRecord] = useState<SocialStrategyRecord | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [context, setContext] = useState<ContextSummary | null>(null)
   const [qIdx, setQIdx] = useState(0)
 
@@ -170,6 +171,13 @@ export default function SocialStrategyPage() {
         voiceDescription: voiceText,
       })
 
+      // A failed read must not look like a brand that has not started. This
+      // discarded its error for as long as the table did not exist, so the
+      // page rendered its empty state and nobody could tell.
+      if (recordRes.error) {
+        setLoadError(recordRes.error.message)
+        return
+      }
       const r = recordRes.data?.[0] as SocialStrategyRecord | undefined
       if (r) {
         setRecord(r)
@@ -353,6 +361,27 @@ export default function SocialStrategyPage() {
     setError('')
     if (qIdx > 0) setQIdx(qIdx - 1)
     else setPhase('entry')
+  }
+
+  /* ---- Render: the read failed ---- */
+
+  // Said out loud rather than shown as an empty state. This page rendered
+  // "not started yet" for every brand while the table it reads did not exist.
+  if (loadError) {
+    return (
+      <div className="max-w-3xl mx-auto px-8 py-12">
+        <Link href="/home" className="text-sm text-muted hover:text-brand-orange transition-colors">
+          &larr; Back to Dashboard
+        </Link>
+        <div
+          role="alert"
+          data-channels-error
+          className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[0.85rem] text-red-700"
+        >
+          Channels could not load: {loadError}
+        </div>
+      </div>
+    )
   }
 
   /* ---- Render: loading ---- */

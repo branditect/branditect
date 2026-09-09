@@ -2,10 +2,13 @@
  * surface — no source pills, no product chips, no voice panel. */
 
 .wrap { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px;
-  height: 100%; min-height: 0; }
+  height: 100%; min-height: 0; align-items: stretch; }
 
+/* Both columns are panels on the page background, per the reference — not a
+ * split with a rule down the middle. */
 .left { display: flex; flex-direction: column; gap: 10px; min-height: 0;
-  border-right: 1px solid theme('colors.rule.DEFAULT'); padding-right: 16px; }
+  background: theme('colors.card'); border: 1px solid theme('colors.rule.DEFAULT');
+  border-radius: 18px; box-shadow: theme('dropShadow.panel'); padding: 16px; }
 .leftHead { display: flex; align-items: center; gap: 10px; }
 .count { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: .8px;
   text-transform: uppercase; color: theme('colors.faint.DEFAULT'); }
@@ -37,7 +40,8 @@
 .cardDate { font-size: 10px; font-weight: 700; color: theme('colors.faint.DEFAULT'); }
 
 .right { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto;
-  padding-right: 4px; }
+  background: theme('colors.card'); border: 1px solid theme('colors.rule.DEFAULT');
+  border-radius: 18px; box-shadow: theme('dropShadow.panel'); padding: 20px 24px; }
 
 .toolbar { display: flex; align-items: center; gap: 6px; padding-bottom: 10px;
   border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
@@ -57,29 +61,29 @@
   letter-spacing: -.5px; color: theme('colors.ink.DEFAULT'); }
 .title::placeholder { color: theme('colors.faint.DEFAULT'); }
 
-.body { display: flex; flex-direction: column; gap: 8px; }
-.block { box-sizing: border-box; width: 100%; resize: vertical; border: 1px solid transparent;
-  border-radius: 8px; padding: 7px 9px; font-size: theme('fontSize.sm[0]'); font-weight: 400;
-  line-height: 1.65; color: theme('colors.ink.DEFAULT'); background: transparent;
-  font-family: inherit; }
-.block:hover { border-color: theme('colors.rule.DEFAULT'); }
-.block:focus { outline: none; border-color: theme('colors.accent.DEFAULT');
-  box-shadow: 0 0 0 3px theme('colors.tint.1'); background: #fff; }
-.heading { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+/* display: block, not flex. Floats do not apply to flex items, so a
+ * half-width image could never have text beside it however the figure was
+ * styled. Spacing is margin now, because gap needs a flex or grid container. */
+.body { display: block; max-width: 760px; }
+.body::after { content: ""; display: block; clear: both; }
+/* width:auto + its own formatting context, so a block sits BESIDE a floated
+ * image rather than under it. A full-width block box overlaps a float — only
+ * line boxes shorten around one — which is why width:100% put every paragraph
+ * below the picture however the figure was styled. */
+.block { box-sizing: border-box; display: block; width: auto; overflow: hidden;
+  margin: 0 0 14px; resize: none; border: none; padding: 0;
+  font-size: 15px; font-weight: 400; line-height: 1.7;
+  color: theme('colors.ink.DEFAULT'); background: transparent; font-family: inherit; }
+.block:focus { outline: none; }
+.heading { font-size: 17px; font-weight: 800; letter-spacing: -.3px;
+  margin-top: 26px; line-height: 1.35; }
 .list { white-space: pre-wrap; }
 
-.imageBlock { border: 1px dashed theme('colors.rule.2'); border-radius: theme('borderRadius.card');
-  padding: 14px; background: theme('colors.tile.DEFAULT'); }
 .missing { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: var(--v-amber-ink);
   line-height: 1.5; }
 .caption { font-size: theme('fontSize.2xs[0]'); font-weight: 500;
   color: theme('colors.muted.2'); margin-top: 6px; }
 
-.addText { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
-  align-items: center; gap: 5px; align-self: flex-start; margin-top: 4px; border-radius: 8px;
-  padding: 6px 10px; font-size: theme('fontSize.2xs[0]'); font-weight: 800;
-  color: theme('colors.muted.DEFAULT'); border: 1px dashed theme('colors.rule.2'); }
-.addText:hover { color: theme('colors.accent.dark'); border-color: theme('colors.accent.line'); }
 
 .note { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.muted.2');
   line-height: 1.55; padding: 8px 2px; }
@@ -103,7 +107,10 @@
 
 /* Criterion 5. Half floats left and the text runs beside it; full does not. */
 .full { float: none; width: 100%; clear: both; }
-.half { float: left; width: 48%; margin: 0 14px 10px 0; }
+/* A fixed column. At 48% the text column beside it collapsed to nothing on a
+ * narrow editor, and the point of half width is a picture with prose next to
+ * it, not two equal columns. */
+.half { float: left; width: 250px; margin: 0 16px 10px 0; }
 
 .widthBtn { all: unset; box-sizing: border-box; cursor: pointer; position: absolute;
   top: 16px; right: 16px; border-radius: 7px; padding: 5px 9px;

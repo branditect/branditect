@@ -49,12 +49,27 @@ try {
   if (!(await waitFor('input[aria-label="Note title"]'))) throw new Error("editor never opened");
 
   // Text before, image, text after — so criterion 10 has something either side.
-  await b.eval(`[...document.querySelectorAll('button')].find(x=>/Paragraph/.test(x.innerText)).click()`);
+  // A note opens with a paragraph ready; there is no button for the next one.
   await waitFor('textarea[aria-label="text block"]');
   await b.type('textarea[aria-label="text block"]', "Before the picture.");
   await b.sleep(1600);
 
   const imagesBefore = (await db()).images?.length ?? null;
+
+  // Second paragraph first, then the cursor back in the first, so the image
+  // lands between them and criterion 10 has text on both sides.
+  await b.eval(`(() => { const t=[...document.querySelectorAll('textarea[aria-label="text block"]')].pop();
+    t.focus(); t.setSelectionRange(t.value.length, t.value.length); return true })()`);
+  await b.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+  await b.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+  await b.sleep(1200);
+  await b.eval(`(() => { const a=[...document.querySelectorAll('textarea[aria-label="text block"]')];
+    if (a.length < 2) return false; a[1].focus(); return true })()`);
+  await b.send("Input.insertText", { text: "After the picture." });
+  await b.sleep(1200);
+  await b.eval(`(() => { const a=[...document.querySelectorAll('textarea[aria-label="text block"]')];
+    a[0].focus(); return true })()`);
+  await b.sleep(300);
 
   await b.eval(`[...document.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Insert an image').click()`);
   if (!(await waitFor('[role=dialog] button img'))) throw new Error("the picker had no images");
@@ -82,38 +97,58 @@ try {
     ? ok("4 · and that id is a real row in Knowledge, not a note-only file")
     : bad("4 · and that id is a real row in Knowledge", String(imgBlock?.image_id));
 
-  await b.eval(`[...document.querySelectorAll('button')].find(x=>/Paragraph/.test(x.innerText)).click()`);
-  await b.sleep(900);
-  const areas = await b.eval(`document.querySelectorAll('textarea[aria-label="text block"]').length`);
-  if (areas < 2) throw new Error("second paragraph never appeared");
-  await b.eval(`(() => { const t=[...document.querySelectorAll('textarea[aria-label="text block"]')][1];
-    t.focus(); return true })()`);
-  await b.send("Input.insertText", { text: "After the picture." });
-  for (let i = 0; i < 30; i++) {
-    await b.sleep(700);
-    if (((await db()).blocks ?? []).some((x) => (x.body ?? "").includes("After the picture"))) break;
-  }
+  /* ── CRITERION 5, MEASURED ── */
 
-  /* ── CRITERION 5 ── */
-  const fullFloat = await b.eval(`(() => { const f=document.querySelector('[data-image-block]');
-    return f ? getComputedStyle(f).float : null })()`);
-  fullFloat === "none" ? ok("5 · a full-width image does not float", fullFloat)
-                       : bad("5 · a full-width image does not float", String(fullFloat));
+  /**
+   * Whether text actually runs beside the image, from geometry.
+   *
+   * The previous version of this asked getComputedStyle(figure).float and got
+   * "left", which is true and means nothing: the figure sat inside its own
+   * wrapper <div>, so it floated within that wrapper and the next paragraph
+   * was a sibling below it. .body was display:flex as well, and floats do not
+   * apply to flex items. The unit test was worse — it read the CSS file as a
+   * string and asserted "float: left" appeared in the .half rule.
+   *
+   * Both passed on a layout where text could never run beside an image.
+   * Rectangles are the only thing that settles it.
+   */
+  const geometry = async () => JSON.parse(await b.eval(`JSON.stringify((() => {
+    const fig = document.querySelector('[data-image-block]');
+    const areas = [...document.querySelectorAll('textarea[aria-label="text block"]')];
+    const after = areas[areas.length - 1];
+    if (!fig || !after) return null;
+    const f = fig.getBoundingClientRect(), t = after.getBoundingClientRect();
+    return {
+      figTop: Math.round(f.top), figBottom: Math.round(f.bottom),
+      figLeft: Math.round(f.left), figRight: Math.round(f.right), figWidth: Math.round(f.width),
+      textTop: Math.round(t.top), textLeft: Math.round(t.left),
+      width: fig.getAttribute('data-width'),
+    };
+  })())`));
+
+  const full = await geometry();
+  full && full.textTop >= full.figBottom - 2
+    ? ok("5 · at full width the text sits below the image", `text top ${full.textTop} ≥ image bottom ${full.figBottom}`)
+    : bad("5 · at full width the text sits below the image", JSON.stringify(full));
 
   await b.eval(`document.querySelector('[data-image-block] button').click()`);
-  await b.sleep(1200);
-  const half = JSON.parse(await b.eval(`JSON.stringify((() => {
-    const f = document.querySelector('[data-image-block]');
-    const cs = getComputedStyle(f);
-    return { float: cs.float, width: f.getBoundingClientRect().width,
-             parent: f.parentElement.getBoundingClientRect().width,
-             attr: f.getAttribute('data-width') };
-  })())`));
-  half.float === "left" ? ok("5 · half width floats left", `${half.attr}, float ${half.float}`)
-                        : bad("5 · half width floats left", JSON.stringify(half));
-  half.width < half.parent * 0.6
-    ? ok("5 · and leaves room for text beside it", `${Math.round(half.width)}px of ${Math.round(half.parent)}px`)
-    : bad("5 · and leaves room for text beside it", `${Math.round(half.width)}px of ${Math.round(half.parent)}px`);
+  await b.sleep(1400);
+  const half = await geometry();
+
+  half && half.textTop < half.figBottom
+    ? ok("5 · at half width the text starts beside the image, not below it",
+         `text top ${half.textTop} < image bottom ${half.figBottom}`)
+    : bad("5 · at half width the text starts beside the image, not below it",
+          half ? `text top ${half.textTop}, image bottom ${half.figBottom} — the text is below` : "null");
+
+  half && half.textLeft >= half.figRight - 2
+    ? ok("5 · and to the right of it", `text left ${half.textLeft} ≥ image right ${half.figRight}`)
+    : bad("5 · and to the right of it",
+          half ? `text left ${half.textLeft}, image right ${half.figRight} — it does not clear the image` : "null");
+
+  half && half.width === "half" && half.figWidth > 180 && half.figWidth < 340
+    ? ok("5 · the half-width image is a fixed column", `${half.figWidth}px`)
+    : bad("5 · the half-width image is a fixed column", JSON.stringify(half));
 
   // Let the width change land before anything is deleted.
   for (let i = 0; i < 20; i++) {

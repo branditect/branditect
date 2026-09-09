@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/icon";
 import { docRoleLabel, fileSize, isVideo, UNTAG_NOTE } from "@/lib/product-attachments";
 import ProductPicker from "@/components/products/product-picker";
+import { authedFetch } from "@/lib/authed-fetch";
 
 interface MediaImage {
   id: string; file_url: string; file_name: string;
@@ -43,7 +44,7 @@ export default function MediaTab({
   const load = useCallback(async () => {
     setError(null);
     try {
-      const res = await fetch(
+      const res = await authedFetch(
         `/api/products/attachments?product_id=${encodeURIComponent(productId)}&brand_id=${encodeURIComponent(brandId)}`,
       );
       const data = await res.json();
@@ -62,7 +63,7 @@ export default function MediaTab({
     setUntagging(id);
     try {
       const q = kind === "image" ? `image_id=${id}` : `document_id=${id}`;
-      const res = await fetch(
+      const res = await authedFetch(
         `/api/products/attachments?product_id=${encodeURIComponent(productId)}&brand_id=${encodeURIComponent(brandId)}&${q}`,
         { method: "DELETE" },
       );

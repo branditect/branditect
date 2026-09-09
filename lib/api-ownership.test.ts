@@ -34,6 +34,14 @@ const name = (p: string) => p.replace("app/api/", "").replace("/route.ts", "");
  */
 const EXEMPT: Record<string, string> = {};
 
+/**
+ * Scratch routes, which are gitignored and therefore cannot reach a deploy.
+ * Skipping them is only safe while that is true, so the test below asserts the
+ * .gitignore lines still exist — otherwise this is a loophole that lets an
+ * endpoint creating users with a hardcoded password slip into a build.
+ */
+const SCRATCH = /^(zz-|.*-seed$|.*-check$)/;
+
 describe("every route that holds the service key checks ownership", () => {
   const files = routeFiles();
 
@@ -46,6 +54,7 @@ describe("every route that holds the service key checks ownership", () => {
     if (!src.includes("supabase-admin")) continue;
     const n = name(file);
     if (n in EXEMPT) continue;
+    if (SCRATCH.test(n)) continue;
 
     it(`${n} imports api-auth`, () => {
       assert.ok(src.includes("api-auth"),
@@ -60,6 +69,14 @@ describe("every route that holds the service key checks ownership", () => {
         `${file} has ${handlers} handler(s) but ${guards} resolveBrand call(s)`);
     });
   }
+
+  it("scratch routes are gitignored, so skipping them is not a loophole", () => {
+    const ignore = readFileSync(".gitignore", "utf8");
+    for (const line of ["app/api/zz-*/", "app/api/*-seed/", "app/api/*-check/"]) {
+      assert.ok(ignore.includes(line),
+        `${line} is no longer in .gitignore — a scratch route could reach a deploy unguarded`);
+    }
+  });
 
   it("no exemption is stale", () => {
     for (const n of Object.keys(EXEMPT)) {

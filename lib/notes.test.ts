@@ -34,6 +34,22 @@ describe("the toolbar has exactly six controls", () => {
    * Saved indicator sits in the toolbar row, which is exactly why it is easy
    * to mistake for a seventh control when counting.
    */
+  it("every control renders its own glyph, not a stand-in", () => {
+    const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    const icons = readFileSync("components/icon.tsx", "utf8");
+    assert.ok(!/name=\{c\.id === "pin" \? "target" : "arrow"\}/.test(page),
+      "the toolbar renders a target for Pinned and an arrow for More");
+    for (const n of ["pin", "more"]) {
+      assert.ok(new RegExp(`^\\s*${n}: \\{`, "m").test(icons), `there is no ${n} icon to render`);
+    }
+  });
+
+  it("there is no button for the next paragraph — Return adds one", () => {
+    const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.ok(!/Paragraph<\/button>|>\s*Paragraph/.test(page), "the ＋ Paragraph button is back");
+    assert.ok(page.includes("onBlockKeyDown"), "Return does not add a block");
+  });
+
   it("Saved is a status, not a control", () => {
     assert.equal(SAVED_INDICATOR.isControl, false);
     assert.ok(!TOOLBAR.some((t) => t.id === "saved"), "Saved is in the control list");
@@ -549,13 +565,50 @@ describe("the width toggle", () => {
     assert.equal(widthLabel(undefined), "Full width");
   });
 
-  it("half floats left and full does not", () => {
+  /**
+   * NOT a string search for "float: left".
+   *
+   * The version of this test that read the CSS file and asserted the .half
+   * rule contained `float: left` passed for weeks on a layout where text could
+   * never run beside an image: every block was wrapped in its own <div>, so the
+   * figure floated inside that wrapper, and .body was display:flex, where
+   * floats do not apply at all. Layout is measured in scripts/check-note-images.mjs
+   * against real rectangles. What is left here is the structure that makes it
+   * possible, which a string search CAN answer honestly.
+   */
+  it("no wrapper element sits between the body and its blocks", () => {
+    const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.ok(!/<div key=\{b\.id \?\? i\}>/.test(page),
+      "each block is wrapped in a div again — a float inside a wrapper cannot " +
+      "have the next block beside it");
+    assert.ok(/<figure\s+key=\{b\.id \?\? i\}/.test(page), "the figure is not keyed directly");
+  });
+
+  it("the body is not a flex container, because floats do not apply to flex items", () => {
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    const body = css.slice(css.indexOf(".body {"), css.indexOf("}", css.indexOf(".body {")));
+    assert.ok(!/display:\s*flex/.test(body), ".body is display:flex again");
+    assert.match(body, /display:\s*block/);
+  });
+
+  it("a text block establishes its own formatting context, or it overlaps the float", () => {
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    const block = css.slice(css.indexOf(".block {"), css.indexOf("}", css.indexOf(".block {")));
+    assert.ok(!/width:\s*100%/.test(block),
+      "a full-width block box overlaps a float rather than sitting beside it");
+    assert.match(block, /overflow:\s*hidden/);
+  });
+
+  it("half is a fixed column, not a percentage", () => {
     const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
     const half = css.slice(css.indexOf(".half {"), css.indexOf("}", css.indexOf(".half {")));
-    const full = css.slice(css.indexOf(".full {"), css.indexOf("}", css.indexOf(".full {")));
-    assert.match(half, /float:\s*left/, "half does not float, so text cannot run beside it");
-    assert.match(full, /float:\s*none/, "full floats, so text would wrap around it too");
-    assert.match(half, /width:\s*4\d%/, "half is not roughly half the column");
+    assert.match(half, /width:\s*250px/);
+    assert.match(half, /float:\s*left/);
+  });
+
+  it("imageBlock is declared once", () => {
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    assert.equal((css.match(/^\.imageBlock \{/gm) ?? []).length, 1);
   });
 
   it("the toggle is on the image, on hover", () => {

@@ -97,6 +97,60 @@ unchanged.
 
 ---
 
+## 6 · Notes step 3 — REOPENED, criterion 5 was not met
+
+**What was wrong.** Text could never run beside a half-width image, and both
+tests passed anyway because neither looked at layout.
+
+- Every block was wrapped in `<div key={b.id ?? i}>`, so the figure floated
+  inside its own wrapper and the next paragraph was a sibling below it.
+- `.body` was `display: flex`, and floats do not apply to flex items at all.
+- The unit test read the CSS file as a string and asserted `float: left`
+  appeared in the `.half` rule.
+- The browser probe read `getComputedStyle(figure).float`, which returned
+  `left` truthfully — the figure's parent was the wrapper, not the flex
+  container.
+
+**The new assertion measures rectangles**: insert a half-width image, put a
+paragraph after it, and assert the paragraph's top is above the image's bottom
+and its left is right of the image's right edge. It was run against the
+unfixed code first and failed — text top 518 against image bottom 500, text
+left 595 against image right 999, width 404px.
+
+**Fixed.** The figure and the textarea are keyed directly and the wrapper is
+gone; `.body` is `display: block` with margin spacing; `.half` is a fixed 250px.
+One more change was needed that the brief did not name: a full-width block box
+overlaps a float — only *line* boxes shorten around one — so `.block` moved from
+`width: 100%` to `width: auto; overflow: hidden`, which gives it its own
+formatting context. Without that the text still sat below.
+
+Now measured: text top 209 against image bottom 416, text left 886 against
+image right 870, 250px.
+
+**Styling, against `reference/studio-notes.html`.** Both columns are white
+panels, 18px radius with the panel shadow, on the page background; the rule
+down the middle is gone. The body is a document — 15px at 1.7, max-width 760px,
+headings 17px with space above — not a stack of bordered textareas. The
+duplicate `.imageBlock` rule is removed. Real `pin` and `more` icons were added
+to `components/icon.tsx`; the toolbar had been rendering a target for Pinned
+and an arrow for More because neither glyph existed.
+
+**Two things I had to decide.** Removing the ＋ Paragraph button left an empty
+note with nothing to type into, so a note now opens with one empty paragraph
+ready. And Return only worked from the last block, which meant a picture could
+never have a paragraph after it — Return now inserts after the current block,
+and an image inserts at the cursor rather than at the end. Both are how a
+document behaves, and criterion 10 needs text on both sides of an image to be
+reachable at all.
+
+**Criteria now asserted.** 4, 5 and 10, all measured in a browser. The two
+string-reading assertions are replaced: what remains in `notes.test.ts` checks
+only the structure that makes the layout possible — no wrapper element, `.body`
+not flex, `.block` not full-width — which is something a string search can
+answer honestly.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

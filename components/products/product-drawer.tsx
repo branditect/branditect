@@ -19,6 +19,7 @@ import {
   type Product,
   type StockStatus,
 } from "@/lib/products";
+import { authedFetch } from "@/lib/authed-fetch";
 
 const TABS = ["Details", "Pricing", "Inventory", "Media", "History"] as const;
 type Tab = (typeof TABS)[number];
@@ -329,7 +330,7 @@ export default function ProductDrawer({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/catalog/product", {
+      const res = await authedFetch("/api/catalog/product", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: product.id, brand_id: brandId, changes: toPatch(draft) }),

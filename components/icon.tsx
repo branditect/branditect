@@ -28,7 +28,7 @@ export type IconName =
   | "megaphone" | "mail" | "instagram" | "linkedin" | "help"
   | "spark" | "copy" | "redo" | "book"
   // Onboarding rail
-  | "key";
+  | "key" | "pin" | "more";
 
 interface IconSpec {
   d: React.ReactNode;
@@ -172,6 +172,14 @@ const PATHS: Record<IconName, IconSpec> = {
   },
   check: {
     d: <path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m4.9 6.6a1.2 1.2 0 0 0-1.7.06l-4.6 5-1.85-1.7a1.2 1.2 0 1 0-1.62 1.77l2.74 2.5a1.2 1.2 0 0 0 1.69-.07l5.4-5.87a1.2 1.2 0 0 0-.06-1.7" />,
+  },
+  // The toolbar rendered a target for Pinned and an arrow for More, because
+  // neither glyph existed and the fallback picked whatever was nearest.
+  pin: {
+    d: <path d="M14 3l7 7-3 1-3 6-2-2-4 4-1-1 4-4-2-2 6-3 1-3z" />,
+  },
+  more: {
+    d: <path d="M12 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4z" />,
   },
   plus: {
     d: (

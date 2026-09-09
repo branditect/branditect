@@ -62,6 +62,8 @@ export default function NotesPage() {
    * pointing at a dead file. The URLs are looked up for display only.
    */
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  /** Where the cursor is, so an insert lands there rather than at the end. */
+  const [focused, setFocused] = useState<number | null>(null);
 
   const loadNotes = useCallback(async () => {
     if (!brandId || brandId === "default") { setLoading(false); return; }
@@ -83,8 +85,11 @@ export default function NotesPage() {
     const json = await res.json().catch(() => ({}));
     if (!res.ok) { setError(json.error ?? "Could not open that note."); return; }
     setTitle(titleInputValue(json.note?.title));
+    // A note always has somewhere to type. With the ＋ Paragraph button gone,
+    // an empty note had no textarea at all and Return had nothing to fire in.
+    // The block is in state only until something is typed into it.
     const loaded: NoteBlock[] = json.blocks ?? [];
-    setBlocks(loaded);
+    setBlocks(loaded.length ? loaded : [{ kind: "text", body: "", sort_order: 0 }]);
 
     const ids = loaded.map((b) => b.image_id).filter(Boolean) as string[];
     if (ids.length) {
@@ -171,10 +176,12 @@ export default function NotesPage() {
 
   /** Criterion 4: place a block that references a row in brand_images. */
   function insertImage(picked: { id: string; url: string }) {
-    const next: NoteBlock[] = [
-      ...blocks,
-      { kind: "image", image_id: picked.id, width: "full", caption: "", sort_order: blocks.length },
-    ];
+    // After the block the cursor is in, like any document. Appending to the
+    // end meant a picture could never have a paragraph after it.
+    const at = focused === null ? blocks.length : focused + 1;
+    const next: NoteBlock[] = [...blocks];
+    next.splice(at, 0, { kind: "image", image_id: picked.id, width: "full", caption: "" });
+    next.forEach((b, i) => { b.sort_order = i; });
     setBlocks(next);
     setImageUrls((prev) => ({ ...prev, [picked.id]: picked.url }));
     queueSave({ blocks: next });
@@ -217,6 +224,25 @@ export default function NotesPage() {
     queueSave({ blocks: next });
   }
 
+  /**
+   * Return at the end of a block starts the next one, the way a document does.
+   * There was a "＋ Paragraph" button; a note is a document, and a document
+   * does not have a button for the next paragraph.
+   */
+  function onBlockKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>, index: number) {
+    if (e.key !== "Enter" || e.shiftKey) return;
+    const el = e.currentTarget;
+    const atEnd = el.selectionStart === el.value.length && el.selectionEnd === el.value.length;
+    if (!atEnd) return;   // a return mid-paragraph is a line break
+    e.preventDefault();
+    const next: NoteBlock[] = [...blocks];
+    next.splice(index + 1, 0, { kind: "text", body: "" });
+    next.forEach((b, i) => { b.sort_order = i; });
+    setBlocks(next);
+    setFocused(index + 1);
+    queueSave({ blocks: next });
+  }
+
   function addBlock(kind: NoteBlock["kind"]) {
     const next = [...blocks, { kind, body: "", sort_order: blocks.length }];
     setBlocks(next);
@@ -229,7 +255,7 @@ export default function NotesPage() {
     if (!res.ok) { setError(json.error ?? "Could not make a note."); return; }
     setNotes((prev) => [json.note, ...prev]);
     setTitle(titleInputValue(json.note.title));
-    setBlocks([]);
+    setBlocks([{ kind: "text", body: "", sort_order: 0 }]);
     setOpenId(json.note.id);
   }
 
@@ -332,7 +358,7 @@ export default function NotesPage() {
                     aria-label={c.title}
                     onClick={() => onToolbar(c.id)}
                   >
-                    {c.label || <Icon name={c.id === "pin" ? "target" : "arrow"} size={12} />}
+                    {c.label || <Icon name={c.id === "pin" ? "pin" : "more"} size={12} />}
                   </button>
                 </span>
               ))}
@@ -356,13 +382,11 @@ export default function NotesPage() {
               onDrop={onDrop}
               data-drop-target
             >
-              {blocks.length === 0 && (
-                <p className={s.note}>Start typing. It saves as you go.</p>
-              )}
-              {blocks.map((b, i) => (
-                <div key={b.id ?? i}>
-                  {b.kind === "image" ? (
+
+              {blocks.map((b, i) =>
+                b.kind === "image" ? (
                     <figure
+                      key={b.id ?? i}
                       className={`${s.imageBlock} ${b.width === "half" ? s.half : s.full}`}
                       data-image-block
                       data-width={b.width ?? "full"}
@@ -396,19 +420,19 @@ export default function NotesPage() {
                     </figure>
                   ) : (
                     <textarea
+                      key={b.id ?? i}
                       className={`${s.block} ${b.kind === "heading" ? s.heading : ""} ${b.kind === "list" ? s.list : ""}`}
                       value={b.body ?? ""}
                       onChange={(e) => editBlock(i, e.target.value)}
                       placeholder={b.kind === "heading" ? "Heading" : b.kind === "list" ? "One item per line" : "Write"}
                       aria-label={`${b.kind} block`}
                       rows={b.kind === "heading" ? 1 : 3}
+                      onKeyDown={(e) => onBlockKeyDown(e, i)}
+                      onFocus={() => setFocused(i)}
                     />
-                  )}
-                </div>
-              ))}
-              <button type="button" className={s.addText} onClick={() => addBlock("text")}>
-                <Icon name="plus" size={11} /> Paragraph
-              </button>
+                  ),
+              )}
+
             </div>
 
             <p className={s.flat} data-flat-length={flattenBlocks(blocks).length} aria-hidden="true" />

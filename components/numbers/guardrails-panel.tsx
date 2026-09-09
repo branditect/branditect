@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Field, Panel, fieldClass, numStr, toNum } from "@/components/numbers/calc-shell";
 import { formatMoney, type Product } from "@/lib/products";
+import { authedFetch } from "@/lib/authed-fetch";
 
 /**
  * The per-product guardrails, in the room CLAUDE.md says pricing rules live.
@@ -56,7 +57,7 @@ export default function GuardrailsPanel({
     setState("saving");
     setError(null);
     try {
-      const res = await fetch("/api/catalog/product", {
+      const res = await authedFetch("/api/catalog/product", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,3 +1,15 @@
+-- ⚠ This file used to open four tables to every signed-in user with
+-- `FOR ALL USING (true) WITH CHECK (true)`, and it is not the only file for
+-- this table: supabase/social-strategy.sql (hyphen) creates social_strategy
+-- with a scoped policy. Two files, one table, opposite intentions.
+--
+-- Three of these tables — content_pillars, platform_style_guides and
+-- social_calendar — are not read or written anywhere in app/, lib/ or
+-- components/, so scripts/cross-tenant.mjs never checked them. A table nothing
+-- uses is still a table anyone can read.
+--
+-- Replaced with discovery-based drops and brand-scoped policies. NOT RUN.
+
 -- Social Strategy Architect — schema
 -- Run this in Supabase SQL Editor before using the new flow.
 
@@ -80,7 +92,59 @@ ALTER TABLE content_pillars ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_style_guides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_calendar ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all for now" ON social_strategy FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for now" ON content_pillars FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for now" ON platform_style_guides FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all for now" ON social_calendar FOR ALL USING (true) WITH CHECK (true);
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT policyname FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = 'social_strategy'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.social_strategy', r.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY social_strategy_own_brand ON social_strategy
+  FOR ALL
+  USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
+  WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT policyname FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = 'content_pillars'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.content_pillars', r.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY content_pillars_own_brand ON content_pillars
+  FOR ALL
+  USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
+  WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT policyname FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = 'platform_style_guides'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.platform_style_guides', r.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY platform_style_guides_own_brand ON platform_style_guides
+  FOR ALL
+  USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
+  WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT policyname FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = 'social_calendar'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.social_calendar', r.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY social_calendar_own_brand ON social_calendar
+  FOR ALL
+  USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
+  WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));

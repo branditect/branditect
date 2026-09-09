@@ -69,9 +69,11 @@
   .v.on .tick svg{opacity:1}
 
   .v .adj{font-size:var(--fs-body);font-weight:800;letter-spacing:-.2px;padding-right:24px}
-  .v .who{font-size:var(--fs-micro);font-weight:600;color:var(--faint);margin-top:4px}
+  .v .def{font-size:var(--fs-xs);font-weight:500;color:var(--muted);margin-top:5px;line-height:1.45}
+  .v .who{font-size:var(--fs-micro);font-weight:600;color:var(--faint);margin-top:7px}
   .v .say{
-    margin-top:10px;padding-left:11px;border-left:2px solid var(--lav-line);
+    margin-top:11px;padding:9px 11px;background:var(--lav-wash);
+    border-left:2px solid var(--lav-line);border-radius:0 8px 8px 0;
     font-size:var(--fs-sm);font-weight:600;line-height:1.5;color:var(--ink-2);
   }
 
@@ -129,9 +131,10 @@
         software.</p>
     </div>
     <div class="why">
-      <h3>No wrong answer</h3>
-      <p>Pick two or three that feel close. You are not choosing a brand to copy — you are showing
-        us the register you want to be read in.</p>
+      <h3>One voice, optionally two</h3>
+      <p>Pick the one that sounds most like you. A second is optional and softens the first;
+        having no second is a real answer, and small brands are often better off pure. The brands
+        named are there for recognition. You are not choosing one to copy.</p>
     </div>
     <div class="prog">
       <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
@@ -140,103 +143,67 @@
   </aside>
 
   <main class="main">
-    <h1 class="q">Which of these sound like you?</h1>
-    <p class="hint">The same message, written twelve ways. Pick two or three that sound like you.</p>
+    <h1 class="q">Which of these sounds like you?</h1>
+    <p class="hint">The same message, written six ways. Pick the one that sounds like you, and optionally a second.</p>
 
     <div class="base"><b>The message</b><span>Telling a customer their order has shipped.</span></div>
 
 
-    <div class="grid">
+    <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
 
       <button class="v on">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Playful</div>
-        <div class="who">like Duolingo, Innocent</div>
-        <div class="say">“It's out the door and it's not looking back. Track it →”</div>
-      </button>
-
-      <button class="v on">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Warm</div>
-        <div class="who">like Headspace, Glossier</div>
-        <div class="say">“Good news — your order's on its way. Here's where it is.”</div>
+        <div class="adj">Confident &amp; precise</div>
+        <div class="def">Few words. No hedging. Lets the thing speak for itself.</div>
+        <div class="who">like Rhode · Mercedes-Benz · Aesop</div>
+        <div class="say">Shipped this morning. Track it.</div>
       </button>
 
       <button class="v">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Plain-spoken</div>
-        <div class="who">like Slack, GitHub</div>
-        <div class="say">“Your order shipped today. Track it here.”</div>
+        <div class="adj">Warm &amp; human</div>
+        <div class="def">Talks like a person who likes you. Contractions, plain words, no distance.</div>
+        <div class="who">like Glossier · Innocent · Bloom</div>
+        <div class="say">Good news. It's on its way to you, and you can see where it's got to here.</div>
       </button>
 
       <button class="v">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Bold</div>
-        <div class="who">like Virgin, Red Bull</div>
-        <div class="say">“Shipped. Go get it.”</div>
+        <div class="adj">Bold &amp; playful</div>
+        <div class="def">Names the category's convention, then breaks it. One joke per piece, not three.</div>
+        <div class="who">like Burger King · Oatly · Duolingo</div>
+        <div class="say">It's out the door and it's not looking back. Go on, watch it travel.</div>
       </button>
 
       <button class="v">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Premium</div>
-        <div class="who">like Louis Vuitton, Aesop</div>
-        <div class="say">“Your order has left us. Follow its journey.”</div>
+        <div class="adj">Calm &amp; reassuring</div>
+        <div class="def">Plain, careful, zero hype. States the risk before the benefit.</div>
+        <div class="who">like CeraVe · Volvo · Philips</div>
+        <div class="say">Your order was dispatched today. Most arrive within three working days, though weather can add one.</div>
       </button>
 
       <button class="v">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Expert</div>
-        <div class="who">like IBM, Cisco</div>
-        <div class="say">“Dispatched today and tracked end to end. Follow it here.”</div>
+        <div class="adj">Visionary &amp; inspiring</div>
+        <div class="def">Talks about what becomes possible, not what the product does.</div>
+        <div class="who">like Apple · Nike · Tony's Chocolonely</div>
+        <div class="say">On its way. One less thing between you and the work.</div>
       </button>
 
       <button class="v">
         <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Purposeful</div>
-        <div class="who">like Patagonia, WWF</div>
-        <div class="say">“On its way, in packaging you can compost. Track it here.”</div>
-      </button>
-
-      <button class="v">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Witty</div>
-        <div class="who">like Netflix, Oatly</div>
-        <div class="say">“Your order has left the building. No encore.”</div>
-      </button>
-
-      <button class="v">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Rugged</div>
-        <div class="who">like Harley-Davidson, Carhartt</div>
-        <div class="say">“Packed, loaded and rolling. Track it.”</div>
-      </button>
-
-      <button class="v">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Homely</div>
-        <div class="who">like IKEA, Ben &amp; Jerry's</div>
-        <div class="say">“It's on its way to you. Pop the kettle on.”</div>
-      </button>
-
-      <button class="v">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Encouraging</div>
-        <div class="who">like Peloton, Nike</div>
-        <div class="say">“It's on its way. You're going to love it.”</div>
-      </button>
-
-      <button class="v">
-        <span class="tick"><svg viewBox="0 0 24 24"><path d="M9.6 17.2L4.4 12l1.4-1.4 3.8 3.8 8.6-8.6L19.6 7z"/></svg></span>
-        <div class="adj">Candid</div>
-        <div class="who">like Buffer, Monzo</div>
-        <div class="say">“It shipped a day late — sorry about that. Here's the tracking.”</div>
+        <div class="adj">Expert &amp; direct</div>
+        <div class="def">Evidence first. Every claim carries its proof in the same sentence.</div>
+        <div class="who">like Revolut · Stripe · Dyson</div>
+        <div class="say">Dispatched 14:20 today, tracked end to end. Delivery estimate Thursday, based on the last 200 orders.</div>
       </button>
 
     </div>
 
     <div class="more">
       <button>Show me these as product descriptions</button>
-      <span class="c">12 registers · 2 chosen</span>
+      <span class="c">6 voices · primary chosen · no secondary is a valid answer</span>
     </div>
 
     <div class="own">
@@ -257,14 +224,13 @@
 
 <div class="note">
   <div>
-    <h4>One message, twelve ways — and why the lines are ours</h4>
-    <p>“Describe your tone of voice” is a blank page, and blank pages are where onboarding stops.
-    Recognition is easy where description is hard. Holding the message constant is what makes the
-    registers comparable: twelve unrelated slogans would mean reading twelve different things and
-    inferring the difference, where twelve versions of one sentence show it. The lines are written
-    for this screen rather than quoted, so nothing has to be sourced, nothing goes stale when a brand
-    rebrands, and no other company’s copy lives permanently in the product. The brand names are
-    comparators, in the smallest type on the card — you are choosing a register, not a brand to
-    imitate.</p>
+    <h4>One message, six ways — and why nothing is in quotation marks</h4>
+    <p>A description of a voice is the thing people cannot evaluate, which is why this step gets
+    skipped. Holding the message constant is what makes six voices comparable: six unrelated sample
+    lines means reading six different things and inferring the difference, where six versions of one
+    sentence shows it. The lines are written for this screen and carry no quotation marks, because a
+    quoted line sitting under a row of brand names reads as something those brands said. The anchors
+    are named, never quoted — and three of them are beauty brands in three different tiles, which is
+    what turns the picker into a lesson rather than a form.</p>
   </div>
 </div>

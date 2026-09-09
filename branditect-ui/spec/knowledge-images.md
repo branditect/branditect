@@ -1,9 +1,60 @@
-# Knowledge ▸ Images — tagging, and a screen that looks like the app
+# Knowledge ▸ Media — tagging, the type switch, and a screen that looks like the app
 
 Reference: `reference/knowledge-images.html`.
 
-Two things at once, because they are the same screen: **make tagging possible**, and rebuild the page
-in the design system.
+Three things, because they are the same screen: **make tagging possible**, **make the type switch
+work**, and rebuild the page in the design system.
+
+---
+
+## 0 · Four of the five types cannot accept an upload
+
+`app/(app)/knowledge/images/page.tsx` passes these to `FileLibrary`:
+
+```
+category="video"   category="audio"   category="graphic"   category="web"
+```
+
+`FileLibrary` inserts them straight into `brand_images.category`, whose constraint is:
+
+```sql
+category TEXT NOT NULL DEFAULT 'brand'
+  CHECK (category IN ('social','event','product','campaign','brand','ai-generated'))
+```
+
+None of the four is in that list, and no migration in `supabase/` widens it. **VID, SND, GFX and WEB
+should reject every upload at the database.** Only IMG works, because `image-library.tsx` passes
+values the constraint allows.
+
+**Confirm this against the live database before writing the fix** — the constraint may have been
+widened by hand outside the migration files. The check is one attempted insert with
+`category = 'video'`; if it comes back with a check-constraint violation, the tabs are decorative.
+
+The fix, once confirmed:
+
+```sql
+ALTER TABLE brand_images DROP CONSTRAINT IF EXISTS brand_images_category_check;
+ALTER TABLE brand_images ADD  CONSTRAINT brand_images_category_check
+  CHECK (category IN ('social','event','product','campaign','brand','ai-generated',
+                      'video','audio','graphic','web'));
+```
+
+Widen, never replace: the six existing values are in live rows and dropping one orphans them.
+
+---
+
+## 0b · The page is not called "Images", and it is certainly not called "Brand Assets"
+
+The `<h1>` today reads **Brand Assets**, with *"Access and manage all of Vetra's brand assets in one
+place."* Two problems. `CLAUDE.md` reserves that vocabulary — *"**Knowledge** — the files you feed
+it. Not 'Vault', not 'Library', not 'Assets'"* — and "Brand assets" is the exact name just retired
+from Studio, so reusing it here rebuilds the collision that was cleared last week.
+
+But "Images" is wrong too, because the page holds five media types.
+
+**Call it Media**, in the `<h1>` and in the nav. It is a plain noun, it is not on the reserved list,
+and it is honest about what the page contains. `lib/nav.ts` changes `Images` → `Media`; the route can
+stay `/knowledge/images` or move with a redirect, and moving is tidier.
 
 ---
 
@@ -76,6 +127,24 @@ the old — enforced by the partial unique index, not by application code.
 
 ---
 
+## 2b · The type switch stays, at a third of the height
+
+Five buttons across the top — **IMG · VID · GFX · SND · WEB** — one active, exactly as they work
+today. They are the right control and they stay.
+
+What changes is the size. Today they are five cards about 200px tall, which pushes the first row of
+actual content below the fold on a laptop; in the reference they are a single row of buttons about
+56px tall, keeping the three-letter code, the name and the one-line description, and adding **the
+count per type**. The count is the useful part that is missing: `SND 0` tells you at a glance that
+there is nothing there, which five equal-sized cards actively hide.
+
+Order them by how much is in them, not alphabetically: Images, Video, Graphics, Sound, Website.
+
+Tagging applies to every type, not only images. A product demo film and a product icon both belong
+on a product card, and `product_images` references `brand_images`, which holds all five.
+
+---
+
 ## 3 · The redesign
 
 The layout and the flow are right and do not change: dropzone, filters, grid. What changes is that
@@ -115,19 +184,29 @@ diagnosis rather than the description, per `CLAUDE.md`:
 9. No rendered text on the page is below 12px, and no element uses a monospace family — asserted
    against the computed styles.
 10. No emoji is used as an icon anywhere on the page.
+11. An upload succeeds in all five types — asserted by a test that uploads one file per type and
+    reads each row back. **This is the one that is failing today.**
+12. Each type button shows the number of items in it, and a type with none reads `0` rather than
+    being hidden.
+13. Neither the page nor the nav uses the words "Assets", "Vault" or "Library" — asserted by the
+    same text scan that guards the retired Studio tab.
 
 ---
 
 ## Build order
 
-1. The picker component, and the write path. Criteria 1, 2, 3, 8.
-2. Tile chips and the selection bar. Criteria 1, 2.
-3. The two filters. Criteria 4, 5.
-4. Matching. Criterion 6.
-5. The restyle. Criteria 9, 10.
-6. `is_primary` from this screen. Criterion 7.
+1. Confirm the category constraint against the live database, then widen it. Criterion 11.
+2. The picker component, and the write path. Criteria 1, 2, 3, 8.
+3. Tile chips and the selection bar. Criteria 1, 2.
+4. The two filters. Criteria 4, 5.
+5. The type switch at its new size, with counts. Criteria 12, 13.
+6. Matching. Criterion 6.
+7. The restyle. Criteria 9, 10.
+8. `is_primary` from this screen. Criterion 7.
 
-Steps 1 and 2 are the whole point; if anything slips, it is 4 and 6.
+Step 1 goes first because it is a live bug rather than a missing feature: a person uploading a brand
+film today gets an error, or worse, silence. Steps 2 and 3 are the point of the rest; if anything
+slips, it is 6 and 8.
 
 ---
 

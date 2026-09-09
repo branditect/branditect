@@ -97,6 +97,61 @@ unchanged.
 
 ---
 
+## 2 · The loaded gun in `supabase/brand_images.sql` — done, and there were eight
+
+**What I did.** Committed the `brand_images.sql` fix as it stood — the
+discovery-based drop plus the brand-scoped policy — without redoing it, and
+wrote the test the item asks for: any file in `supabase/` that creates a
+`USING (true)` policy on a brand-scoped table fails the suite.
+
+**The test found seven more files, not one.** The item names line 40 of
+`brand_images.sql`. The same pattern was in:
+
+| file | policy | tables |
+|---|---|---|
+| `brand_strategies.sql` | `Allow all for now` | `brand_strategies` |
+| `brand_tone.sql` | `Allow all tone` | `brand_tone` |
+| `brand_visual.sql` | `Allow all visual` | `brand_visual` |
+| `brands.sql` | `Users can manage their brands` | `brands` |
+| `catalog.sql` | `Allow all catalog`, `Allow all products`, `Allow all financial` | `brand_catalog`, `catalog_products`, `brand_financial_rules` |
+| `catalog_products_v6.sql` | `Allow all product_history` | `product_history` |
+| `social_strategy.sql` | `Allow all for now` ×4 | `social_strategy`, `content_pillars`, `platform_style_guides`, `social_calendar` |
+
+All eleven policies are now a discovery-based drop and a brand-scoped policy —
+`user_id = auth.uid()` for `brands`, which is keyed by user rather than brand.
+**None of it has been run**, per rule 1. These are files, and the live database
+was already closed by `close-rls-2.sql` and `close-rls-3.sql`; the risk was
+re-running one of them.
+
+**Two things worth knowing beyond the item.**
+
+`supabase/social_strategy.sql` (underscore) and `supabase/social-strategy.sql`
+(hyphen, written for queue item 5 of the previous ordering) both define
+`social_strategy`, with opposite intentions — one opened it, one scopes it.
+Two files, one table. Somebody should delete one, and I have not, because
+deleting a file is outside rule 2 and the choice is not mine.
+
+`content_pillars`, `platform_style_guides` and `social_calendar` are not read
+or written anywhere in `app/`, `lib/` or `components/`, which is why
+`scripts/cross-tenant.mjs` never checked them — its table list comes from a
+grep of the application. A table nothing uses is still a table anyone can read.
+Their RLS state on the live database is **unverified**.
+
+**The storage half stays below the line**, untouched. A test asserts the
+`DO NOT RUN YET` marker is there, that it says *why*, and that no `storage.*`
+statement sits above it.
+
+**A control caught my own assertion being too narrow.** It checked for
+`storage.objects` only, so moving `UPDATE storage.buckets SET public = false`
+above the line passed. The statement that actually breaks every image in the
+app is the bucket one. Widened, and it fails now.
+
+**Criteria now asserted.** Item 2 in full: the world-open policy is replaced,
+and a test fails if any file in `supabase/` reintroduces one on a brand-scoped
+table.
+
+---
+
 ## 6 · Notes step 3 — REOPENED, criterion 5 was not met
 
 **What was wrong.** Text could never run beside a half-width image, and both

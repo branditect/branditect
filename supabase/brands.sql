@@ -1,3 +1,16 @@
+
+-- ⚠ This file used to create a world-open policy on brands.
+--
+-- The live database no longer has it — supabase/close-rls-2.sql and
+-- close-rls-3.sql swept those, and scripts/cross-tenant.mjs proves it by
+-- signing in as one user and failing to read another's rows. But re-running
+-- THIS file would have put it straight back: PERMISSIVE policies are OR'd, so
+-- one USING (true) defeats every scoped policy sitting beside it.
+--
+-- Replaced with a discovery-based drop and a brand-scoped policy. Dropping by
+-- the name this file creates is what let nine open policies survive
+-- close-rls.sql.
+
 CREATE TABLE IF NOT EXISTS brands (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
@@ -13,8 +26,20 @@ CREATE TABLE IF NOT EXISTS brands (
 
 ALTER TABLE brands ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can manage their brands" ON brands
-  FOR ALL USING (true) WITH CHECK (true);
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT policyname FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = 'brands'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.brands', r.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY brands_own_brand ON brands
+  FOR ALL
+  USING      (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 
 -- Storage buckets
 INSERT INTO storage.buckets (id, name, public) VALUES ('brand-logos', 'brand-logos', true) ON CONFLICT (id) DO NOTHING;

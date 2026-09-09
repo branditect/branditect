@@ -34,3 +34,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scratch service-role endpoints — never commit
+# these use SUPABASE_SERVICE_ROLE_KEY and bypass RLS entirely
+app/api/zz-*/
+app/api/*-seed/
+app/api/*-check/
+
+# isolated worktrees
+.worktrees/

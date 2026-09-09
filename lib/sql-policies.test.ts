@@ -34,49 +34,49 @@ function statements(sql: string): string {
 }
 
 /**
- * Tables keyed by brand, discovered from the CREATE TABLE statements in this
- * directory rather than from a list somebody maintains by hand.
+ * Policies that are genuinely meant to be world-open. Empty, and adding to it
+ * is a deliberate act somebody can review in a diff.
+ *
+ * There is no shape test here on purpose. The first version of this guard
+ * checked "tables with a brand_id column", which skipped product_specs by
+ * construction — it has no brand_id and scopes through
+ * product_id → catalog_products → brands — and would have skipped the next
+ * table shaped that way too. A guard that only inspects the shape you already
+ * thought of is the same failure as the storage assertion that only checked
+ * storage.objects.
  */
-function brandScopedTables(): Set<string> {
-  const found = new Set<string>();
-  for (const f of files) {
-    const sql = statements(readFileSync(join(DIR, f), "utf8"));
-    for (const m of sql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(\w+)\s*\(([\s\S]*?)\n\);/g)) {
-      if (/\bbrand_id\b/.test(m[2])) found.add(m[1]);
-    }
-  }
-  // Tables the app uses that no file in here creates. Named so the gap is
-  // visible rather than silently uncovered.
-  for (const t of ["brand_images", "brand_logos", "brand_documents", "catalog_products",
-                   "brands", "brand_templates", "mission_goals", "mission_notes",
-                   "mission_tasks", "brand_book_assets"]) found.add(t);
-  return found;
-}
+const PUBLIC_BY_DESIGN: { file: string; policy: string }[] = [];
 
-describe("no file in supabase/ re-opens a brand-scoped table", () => {
-  const scoped = brandScopedTables();
-
-  it("finds tables to check, so this cannot pass vacuously", () => {
-    assert.ok(scoped.size >= 10, `only ${scoped.size} brand-scoped tables found`);
+describe("no file in supabase/ creates a world-open policy", () => {
+  it("finds files to check, so this cannot pass vacuously", () => {
     assert.ok(files.length >= 8, `only ${files.length} sql files found`);
   });
 
   for (const f of files) {
-    it(`${f} has no USING (true) on a brand-scoped table`, () => {
+    it(`${f} has no USING (true)`, () => {
       const sql = statements(readFileSync(join(DIR, f), "utf8"));
       const offenders: string[] = [];
       for (const m of sql.matchAll(/CREATE POLICY\s+("?[\w\s]+"?)\s+ON\s+([\w.]+)([\s\S]*?);/g)) {
+        const policy = m[1].trim().replace(/^"|"$/g, "");
         const table = m[2].replace(/^public\./, "");
-        if (!scoped.has(table)) continue;
-        if (/USING\s*\(\s*true\s*\)/i.test(m[3])) {
-          offenders.push(`${m[1].trim()} on ${table}`);
-        }
+        if (!/USING\s*\(\s*true\s*\)/i.test(m[3])) continue;
+        if (PUBLIC_BY_DESIGN.some((x) => x.file === f && x.policy === policy)) continue;
+        offenders.push(`${policy} on ${table}`);
       }
       assert.deepEqual(offenders, [],
-        `${f} would re-open ${offenders.join(", ")} to every signed-in user. ` +
-        `Permissive policies are OR'd, so one of these defeats every scoped policy beside it.`);
+        `${f} would open ${offenders.join(", ")} to every signed-in user. ` +
+        `Permissive policies are OR'd, so one of these defeats every scoped ` +
+        `policy beside it, and a policy-reading audit will not show it.`);
     });
   }
+
+  it("no allowlist entry is stale", () => {
+    for (const x of PUBLIC_BY_DESIGN) {
+      assert.ok(files.includes(x.file), `${x.file} is allowlisted but does not exist`);
+      const sql = statements(readFileSync(join(DIR, x.file), "utf8"));
+      assert.ok(sql.includes(x.policy), `${x.policy} is allowlisted but is not in ${x.file}`);
+    }
+  });
 
   it("brand_images.sql creates the scoped policy it is supposed to", () => {
     const sql = statements(readFileSync(join(DIR, "brand_images.sql"), "utf8"));
@@ -89,16 +89,26 @@ describe("no file in supabase/ re-opens a brand-scoped table", () => {
     assert.match(sql, /FROM pg_policies/,
       "dropping only the name it creates is how nine open policies survived close-rls.sql");
   });
+
+  /**
+   * product_specs has no brand_id — it scopes through the product. The join has
+   * to be on brands.brand_id, which is TEXT, and not brands.id, which is a
+   * UUID. Confusing those two is what made templates render nowhere.
+   */
+  it("product_specs scopes through its product, on the TEXT key", () => {
+    const sql = statements(readFileSync(join(DIR, "product_specs.sql"), "utf8"));
+    assert.match(sql, /CREATE POLICY product_specs_own_brand ON product_specs/);
+    assert.match(sql, /JOIN brands b ON b\.brand_id = p\.brand_id/);
+    assert.ok(!/JOIN brands b ON b\.id\b/.test(sql),
+      "joins brands.id, a UUID, against a TEXT column");
+  });
+
+  it("brand_guideline is scoped by its own brand_id", () => {
+    const sql = statements(readFileSync(join(DIR, "brand_guideline.sql"), "utf8"));
+    assert.match(sql, /CREATE POLICY brand_guideline_own_brand ON brand_guideline/);
+  });
 });
 
-/**
- * The storage half of security-hardening part 2 must stay below the line.
- *
- * brand_images.file_url stores a full public URL and a signed URL expires, so
- * it cannot be stored. Making the bucket private before storage_path is
- * backfilled and both assertions pass breaks every image in the app at once,
- * for everyone.
- */
 describe("the storage half of brand_images.sql is not runnable yet", () => {
   const raw = readFileSync(join(DIR, "brand_images.sql"), "utf8");
 

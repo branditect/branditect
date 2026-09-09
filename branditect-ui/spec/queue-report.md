@@ -152,6 +152,50 @@ table.
 
 ---
 
+## Inbox 1 · Item 2 missed two files, and the criterion is why — done
+
+**What I did.** Fixed `supabase/brand_guideline.sql` and
+`supabase/product_specs.sql`, and widened the guard so the shape of a table no
+longer decides whether it is inspected.
+
+**The criterion was the bug, and the entry is right about why.** Item 2's test
+looked for `USING (true)` *on a table with a `brand_id` column*.
+`product_specs` has no `brand_id` — it scopes through
+`product_id → catalog_products(id) → brands` — so the guard skipped it by
+construction and would have skipped the next table shaped that way. That is the
+same failure as the storage assertion that only checked `storage.objects`.
+
+The guard now flags **any** `CREATE POLICY … USING (true)` in `supabase/`, on
+any table, with an allowlist for anything genuinely public. The allowlist is
+empty, and a test fails if an entry in it goes stale.
+
+**The join was verified, not assumed.** The entry warned that `brands.id` is a
+UUID and `brands.brand_id` is TEXT and the two have been confused before. I
+probed the live database rather than trusting the warning or my memory:
+
+| column | type |
+|---|---|
+| `product_specs.product_id` | UUID — rejects text |
+| `catalog_products.id` | UUID |
+| `catalog_products.brand_id` | TEXT |
+| `brands.brand_id` | TEXT |
+| `brands.id` | UUID — rejects text |
+
+So `JOIN brands b ON b.brand_id = p.brand_id` is TEXT to TEXT and
+`product_id IN (SELECT p.id …)` is UUID to UUID. A test fails if it is ever
+rewritten to join `brands.id`.
+
+**Negative control, as instructed.** A `USING (true)` policy on a table with no
+`brand_id` — the exact shape the old criterion could not see — turns the suite
+red. Three more with it: the policy back on `product_specs`, the join switched
+to `brands.id`, and `brand_guideline` reopened. All four red, all four restored.
+
+**Neither file has been run.** Rule 1.
+
+Inbox entry 1 is marked DONE in place.
+
+---
+
 ## 6 · Notes step 3 — REOPENED, criterion 5 was not met
 
 **What was wrong.** Text could never run beside a half-width image, and both

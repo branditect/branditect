@@ -702,6 +702,83 @@ and the live audit, which reports `signed = 0` on all eight columns.
 
 ---
 
+## Inbox 4a · The work list was 40% source code — fixed, with the control it asked for
+
+**Confirmed, and worse than reported.** 409 of the 1,276 entries were raw JSX,
+not 375. The list is now **744 distinct strings across 58 files**, which sits
+where the entry estimated it would.
+
+### The cause, which was not the obvious one
+
+It was not a weak filter. **One apostrophe in ordinary JSX text desynchronised
+the entire scan.** The literal scanner paired quotes left to right, so
+`you don't have to ask anyone` opened a string at the apostrophe that closed at
+the next apostrophe further down the file — and from there every quote was off
+by one. What it reported as "strings" from that point on was the code *between*
+two real strings: `> <div className=`, `); setScreen(`, `: isActive ?`.
+
+That is why the fragments came in runs rather than one at a time, and why they
+were concentrated in the long screens.
+
+Both halves are fixed:
+
+- **An apostrophe only opens a string where a string can start** — after `=`,
+  `(`, `,`, `:`, `[` or whitespace. `don't` no longer opens anything.
+- **`isSourceFragment` rejects what is still recognisably code**: anything
+  carrying `<`, `>`, `{`, `}`, an operator, a React identifier, or starting or
+  ending mid-expression.
+
+Two smaller ones found on the way out:
+
+- **Class lists with arbitrary values read as copy.** `bg-[#FFF2EE]` and
+  `drop-shadow-[0_5px_10px_rgba(232,73,32,.3)]` failed the old charset, so the
+  whole string fell through to the list. Widening the charset alone then went
+  too far and swallowed `One check left: upload your brand guideline.` — a
+  sentence with a colon in it. It now needs a Tailwind-shaped token *and* most
+  of its words carrying a class separator, which a sentence does not have.
+- **`\'` reached the list as a backslash.** A translator would have copied
+  `you\'re` into the Finnish. Escapes are unescaped now.
+
+**And one rule I had to delete rather than tighten.** `starts with a digit` was
+in the technical list. `124 of 6 required` is real sublabel copy — CLAUDE.md
+names that exact shape as what sublabels must carry. Only a string that is
+*nothing but* a number is configuration now.
+
+### The negative control the entry asked for
+
+A file was added with a class list, a `{…}` ternary, an `onClick` arrow, a
+`useState` call, JSX text containing an apostrophe, and four real strings —
+including one in an `aria-label` and both branches of a ternary.
+
+Regenerated:
+
+```
+## app/(app)/zz4a/page.tsx
+
+- Zebra control panel
+- Zebra opens the drawer
+- Zebra collapsed view
+- Zebra expanded view
+```
+
+Four real strings in, zero source fragments anywhere in the file — and the
+apostrophe text did not eat the strings after it. The file was removed and the
+list regenerates **byte-for-byte identical** to before it existed.
+
+Six assertions cover it in `npm test`, including one that reads the committed
+`i18n-gap.md` itself and fails if any entry is a fragment — which is the check
+that would have caught this in the first place.
+
+### The numbers these replace
+
+`OUTSTANDING` in `lib/i18n-scope.ts` is regenerated: **1,514 literal
+occurrences across 62 files**, 744 of them distinct and unkeyed. The figures in
+the Inbox 3 entry above — 2,107 and 1,276 — were measured with the broken
+scanner and are superseded by these. I have left that entry as written rather
+than editing it, so the record shows what was believed at the time.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

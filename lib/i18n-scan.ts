@@ -95,6 +95,7 @@ export function findLiterals(src: string): Literal[] {
     // this is code between a generic and a comparison, not text in an element.
     if (/[{}();=]/.test(raw)) continue;
     if (!looksLikeCopy(raw)) continue;
+    if (isTechnical(raw)) continue;
     out.push({ line: lineAt(m.index), text: raw.trim().replace(/\s+/g, " "), where: "jsx" });
   }
 
@@ -131,7 +132,10 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
   [/^[A-Za-z-]+-[A-Za-z-]+$/, "a header name or a kebab token"],
   [/^[a-z_]+(,\s*[a-z_]+)+$/, "a column list"],
   [/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/, "a dotted identifier"],
-  [/^\d/, "starts with a digit"],
+  // Not "starts with a digit": "124 of 6 required" is real sublabel copy and
+  // CLAUDE.md names it as the shape sublabels must have. Only a string that is
+  // NOTHING but a number is configuration.
+  [/^[\d.,:%\s+x-]+$/, "a number"],
   [/^[a-z][a-z0-9_]*$/, "a lowercase identifier"],
   [/^(true|false|null|undefined)$/, "a literal value"],
 ];
@@ -145,9 +149,18 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
  */
 export function isClassList(text: string): boolean {
   const tokens = text.trim().split(/\s+/);
-  if (!tokens.every((w) => /^[a-z0-9:[\]/._!-]+$/.test(w))) return false;
+  // Arbitrary values are part of a class: bg-[#FFF2EE], drop-shadow-[0_5px_10px_rgba(232,73,32,.3)],
+  // border-outline-variant/15. The charset has to allow them or half the class
+  // lists in this codebase read as copy.
+  if (!tokens.every((w) => /^[A-Za-z0-9:[\]#()/,._%!-]+$/.test(w))) return false;
   const TAILWIND = /^(bg|text|px|py|pt|pb|pl|pr|mx|my|mt|mb|ml|mr|rounded|flex|grid|gap|w|h|min|max|border|shadow|drop|font|leading|tracking|opacity|z|top|left|right|bottom|absolute|relative|hover|focus|items|justify|overflow|space|inline|block|hidden|sr)[-:]/;
-  return tokens.some((w) => /:/.test(w) || TAILWIND.test(w));
+  // Two conditions, and the second is what stops a sentence being read as a
+  // class list. "One check left: upload your brand guideline." passes the
+  // charset and has a colon in it; what it does not have is most of its words
+  // carrying a class separator.
+  if (!tokens.some((w) => TAILWIND.test(w))) return false;
+  const classy = tokens.filter((w) => /[-:[\/]/.test(w)).length;
+  return classy * 2 >= tokens.length;
 }
 
 /** SVG path data: a command letter followed by coordinates. */
@@ -166,11 +179,41 @@ const KEY_NAMES = new Set([
 ]);
 const COMPARISON = /[=!]==?\s*$|case\s+$/;
 
+/**
+ * Source code that reached the list by accident.
+ *
+ * Inbox entry 4a: 375 of the 1,276 entries in i18n-gap.md were raw JSX —
+ * `); if (opt.value !==`, `: isActive ?`, whole runs of `className=`. That
+ * file is a work list, and left as it was it invited 375 keys whose English is
+ * a fragment of a JavaScript expression. A dictionary containing those is
+ * worse than one with gaps, because the gaps at least look like gaps.
+ *
+ * THE CAUSE, which is worth naming because it is not obvious. The literal
+ * scanner pairs quotes left to right. One apostrophe in ordinary JSX text —
+ * "you don't have to ask anyone" — pairs with the next apostrophe further down
+ * the file, and every quote after it is off by one. From then on the "strings"
+ * it finds are the code BETWEEN two real strings.
+ *
+ * Both halves are fixed: an apostrophe only opens a string where a string can
+ * actually start (after = ( , : [ or whitespace), and anything still carrying
+ * the marks of source code is rejected here.
+ */
+export function isSourceFragment(text: string): boolean {
+  const t = text.trim();
+  if (/[<>{}]/.test(t)) return true;                 // a tag, or a brace-stripped body
+  if (/=>|===|!==|\?\?|&&|\|\|/.test(t)) return true;    // operators
+  if (/\b(className|onClick|onChange|useState|const|return|import|export|function)\b/.test(t)) return true;
+  if (/^[).;,:?[\]]/.test(t)) return true;            // starts mid-expression
+  if (/[);]\s*$/.test(t)) return true;               // ends mid-expression
+  return false;
+}
+
 export function isTechnical(text: string): string | null {
   const t = text.trim();
   for (const [rx, why] of TECHNICAL_SHAPES) if (rx.test(t)) return why;
   if (isPathData(t)) return "SVG path data";
   if (isClassList(t)) return "a class list";
+  if (isSourceFragment(t)) return "source code, not copy";
   return null;
 }
 
@@ -195,10 +238,16 @@ export function findAllLiterals(src: string): Literal[] {
    */
   const out: Literal[] = findLiterals(src).filter((l) => !isTechnical(l.text));
   const seen = new Set(out.map((l) => l.line + "|" + l.text));
-  const re = /(["'])((?:\\.|(?!\1)[^\\])*)\1/g;
+  // The apostrophe is the whole problem: in `don't` it is not a delimiter, and
+  // treating it as one shifts every quote after it by one. So it only opens a
+  // string where a string can start.
+  const re = /(?:(")((?:\\.|[^"\\])*)"|(?:^|[=(,:[\s])(')((?:\\.|[^'\\])*)')/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(stripped)) !== null) {
-    const text = m[2];
+    // \' inside a single-quoted string is an apostrophe, not a backslash. Left
+    // as it was, the work list carried "you\\'re" and a translator would have
+    // copied the backslash into the Finnish.
+    const text = (m[2] ?? m[4] ?? "").replace(/\\(['"`])/g, "$1");
     if (!looksLikeCopy(text)) continue;
     if (isTechnical(text)) continue;
     const before = stripped.slice(Math.max(0, m.index - 40), m.index);

@@ -9,7 +9,7 @@ import {
   translate, interpolate, toLocale, isLocale, placeholdersIn,
   LOCALES, DEFAULT_LOCALE, LOCALE_NAME,
 } from "./i18n/index.ts";
-import { findAllLiterals, isTechnical, isClassList, isPathData, looksLikeCopy } from "./i18n-scan.ts";
+import { findAllLiterals, isTechnical, isClassList, isPathData, isSourceFragment, looksLikeCopy } from "./i18n-scan.ts";
 import { SCOPE, OUT_OF_SCOPE, IGNORE, EXTRACTED, OUTSTANDING } from "./i18n-scope.ts";
 import { forLocale, sectionTitleFor, allForLocale } from "./onboarding-locale.ts";
 import { QUESTIONS_FI } from "./onboarding-questions.fi.ts";
@@ -315,5 +315,94 @@ describe("the navigation renders from keys", () => {
     assert.ok(brand, "the nav test's own handle on an item is gone");
     assert.equal(en[brand!.key], "Brand");
     assert.equal(fi[brand!.key], "Brändi");
+  });
+});
+
+// ────────────────────────────── inbox 4a: the work list is a work list ──
+
+describe("source code cannot reach the work list", () => {
+  /**
+   * The gap file is what the design side translates from. 409 of its 1,276
+   * entries were fragments of JavaScript. A dictionary built from those is
+   * worse than one with gaps, because a gap at least looks like a gap.
+   */
+  it("rejects the shapes that got in", () => {
+    const fragments = [
+      "); if (opt.value !==",
+      ": isActive ?",
+      "> <div className=",
+      "&& ( <div className=",
+      "<hr class=\"my-6 border-t border-light\" />",
+      "); setScreen(",
+      "const [open, setOpen] = useState",
+    ];
+    for (const f of fragments) {
+      assert.ok(isSourceFragment(f), `${JSON.stringify(f)} should be rejected as source`);
+      assert.ok(isTechnical(f), `${JSON.stringify(f)} still reaches the list`);
+    }
+  });
+
+  it("keeps real copy, including the punctuation copy actually has", () => {
+    const copy = [
+      "Take what you need — you don't have to ask anyone.",
+      "One check left: upload your brand guideline.",
+      "124 of 6 required",
+      "What's the deepest discount I can run?",
+      "Profitability, pricing structure and offers.",
+    ];
+    for (const c of copy) {
+      assert.ok(!isSourceFragment(c), `${JSON.stringify(c)} was rejected as source`);
+      assert.equal(isTechnical(c), null, `${JSON.stringify(c)} was rejected as technical`);
+    }
+  });
+
+  it("rejects a class list with arbitrary values in it", () => {
+    // bg-[#FFF2EE] and drop-shadow-[0_5px_10px_rgba(...)] are classes. The
+    // first charset here allowed neither and they read as copy.
+    assert.ok(isClassList("bg-[#FFF2EE] border-[#ec5c36] text-[#ec5c36] font-semibold"));
+    assert.ok(isClassList("bg-white border-outline-variant/15 text-dark hover:border-[#ec5c36]/40"));
+    assert.ok(!isClassList("Take what you need"));
+  });
+
+  /**
+   * THE ROOT CAUSE, and it is worth a test of its own because it is invisible.
+   * One apostrophe in ordinary JSX text pairs with the next apostrophe further
+   * down the file, and every quote after it is off by one — so the "strings"
+   * the scanner finds are the code BETWEEN two real strings.
+   */
+  it("an apostrophe in JSX text does not shift every quote after it", () => {
+    const src = [
+      'export default function P() {',
+      '  return (',
+      '    <div>',
+      "      <p>you don't have to ask anyone</p>",
+      '      <B label="Add a product" />',
+      '    </div>',
+      '  );',
+      '}',
+    ].join("\n");
+    const found = findAllLiterals(src).map((l) => l.text);
+    assert.ok(found.includes("Add a product"),
+      `the string after the apostrophe was lost: ${JSON.stringify(found)}`);
+    assert.ok(found.some((t) => t.includes("don't")), `the JSX text itself was lost: ${JSON.stringify(found)}`);
+    for (const t of found) assert.ok(!isSourceFragment(t), `source leaked: ${JSON.stringify(t)}`);
+  });
+
+  it("unescapes a quote rather than handing a translator a backslash", () => {
+    const src = `const a = 'Strategy is platform-shaped. No scripts if you\\'re not on TikTok.';`;
+    const found = findAllLiterals(src).map((l) => l.text);
+    assert.ok(found.some((t) => t.includes("you're")), JSON.stringify(found));
+    assert.ok(!found.some((t) => t.includes("\\'")), JSON.stringify(found));
+  });
+
+  it("the generated work list carries no source fragment", () => {
+    // The file itself, not the function. This is the assertion that would have
+    // caught it: 409 entries in the committed list matched this.
+    const gap = readFileSync("branditect-ui/spec/i18n-gap.md", "utf8");
+    const entries = gap.split("\n").filter((l) => l.startsWith("- ")).map((l) => l.slice(2));
+    assert.ok(entries.length > 300, `only ${entries.length} entries — regenerate with npm run i18n:gap`);
+    const leaked = entries.filter((e) => isSourceFragment(e) || isClassList(e));
+    assert.deepEqual(leaked.slice(0, 8), [],
+      `${leaked.length} source fragment(s) in the work list; regenerate it`);
   });
 });

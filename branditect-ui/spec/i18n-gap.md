@@ -6,7 +6,7 @@ Inbox entry 3 says the dictionary was derived from the real strings in these
 files. Measured against them, most of the interface is not in it: the strings
 below appear on screen and match no value in `lib/i18n/en.ts`.
 
-**1276 distinct strings across 60 files.** A further 541 already
+**744 distinct strings across 58 files.** A further 639 already
 match a key and were extracted or are ready to be.
 
 Nothing here is truncated. A list that stopped at the first hundred would read
@@ -24,57 +24,11 @@ decision.
 - Threads
 - Facebook
 - Pinterest
-- Awareness
-- Community
-- Authority
-- Leads
-- Sales
-- Recruiting
-- Just me
-- Me + freelancer
-- Internal team
-- Agency
-- Branditect produces it
-- Which platforms are you committing to for the next 90 days?
-- Strategy is platform-shaped. No TikTok scripts if you\'re not on TikTok.
-- What is social actually doing for the business right now?
-- The same brand produces very different content if the goal shifts. Awareness content ≠ sales content.
-- How much can you actually produce per week — and who\'s behind it?
-- Quality decay is the #1 reason social strategies fail. We won\'t propose 15 reels a week if one person on a laptop is making them.
-- Name 3–5 accounts whose social you admire — in your space or adjacent.
-- Branditect studies their cadence, format mix, and topic patterns. Not to copy, to benchmark what good looks like in this category.
-- What do you NOT want to look or sound like on social?
-- Knowing what to avoid is half of staying on-brand. This becomes a negative constraint the AI checks every social output against, forever.
-- Failed to start
-- Pick at least one platform.
-- Pick a primary goal.
-- Both volume and production setup are required.
-- Give us at least 3 accounts.
-- Cap is 5 accounts — pick your sharpest.
-- Tell us at least one anti-pattern — even just one chip.
-- Save failed
-- Step 2 ships the rendered Strategy Doc here — content pillars, platform style guides, 30-day calendar, anti-pattern card. Your answers are saved.
-- Reading your brand strategy → studying your reference accounts → cross-referencing your goals → building your pillars → drafting examples.
+- 20+ posts a week with one person almost always means quality decay within 4 weeks. We'd rather propose 10–12 with a stronger format mix. Keep 20+?
 - who we are
-- . BrandTone answers
 - how we sound
-- . This answers
 - what we post on Wednesday
-- . Branditect already knows most of it — we just need 5 things to fill the gaps.
-- Brand Strategy
-- not set up yet
-- Tone of Voice
-- voice rules, vocab
-- You can still proceed — but pillars and example posts get sharper once Brand Strategy and Tone of Voice are filled in.
-- Starting…
-- Resume
-- Begin
-- bg-[#FFF2EE] border-[#ec5c36] text-[#ec5c36] font-semibold
-- bg-white border-outline-variant/15 text-dark hover:border-[#ec5c36]/40
-- bg-[#EBF5FC] border-[#87C5EA] text-[#315A72] font-semibold
-- bg-white border-outline-variant/15 text-dark hover:border-[#87C5EA]/60
-- fake-vulnerable founder posts\nLinkedIn-bait listicles
-- Generate strategy
+- 3–5 reference accounts to benchmark
 
 ## app/(app)/brand/strategy/page.tsx
 
@@ -83,96 +37,11 @@ decision.
 - Messaging architecture
 - Brand voice & tone
 - Risks & opportunities
-- <hr class="my-6 border-t border-light" />
-- <h4 class="text-base font-semibold text-dark mt-4 mb-2 font-sans">$1</h4>
-- <h3 class="text-lg font-semibold text-brand-orange mt-5 mb-2 font-sans">$1</h3>
-- <h2 class="text-xl font-bold text-ink mt-8 mb-3 font-sans">$1</h2>
-- <h1 class="text-3xl font-semibold text-ink mb-6 pb-3 border-b-2 border-brand-orange">$1</h1>
-- <ul class="list-disc pl-6 space-y-1 my-3 text-dark">
-- <ol class="list-decimal pl-6 space-y-1 my-3 text-dark">
 - Generation failed
 - Generation failed — no response from server
 - No strategy received. Please try again.
 - Failed to save. Please try again.
-- && ( <div className=
-- > <div className=
-- > Brand </div> <h1 className=
-- > No strategy yet. </h1> <p className=
 - It is built from the questionnaire. Twenty questions, five of them needed to open your workspace, about four minutes. This page fills itself in as you answer.
-- > It is built from the questionnaire. Twenty questions, five of them needed to open your workspace, about four minutes. This page fills itself in as you answer. </p> {error && ( <div className=
-- > {error} </div> )} <div className=
-- > <Link href=
-- > Start the questionnaire </Link> </div> </div> </div> </div> )} { } {screen ===
-- > <div> <h1 className=
-- > What does your brand offer? </h1> <p className=
-- > This helps us tailor the strategy framework. </p> </div> <div className=
-- > <button onClick={() => { setCategory(
-- ); setScreen(
-- ); }} className=
-- >&#9634;</div> <div className=
-- > Physical or Digital Products </div> <div className=
-- > E-commerce, SaaS, apps, physical goods </div> </button> <button onClick={() => { setCategory(
-- >&#9672;</div> <div className=
-- > Services </div> <div className=
-- > Consulting, agency, freelance, professional services </div> </button> </div> <button onClick={() => setScreen(
-- )} className=
-- > &larr; Go back </button> </div> </div> )} { } {screen ===
-- && !isGenerating && ( <div className=
-- > { } <aside className=
-- > <h2 className=
-- > Sections </h2> {SECTIONS.map((section) => { const answered = answeredCountForSection(section); const total = totalForSection(section); const isActive = section === currentSection; return ( <button key={section} onClick={() => goToQuestionsBySection(section)} className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-sans transition-colors ${ isActive ?
-- }`} > <div className=
-- > <span className=
-- >{section}</span> <span className={`text-xs font-mono ${ answered === total ?
-- }`} > {answered}/{total} </span> </div> <div className=
-- style={{ width: `${total > 0 ? (answered / total) * 100 : 0}%`, }} /> </div> </button> ); })} </div> <div className=
-- > {totalAnswered} / {QUESTIONS.length} answered </div> <button onClick={() => generate(false)} disabled={totalAnswered < 1} className=
-- > Generate Strategy Now </button> </div> </aside> { } <div className=
-- > {currentSection} </span> <span className=
-- > Question {currentIndex + 1} of {QUESTIONS.length} </span> </div> <div className=
-- style={{ width: `${((currentIndex + 1) / QUESTIONS.length) * 100}%`, }} /> </div> <h2 className=
-- > {currentQuestion.question} </h2> <textarea ref={textareaRef} value={answers[questionKey(currentQuestion)] \|\|
-- } onChange={(e) => setAnswers((prev) => ({ ...prev, [questionKey(currentQuestion)]: e.target.value, })) } rows={6} placeholder={currentQuestion.placeholder} className=
-- /> <div className=
-- > <button onClick={handleImageAttach} disabled={images.length >= 3} className=
-- > <svg className=
-- > <path strokeLinecap=
-- strokeWidth={2} d=
-- /> </svg> Attach Image ({images.length}/3) </button> {images.map((img, idx) => ( <div key={idx} className=
-- >{img.name}</span> <button onClick={() => removeImage(idx)} className=
-- > &times; </button> </div> ))} </div> {error && ( <div className=
-- > <button onClick={() => { if (currentIndex === 0) { setScreen(
-- ); } else { setCurrentIndex((p) => p - 1); } }} className=
-- > Back </button> <div className=
-- > <button onClick={() => { if (currentIndex < QUESTIONS.length - 1) { setCurrentIndex((p) => p + 1); } }} disabled={currentIndex >= QUESTIONS.length - 1} className=
-- > Skip </button> <button onClick={() => { if (currentIndex < QUESTIONS.length - 1) { setCurrentIndex((p) => p + 1); } else { generate(false); } }} className=
-- > {currentIndex < QUESTIONS.length - 1 ?
-- } </button> </div> </div> </div> </div> </div> )} { } {screen ===
-- && isGenerating && ( <div className=
-- > <div> <h2 className=
-- > Crafting your brand strategy </h2> <p className=
-- > Synthesizing {totalAnswered} answers into a comprehensive strategy... </p> </div> <div className=
-- > {GENERATION_STAGES.map((stage, idx) => ( <div key={stage} className=
-- > <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-mono transition-colors ${ idx < generationStage ?
-- : idx === generationStage ?
-- }`} > {idx < generationStage ? ( <svg className=
-- strokeWidth={3} d=
-- /> </svg> ) : ( idx + 1 )} </div> <span className={`text-sm font-sans ${ idx <= generationStage ?
-- }`} > {stage} </span> </div> ))} </div> <div className=
-- style={{ width: `${((generationStage + 1) / GENERATION_STAGES.length) * 100}%`, }} /> </div> {error && ( <div className=
-- > {error} <button onClick={() => { setError(
-- ); setIsGenerating(false); }} className=
-- > Go back to questions </button> </div> )} </div> </div> )} { } {screen ===
-- > <button onClick={() => { setScreen(
-- ); setCurrentIndex(0); }} className=
-- > Edit Answers </button> <button onClick={() => generate(false)} className=
-- > Regenerate </button> </div> <div className=
-- > <button onClick={copyToClipboard} className=
-- > Copy </button> <button onClick={downloadMd} className=
-- > Download .md </button> <button onClick={saveToSupabase} disabled={saved} className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors font-sans ${ saved ?
-- }`} > {saved ?
-- } </button> </div> </div> <div className=
-- dangerouslySetInnerHTML={{ __html: parseMarkdown(generatedStrategy), }} /> </div> </div> </div> )} { } {screen ===
 
 ## app/(app)/brand/tone-of-voice/page.tsx
 
@@ -182,7 +51,6 @@ decision.
 - Does it match our pillar guidelines?
 - Would our audience feel spoken to, not at?
 - Is the message concise and purposeful?
-- Save failed
 - Analysing your writing samples...
 - No stream
 - Generating tone guidelines...
@@ -217,34 +85,15 @@ decision.
 ## app/(app)/brand/visual-identity/page.tsx
 
 - Sphinx of black quartz, judge my vow
-- ${(font.name ??
-- , system-ui, sans-serif`; } function cssSnippetFor(font: FontRow): string { const family = (font.name ??
-- );font-display:swap;}`; document.head.appendChild(style); added.push(style); } } return () => { added.forEach((el) => el.remove()); }; }, [fonts]); const flash = useCallback((message: string) => { setToast(message); window.setTimeout(() => setToast(null), 1900); }, []); const copy = useCallback((value: string, message: string) => { navigator.clipboard?.writeText(value).then( () => flash(message), () => flash(
 - Each plate is fixed to its slot, so you can see whether a reversed file actually works before you use it. Download the one you need.
 - Upload the primary, a reversed version and the symbol on its own — those three cover almost every use.
 - Every swatch copies. The contrast badge is measured against white at render, so it cannot go stale — it is the difference between a colour you can set text in and one you can only fill a shape with.
 - Add the ones you actually use — a primary, an ink and a background will carry most of what Studio makes. Or pull them straight out of a screenshot.
 - Ag
 - The four things that go wrong most often. They live here rather than on page 34 of a PDF, because a rule nobody reads is not a rule.
-- , sub:
-- , busy: false }, { cls: s.rc, title:
-- , busy: false }, { cls:
-- , title:
-- , busy: true }, ].map((d) => ( <div key={d.title} className={s.dont}> <div className={`${s.dstage} ${d.busy ? s.busy :
-- }`}> <span className={s.x}><Icon name=
-- size={9} /></span> <Mark url={heroLogo?.file_url ?? null} className={d.cls \|\| undefined} /> </div> <div className={s.cap}> {d.title} <span>{d.sub}</span> </div> </div> ))} </div> </div> </div> </section> { } {visual?.guideline_url && ( <div className={s.guide}> <div className={s.cov}><div className={s.covL}>Brand<br />Guidelines</div></div> <div className=
-- > <h3>The full guidelines</h3> <p> Everything above, plus photography direction, tone of voice, iconography and the print specifications. Read it once; come back to this page for the day-to-day. </p> <div className={s.gmeta}> {pageCount > 0 && <span className={s.gpill}>{pageCount} pages</span>} <span className={s.gpill}>{version}</span> {updated && ( <span className={s.gpill}> Updated {new Date(updated).toLocaleDateString(undefined, { day:
-- , month:
-- , year:
-- })} </span> )} </div> </div> <div className={s.gacts}> <a className={s.act} href={visual.guideline_url} target=
-- > <Icon name=
-- size={12} /> Read here </a> <button type=
-- className={s.act} onClick={() => download(visual.guideline_url,
-- )} > <Icon name=
-- size={12} /> Download </button> </div> </div> )} {!loading && logos.length === 0 && colors.length === 0 && fonts.length === 0 && ( <div className={s.sec}> <p className={s.emptyNote}> Nothing has been uploaded for this brand yet. Logos, colours and typefaces appear here as they are added. </p> </div> )} <div className={`${s.toast} ${toast ? s.toastOn :
+- 120px / 32mm
+- 24px / 8mm
 - Nothing has been uploaded for this brand yet. Logos, colours and typefaces appear here as they are added.
-- }`} role=
-- > {toast} </div> </div> </div> { } <ChatRail indexedFileCount={fileCount} suggestions={[
 
 ## app/(app)/chat/page.tsx
 
@@ -270,17 +119,9 @@ decision.
 - Product info
 - Company info
 - Pricing
-- Other
-- bg-[#FEE2E2] text-[#DC2626]
-- bg-[#FEF3C7] text-[#D97706]
-- bg-[#DBEAFE] text-[#2563EB]
-- bg-[#D1FAE5] text-[#059669]
-- bg-[#EDE9FE] text-[#7C3AED]
-- bg-[#CFFAFE] text-[#0891B2]
 - Upload failed
 - Please add a title.
 - Please add some content.
-- Save failed
 - Building…
 - Active
 - Empty
@@ -293,28 +134,20 @@ decision.
 
 - Canva
 - Google Slides
-- Other
+- 28px 32px
 - -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+- 8px 14px
+- 1px solid #EDEBE8
+- 10px 13px
+- 3px solid #E16C00
+- 13px 15px
+- 64px 1fr auto
+- 1.5px dashed #D9D6D0
+- 2px solid #D9D6D0
 - spin 0.75s linear infinite
-- value={editNames[t.id] ?? t.name} onChange={e => setEditNames(p => ({ ...p, [t.id]: e.target.value }))} onBlur={e => { if (e.target.value.trim() !== t.name) saveField(t.id, 'name', e.target.value.trim()) }} style={{ fontSize: 13.5, fontWeight: 500, color: '#0D0D0D', background: 'transparent', border: 'none', borderBottom: '1.5px solid transparent', outline: 'none', padding: '1px 2px', width: '100%', marginBottom: 7, fontFamily: 'inherit', transition: 'border-color 0.15s' }} onFocus={e => { (e.target as HTMLInputElement).style.borderBottomColor = '#E16C00' }} /> { } <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}> <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 7px', borderRadius: 20, ...PLATFORM_STYLE[t.platform] }}> {PLATFORM_LABEL[t.platform]} </span> <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: '#6B6760' }}> <span style={{ width: 6, height: 6, borderRadius: '50%', background: isConnected ? '#34C759' : '#D9D6D0', display: 'inline-block' }} /> {isConnected ? 'Connected' : 'Not connected'} </span> </div> { } {(() => { const urlDirty = (currentUrl?.trim() \|\| '') !== (t.url \|\| '') return ( <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}> <input type=
-- value={currentUrl \|\| ''} onChange={e => setEditUrls(p => ({ ...p, [t.id]: e.target.value }))} placeholder=
-- style={{ flex: 1, fontSize: 12, fontFamily: 'inherit', color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', outline: 'none', minWidth: 0, transition: 'border-color 0.15s' }} onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E16C00'; (e.target as HTMLInputElement).style.background = 'white' }} onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2' }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); connectTemplate(t.id) } }} /> {urlDirty \|\| !isConnected ? ( <button onMouseDown={e => { e.preventDefault(); connectTemplate(t.id) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 12px', borderRadius: 6, background: '#E16C00', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }} > {isConnected ? 'Save' : 'Connect'} </button> ) : ( <button style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 11px', borderRadius: 6, background: '#E9F7EE', color: '#1A7A40', border: '1px solid #B8E6C8', cursor: 'default', flexShrink: 0 }}> <svg width=
-- ><polyline points=
-- /></svg> Saved </button> )} {isConnected && !urlDirty && ( <a href={t.url} target=
-- style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#6B6760', background: 'transparent', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}> <svg width=
-- ><path d=
-- /><polyline points=
-- /><line x1=
-- /></svg> Open </a> )} </div> ) })()} </div> { } <div style={{ paddingTop: 2 }}> <button onClick={() => deleteTemplate(t)} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, border: 'none', background: 'transparent', cursor: 'pointer', color: '#B0ACA4' }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FDE8E8'; (e.currentTarget as HTMLButtonElement).style.color = '#C0392B' }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#B0ACA4' }} title=
-- > <svg width=
-- /><path d=
-- /><rect x=
-- /></svg> </button> </div> </div> ) })} { } <button onClick={() => { setModalOpen(true); setTimeout(() => modalNameRef.current?.focus(), 50) }} style={{ background: 'transparent', border: '1.5px dashed #D9D6D0', borderRadius: 10, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left', fontFamily: 'inherit' }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#E16C00'; (e.currentTarget as HTMLButtonElement).style.background = '#FBE9E2' }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#D9D6D0'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }} > <div style={{ width: 38, height: 38, borderRadius: 7, background: '#EDEBE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}> <svg width=
-- ><line x1=
-- /></svg> </div> <span style={{ fontSize: 13, color: '#6B6760' }}>Add another template</span> </button> </div> { } {modalOpen && ( <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.28)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }} > <div style={{ background: 'white', borderRadius: 14, width: 460, padding: 28, boxShadow: '0 8px 40px rgba(0,0,0,0.14)' }}> <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0D0D0D', marginBottom: 4 }}>Add template</h2> <p style={{ fontSize: 13, color: '#6B6760', marginBottom: 22, lineHeight: 1.55 }}> Name it however makes sense for your workflow — like &ldquo;Post — Product Launch — Square&rdquo;. </p> <div style={{ marginBottom: 16 }}> <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Name</label> <input ref={modalNameRef} type=
-- value={modalName} onChange={e => setModalName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveNewTemplate()} placeholder=
-- style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '9px 12px', outline: 'none' }} /> <div style={{ fontSize: 11, color: '#B0ACA4', marginTop: 4 }}>Use dashes to separate type, campaign, and format.</div> </div> <div style={{ marginBottom: 16 }}> <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Platform</label> <div style={{ display: 'flex', gap: 8 }}> {(['canva', 'slides', 'other'] as Platform[]).map(p => ( <button key={p} onClick={() => setModalPlat(p)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px 10px', border: `1px solid ${modalPlat === p ? '#E16C00' : '#EDEBE8'}`, borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', background: modalPlat === p ? '#FBE9E2' : 'white', color: modalPlat === p ? '#E16C00' : '#3A3835', transition: 'all 0.12s' }} > {PLATFORM_LABEL[p]} </button> ))} </div> </div> <div style={{ marginBottom: 24 }}> <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Template link</label> <input type=
-- value={modalUrl} onChange={e => setModalUrl(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveNewTemplate()} placeholder=
+- 9px 12px
+- 1px solid #D9D6D0
+- 8px 16px
 - Adding…
 
 ## app/(app)/knowledge/presentations/page.tsx
@@ -345,17 +178,11 @@ decision.
 - Custom quote
 - Product name *
 - SKU
-- RRP (€)
-- Wholesale price (€)
-- COGS (€)
 - Delivery time
 - Capacity per month
 - Service name *
-- Price (€)
 - Ideal client
-- What's included (comma-separated)
 - Plan name *
-- Monthly price (€)
 - Delivery format
 - Edit product
 - Save changes
@@ -366,7 +193,6 @@ decision.
 - Upload PDF
 - Paste your product list, price list, service menu, or any text describing your products/services here...\n\nExample:\nBrand Strategy Workshop — €1,500\nA full-day workshop to define your brand positioning and messaging framework.\n\nSocial Media Retainer — €800/month\nMonthly management of 2 social channels including content creation and scheduling.
 - Extract products with AI
-- ← Back
 - Unnamed
 - Unnamed product
 - + Add product
@@ -418,9 +244,6 @@ decision.
 
 ## app/(app)/numbers/page.tsx
 
-- bg-green-wash text-green-ink border border-green-line hover:bg-[#ddf0e5]
-- bg-grad-mark text-white drop-shadow-[0_5px_10px_rgba(232,73,32,.3)] hover:brightness-[1.03]
-- bg-blue-wash text-blue-ink border border-blue-line hover:bg-[#dde8fb]
 - Know what every sale really costs.
 - Everything it takes to put one unit in a customer's hands, and what happens when a cost moves.
 - Production cost
@@ -458,7 +281,6 @@ decision.
 - at your best margin
 - Physical goods
 - Digital & access
-- border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent
 - Subscription
 - — all that apply
 - Own site
@@ -530,7 +352,7 @@ decision.
 
 ## app/(app)/studio/brand-bases/page.tsx
 
-- Brand Strategy
+- Visual Identity
 - Business Pulse
 - Goals, upcoming launches, sensitivities, financial rules
 - Build Your Brand Foundation
@@ -539,173 +361,28 @@ decision.
 
 ## app/(app)/studio/brand-book/BrandBookClient.tsx
 
-- image } <aside style={s.sidebar}> { } <div style={{ padding: 16, borderBottom:
-- }}> <div style={{ fontSize: 13, fontWeight: 500, color:
 - Brand book
-- , marginBottom: 12 }}>Brand book</div> <div onClick={() => mainFileRef.current?.click()} onDrop={handleDrop} onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} style={{ border: `1.5px dashed ${dragOver ?
-- }`, borderRadius: 8, padding: 16, textAlign:
-- , cursor:
-- , background: dragOver ?
-- , transition:
-- }} > <div style={{ width: 28, height: 28, background:
-- , borderRadius: 6, display:
-- , alignItems:
-- , justifyContent:
-- , margin:
-- }}> <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 4.5L7 1l3.5 3.5M1 11h12" stroke="var(--color-text-primary, #1a1a1a)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg> </div> <div style={{ fontSize: 12, fontWeight: 500, color:
-- , marginBottom: 3 }}> {uploading ? (uploadProgress \|\|
-- } </div> <div style={{ fontSize: 11, color:
+- all 0.14s
+- 0 auto 8px
+- Upload brand book
 - PNG, JPG, PDF, screenshots
-- }}>PNG, JPG, PDF, screenshots</div> </div> <input ref={mainFileRef} type="file" accept="image } <div style={{ flex: 1, padding: 14, overflowY:
-- }}> {ASSET_CATEGORIES.map(cat => { const catAssets = assets.filter(a => a.category === cat.id) return ( <div key={cat.id} style={{ marginBottom: 20 }}> <div style={{ fontSize: 10, color:
-- , textTransform:
-- , letterSpacing:
-- , fontWeight: 500, marginBottom: 8, display:
-- }}> {cat.label} <button onClick={() => assetFileRefs.current[cat.id]?.click()} style={{ fontSize: 10, padding:
-- , borderRadius: 3, border:
-- , background:
-- , color:
-- , fontFamily:
-- }} > {assetUploading === cat.id ?
-- } </button> </div> <input ref={el => { assetFileRefs.current[cat.id] = el }} type="file" accept={cat.accept} multiple style={{ display:
-- }} onChange={e => handleAssetUpload(cat.id, e.target.files)} /> {catAssets.length === 0 ? ( <div style={{ fontSize: 11, color:
-- , padding:
-- , fontStyle:
-- }}> No {cat.label.toLowerCase()} yet </div> ) : ( catAssets.map(asset => ( <div key={asset.id} style={{ border:
-- , borderRadius: 8, padding:
-- , marginBottom: 5, display:
-- , gap: 9, background:
-- }}> <div style={{ width: 32, height: 32, borderRadius: 5, overflow:
-- , flexShrink: 0, border:
-- , display:
-- }}> { } <img src={asset.file_url} alt="" style={{ width:
-- , height:
-- , objectFit:
-- }} /> </div> <div style={{ flex: 1, minWidth: 0 }}> <div style={{ fontSize: 11, color:
-- , whiteSpace:
-- , overflow:
-- , textOverflow:
-- }}> {asset.file_name?.replace(/\.[^.]+$/,
-- ) \|\| cat.label} </div> <div style={{ fontSize: 10, color:
-- , marginTop: 1 }}>{cat.id}</div> </div> <div style={{ display:
-- , gap: 4 }}> <a href={asset.file_url} download={asset.file_name} style={{ fontSize: 10, padding:
-- , textDecoration:
-- }}>&#8595;</a> <button onClick={() => deleteAsset(asset.id)} style={{ fontSize: 10, padding:
-- }}>&times;</button> </div> </div> )) )} </div> ) })} { } <div> <div style={{ fontSize: 10, color:
 - Color codes
-- }}> Color codes <button onClick={() => setAddColorOpen(p => !p)} style={{ fontSize: 10, padding:
-- }} > + Add </button> </div> {addColorOpen && ( <div style={{ padding: 10, border:
 - + Add
-- , borderRadius: 8, marginBottom: 8, background:
-- , flexDirection:
-- , gap: 6 }}> <input value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#E16C00" style={{ padding:
-- , border:
-- , borderRadius: 4, fontSize: 12, fontFamily:
-- , outline:
-- , width:
-- , boxSizing:
-- }} /> <input value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color name" style={{ padding:
-- }} /> <div style={{ display:
-- , gap: 6 }}> <button onClick={addColor} style={{ flex: 1, padding:
-- , borderRadius: 4, border:
-- , fontSize: 11, cursor:
-- }}>Add</button> <button onClick={() => setAddColorOpen(false)} style={{ flex: 1, padding:
-- }}>Cancel</button> </div> </div> )} {colors.length === 0 ? ( <div style={{ fontSize: 11, color:
 - Auto-extracted when you ask AI about colors
-- }}>Auto-extracted when you ask AI about colors</div> ) : ( colors.map(c => ( <div key={c.id} onClick={() => copyColor(c.hex)} style={{ display:
-- , gap: 8, padding:
-- , borderRadius: 8, border:
-- , marginBottom: 5, background:
-- }}> <div style={{ width: 20, height: 20, borderRadius: 4, background: c.hex, flexShrink: 0, border:
-- }} /> <div style={{ flex: 1, fontSize: 12, color:
-- }}>{c.name}</div> <div style={{ fontSize: 10, color:
-- }}>{c.hex}</div> <button onClick={e => { e.stopPropagation(); deleteColor(c.id) }} style={{ fontSize: 10, padding:
-- }}>&times;</button> </div> )) )} </div> </div> </aside> { } <main style={s.main}> { } <div style={{ display:
-- , borderBottom:
-- , flexShrink: 0 }}> <div style={{ fontSize: 13, fontWeight: 500, color:
 - Brand book viewer
-- }}>Brand book viewer</div> <div style={{ display:
-- , gap: 8 }}> {pages.length > 0 && ( <div style={{ display:
-- , borderRadius: 8, overflow:
-- ] as const).map(mode => ( <button key={mode} onClick={() => setViewMode(mode)} style={{ fontSize: 11, padding:
-- , background: viewMode === mode ?
-- , color: viewMode === mode ?
-- , fontWeight: viewMode === mode ? 500 : 400 }}> {mode ===
-- } </button> ))} </div> )} <button onClick={() => mainFileRef.current?.click()} style={{ fontSize: 11, padding:
 - + Add pages
-- }}> + Add pages </button> </div> </div> { } <div style={{ flex: 1, overflow:
-- }}> {pages.length === 0 ? ( <div style={{ flex: 1, display:
-- , gap: 16, background:
-- }} onClick={() => mainFileRef.current?.click()} onDrop={handleDrop} onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} > <svg width="48" height="48" viewBox="0 0 48 48" fill="none" opacity={0.25}><rect x="4" y="8" width="40" height="32" rx="3" stroke="white" strokeWidth="2"/><path d="M4 18h40M14 8v10" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="24" cy="30" r="5" stroke="white" strokeWidth="2"/></svg> <div style={{ textAlign:
-- }}> <div style={{ fontSize: 15, color:
 - Upload your brand book
-- , marginBottom: 6 }}>Upload your brand book</div> <div style={{ fontSize: 12, color:
 - PNG, JPG, screenshots — drag & drop or click
-- }}>PNG, JPG, screenshots — drag & drop or click</div> </div> <button style={{ padding:
 - Choose files
-- , fontSize: 12, cursor:
-- }}> Choose files </button> </div> ) : viewMode ===
-- ? ( <div style={{ flex: 1, background:
-- }}> <div style={{ width:
-- , maxWidth: 700, aspectRatio:
-- , position:
-- }}> { } <img src={pages[curPage]?.file_url} alt={`Page ${curPage + 1}`} style={{ width:
-- }} /> </div> </div> ) : ( <div style={{ flex: 1, overflowY:
-- , padding: 20, background:
-- }}> {pages.map((page, i) => ( <div key={page.id} onClick={() => { setCurPage(i); setViewMode(
-- ) }} style={{ width:
-- , aspectRatio:
-- , marginBottom: 10, border:
-- }} > { } <img src={page.file_url} alt={`Page ${i + 1}`} style={{ width:
-- }} /> <div style={{ position:
-- , top: 8, left: 8, background:
-- , fontSize: 10, padding:
-- , borderRadius: 3 }}>{i + 1}</div> <button onClick={e => { e.stopPropagation(); deletePage(page.id) }} style={{ position:
-- , top: 8, right: 8, width: 22, height: 22, borderRadius:
-- , fontSize: 12, display:
-- }} >&times;</button> </div> ))} </div> )} { } {pages.length > 0 && viewMode ===
-- && ( <div style={{ display:
-- , gap: 12, padding:
-- , borderTop:
-- , flexShrink: 0 }}> <button onClick={prevPage} disabled={curPage === 0} style={{ width: 30, height: 30, borderRadius: 8, border:
-- , cursor: curPage === 0 ?
-- , opacity: curPage === 0 ? 0.3 : 1, fontSize: 14, display:
-- }}>&larr;</button> <div style={{ flex: 1, display:
-- , gap: 5, overflowX:
-- }}> {pages.map((page, i) => ( <div key={page.id} onClick={() => setCurPage(i)} style={{ width: 54, height: 30, borderRadius: 3, overflow:
-- , flexShrink: 0, border: i === curPage ?
-- }} > { } <img src={page.file_url} alt="" style={{ width:
-- }} /> </div> ))} </div> <div style={{ fontSize: 12, color:
-- , flexShrink: 0 }}>{curPage + 1} / {pages.length}</div> <button onClick={nextPage} disabled={curPage === pages.length - 1} style={{ width: 30, height: 30, borderRadius: 8, border:
-- , cursor: curPage === pages.length - 1 ?
-- , opacity: curPage === pages.length - 1 ? 0.3 : 1, fontSize: 14, display:
-- }}>&rarr;</button> </div> )} </div> { } <div style={{ borderTop:
-- , flexShrink: 0 }}> <div ref={chatMsgsRef} style={{ maxHeight: 130, overflowY:
-- , gap: 7 }} > {chatMsgs.map((m, i) => ( <div key={i} style={{ fontSize: 12, lineHeight: 1.55, padding:
-- , maxWidth:
-- , background: m.type ===
-- , color: m.type ===
-- , alignSelf: m.type ===
-- , borderRadius: m.type ===
-- }}> {m.text} </div> ))} {chatLoading && ( <div style={{ fontSize: 12, color:
+- 10px 16px
+- 7px 10px
+- 8px 8px 8px 2px
+- 8px 8px 2px 8px
 - Reading the brand materials...
-- , alignSelf:
-- }}>Reading the brand materials...</div> )} </div> <div style={{ display:
-- }}> <textarea value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key ===
-- && !e.shiftKey) { e.preventDefault(); sendChat() } }} placeholder={pages.length > 0 ?
-- } style={{ flex: 1, fontSize: 12, padding:
-- , borderRadius: 8, background:
-- , resize:
-- , height: 34, lineHeight: 1.5 }} /> <button onClick={sendChat} disabled={chatLoading \|\| !chatInput.trim()} style={{ padding:
-- , borderRadius: 8, cursor: chatLoading ?
-- , fontSize: 12, fontFamily:
-- , opacity: chatLoading \|\| !chatInput.trim() ? 0.4 : 1, flexShrink: 0 }} > Ask </button> </div> </div> </main> { } {toastVisible && ( <div style={{ position:
+- Ask about the brand — colors, fonts, logo rules...
+- Upload brand book first, then ask questions...
+- 7px 16px
 - Ask
-- , bottom: 20, left:
-- , transform:
-- , fontSize: 11, padding:
-- , borderRadius: 20, zIndex: 99, whiteSpace:
-- , pointerEvents:
 
 ## app/(app)/studio/brand-guideline/BrandGuidelineClient.tsx
 
@@ -735,43 +412,55 @@ decision.
 - spin 0.75s linear infinite
 - Upload image
 - Loading brand guidelines…
-- ><path d=
-- /></svg> Edit </button> ) } function SectionRule({ label, sId, padTop = 32 }: { label: string; sId: string; padTop?: number }) { return ( <div style={{ padding: `${padTop}px 56px 0` }}> <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}> {label} <div style={{ flex: 1, height: 1, background: 'var(--bd-border)' }} /> <EditBtn sectionId={sId} /> </div> </div> ) } function HeroBand({ tag, title, body, dark = true }: { tag: string; title: string; body: string; dark?: boolean }) { return ( <div style={{ background: dark ? 'var(--bg-dark)' : 'var(--bg-light)', padding: '56px 56px 48px', position: 'relative', overflow: 'hidden' }}> <div style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: dark ? 'rgba(255,255,255,0.3)' : 'var(--text-muted)', marginBottom: 14 }}>{tag}</div> <div style={{ width: 40, height: 2, background: 'var(--bd-accent)', marginBottom: 18 }} /> <div style={{ fontSize: 48, fontWeight: 300, color: dark ? 'white' : 'var(--bd-text)', letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: 22, fontFamily: 'var(--bd-font)' }}>{title}</div> <div style={{ fontSize: 14, color: dark ? 'rgba(255,255,255,0.52)' : 'var(--text-muted)', lineHeight: 1.85, maxWidth: 580 }}>{body}</div> <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 200, backgroundImage: dark ? 'repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.06) 28px,rgba(255,255,255,0.06) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.06) 28px,rgba(255,255,255,0.06) 29px)' : 'none', pointerEvents: 'none' }} /> </div> ) } function AccentBand({ children }: { children: React.ReactNode }) { return ( <div style={{ background: 'var(--bd-accent)', padding: '20px 56px', display: 'flex', alignItems: 'center', gap: 20 }}> <div style={{ width: 3, height: 40, background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} /> <div style={{ fontSize: 13.5, color: 'white', lineHeight: 1.7, fontStyle: 'italic' }}>{children}</div> </div> ) } function renderLogos() { return ( <> <HeroBand tag={`Brand identity — Logos`} title={`${bd!.meta.name} logo system`} body={bd!.logos.intro} /> <AccentBand>{bd!.logos.wordmarkNote}</AccentBand> <SectionRule label=
-- /> <div style={{ padding: '0 56px 28px' }}> <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.8, maxWidth: 620, marginBottom: 20 }}> Upload each logo variant below. The AI detects whether each upload is a wordmark, logomark, combination mark or emblem. </p> <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--bd-border)', border: '1px solid var(--bd-border)', borderRadius: 10, overflow: 'hidden' }}> {LOGO_SLOTS.map(slot => { const uploadUrl = bd!.logos.uploads[slot.id] const detectedType = bd!.logos.analyses[slot.id] const isUploading = logoUploading[slot.id] const inputId = `logo-input-${slot.id}` const bg = slot.darkBg ? 'var(--bg-dark)' : 'white' const iconColor = slot.darkBg ? 'rgba(255,255,255,0.3)' : 'var(--bd-border)' const labelColor = slot.darkBg ? 'rgba(255,255,255,0.5)' : 'var(--text-muted)' return ( <div key={slot.id} style={{ display: 'flex', flexDirection: 'column' }}> <label htmlFor={inputId} style={{ flex: 1, background: bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', cursor: isUploading ? 'wait' : 'pointer', position: 'relative', overflow: 'hidden', minHeight: 140, borderBottom: '1px solid var(--bd-border)' }}> {uploadUrl ? ( <> { } <img src={uploadUrl} alt={slot.label} style={{ maxHeight: 64, maxWidth: '80%', objectFit: 'contain' }} /> <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = '1' }} onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = '0' }} > <span style={{ fontSize: 12, color: 'white', fontWeight: 500 }}>↑ Replace</span> </div> </> ) : isUploading ? ( <div style={{ width: 24, height: 24, border: `2px solid ${iconColor}`, borderTopColor: slot.darkBg ? 'rgba(255,255,255,0.8)' : '#555', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} /> ) : ( <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.6 }}> <svg width=
 - Upload each logo variant below. The AI detects whether each upload is a wordmark, logomark, combination mark or emblem.
 - ↑ Replace
-- stroke={slot.darkBg ? 'white' : '#6b7a8d'} strokeWidth=
-- /></svg> <span style={{ fontSize: 11, color: labelColor }}>Upload {slot.label}</span> </div> )} <input id={inputId} type=
+- 12px 14px
 - flex 0.25s ease
 - Primary palette
+- 0 56px
+- 12px 13px
 - AA
 - AAA
+- 2px 5px
 - Secondary palette
+- 0 56px 8px
+- 10px 12px
 - Usage rules
-- repeat(3, 1fr)
+- 0 56px 48px
+- 14px 16px
 - Photography
 - Brand identity — Image style
 - Imagery focuses on real environments and authentic performance — not lifestyle, not aspiration. Every image should feel like it was taken, not produced.
 - Style rules
+- 1fr 1fr
 - Approved style
 - Design system — Button styles
 - Variants
-- Secondary
-- Accent
+- 0 56px 28px
 - Disabled
+- 10px 24px
 - Corner radius
 - Channels — Social media
 - Canva template
+- 0 56px 24px
 - Paste Canva template link…
+- 9px 13px
 - Open in Canva ↗
+- 9px 18px
 - Post gallery
-- repeat(4, 4px)
+- 20px 18px 16px
 - Brand guideline
+- 14px 18px 4px
+- 8px 18px
+- 2px solid transparent
 - all 0.12s
+- 12px 18px
+- 11px 28px
+- 6px 14px
 - ↑ Upload guideline
 - Edit section
 - transform 0.22s ease
-- -4px 0 24px rgba(0,0,0,0.08)
+- 14px 18px
 - Updating section…
 - What would you like to change?
 - e.g. 'Add a monochrome color variant' or 'Update the clearspace rule to x-height instead of cap-height'
@@ -782,12 +471,23 @@ decision.
 - Upload brand guideline screenshots
 - PNG or JPG — upload multiple pages.
 - Claude reads all pages in depth and extracts colors, fonts, logo rules, photography guidelines and all section text.
+- 11px 14px
 - What gets extracted:
+- 14px 22px
 - Extracting…
+- 8px 16px
+- 8px 22px
 - Extracting...
 - Extract brand data
+- 10px 13px
 - Brand AI
+- 8px 10px
+- 10px 10px 10px 2px
+- 10px 10px 2px 10px
 - Ask the brand…
+- 6px 9px
+- 6px 10px
+- 7px 18px
 
 ## app/(app)/studio/code/page.tsx
 
@@ -810,51 +510,19 @@ decision.
 - Drop screenshots here
 - or click to upload
 - Up to 3 images — PNG, JPG, WebP
-- /> <button onClick={() => removeImage(idx)} className=
-- >×</button> </div> ))} </div> )} </div> { } <div> <label className=
 - Feature Description
-- > Feature Description </label> <textarea value={featureDesc} onChange={(e) => setFeatureDesc(e.target.value)} rows={4} placeholder=
 - e.g. A pricing page with three tier cards — Free, Pro, and Enterprise. Each card shows the price, features list, and a CTA button. Highlight the Pro plan.
-- /> </div> { } <div> <button onClick={() => setShowCode(!showCode)} className=
-- > <svg width=
-- > <path d=
-- /> </svg> {showCode ? 'Hide' : 'Paste existing code (optional)'} </button> {showCode && ( <textarea value={existingCode} onChange={(e) => setExistingCode(e.target.value)} rows={6} placeholder=
 - Paste any existing component code, CSS variables, or Tailwind config...
-- /> )} </div> { } {error && ( <p className=
-- >{error}</p> )} { } <button onClick={handleGenerate} className=
-- > Generate On-Brand Component </button> </div> )} { } {step === 'loading' && ( <div className=
 - Generate On-Brand Component
-- > <div className=
-- /> <div className=
-- > {LOADING_STEPS.map((label, i) => ( <p key={i} className={`text-[0.82rem] transition-colors ${ i < loadingStep ? 'text-green-500' : i === loadingStep ? 'text-brand-orange font-medium' : 'text-muted/40' }`}> {i < loadingStep ? '✓ ' : i === loadingStep ? '→ ' : ''}{label} </p> ))} </div> </div> )} { } {step === 'done' && result && ( <div> <div className=
-- > <div> <h2 className=
 - Generated Component
-- >Generated Component</h2> </div> <button onClick={handleReset} className=
-- > Start over </button> </div> { } {result.designSystem && ( <div className=
 - Start over
-- > <p className=
 - Extracted Design System
-- > Extracted Design System </p> <div className=
-- > <div> <p className=
 - Colours
-- >Colours</p> <div className=
-- > {result.designSystem.colors.map((hex, i) => ( <div key={i} className=
-- style={{ background: hex }} title={hex} /> ))} </div> </div> <div> <p className=
 - Typography
-- >Typography</p> <p className=
-- >{result.designSystem.typography}</p> </div> <div> <p className=
 - Style notes
-- >Style notes</p> <p className=
-- >{result.designSystem.styleNotes}</p> </div> </div> </div> )} { } <div className=
-- > <span className=
 - Visual Preview
-- >Visual Preview</span> </div> <iframe srcDoc={result.html} sandbox=
-- style={{ height: '520px' }} title=
 - Component preview
-- /> </div> <div className=
 - HTML Code
-- >HTML Code</span> <button onClick={handleCopy} className={`font-mono text-[0.55rem] px-2.5 py-1 rounded border transition-colors ${ copied ? 'text-green-600 border-green-200 bg-green-50' : 'text-brand-orange border-brand-orange-mid hover:bg-brand-orange-pale' }`} > {copied ? 'Copied!' : 'Copy code'} </button> </div> <div className=
-- style={{ maxHeight: '520px' }}> <pre className=
 
 ## app/(app)/studio/create-images/page.tsx
 
@@ -874,6 +542,7 @@ decision.
 - People, places, moods
 - No products yet. Add one in Knowledge ▸ Products, or pick Something else.
 - Which product?
+- 1 product photo added as reference below.
 - No product photo on file, so nothing was added below.
 - Pick your reference pictures
 - Choose pictures that show what you are after. Up to three, and all of them are read.
@@ -881,77 +550,24 @@ decision.
 - Upload
 - Where is it?
 - This is the one thing a picture cannot tell us on its own.
-- className={`${s.wh} ${where === w.id ? s.on :
-- }`} aria-pressed={where === w.id} onClick={() => setWhere(w.id)}> <span className={`${s.wi} ${w.tone}`}> <Icon name={w.icon} size={17} /> </span> <span className={s.wl}>{w.label}</span> <span className={s.wd}>{w.detail}</span> </button> ))} </div> </div> { } <div className={s.step}> <div className={s.slab}> <span className={s.snum}>4</span><h3>What do you want to see?</h3> <span className={s.req}>Needed</span> </div> <p className={s.shint}>Say it plainly, the way you would to a photographer.</p> <textarea className={s.brf} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder=
 - What do you want to see?
 - Say it plainly, the way you would to a photographer.
 - One sentence is enough.
-- /> <div className={s.exs}> {examples.map((e) => ( <button key={e} type=
-- className={s.ex} onClick={() => setSubject(e)}>{e}</button> ))} </div> </div> { } <div className={s.step}> <div className={s.slab}><span className={s.snum}>5</span><h3>Shape</h3></div> <div className={s.ratios}> {FORMATS.map((f) => ( <button key={f} type=
 - Shape
-- className={`${s.rt} ${format === f ? s.on :
-- }`} aria-pressed={format === f} onClick={() => setFormat(f)}> <span className={s.box} style={{ width: RATIO_BOX[f].w, height: RATIO_BOX[f].h }} /> <span className={s.lb}>{f}</span> </button> ))} </div> <button type=
-- className={s.moreBtn} onClick={() => setExtraOpen((v) => !v)}> <Icon name=
 - Anything else — props, angle, space for text
-- size={11} /> Anything else — props, angle, space for text </button> {extraOpen && ( <textarea className={s.brf} style={{ minHeight: 62, marginTop: 8 }} value={extra} onChange={(e) => setExtra(e.target.value)} aria-label=
 - Anything else
-- /> )} </div> <button type=
-- className={s.go} disabled={Boolean(blocker) \|\| busy} onClick={() => void generate()}> {busy ?
-- } </button> <p className={s.gowhy}>{blocker ?? briefReady(refs.length)}</p> </div> { } <div className={s.canvas}> <div className={s.ctop}> <div> <h2>{tab ===
-- }</h2> <div className={s.csub}> {tab ===
-- } </div> </div> <div className={s.seg} role=
 - Which images
-- > <button type=
 - Session
-- className={tab ===
-- ? s.on : undefined} onClick={() => setTab(
-- )}>Session</button> <button type=
-- )}>Saved</button> </div> </div> {tab ===
-- ? ( shots.length === 0 ? ( <div className={s.empty}> <span className={s.emptyIc}><Icon name=
-- size={26} /></span> <h3>Nothing made yet.</h3> <p>Pick a reference picture and say what you want to see. The first one takes about fifteen seconds.</p> </div> ) : ( <div className={s.grid}> {shots.map((shot) => ( <article key={shot.id} className={`${s.shot} ${shot.state ===
 - Nothing made yet.
 - Pick a reference picture and say what you want to see. The first one takes about fifteen seconds.
-- ? s.failed :
-- }`}> <div className={s.shotImg}> {shot.state ===
-- ? ( <img src={shot.src} alt={shot.subject} /> ) : ( <div className={shot.state ===
-- ? s.working : undefined} style={{ paddingTop: aspectPadding(shot.format) }} /> )} <span className={s.badge}>{shot.format}</span> </div> <div className={s.shotBody}> <div className={s.prov}> {shot.refs.slice(0, 3).map((r) => ( <img key={r.id} className={s.th} src={r.url} alt=
-- /> ))} <span> {shot.refs.length} reference{shot.refs.length === 1 ?
-- } · {shot.where} </span> </div> {shot.state ===
-- && ( <p className={s.wstat}><i />Matching the light and grade from your references…</p> )} {shot.state ===
 - Matching the light and grade from your references…
-- && ( <> <p className={s.failMsg}>{shot.reason}</p> <div className={s.acts} style={{ marginTop: 9, gridTemplateColumns:
-- }}> <button type=
-- className={s.act} disabled={busy} onClick={() => void generate()}> <Icon name=
-- size={12} />Retry </button> </div> </> )} {shot.state ===
-- && ( <div className={s.acts}> <button type=
-- className={`${s.act} ${shot.saved ? s.done : s.prime}`} disabled={shot.saved} onClick={() => void save(shot)}> <Icon name={shot.saved ?
-- } size={12} /> {shot.saved ?
-- } </button> <button type=
-- className={s.act} onClick={() => download(shot)}> <Icon name=
 - Get
-- size={12} />Get </button> <button type=
-- size={12} />Again </button> </div> )} </div> </article> ))} </div> ) ) : savedImages.length === 0 ? ( <div className={s.empty}> <span className={s.emptyIc}><Icon name=
-- size={26} /></span> <h3>Nothing saved yet.</h3> <p>Saved images go to Knowledge ▸ Images, and can be used as references next time.</p> </div> ) : ( <div className={s.grid}> {savedImages.map((img) => ( <article key={img.id} className={s.shot}> <div className={s.shotImg}> { } <img src={img.file_url} alt={img.file_name} /> </div> <div className={s.shotBody}> <div className={s.acts} style={{ gridTemplateColumns:
 - Nothing saved yet.
 - Saved images go to Knowledge ▸ Images, and can be used as references next time.
-- className={s.act} onClick={() => addRef({ id: `knowledge:${img.id}`, name: img.file_name, url: img.file_url, source:
-- })}> <Icon name=
 - Use as reference
-- size={12} />Use as reference </button> </div> </div> </article> ))} </div> )} </div> </div> {library && ( <div className={s.sheet} role=
 - Pick from Knowledge
-- onClick={() => setLibrary(null)}> <div className={s.sheetBox} onClick={(e) => e.stopPropagation()}> <div className={s.sheetTop}> <h3>From Knowledge ▸ Images</h3> <button type=
 - From Knowledge ▸ Images
-- className={s.act} style={{ marginLeft:
-- , width:
-- , padding:
-- }} onClick={() => setLibrary(null)}> <Icon name=
-- size={12} />Close </button> </div> {library.length === 0 ? ( <p style={{ padding:
 - No images in Knowledge yet.
-- }} className={s.csub}>No images in Knowledge yet.</p> ) : ( <div className={s.sheetGrid}> {library.map((img) => ( <button key={img.id} type=
-- className={s.pick} onClick={() => { addRef({ id: `knowledge:${img.id}`, name: img.file_name, url: img.file_url, source:
-- }); setLibrary(null); }}> { } <img src={img.file_url} alt={img.file_name} /> </button> ))} </div> )} </div> </div> )} <div className={`${s.toast} ${toast ? s.toastOn :
-- }`} role=
-- >{toast}</div> </div> </div> <ChatRail indexedFileCount={savedImages.length} suggestions={[
 
 ## app/(app)/studio/notes/page.tsx
 
@@ -995,6 +611,7 @@ decision.
 - How many drafts
 - Writing…
 - Write it
+- 1 product record
 - didn't finish
 - Copied
 - Checking every claim against your product records…
@@ -1006,121 +623,7 @@ decision.
 
 ## app/onboarding/page.tsx
 
-- Tech & SaaS
-- Health & Wellness
-- Food & Beverage
-- Professional Services
-- Fashion & Beauty
-- Education
-- Real Estate
-- Other
-- Primary Logo
-- Dark Background Version
-- Icon / Mark Only
-- White Version
-- Answer our brand questionnaire
-- Paste existing strategy
-- Already have a brand strategy? Paste it and we'll structure it.
-- Upload a PDF
-- Upload your brand guidelines or strategy document.
-- You can always set this up later from the Brand Library.
-- Dashboard
-- Your brand command centre at a glance.
-- Create
-- Generate on-brand content in seconds.
-- Brand Library
-- Voice, visuals, and strategy in one place.
-- Asset Library
-- All your logos, images, and files organised.
-- Image Architect
-- AI-powered image generation for your brand.
-- Business Tools
-- Pricing, finance, and operations support.
-- Name, website & industry
-- Logo Upload
-- Your brand visuals
-- Your color palette
-- Brand Strategy
-- How you position your brand
-- All Done
-- Your workspace is ready
-- Not authenticated
-- Secondary
-- Accent
-- Something went wrong saving your brand. Please try again.
-- > {brandColors.map((c, i) => ( <div key={i} className=
-- > <div className=
-- style={{ background: c.hex }} /> <div> <div className=
-- >{c.name \|\|
-- }</div> <div className=
-- >{c.hex}</div> </div> <button onClick={() => setBrandColors(prev => prev.filter((_, idx) => idx !== i))} className=
-- >×</button> </div> ))} {brandColors.length === 0 && ( <p className=
-- >No colors added yet.</p> )} </div> { } <div className=
-- > <div> <label className=
-- >Color</label> <div className=
-- > <input type=
-- value={newColorHex} onChange={(e) => setNewColorHex(e.target.value)} className=
-- /> <input type=
-- /> </div> </div> <div className=
-- > <label className=
-- >Color name</label> <input type=
-- value={newColorName} onChange={(e) => setNewColorName(e.target.value)} placeholder=
-- /> </div> <button onClick={() => { if (newColorHex) { setBrandColors(prev => [...prev, { hex: newColorHex, name: newColorName \|\| newColorHex }]); setNewColorHex(
-- ); setNewColorName(
-- ); } }} className=
-- > Add </button> </div> <div className=
-- > <button onClick={() => setStep(4)} className=
-- > Continue → </button> <button onClick={() => setStep(4)} className=
-- Skip for now →
-- > Skip for now → </button> </div> </div> ); } function renderStep4() { return ( <div className=
-- > <h2 className=
-- >How would you like to set up your brand strategy?</h2> <p className=
-- >Choose one option below. You can change this later.</p> <div className=
-- > {STRATEGY_OPTIONS.map((opt) => { const selected = strategyMethod === opt.value; return ( <div key={opt.value}> <button type=
-- onClick={() => { setStrategyMethod(opt.value); if (opt.value !==
-- ) setStrategyText(
-- ); if (opt.value !==
-- ) setStrategyFile(null); }} className={`w-full flex items-start gap-4 rounded-xl border p-5 text-left transition-all ${ selected ?
-- }`} > <span className=
-- >{opt.icon}</span> <div> <div className=
-- >{opt.title}</div> <div className=
-- >{opt.desc}</div> </div> </button> { } {selected && opt.value ===
-- && ( <textarea value={strategyText} onChange={(e) => setStrategyText(e.target.value)} rows={6} placeholder=
-- /> )} { } {selected && opt.value ===
-- && ( <div className=
-- > <button type=
-- onClick={() => strategyFileRef.current?.click()} className=
-- > {strategyFile ? strategyFile.name :
-- } </button> <input ref={strategyFileRef} type=
-- onChange={(e) => { const file = e.target.files?.[0]; if (file) { setStrategyFile(file); setStrategyMethod(
-- ); } }} /> </div> )} </div> ); })} </div> <button onClick={handleSubmit} disabled={submitting} className=
-- > {submitting ?
-- } </button> </div> ); } function renderStep5() { return ( <div className=
-- > { } <div className=
-- > B </div> <h2 className=
-- > Branditect for {brandName} is ready. </h2> <p className=
-- >Your brand workspace has been created.</p> </div> { } <div className=
-- > {MODULE_CARDS.map((mod) => ( <div key={mod.title} className=
-- > <span className=
-- >{mod.icon}</span> <div className=
-- >{mod.title}</div> <div className=
-- >{mod.desc}</div> </div> ))} </div> <button onClick={() => router.push(
-- )} className=
-- > Open my workspace → </button> </div> ); } return ( <div className=
-- > { } <aside className=
-- > <Logo height={28} /> </div> <nav className=
-- > <ul className=
-- > {STEPS.map((s) => { const isActive = step === s.num; const isCompleted = step > s.num; return ( <li key={s.num} className=
-- > { } <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5 ${ isCompleted ?
-- : isActive ?
-- }`} > {isCompleted ?
-- : s.num} </div> <div> <div className={`text-sm leading-tight ${ isActive ?
-- : isCompleted ?
-- }`} > {s.title} </div> <div className=
-- >{s.subtitle}</div> </div> </li> ); })} </ul> </nav> { } {step > 1 && step < 4 && ( <div className=
-- > <button onClick={() => setStep(step - 1)} className=
-- > ← Back </button> </div> )} </aside> { } <main className=
-- ← Back
+- 38 strategic questions that build your complete brand foundation. Takes 15-30 minutes.
 
 ## app/signup/page.tsx
 
@@ -1144,18 +647,15 @@ decision.
 - One-off purchases
 - On subscription
 - Who is doing the work?
-- Just me
 - Two or three of us
 - Getting started
 - Let’s get to know your business
 - Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs.
-- ← Back
 
 ## app/start/q/[n]/page.tsx
 
 - One of the five answers that unlocks your workspace.
 - Skippable — it becomes a Brand Readiness item you can come back to.
-- ← Back
 - Finish
 - Next question
 
@@ -1176,13 +676,27 @@ decision.
 
 - Conversation
 - New conversation
-- -4px 0 24px rgba(0,0,0,0.08)
 - 'DM Sans', sans-serif
+- 10px 16px
+- 4px 6px
 - + New
+- 4px 10px
+- 2px 6px
+- 16px 14px
+- 10px 14px
+- 14px 18px
 - Branditect AI chat
+- 5px 14px
 - Chat
+- 22px 18px 12px
+- 14px 14px 3px 14px
 - Save to notes
+- 12px 18px 18px
+- 11px 13px
 - opacity 0.15s
+- 50px 10px
+- 0 auto 12px
+- 13px 14px
 
 ## components/auth/auth-form.tsx
 
@@ -1255,9 +769,6 @@ decision.
 
 ## components/numbers/calc-shell.tsx
 
-- bg-green-wash text-green-ink border border-green-line hover:bg-[#ddf0e5]
-- bg-lavender text-lav-ink border border-lav-line hover:bg-[#e0d3f4]
-- bg-blue-wash text-blue-ink border border-blue-line hover:bg-[#dde8fb]
 - and press save there.
 - Prefill from
 - No products yet, so there is nothing to prefill from — this is a quick calculation. That is a normal way to use it: work out the numbers first, add the product after.
@@ -1276,10 +787,6 @@ decision.
 
 - SIGNED_OUT
 
-## components/products/image-picker.tsx
-
-- a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])
-
 ## components/products/media-tab.tsx
 
 - Not available.
@@ -1294,7 +801,6 @@ decision.
 - After cost to sell as well.
 - No tax rate recorded, so both figures assume zero. A missing rate treated as zero reads the gross price as net and flatters the margin.
 - + Add your own line
-- . Same limits, same enforcement, the room this app keeps pricing rules in.
 
 ## components/products/product-drawer.tsx
 
@@ -1304,7 +810,6 @@ decision.
 - Media
 - History
 - Discard unsaved changes to this product?
-- a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])
 - Could not save
 - Change product image
 - Change
@@ -1322,7 +827,6 @@ decision.
 ## components/products/product-picker.tsx
 
 - This image will show on the product's card.
-- . Nothing is tagged until you confirm.
 - No products yet. Add one in Knowledge ▸ Products first.
 - Tagging…
 
@@ -1332,6 +836,7 @@ decision.
 
 ## components/products/specs-editor.tsx
 
+- 8.4 L/kg
 - + Add specification
 - Structured facts Studio can quote verbatim — spec tables, comparison blocks, ad claims. A row with no name is discarded.
 
@@ -1350,25 +855,6 @@ decision.
 - Saving…
 - Not saved — retrying
 - Finish later →
-
-## components/strategy/icons.tsx
-
-- , bolt:
-- , heart:
-- , shield:
-- , spark:
-- , tag:
-- , flag:
-- , check:
-- , ban:
-- , pen:
-- , dl:
-- , clock:
-- , chat:
-- , img:
-- , bag:
-- , arr:
-- , brain:
 
 ## components/strategy/strategy-document.tsx
 
@@ -1422,35 +908,6 @@ decision.
 - Upload failed
 - Uploading…
 - Choose a file
-- , }: { brandId: string; onDone: () => void; variant?:
-- }) { const [open, setOpen] = useState(false); const [hex, setHex] = useState(
-- ); const [name, setName] = useState(
-- ); const [busy, setBusy] = useState(false); const [error, setError] = useState<string \| null>(null); const shotRef = useRef<HTMLInputElement>(null); const parsed = normaliseHex(hex); async function save() { if (!parsed) { setError(
-- ); return; } setBusy(true); setError(null); const res = await authedJson(
-- , { brandId, hex: parsed, name: name.trim() \|\|
-- , }); const json = await res.json().catch(() => ({})); setBusy(false); if (!res.ok) { setError(json.error ?? `Could not save (${res.status})`); return; } setHex(
-- ); setName(
-- ); setOpen(false); onDone(); } async function extract(files: FileList \| null) { if (!files?.[0]) return; setBusy(true); setError(null); const fd = new FormData(); fd.append(
-- , files[0]); fd.append(
-- , brandId); fd.append(
-- ); fd.append(
-- ); const res = await authedFetch(
-- , { method:
-- , body: fd }); const json = await res.json().catch(() => ({})); setBusy(false); if (!res.ok) { setError(json.error ?? `Extraction failed (${res.status})`); return; } if (!json.colors?.length) { setError(
-- ); return; } setOpen(false); onDone(); } return ( <div className={u.wrap}> <button type=
-- className={variant ===
-- ? u.emptyBtn : u.trigger} onClick={() => setOpen((v) => !v)} > <Icon name=
-- size={variant ===
-- ? 14 : 12} /> Add a colour </button> {open && ( <Panel onClose={() => setOpen(false)}> <div className={u.plab}>Add one colour</div> <div className={u.row}> <span className={u.preview} style={parsed ? { backgroundColor: parsed } : undefined} aria-hidden=
-- /> <input className={u.input} placeholder=
-- value={hex} onChange={(e) => setHex(e.target.value)} aria-label=
-- /> </div> <input className={u.input} placeholder=
-- value={name} onChange={(e) => setName(e.target.value)} aria-label=
-- /> <button type=
-- className={u.go} disabled={busy \|\| !parsed} onClick={save}> {busy ?
-- } </button> <div className={u.orLine}><span>or</span></div> <button type=
-- className={u.ghost} disabled={busy} onClick={() => shotRef.current?.click()} > <Icon name=
-- size={12} /> Pull them out of a screenshot </button> <input ref={shotRef} type=
 - Name the typeface first
 - DM Sans
 - The specimen on this page is set in the real typeface, so a name that is not on Google Fonts will show as a fallback rather than silently look right.
@@ -1469,4 +926,9 @@ decision.
 - Add costs and pricing so Studio never writes past your margins.
 - 'DM Sans', sans-serif
 - 'Space Grotesk', sans-serif
+- 4 steps
+- 18px 20px
 - background 0.15s
+- 14px 32px
+- 14px 24px
+- 4px 0

@@ -556,6 +556,152 @@ so I have not built it — but a column nothing writes is worth naming.
 
 ---
 
+## 3 · Private buckets and signed URLs — app code done, SQL written, **the flip is blocked and should be**
+
+The merge blocker is doing its job. `npm run storage:audit` is red on four rows,
+and until it is green no bucket can go private without breaking them.
+
+### The spec's three buckets are not the four that exist
+
+Measured against the live project rather than read off the spec:
+
+| bucket | state | in the spec? |
+|---|---|---|
+| `brand-images` | **public** | yes |
+| `brand-assets` | **public** | yes |
+| `brand-reference-images` | **public** | **no — named nowhere** |
+| `brand-documents` | private | no, and already correct |
+| `brand-logos` | **does not exist** | yes |
+
+`brand-logos` is in the spec and is not there. `app/onboarding/page.tsx:148`
+uploads a founder's logo to it and discards the error, so that upload has been
+failing silently since it was written. The logos that do exist arrived through
+`/api/brand-assets/upload`, which writes to `brand-assets`. Creating the bucket
+is not the fix; deleting the dead upload path is, and that is app code rather
+than this item.
+
+`brand-reference-images` is public, holds objects, and appears in no spec and
+no code. It is covered by the migration rather than left alone: a bucket nobody
+is watching is the one that stays open.
+
+**Criterion 1 is asserted the way the spec asks** — a real object fetched with
+no credentials at all, not the bucket's config flag. Both public buckets return
+`200` today.
+
+### Two more loaded guns, and the entry-1 guard could not see them
+
+`supabase/brand_visual.sql` and `supabase/brands.sql` created policies of this
+shape:
+
+```sql
+CREATE POLICY "Allow brand-assets reads" ON storage.objects
+  FOR SELECT USING (bucket_id = 'brand-assets');
+```
+
+That names no user. Any signed-in person could read — and for `brand-assets`,
+**update and delete** — every object in the bucket: 43 brand book pages, 15
+logos, 5 template thumbnails and a guideline PDF, across every tenant.
+
+It got past inbox entry 1's guard because the text is not literally `USING
+(true)`. Both files also created their buckets **public**.
+
+Worse than being open on its own: RLS policies are PERMISSIVE and **OR'd**, so
+re-running either file after `private-buckets.sql` would sit an unscoped policy
+beside the scoped one and defeat it, invisibly to a policy-reading audit. That
+is inbox entry 1's failure again, one layer down.
+
+Both files now create their buckets private and **drop** the open policies
+rather than creating them. The scoped policies live in one file.
+
+**The guard is widened from a word to a rule.** Not "does it say `true`" but:
+every `CREATE POLICY … ON storage.objects` in `supabase/` must reference
+`auth.uid()`; no file may create or flip a bucket to public; and the two files
+that make a bucket private must carry the `DO NOT RUN YET` line with its
+reason. Nine negative controls, all red.
+
+### Criterion 3, the merge blocker: 4 rows would break
+
+Eight columns across seven tables hold a public storage URL. They were found by
+reading every table and scanning every string column, not by grepping the code
+— two of them are written by routes that name no bucket near the insert.
+
+```
+table.column                      urls  parsed  prefix  exists  signed
+brand_images.file_url              114     114     112     114       0
+catalog_products.image_url          10      10      10      10       0
+brand_book_pages.file_url           43      43      43      43       0
+brand_logos.file_url                15      15      15      15       0
+brand_templates.thumbnail_url        5       5       5       5       0
+brands.logo_url                      3       3       2       3       0
+brand_visual.guideline_url           1       1       0       1       0
+mission_notes.content                3       3       3       3       0
+```
+
+Every URL parses and every one resolves to an object that exists. The failure
+is the **prefix**, which is what the storage policies scope on:
+
+- `brand_images` ×2 — `vetra/web/…`, the slug from before the `-6zc3` suffix.
+- `brands.logo_url` ×1 — `logos/primary-logo-…`, a shared namespace with no brand in it.
+- `brand_visual.guideline_url` ×1 — `guidelines/small Sorbify…`, the same.
+
+**The five template thumbnails are not in that list, and nearly were.** They sit
+under the brand's **UUID** rather than its slug — the same UUID-against-TEXT
+confusion that made templates render nowhere until `brand-templates-key.sql`.
+The objects are still on disk under the UUID, so the policies accept both keys.
+A policy that took only the slug would have hidden five thumbnails on the day
+the bucket went private, and nothing would have said so.
+
+`scripts/storage-remediate.mjs` moves the four, copy-then-verify-then-update
+then optionally remove — never move-then-update, because a move that succeeds
+beside an update that fails leaves a row pointing at nothing. **It has not been
+run.** The dry run lists exactly those four.
+
+### `mission_notes.content` has no column that would help
+
+Three notes have an image URL **inside prose**. There is no `storage_path`
+column that fixes that — the cell is text with a markdown link in it. They are
+in the registry with `pathColumn: null` and a reason, and a test fails if that
+reason is ever dropped. Flagged, not migrated.
+
+*(My first audit reported these three as pointing at objects that do not exist.
+That was the audit: `\S+` swallowed the markdown closing bracket. The rows are
+fine.)*
+
+### The app code, which is safe to ship now
+
+`lib/storage-paths.ts` is the **one** parse. It was
+`split("/brand-images/")[1]` inline in `image-library.tsx` and again in
+`file-library.tsx` — one per bucket, which is the shape that goes wrong when a
+third bucket appears. Both call it now.
+
+`lib/signed-url.ts` prefers `storage_path` and falls back to the stored
+`file_url`, so it is correct **before** the migration (no column, public URL,
+returned unchanged), **during** (path present, bucket still public, signed URL
+works anyway) and **after** (bucket private, signing is the only thing that
+works). Nothing has to be timed.
+
+**Criterion 5 is a counted assertion, not a claim:** a fake signer records its
+calls, and forty images produce **one**. The batch keeps the array the same
+length and order — a caller zipping a shorter array back onto its rows would
+shift every image by one, which looks like the grid working and shows the wrong
+picture for every product.
+
+**Criterion 4** — no signed URL is ever written to a table — is asserted twice:
+a source check that no insert or update takes its value from a signing call,
+and the live audit, which reports `signed = 0` on all eight columns.
+
+### What is NOT done, and why
+
+- **Nothing was flipped.** Rule 1, and criterion 3 is red anyway.
+- **Criterion 2** (every image renders after the switch) and **criterion 6** (a
+  second account cannot read across the prefix) cannot be asserted before the
+  flip. `scripts/cross-tenant.mjs` is the place criterion 6 goes; it needs a
+  storage arm added once the buckets are private.
+- The four blocking rows are **not fixed**. Fixing them writes to production
+  storage, which rule 2 puts out of reach. The script is written and dry-run.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

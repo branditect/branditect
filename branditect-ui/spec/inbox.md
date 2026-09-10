@@ -336,3 +336,62 @@ by name in the report.
 is already in `en.ts` and `fi.ts`. Not committed, not deleted.
 
 See the report entry "Inbox 3".
+
+---
+
+## 4 · OPEN — two loose ends from entry 3, then straight to queue item 3
+
+Neither of these blocks queue item 3. **Do item 3 first.** These are here so they are not
+lost, and they are small.
+
+### 4a · The gap scanner still emits source code, and it inflates the number
+
+`branditect-ui/spec/i18n-gap.md` lists **1276 strings. 375 of them are raw JSX**, not strings
+— fragments like `); if (opt.value !==`, `: isActive ?`, and whole runs of `className=` and
+`onClick={() =>`. The two scanner bugs the controls caught were real, and this is a third
+that survived them.
+
+The real remaining count is about **900**, not 1276.
+
+This matters more than a wrong number in a report: that file is the work list. Left as it is,
+it invites 375 keys whose English is a fragment of a JavaScript expression, and a dictionary
+that contains those is worse than one with gaps, because the gaps are at least visible.
+
+Fix the scanner so a brace-stripped body cannot enter the list, regenerate, and **prove it
+with a negative control**: put a known JSX expression in a file, confirm it does not appear
+in the regenerated list, and confirm a real new string does.
+
+### 4b · `output_language` is stored and never asked — the half that matters most
+
+This is why entry 3 is PART DONE rather than DONE, and it is worth being blunt about which
+half is missing.
+
+`interface_language` has a switch. That one decides what **Saara** reads. `output_language`
+decides what **her customers** read — the copy Studio writes, the thing she is actually
+paying for. It has a column, it has a default of `'en'`, and nothing anywhere asks for it.
+
+So a Finnish brand today gets a Finnish interface and English copy, which is precisely
+backwards from what matters. `spec/finnish.md` says it is asked once, in onboarding: *"What
+language should we write in?"* — separate from the interface setting, which lives in
+Settings. Two questions, because a founder who has read English software for fifteen years
+may well want the interface in English and the copy in Finnish.
+
+Then every generation route states the language explicitly rather than letting the model
+infer it from the brand's own inputs. That is a one-line addition per route and it is the
+difference between a feature and an accident: today Studio writes Finnish for a Finnish brand
+*probably*, uncontrolled, and liable to switch mid-draft when a document happens to be in
+English.
+
+**Assert it end to end**, not by reading the column: a brand with `output_language = 'fi'`
+produces Finnish copy from a route, and the same brand set to `'en'` produces English.
+
+### Translation status, so nobody re-counts it
+
+`lib/i18n/en.ts` and `fi.ts` are at **599 keys**, all translated, typechecking clean. That
+covers the whole first-run path: nav, chrome, sign-in, onboarding, the 20-question
+questionnaire, Knowledge, the product card, Brand, Numbers labels and Channels.
+
+What is left is the deep tool screens — brand book, brand guideline, create images, product
+import, the Numbers page body, the code tool. **The design side is translating those and they
+come back through this inbox.** Do not translate them yourself and do not wait for them
+before doing anything else.

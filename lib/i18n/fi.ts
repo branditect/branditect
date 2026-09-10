@@ -649,9 +649,9 @@ export const fi: Record<StringKey, string> = {
     "Käyttöliittymän kieli ja Studion kirjoituskieli ovat kaksi eri valintaa.",
   "settings.interfaceLanguage": "Käyttöliittymän kieli",
   "settings.interfaceLanguageHelp":
-    "Painikkeiden, otsikoiden ja ohjetekstien kieli.",
+    "Painikkeiden, selitteiden ja ohjetekstien kieli.",
   "settings.languageSavedLocally":
-    "Tallennettu tähän selaimeen. Tallentuu brändiisi, kun kielisarakkeet ovat olemassa.",
+    "Tallennettu toistaiseksi tähän selaimeen. Siirtyy tilillesi, kun kieliasetukset otetaan käyttöön.",
 
   "guardrails.title": "Rajat, joita Studio noudattaa",
   "guardrails.whichProduct": "Mikä tuote",
@@ -659,4 +659,137 @@ export const fi: Record<StringKey, string> = {
   "guardrails.saved": "Tallennettu ✓",
   "calc.applyToProduct": "Käytä tuotteeseen",
   "calc.quickCalculation": "Pikalaskelma — ei tuotetta",
+
+  // ── Käyttöönotto ▸ toimialat ──────────────────────────────────────────────
+  "industry.tech": "Teknologia ja SaaS",
+  "industry.health": "Terveys ja hyvinvointi",
+  "industry.food": "Ruoka ja juoma",
+  "industry.services": "Asiantuntijapalvelut",
+  "industry.fashion": "Muoti ja kauneus",
+  "industry.education": "Koulutus",
+  "industry.realEstate": "Kiinteistöt",
+  "industry.other": "Muu",
+
+  // ── Käyttöönotto ▸ logopaikat ja värit ────────────────────────────────────
+  "logoSlot.primary": "Päälogo",
+  "logoSlot.dark": "Tummalle taustalle",
+  "logoSlot.mark": "Vain ikoni tai merkki",
+  "logoSlot.white": "Valkoinen versio",
+  "colourRole.secondary": "Toissijainen",
+  "colourRole.accent": "Korostus",
+
+  // ── Käyttöönotto ▸ strategiavaihtoehdot ───────────────────────────────────
+  "onboarding.strategy.questionnaire": "Vastaa brändikyselyyn",
+  "onboarding.strategy.paste": "Liitä olemassa oleva strategia",
+  "onboarding.strategy.pasteHelp":
+    "Onko sinulla jo brändistrategia? Liitä se, niin jäsennämme sen.",
+  "onboarding.strategy.upload": "Lataa PDF",
+  "onboarding.strategy.uploadHelp": "Lataa brändiohjeistosi tai strategiadokumenttisi.",
+  "onboarding.strategy.later": "Voit tehdä tämän myöhemminkin Brändikirjastosta.",
+
+  // ── Käyttöönotto ▸ vaiheet ────────────────────────────────────────────────
+  "onboarding.step.basics": "Nimi, verkkosivu ja toimiala",
+  "onboarding.step.logo": "Logojen lataus",
+  "onboarding.step.visuals": "Brändisi visuaalit",
+  "onboarding.step.palette": "Väripalettisi",
+  "onboarding.step.strategy": "Brändistrategia",
+  "onboarding.step.positioning": "Miten asemoit brändisi",
+  "onboarding.step.allDone": "Valmista",
+  "onboarding.step.workspaceReady": "Työtilasi on valmis",
+  "onboarding.back": "← Takaisin",
+  "onboarding.skipArrow": "Ohita toistaiseksi →",
+  "onboarding.notAuthenticated": "Ei kirjautunut",
+  "onboarding.saveFailed": "Brändin tallennuksessa meni jokin pieleen. Yritä uudelleen.",
+
+  // ── Käyttöönotto ▸ moduulikortit viimeisessä vaiheessa ────────────────────
+  "module.dashboard": "Työpöytä",
+  "module.dashboardDesc": "Brändisi komentokeskus yhdellä silmäyksellä.",
+  "module.create": "Luo",
+  "module.createDesc": "Luo brändinmukaista sisältöä sekunneissa.",
+  "module.brandLibrary": "Brändikirjasto",
+  "module.brandLibraryDesc": "Ääni, visuaalit ja strategia yhdessä paikassa.",
+  "module.assetLibrary": "Materiaalikirjasto",
+  "module.assetLibraryDesc": "Kaikki logosi, kuvasi ja tiedostosi järjestyksessä.",
+  "module.imageArchitect": "Kuva-arkkitehti",
+  "module.imageArchitectDesc": "Tekoälyllä luodut kuvat brändillesi.",
+  "module.businessTools": "Liiketoiminnan työkalut",
+  "module.businessToolsDesc": "Hinnoittelun, talouden ja toiminnan tuki.",
+
+  // ── Kanavat ▸ tavoitteet ja kapasiteetti ──────────────────────────────────
+  // Platform names — Instagram, TikTok, LinkedIn and the rest — are proper
+  // nouns and are not in this file at all. Do not add them.
+  "goal.awareness": "Tunnettuus",
+  "goal.community": "Yhteisö",
+  // "Asiantuntijuus", not "auktoriteetti": in Finnish the loanword carries
+  // command rather than the standing that comes from knowing your field.
+  "goal.authority": "Asiantuntijuus",
+  "goal.leads": "Liidit",
+  "goal.sales": "Myynti",
+  "goal.recruiting": "Rekrytointi",
+  "setup.justMe": "Vain minä",
+  "setup.meFreelancer": "Minä ja freelancer",
+  "setup.internalTeam": "Oma tiimi",
+  "setup.agency": "Toimisto",
+  "setup.branditect": "Branditect tuottaa sen",
+
+  // ── Kanavat ▸ viisi kysymystä ─────────────────────────────────────────────
+  "channels.q1": "Mihin alustoihin sitoudut seuraavaksi 90 päiväksi?",
+  "channels.q1Why":
+    "Strategia on alustan muotoinen. Ei TikTok-käsikirjoituksia, jos et ole TikTokissa.",
+  "channels.q2": "Mitä some oikeasti tekee liiketoiminnalle juuri nyt?",
+  "channels.q2Why":
+    "Sama brändi tuottaa hyvin erilaista sisältöä, jos tavoite muuttuu. Tunnettuussisältö ≠ myyntisisältö.",
+  "channels.q3": "Kuinka paljon pystyt oikeasti tuottamaan viikossa — ja kuka sen tekee?",
+  "channels.q3Why":
+    "Laadun rapautuminen on yleisin syy somestrategioiden epäonnistumiseen. Emme ehdota 15 reeliä viikossa, jos niitä tekee yksi ihminen läppärillä.",
+  "channels.q4": "Nimeä 3–5 tiliä, joiden somea ihailet — omalta alaltasi tai sen läheltä.",
+  "channels.q4Why":
+    "Branditect tutkii niiden julkaisutahtia, formaattien jakaumaa ja aiheita. Ei kopioidakseen vaan nähdäkseen, miltä hyvä näyttää tässä kategoriassa.",
+  "channels.q5": "Miltä et halua näyttää tai kuulostaa somessa?",
+  "channels.q5Why":
+    "Sen tietäminen mitä välttää on puolet brändissä pysymisestä. Tästä tulee kielto, jota vasten tekoäly tarkistaa jokaisen somejulkaisun, pysyvästi.",
+  "channels.antiExample": "teennäisen haavoittuvat perustajapostaukset\nLinkedIn-syötiksi tehdyt listajutut",
+
+  // ── Kanavat ▸ tarkistukset ────────────────────────────────────────────────
+  "channels.errStart": "Aloitus epäonnistui",
+  "channels.errPlatform": "Valitse vähintään yksi alusta.",
+  "channels.errGoal": "Valitse päätavoite.",
+  "channels.errCapacity": "Sekä määrä että tuotantotapa vaaditaan.",
+  "channels.errMinAccounts": "Anna vähintään 3 tiliä.",
+  "channels.errMaxAccounts": "Enintään 5 tiliä — valitse terävimmät.",
+  "channels.errAntiPattern": "Kerro vähintään yksi vältettävä asia — yksikin riittää.",
+  "channels.errSave": "Tallennus epäonnistui",
+
+  // ── Kanavat ▸ tila ja eteneminen ──────────────────────────────────────────
+  "channels.step2Ships":
+    "Vaiheessa 2 tähän tulee valmis strategiadokumentti — sisältöpilarit, alustakohtaiset tyylioppaat, 30 päivän kalenteri ja vältettävien kortti. Vastauksesi on tallennettu.",
+  "channels.working":
+    "Luetaan brändistrategiasi → tutkitaan viitetilisi → ristiinluetaan tavoitteesi → rakennetaan pilarit → luonnostellaan esimerkit.",
+  "channels.brandStrategy": "Brändistrategia",
+  "channels.toneOfVoice": "Äänensävy",
+  "channels.notSetUp": "ei vielä määritetty",
+  "channels.voiceRules": "äänisäännöt, sanasto",
+  "channels.proceedAnyway":
+    "Voit jatkaa silti — mutta pilarit ja esimerkkijulkaisut terävöityvät, kun brändistrategia ja äänensävy on täytetty.",
+  "channels.starting": "Aloitetaan…",
+  "channels.resume": "Jatka",
+  "channels.begin": "Aloita",
+  "channels.generate": "Luo strategia",
+
+  // ONE KEY, NOT FIVE, AND THIS IS THE POINT.
+  //
+  // The screen built this sentence by concatenating fragments around inline
+  // emphasis: "…answers" + "who we are" + ". BrandTone answers" + "how we
+  // sound" + … Each fragment was a separate string in the scan.
+  //
+  // That cannot be translated. Finnish puts the case ending where English puts
+  // a preposition, and the verb lands in a different place, so the joins fall
+  // in the wrong positions and the emphasis lands on the wrong words. It reads
+  // as broken Finnish, not as a translation that needs polishing.
+  //
+  // Whoever wires this must render it as one string. If the emphasis matters,
+  // mark it inside the string and parse it out — never by splitting the
+  // sentence at the seams the English happens to have.
+  "channels.whatThisAnswers":
+    "Brändistrategia vastaa siihen, keitä olemme. BrandTone vastaa siihen, miltä kuulostamme. Tämä vastaa siihen, mitä julkaisemme keskiviikkona. Branditect tietää suurimman osan jo — tarvitsemme vain viisi asiaa aukkojen täyttämiseen.",
 };

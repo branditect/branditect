@@ -2,6 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
+import { storagePathFromUrl } from "@/lib/storage-paths";
+import { signedUrls } from "@/lib/signed-url";
 import { imageMatches } from "@/lib/product-attachments";
 import ProductPicker from "@/components/products/product-picker";
 import {
@@ -17,6 +20,7 @@ import { authedFetch } from "@/lib/authed-fetch";
 interface BrandImage {
   id: string;
   file_url: string;
+  storage_path?: string | null;
   file_name: string;
   file_size: number;
   category: string;
@@ -52,6 +56,12 @@ const DEFAULT_BRAND_ID = "default";
 export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?: string }) {
   const BRAND_ID = brandId;
   const [images, setImages] = useState<BrandImage[]>([]);
+  /**
+   * Signed URLs, by row id. Empty until the grid has loaded, and empty
+   * forever if signing fails — srcOf falls back to the stored file_url, so
+   * this is correct while the bucket is still public and after it is not.
+   */
+  const [signed, setSigned] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -97,8 +107,19 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
       .not("category", "in", '("video","audio","graphic","web")')
       .order("uploaded_at", { ascending: false });
 
-    setImages(data || []);
+    const rows = (data || []) as BrandImage[];
+    setImages(rows);
     setLoading(false);
+
+    // ONE signing call for the whole grid, not one per tile. Forty images
+    // signed one at a time is forty round trips before anything paints.
+    if (rows.length) {
+      const urls = await signedUrls(supabase, IMAGE_BUCKET,
+        rows.map((r) => ({ storagePath: r.storage_path, fileUrl: r.file_url })));
+      const next: Record<string, string> = {};
+      rows.forEach((r, i) => { const u = urls[i]; if (u) next[r.id] = u; });
+      setSigned(next);
+    }
     // BRAND_ID belongs in here. useBrand resolves after the first render, so
     // an empty array froze this on the prop's default of "default", a brand
     // that does not exist, and the grid stayed empty for everyone. The lint
@@ -217,11 +238,26 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     setTimeout(() => setCopiedUrl(null), 1500);
   }, []);
 
+
+  /**
+   * What to put in a src or an href.
+   *
+   * The signed URL when there is one, the stored public URL otherwise. Both
+   * are correct at different points in the migration and neither is correct at
+   * both, which is why nothing reads file_url directly any more.
+   */
+  const srcOf = useCallback(
+    (row: { id: string; file_url: string }) => signed[row.id] ?? row.file_url,
+    [signed],
+  );
+
   const deleteImage = useCallback(async (img: BrandImage) => {
-    // Extract storage path from URL
-    const urlParts = img.file_url.split("/brand-images/");
-    if (urlParts[1]) {
-      await supabase.storage.from("brand-images").remove([decodeURIComponent(urlParts[1])]);
+    // One parse, in lib/storage-paths.ts. This used to be an inline
+    // split("/brand-images/") here and another in file-library, which is the
+    // shape that goes wrong the moment a third bucket appears.
+    const path = img.storage_path || storagePathFromUrl(img.file_url, IMAGE_BUCKET);
+    if (path) {
+      await supabase.storage.from(IMAGE_BUCKET).remove([path]);
     }
     await supabase.from("brand_images").delete().eq("id", img.id);
     setImages((prev) => prev.filter((i) => i.id !== img.id));
@@ -585,7 +621,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                 </button>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={img.file_url}
+                  src={srcOf(img)}
                   alt={img.file_name}
                   className="w-full h-full object-cover"
                 />
@@ -598,7 +634,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     </span>
                     <div className="flex gap-1.5">
                       <a
-                        href={img.file_url}
+                        href={srcOf(img)}
                         download={img.file_name}
                         onClick={e => e.stopPropagation()}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline"
@@ -606,10 +642,10 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                         Download
                       </a>
                       <button
-                        onClick={() => copyUrl(img.file_url)}
+                        onClick={() => copyUrl(srcOf(img))}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30"
                       >
-                        {copiedUrl === img.file_url ? "Copied ✓" : "Copy URL"}
+                        {copiedUrl === srcOf(img) ? "Copied ✓" : "Copy URL"}
                       </button>
                       <button
                         onClick={() => startEditTags(img)}
@@ -752,7 +788,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={e => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={previewImg.file_url}
+              src={srcOf(previewImg)}
               alt={previewImg.file_name}
               className="w-full h-full object-contain rounded-lg"
               style={{ maxHeight: '80vh' }}
@@ -766,14 +802,14 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               </div>
               <div className="flex gap-2">
                 <a
-                  href={previewImg.file_url}
+                  href={srcOf(previewImg)}
                   download={previewImg.file_name}
                   className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline"
                 >
                   Download
                 </a>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(previewImg.file_url); }}
+                  onClick={() => { navigator.clipboard.writeText(srcOf(previewImg)); }}
                   className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30"
                 >
                   Copy URL

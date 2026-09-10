@@ -621,7 +621,7 @@ export const en = {
   "settings.interfaceLanguageHelp":
     "The language of buttons, labels and help text.",
   "settings.languageSavedLocally":
-    "Saved on this browser. It saves to your brand once the language columns exist.",
+    "Saved in this browser for now. It will follow your account once language settings go live.",
 
   "guardrails.title": "Guardrails Studio obeys",
   "guardrails.whichProduct": "Which product",
@@ -629,6 +629,123 @@ export const en = {
   "guardrails.saved": "Saved ✓",
   "calc.applyToProduct": "Apply to product",
   "calc.quickCalculation": "Quick calculation — no product",
+
+  // ── Onboarding ▸ industries ───────────────────────────────────────────────
+  "industry.tech": "Tech & SaaS",
+  "industry.health": "Health & Wellness",
+  "industry.food": "Food & Beverage",
+  "industry.services": "Professional Services",
+  "industry.fashion": "Fashion & Beauty",
+  "industry.education": "Education",
+  "industry.realEstate": "Real Estate",
+  "industry.other": "Other",
+
+  // ── Onboarding ▸ logo slots and colours ───────────────────────────────────
+  "logoSlot.primary": "Primary Logo",
+  "logoSlot.dark": "Dark Background Version",
+  "logoSlot.mark": "Icon / Mark Only",
+  "logoSlot.white": "White Version",
+  "colourRole.secondary": "Secondary",
+  "colourRole.accent": "Accent",
+
+  // ── Onboarding ▸ strategy options ─────────────────────────────────────────
+  "onboarding.strategy.questionnaire": "Answer our brand questionnaire",
+  "onboarding.strategy.paste": "Paste existing strategy",
+  "onboarding.strategy.pasteHelp":
+    "Already have a brand strategy? Paste it and we'll structure it.",
+  "onboarding.strategy.upload": "Upload a PDF",
+  "onboarding.strategy.uploadHelp": "Upload your brand guidelines or strategy document.",
+  "onboarding.strategy.later": "You can always set this up later from the Brand Library.",
+
+  // ── Onboarding ▸ steps ────────────────────────────────────────────────────
+  "onboarding.step.basics": "Name, website & industry",
+  "onboarding.step.logo": "Logo Upload",
+  "onboarding.step.visuals": "Your brand visuals",
+  "onboarding.step.palette": "Your color palette",
+  "onboarding.step.strategy": "Brand Strategy",
+  "onboarding.step.positioning": "How you position your brand",
+  "onboarding.step.allDone": "All Done",
+  "onboarding.step.workspaceReady": "Your workspace is ready",
+  "onboarding.back": "← Back",
+  "onboarding.skipArrow": "Skip for now →",
+  "onboarding.notAuthenticated": "Not authenticated",
+  "onboarding.saveFailed": "Something went wrong saving your brand. Please try again.",
+
+  // ── Onboarding ▸ the module cards on the last step ────────────────────────
+  "module.dashboard": "Dashboard",
+  "module.dashboardDesc": "Your brand command centre at a glance.",
+  "module.create": "Create",
+  "module.createDesc": "Generate on-brand content in seconds.",
+  "module.brandLibrary": "Brand Library",
+  "module.brandLibraryDesc": "Voice, visuals, and strategy in one place.",
+  "module.assetLibrary": "Asset Library",
+  "module.assetLibraryDesc": "All your logos, images, and files organised.",
+  "module.imageArchitect": "Image Architect",
+  "module.imageArchitectDesc": "AI-powered image generation for your brand.",
+  "module.businessTools": "Business Tools",
+  "module.businessToolsDesc": "Pricing, finance, and operations support.",
+
+  // ── Channels ▸ platforms, goals, capacity ─────────────────────────────────
+  "goal.awareness": "Awareness",
+  "goal.community": "Community",
+  "goal.authority": "Authority",
+  "goal.leads": "Leads",
+  "goal.sales": "Sales",
+  "goal.recruiting": "Recruiting",
+  "setup.justMe": "Just me",
+  "setup.meFreelancer": "Me + freelancer",
+  "setup.internalTeam": "Internal team",
+  "setup.agency": "Agency",
+  "setup.branditect": "Branditect produces it",
+
+  // ── Channels ▸ the five questions ─────────────────────────────────────────
+  "channels.q1": "Which platforms are you committing to for the next 90 days?",
+  "channels.q1Why": "Strategy is platform-shaped. No TikTok scripts if you're not on TikTok.",
+  "channels.q2": "What is social actually doing for the business right now?",
+  "channels.q2Why":
+    "The same brand produces very different content if the goal shifts. Awareness content ≠ sales content.",
+  "channels.q3": "How much can you actually produce per week — and who's behind it?",
+  "channels.q3Why":
+    "Quality decay is the #1 reason social strategies fail. We won't propose 15 reels a week if one person on a laptop is making them.",
+  "channels.q4": "Name 3–5 accounts whose social you admire — in your space or adjacent.",
+  "channels.q4Why":
+    "Branditect studies their cadence, format mix, and topic patterns. Not to copy, to benchmark what good looks like in this category.",
+  "channels.q5": "What do you NOT want to look or sound like on social?",
+  "channels.q5Why":
+    "Knowing what to avoid is half of staying on-brand. This becomes a negative constraint the AI checks every social output against, forever.",
+  "channels.antiExample": "fake-vulnerable founder posts\nLinkedIn-bait listicles",
+
+  // ── Channels ▸ validation ─────────────────────────────────────────────────
+  "channels.errStart": "Failed to start",
+  "channels.errPlatform": "Pick at least one platform.",
+  "channels.errGoal": "Pick a primary goal.",
+  "channels.errCapacity": "Both volume and production setup are required.",
+  "channels.errMinAccounts": "Give us at least 3 accounts.",
+  "channels.errMaxAccounts": "Cap is 5 accounts — pick your sharpest.",
+  "channels.errAntiPattern": "Tell us at least one anti-pattern — even just one chip.",
+  "channels.errSave": "Save failed",
+
+  // ── Channels ▸ status and progress ────────────────────────────────────────
+  "channels.step2Ships":
+    "Step 2 ships the rendered Strategy Doc here — content pillars, platform style guides, 30-day calendar, anti-pattern card. Your answers are saved.",
+  "channels.working":
+    "Reading your brand strategy → studying your reference accounts → cross-referencing your goals → building your pillars → drafting examples.",
+  "channels.brandStrategy": "Brand Strategy",
+  "channels.toneOfVoice": "Tone of Voice",
+  "channels.notSetUp": "not set up yet",
+  "channels.voiceRules": "voice rules, vocab",
+  "channels.proceedAnyway":
+    "You can still proceed — but pillars and example posts get sharper once Brand Strategy and Tone of Voice are filled in.",
+  "channels.starting": "Starting…",
+  "channels.resume": "Resume",
+  "channels.begin": "Begin",
+  "channels.generate": "Generate strategy",
+
+  // A whole sentence, not fragments. See the note in fi.ts — the screen used to
+  // build this by concatenating five pieces around inline emphasis, which does
+  // not survive a language whose word order differs.
+  "channels.whatThisAnswers":
+    "Brand Strategy answers who we are. BrandTone answers how we sound. This answers what we post on Wednesday. Branditect already knows most of it — we just need 5 things to fill the gaps.",
 } as const;
 
 export type StringKey = keyof typeof en;

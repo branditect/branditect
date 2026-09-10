@@ -2,11 +2,15 @@
 
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
+import { storagePathFromUrl } from "@/lib/storage-paths";
+import { signedUrls } from "@/lib/signed-url";
 import { summariseUpload, anyLanded, type UploadFailure } from "@/lib/upload-report";
 
 interface FileItem {
   id: string;
   file_url: string;
+  storage_path?: string | null;
   file_name: string;
   file_size: number;
   category: string;
@@ -43,6 +47,8 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
      no file. */
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  /** Signed URLs by row id; empty means "use the stored file_url". */
+  const [signed, setSigned] = useState<Record<string, string>>({});
 
   const fetchFiles = useCallback(async () => {
     setLoading(true);
@@ -52,8 +58,18 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
       .eq("brand_id", BRAND_ID)
       .eq("category", category)
       .order("uploaded_at", { ascending: false });
-    setFiles(data || []);
+    const rows = (data || []) as FileItem[];
+    setFiles(rows);
     setLoading(false);
+
+    // One signing call for the grid. See image-library.
+    if (rows.length) {
+      const urls = await signedUrls(supabase, IMAGE_BUCKET,
+        rows.map((r) => ({ storagePath: r.storage_path, fileUrl: r.file_url })));
+      const next: Record<string, string> = {};
+      rows.forEach((r, i) => { const u = urls[i]; if (u) next[r.id] = u; });
+      setSigned(next);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, BRAND_ID]);
 
@@ -127,10 +143,23 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
     setTimeout(() => setCopiedUrl(null), 1500);
   }, []);
 
+
+  /**
+   * What to put in a src or an href.
+   *
+   * The signed URL when there is one, the stored public URL otherwise. Both
+   * are correct at different points in the migration and neither is correct at
+   * both, which is why nothing reads file_url directly any more.
+   */
+  const srcOf = useCallback(
+    (row: { id: string; file_url: string }) => signed[row.id] ?? row.file_url,
+    [signed],
+  );
+
   const deleteFile = useCallback(async (item: FileItem) => {
-    const urlParts = item.file_url.split("/brand-images/");
-    if (urlParts[1]) {
-      await supabase.storage.from("brand-images").remove([decodeURIComponent(urlParts[1])]);
+    const path = item.storage_path || storagePathFromUrl(item.file_url, IMAGE_BUCKET);
+    if (path) {
+      await supabase.storage.from(IMAGE_BUCKET).remove([path]);
     }
     await supabase.from("brand_images").delete().eq("id", item.id);
     setFiles((prev) => prev.filter((f) => f.id !== item.id));
@@ -263,13 +292,13 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
               <div className="relative aspect-square bg-pale flex items-center justify-center cursor-pointer" onClick={() => setPreviewItem(item)}>
                 {previewType === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.file_url} alt={item.file_name} className="w-full h-full object-cover" />
+                  <img src={srcOf(item)} alt={item.file_name} className="w-full h-full object-cover" />
                 ) : previewType === "video" ? (
-                  <video src={item.file_url} className="w-full h-full object-cover" muted />
+                  <video src={srcOf(item)} className="w-full h-full object-cover" muted />
                 ) : previewType === "audio" ? (
                   <div className="flex flex-col items-center gap-2 p-2">
                     <span className="text-2xl text-muted">SND</span>
-                    <audio src={item.file_url} controls className="w-[90%]" onClick={(e) => e.stopPropagation()} />
+                    <audio src={srcOf(item)} controls className="w-[90%]" onClick={(e) => e.stopPropagation()} />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
@@ -282,11 +311,11 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
                 {hoveredId === item.id && (
                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
                     <div className="flex gap-1.5 flex-wrap justify-center">
-                      <a href={item.file_url} download={item.file_name} onClick={e => e.stopPropagation()} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline">
+                      <a href={srcOf(item)} download={item.file_name} onClick={e => e.stopPropagation()} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline">
                         Download
                       </a>
-                      <button onClick={() => copyUrl(item.file_url)} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
-                        {copiedUrl === item.file_url ? "Copied" : "Copy URL"}
+                      <button onClick={() => copyUrl(srcOf(item))} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
+                        {copiedUrl === srcOf(item) ? "Copied" : "Copy URL"}
                       </button>
                       <button onClick={() => startEditTags(item)} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
                         Edit tags
@@ -327,14 +356,14 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
           <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
             {previewType === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewItem.file_url} alt={previewItem.file_name} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
+              <img src={srcOf(previewItem)} alt={previewItem.file_name} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
             ) : previewType === "video" ? (
-              <video src={previewItem.file_url} controls autoPlay className="max-w-full max-h-[75vh] rounded-lg" />
+              <video src={srcOf(previewItem)} controls autoPlay className="max-w-full max-h-[75vh] rounded-lg" />
             ) : previewType === "audio" ? (
               <div className="bg-white rounded-lg p-8 flex flex-col items-center gap-4">
                 <div className="text-4xl text-muted">SND</div>
                 <div className="text-sm font-medium text-ink">{previewItem.file_name}</div>
-                <audio src={previewItem.file_url} controls autoPlay className="w-80" />
+                <audio src={srcOf(previewItem)} controls autoPlay className="w-80" />
               </div>
             ) : (
               <div className="bg-white rounded-lg p-8 text-center">
@@ -344,8 +373,8 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
             )}
             <div className="mt-3 flex items-center gap-3">
               <span className="text-white text-sm">{previewItem.file_name}</span>
-              <a href={previewItem.file_url} download={previewItem.file_name} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline">Download</a>
-              <button onClick={() => { navigator.clipboard.writeText(previewItem.file_url); }} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30">Copy URL</button>
+              <a href={srcOf(previewItem)} download={previewItem.file_name} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline">Download</a>
+              <button onClick={() => { navigator.clipboard.writeText(srcOf(previewItem)); }} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30">Copy URL</button>
             </div>
             <button onClick={() => setPreviewItem(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg hover:bg-black/70">&times;</button>
           </div>

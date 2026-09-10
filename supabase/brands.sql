@@ -41,11 +41,39 @@ CREATE POLICY brands_own_brand ON brands
   USING      (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
--- Storage buckets
-INSERT INTO storage.buckets (id, name, public) VALUES ('brand-logos', 'brand-logos', true) ON CONFLICT (id) DO NOTHING;
-INSERT INTO storage.buckets (id, name, public) VALUES ('brand-strategy', 'brand-strategy', true) ON CONFLICT (id) DO NOTHING;
+-- ── Storage buckets ────────────────────────────────────────────────────────
+--
+-- THESE WERE TWO MORE LOADED GUNS. Until 2026-09-10 this file created both
+-- buckets PUBLIC and gave storage.objects four policies of the shape
+--
+--   CREATE POLICY "Allow logo reads" ON storage.objects
+--     FOR SELECT USING (bucket_id = 'brand-logos');
+--
+-- which names no user at all: every signed-in person could read, and in the
+-- brand-assets case update and delete, every object in the bucket. It is the
+-- same failure as the USING (true) policies inbox entry 1 caught, and it got
+-- past that guard because the text is not literally "true".
+--
+-- Worse than merely being open: RLS policies are PERMISSIVE and OR'd, so
+-- re-running this file after private-buckets.sql would sit an unscoped policy
+-- beside the scoped one and defeat it, invisibly to a policy-reading audit.
+--
+-- Neither bucket exists in production. app/onboarding/page.tsx uploads to
+-- brand-logos and discards the error, so that upload has been failing silently
+-- since it was written; the logos that do exist went to brand-assets through
+-- /api/brand-assets/upload.
+--
+-- The buckets are created private. The scoped storage.objects policies live in
+-- one place, supabase/private-buckets.sql, rather than being repeated here --
+-- two files creating the same policy is the drift this codebase keeps paying
+-- for.
 
-CREATE POLICY "Allow logo uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'brand-logos');
-CREATE POLICY "Allow logo reads" ON storage.objects FOR SELECT USING (bucket_id = 'brand-logos');
-CREATE POLICY "Allow strategy uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'brand-strategy');
-CREATE POLICY "Allow strategy reads" ON storage.objects FOR SELECT USING (bucket_id = 'brand-strategy');
+INSERT INTO storage.buckets (id, name, public) VALUES ('brand-logos', 'brand-logos', false) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('brand-strategy', 'brand-strategy', false) ON CONFLICT (id) DO NOTHING;
+
+-- Discovery-based: removes the open policies wherever a previous run of this
+-- file left them, and creates nothing in their place.
+DROP POLICY IF EXISTS "Allow logo uploads"     ON storage.objects;
+DROP POLICY IF EXISTS "Allow logo reads"       ON storage.objects;
+DROP POLICY IF EXISTS "Allow strategy uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Allow strategy reads"   ON storage.objects;

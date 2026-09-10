@@ -14,7 +14,9 @@
     "rls:cross-tenant": "node scripts/cross-tenant.mjs",
     "cache:probe": "node --experimental-strip-types scripts/prompt-cache-probe.mjs",
     "i18n:scan": "node --experimental-strip-types scripts/i18n-scan.mjs",
-    "i18n:gap": "node --experimental-strip-types scripts/i18n-gap.mjs"
+    "i18n:gap": "node --experimental-strip-types scripts/i18n-gap.mjs",
+    "storage:audit": "node --experimental-strip-types scripts/storage-audit.mjs",
+    "storage:remediate": "node --experimental-strip-types scripts/storage-remediate.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

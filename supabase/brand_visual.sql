@@ -40,12 +40,26 @@ CREATE POLICY brand_visual_own_brand ON brand_visual
   USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
   WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
 
--- Storage bucket for brand library assets (logos, guidelines uploaded in Brand Library)
+-- ── Storage bucket for brand library assets ────────────────────────────────
+--
+-- A LOADED GUN until 2026-09-10, and the worst of the three: these four
+-- policies named no user, so any signed-in person could read, UPDATE and
+-- DELETE every object in brand-assets -- 43 brand book pages, 15 logos, 5
+-- template thumbnails and a guideline PDF, across every tenant.
+--
+-- ON CONFLICT DO NOTHING means the bucket keeps whatever public flag it
+-- already has, so this line does not reopen a bucket that has been made
+-- private. The policies had no such protection: CREATE POLICY is additive and
+-- RLS is OR'd, so re-running this file beside private-buckets.sql would have
+-- put an unscoped policy next to the scoped one and defeated it.
+--
+-- The scoped policies live in supabase/private-buckets.sql, in one place.
+
 INSERT INTO storage.buckets (id, name, public, file_size_limit)
-VALUES ('brand-assets', 'brand-assets', true, 104857600)
+VALUES ('brand-assets', 'brand-assets', false, 104857600)
 ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "Allow brand-assets uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'brand-assets');
-CREATE POLICY "Allow brand-assets reads" ON storage.objects FOR SELECT USING (bucket_id = 'brand-assets');
-CREATE POLICY "Allow brand-assets updates" ON storage.objects FOR UPDATE USING (bucket_id = 'brand-assets');
-CREATE POLICY "Allow brand-assets deletes" ON storage.objects FOR DELETE USING (bucket_id = 'brand-assets');
+DROP POLICY IF EXISTS "Allow brand-assets uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Allow brand-assets reads"   ON storage.objects;
+DROP POLICY IF EXISTS "Allow brand-assets updates" ON storage.objects;
+DROP POLICY IF EXISTS "Allow brand-assets deletes" ON storage.objects;

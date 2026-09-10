@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { buildBrandContext } from '@/lib/brandContext'
 import { serviceClient as supabase } from '@/lib/supabase-admin'
 import { resolveBrand } from "@/lib/api-auth";
-import { HOUSE_STYLE } from '@/lib/house-style'
+import { cachedSystem, logCacheUsage } from '@/lib/prompt-cache'
+import { copyStable, copyPerRequest } from '@/lib/prompts'
 import { findFormat, normaliseDraft, isThinBrief, type Draft, type Length } from '@/lib/studio-write'
 
 // Three drafts of a long email is a real amount of generation.
@@ -47,73 +48,6 @@ async function readBrandFacts(brandId: string, productId: string | null): Promis
     context,
     product: (productRes.data as Record<string, unknown> | null) ?? null,
   }
-}
-
-/**
- * The product picked in Options is spelled out on its own rather than left to
- * be found among the whole catalogue — a description of one product should not
- * depend on the model picking the right row out of forty.
- */
-function productBlock(product: Record<string, unknown> | null): string {
-  if (!product) return ''
-  const keep = [
-    'name', 'type', 'category', 'description', 'price_rrp', 'price_monthly',
-    'price_model', 'inclusions', 'ideal_client', 'delivery_time',
-  ]
-  const lines = keep
-    .map((k) => {
-      const v = product[k]
-      if (v === null || v === undefined || v === '') return null
-      return `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`
-    })
-    .filter(Boolean)
-  if (!lines.length) return ''
-  return `\n\n=== THE PRODUCT THIS IS ABOUT ===\n${lines.join('\n')}`
-}
-
-function buildSystemPrompt(args: {
-  brandName: string
-  deliverable: string
-  wordTarget: string
-  count: number
-  context: string
-  product: Record<string, unknown> | null
-}): string {
-  const { brandName, deliverable, wordTarget, count, context, product } = args
-
-  return `You are the copywriter for ${brandName}. You know this brand from the sources below and from nothing else.
-
-WRITE: ${count} separate draft${count > 1 ? 's' : ''} of ${deliverable}.
-LENGTH: each draft, ${wordTarget}.
-
-${count > 1 ? `The drafts must take genuinely different angles. Three versions of the same sentence is not a choice.\n\n` : ''}THE ONE RULE — no fact that is not in the sources below.
-Product names, features, numbers, prices, dates, names of people: if it is not written
-below, it does not go in the copy. Never write a placeholder such as [feature] or [price].
-If the brief asks for something the sources cannot support, write the draft around what you
-do have and say what is missing in the "missing" field.
-
-PROVENANCE — every hard fact you use must be declared.
-A hard fact is a number, a price, a measurement, a date, a named certification, or a named
-product feature. For each one, give the claim as it appears in your copy and the source it
-came from, named as it appears below (for example "Product range specs" or "Brand strategy").
-An undeclared number is the failure this whole system exists to prevent.
-
-Return valid JSON and nothing else. No backticks, no prose outside the JSON:
-{
-  "drafts": [
-    {
-      "body": "the copy itself, plain text, line breaks allowed",
-      "provenance": [{ "claim": "12 times its own weight", "source": "Product range specs" }]
-    }
-  ],
-  "missing": "one sentence naming anything the brief needed that the sources did not have, or an empty string"
-}
-
-Complete the entire JSON including every closing brace. Do not stop mid-output.
-
---- BRAND SOURCES BELOW ---
-
-${context || `Brand: ${brandName}\n(Nothing has been added to this brand yet.)`}${productBlock(product)}${HOUSE_STYLE}`
 }
 
 function parseJson(rawText: string): Record<string, unknown> | null {
@@ -193,16 +127,14 @@ Write the ${count} draft${count > 1 ? 's' : ''} now. Return only the JSON.`
       // max_tokens caps thinking + text together — these calls would truncate.
       thinking: { type: 'disabled' },
       max_tokens: 4000,
-      system: buildSystemPrompt({
-        brandName: facts.brandName,
-        deliverable,
-        wordTarget: def.words[len],
-        count,
-        context: facts.context,
-        product: facts.product,
-      }),
+      system: cachedSystem(
+        copyStable({ brandName: facts.brandName, context: facts.context }),
+        copyPerRequest({ deliverable, wordTarget: def.words[len], count, product: facts.product }),
+      ),
       messages: [{ role: 'user', content: userPrompt }],
     })
+
+    logCacheUsage('copy-architect', response.usage)
 
     const rawText = response.content
       .filter((b) => b.type === 'text')

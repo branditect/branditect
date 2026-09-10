@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { HOUSE_STYLE } from "@/lib/house-style";
+import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
+import { TONE_STABLE } from "@/lib/prompts";
 
 export const maxDuration = 60;
 
@@ -21,25 +22,7 @@ export async function POST(req: NextRequest) {
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
       max_tokens: 4000,
-      system: `You are a brand strategist. Analyse the writing samples provided and extract a complete tone of voice guideline. Return ONLY valid JSON, no markdown, no code fences.
-
-JSON structure:
-{
-  "expression_label": "3-4 word tone label (e.g. Bold & Direct, Warm & Expert)",
-  "expression_text": "2-3 sentence description of how this brand sounds",
-  "pillars": [
-    {"icon": "emoji", "name": "Pillar name", "desc": "One sentence description", "bullets": ["Specific guideline 1", "Specific guideline 2", "Specific guideline 3"]}
-  ],
-  "dos": ["Do this", "Do that", "Do this too"],
-  "donts": ["Don't do this", "Don't do that"],
-  "vocab_yes": ["word1", "word2", "word3", "word4", "word5"],
-  "vocab_no": ["avoid1", "avoid2", "avoid3", "avoid4", "avoid5"],
-  "touchpoints": [
-    {"icon": "emoji", "name": "Channel name", "badge": "Short badge", "bad": "Example of wrong tone", "good": "Example of right tone"}
-  ]
-}
-
-Generate exactly 4 pillars and 4 touchpoints (Website, Email, Social Media, Customer Service). Generate 5-8 dos, 5-8 donts, 6-10 vocab_yes, 6-10 vocab_no. Keep everything concise.` + HOUSE_STYLE,
+      system: cachedSystem(TONE_STABLE),
       messages: [{
         role: "user",
         content: `Analyse these writing samples and extract the brand tone of voice:\n\n${pastedText.slice(0, 5000)}`
@@ -53,6 +36,8 @@ Generate exactly 4 pillars and 4 touchpoints (Website, Email, Social Media, Cust
         try {
           let fullText = "";
           for await (const event of stream) {
+            // message_start is where a streamed call reports its cache numbers.
+            if (event.type === "message_start") logCacheUsage("tone-generate", event.message.usage);
             if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
               fullText += event.delta.text;
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: true })}\n\n`));

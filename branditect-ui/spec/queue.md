@@ -199,3 +199,23 @@ Delete `app/api/zz-note/route.ts`. Stop. Do not start anything not on this list 
 improve items already reported. Leave the tree committed and clean, and close the report with which
 items completed, which stopped at a migration, which were blocked, and the full list of `zz-` brands
 and users to clean up.
+
+---
+
+# ADDED MID-RUN — rule 4, the inbox
+
+**4 · Re-read `branditect-ui/spec/inbox.md` at every item boundary**, before
+starting the next item and after finishing the previous one.
+
+Entries are written there while you are working, so what you read at the start
+of the queue is not what is there now. An entry may correct an item you have
+already reported as done — that is the point of it, and reopening a closed item
+because the inbox says so is correct behaviour, not churn.
+
+Mark an entry `DONE` in place once acted on, and give it its own entry in the
+report. Never delete one: an entry that was acted on and one that was never seen
+must not look the same.
+
+This is the only channel back. There is no terminal between us — headless runs
+are disabled and the platform blocks typing into terminals — so a file at a
+known path, re-read on a fixed schedule, is the whole protocol.

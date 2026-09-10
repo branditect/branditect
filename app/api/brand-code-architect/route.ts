@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { HOUSE_STYLE } from '@/lib/house-style'
+import { cachedSystem, logCacheUsage } from '@/lib/prompt-cache'
+import { CODE_ARCHITECT_STABLE } from '@/lib/prompts'
 
 export const maxDuration = 60
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
-
-const SYSTEM_PROMPT = `You are a senior UI/UX engineer and design systems expert. You analyse screenshots to extract precise design systems, then generate matching HTML components for new features.
-
-Your response MUST be valid JSON only — no markdown, no backticks, no prose outside the JSON.
-
-Return this exact structure:
-{
-  "designSystem": {
-    "colors": ["#hex1", "#hex2", "#hex3", "#hex4", "#hex5"],
-    "typography": "Fonts used and text hierarchy",
-    "styleNotes": "Spacing, border-radius, card treatment, shadows, overall character"
-  },
-  "html": "COMPLETE self-contained HTML file with embedded <style>. Must: render the new feature with realistic placeholder content; include hover states and transitions; be mobile-friendly; contain no Lorem Ipsum. Use the exact design system extracted from the screenshots. Keep CSS concise — use shorthand properties and avoid redundancy."
-}
-
-IMPORTANT: You MUST complete the entire JSON response including the closing braces. Do not stop mid-output. Keep the HTML under 400 lines to ensure you can finish.`
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,7 +47,7 @@ Extract the design system and generate a complete, self-contained HTML file that
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
       max_tokens: 16000,
-      system: SYSTEM_PROMPT + HOUSE_STYLE,
+      system: cachedSystem(CODE_ARCHITECT_STABLE),
       messages: [
         {
           role: 'user',
@@ -73,6 +58,8 @@ Extract the design system and generate a complete, self-contained HTML file that
         },
       ],
     })
+
+    logCacheUsage('brand-code-architect', response.usage)
 
     const rawText = response.content
       .filter((b) => b.type === 'text')

@@ -1,34 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { HOUSE_STYLE } from "@/lib/house-style";
+import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
+import { CATALOG_PARSE_STABLE } from "@/lib/prompts";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export const maxDuration = 30;
-
-const SYSTEM_PROMPT = `You are a product catalogue parser. Extract all products or services from the provided text and return them as a JSON array.
-
-For each product/service return an object with these fields:
-- kind: "physical" | "services" | "saas" | "digital"
-- name: string (product/service name)
-- description: string (1-2 sentence description)
-- category: string (optional, e.g. "Skincare", "Consulting")
-- price: string (price as plain number, e.g. "29.99" — for physical/services/digital)
-- priceModel: string (services only: "Per project" | "Per hour" | "Retainer / monthly" | "Custom quote")
-- monthlyPrice: string (saas only, plain number e.g. "49")
-- deliveryTime: string (optional, e.g. "3-5 business days")
-- inclusions: string (comma-separated list of what is included, optional)
-- idealClient: string (services only, who this is for, optional)
-- sku: string (physical only, optional)
-
-Choose kind based on:
-- "physical" = tangible goods that are shipped or handed over
-- "services" = professional services, consulting, coaching, agency work
-- "saas" = software or digital subscriptions (recurring)
-- "digital" = one-time digital downloads, courses, templates
-
-Return ONLY a valid JSON array, no markdown, no extra text.
-Example: [{"kind":"services","name":"Brand Strategy Workshop","description":"Half-day workshop to define brand positioning.","price":"1500","priceModel":"Per project"}]`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,7 +55,7 @@ export async function POST(req: NextRequest) {
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
       max_tokens: 2000,
-      system: SYSTEM_PROMPT + HOUSE_STYLE,
+      system: cachedSystem(CATALOG_PARSE_STABLE),
       messages: [
         {
           role: "user",
@@ -86,6 +63,9 @@ export async function POST(req: NextRequest) {
         },
       ],
     });
+
+
+    logCacheUsage("catalog-parse", response.usage);
 
     const raw = response.content
       .filter((b) => b.type === "text")

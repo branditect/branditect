@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
+import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
+import { VAULT_EXTRACT_STABLE } from "@/lib/prompts";
 
 // A 40-page image-heavy guideline PDF measured 104s. At the old 60s the
 // function was killed mid-flight, so the row below stayed "processing" with
@@ -11,8 +13,6 @@ import { resolveBrand } from "@/lib/api-auth";
 export const maxDuration = 300;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const SYSTEM_PROMPT = `You are a brand data extractor. Extract ALL text content from this document — product names, features, pricing, company info, team info, and any other facts. Format as clean readable text. Do not summarise — preserve all specific details, numbers, names, and figures exactly as written.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -118,9 +118,11 @@ export async function POST(req: NextRequest) {
         // truncate. None of them need reasoning tokens.
         thinking: { type: "disabled" },
         max_tokens: 4000,
-        system: SYSTEM_PROMPT,
+        system: cachedSystem(VAULT_EXTRACT_STABLE),
         messages: [{ role: "user", content: messageContent }],
       });
+
+      logCacheUsage("vault-extract", response.usage);
 
       extractedText = response.content
         .filter((b) => b.type === "text")

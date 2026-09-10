@@ -250,6 +250,138 @@ answer honestly.
 
 ---
 
+## Inbox 2 · Prompt caching — done, and the API's own numbers are below
+
+**Confirmed as described.** No `cache_control` anywhere in `app/api` or `lib`.
+All eight routes passed `system` a plain string, so nothing has ever been
+cached. Nothing errors when you do that — you simply pay full input price
+forever, which is why it survived this long.
+
+**`lib/prompt-cache.ts`** builds the array. **`lib/prompts.ts`** now holds every
+system prompt in the app, one file, moved verbatim: a script sliced the seven
+existing literals out of the routes and a byte-for-byte comparison confirmed
+they came across unchanged before the originals were deleted. All eight routes
+call the helper.
+
+### The split, and why copy-architect changed
+
+`cachedSystem(stable, varying)` takes the two halves separately and assembles
+them itself. A caller never holds them concatenated, so it cannot put them in
+the wrong order. The per-request half is a `PerRequestBlock` object rather than
+a string, so gluing it onto the prefix produces a visible `[object Object]`
+instead of a silent doubling of the bill.
+
+`app/api/copy-architect/route.ts` is the one route whose prompt changed shape.
+The brief — `WRITE: 3 separate drafts of a long-form email`, the length, the
+chosen product — used to sit between "You are the copywriter for X" and the
+brand sources. That is a per-request string at the front of a five-thousand
+token prefix: it would have invalidated the entry on every single call and
+turned caching into a pure loss. The brief is now a second, uncached block after
+the brand sources.
+
+Everything else is byte-identical to what it sent yesterday.
+
+### Criterion 2 — measured, not asserted from the source
+
+`npm run cache:probe` sends the real system arrays, built by the real builders,
+to the real API and reads the counters back. Four calls per route: a write, an
+identical call that must read, a call where only the per-request block changed
+that must still read, and the same call with `cache_control` stripped that must
+read zero.
+
+```
+model claude-sonnet-5 · ttl 1h
+
+CACHES         andy                  wrote 4879, read 4879; control read 0
+CACHES         copy-architect        wrote 5123, read 5123, 5123 on a different brief; control read 0
+CACHES         generate-prompt       wrote 2072, read 2072; control read 0
+CACHES         brand-strategy        wrote 1651, read 1651; control read 0
+BELOW-MINIMUM  tone-generate         872 input tokens, under the 1024 Sonnet needs
+BELOW-MINIMUM  catalog-parse         863 input tokens, under the 1024 Sonnet needs
+BELOW-MINIMUM  brand-code-architect  757 input tokens, under the 1024 Sonnet needs
+BELOW-MINIMUM  vault-extract         99 input tokens, under the 1024 Sonnet needs
+```
+
+The stripped-`cache_control` control is the part that makes the rest mean
+anything: without it, `read > 0` could be a counter that is never zero.
+
+**Four of eight routes cache, not eight.** Sonnet caches nothing below 1024
+tokens, and four of these prompts are shorter than that. `cache_control` on
+them is inert — no write premium, no error, no saving. They go through the same
+helper for uniformity, and their log line will read `hit=n/a` forever, which is
+the honest signal rather than a 0% that looks like a fault. Anything that grows
+one of them past 1024 tokens starts caching with no further change.
+
+**The four that cache are the four that matter.** They are AI Chat, Studio ▸
+Write, Studio ▸ Create images and Brand ▸ Strategy — everything a founder uses
+repeatedly. The four that do not are one-shot ingestion: parse a catalogue,
+extract a PDF, read a screenshot.
+
+### The 1-hour TTL needs no beta header
+
+The entry expected one. It does not: `ttl: "1h"` is accepted on the plain
+Messages API, measured on 2026-09-10 against `claude-sonnet-5` with
+`@anthropic-ai/sdk` 0.81.0 and `anthropic-version: 2023-06-01`. The write came
+back as `cache_creation.ephemeral_1h_input_tokens: 2404` and the second call as
+`cache_read_input_tokens: 2404`. One hour is chosen over five minutes because
+an expired entry costs *more* than not caching — a miss pays 1× to re-read and
+1.25× to re-write — and a founder coming back to a draft twenty minutes later
+is a normal thing to do, not an edge case.
+
+### Criterion 3 — the counters are logged per call
+
+Every route prints one greppable line: `[cache] andy write=0 read=4879
+uncached=214 hit=100%`. Streaming routes take theirs from `message_start`,
+which is where a streamed call reports usage. A prompt too short to cache logs
+`hit=n/a` rather than `hit=0%`.
+
+### Criterion 4 — nothing per-request in the cached block
+
+`lib/prompt-cache.test.ts`, 42 assertions, run in `npm test` (989 total, all
+green). The load-bearing ones build the full system array twice for one brand
+with two different briefs and assert block 0 is byte-identical while block 1
+differs; assert `lib/prompts.ts` contains no `Date`, `Math.random`,
+`performance.now` or `randomUUID` with comments stripped first; and walk every
+route asserting none passes a string, none concatenates inside the
+`cachedSystem(` call, and none has stopped logging.
+
+Eight negative controls, each applied to working code and reverted:
+
+| control | result |
+|---|---|
+| a clock inside the cached prefix | red |
+| `cache_control` on the per-request block | red |
+| per-request concatenated inside the helper | red |
+| one route back to a plain string | red |
+| one route stops logging | red |
+| `andyStable` ignores its brand context | red |
+| a route glues a varying string onto the prefix | red |
+| the house style dropped from a stable prompt | red |
+
+**One claim I made and then had to withdraw.** I wrote that the object type
+makes `copyStable(x) + copyPerRequest(y)` a compile error. It is not —
+TypeScript permits `+` between a string and an object. I found that by running
+`tsc` against the broken version rather than by reasoning about it, and the
+comment in `lib/prompt-cache.ts` now says so. The test is what catches it.
+
+### Two things not done
+
+**`claude/unit-economics.md` is not in this repo** — no file of that name
+exists anywhere under it. I have not created one, because a second copy of a
+doc whose canonical version lives in the project is exactly the drift this
+codebase keeps getting bitten by. The numbers above are the ones for the note
+at the top of it.
+
+**`next build` was not run.** A dev server was listening on port 3000 and
+CLAUDE.md forbids building underneath one. Instead: `tsc --noEmit` clean across
+the project, `next lint` clean on `app` and `lib`, 989 tests green, and all
+eight changed routes exercised through the running dev server — each returned
+its own handler's 401 or 400 rather than a compile error, and
+`/api/brand/generate-prompt` returned a real 200 with the cached array in
+flight.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

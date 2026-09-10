@@ -11,6 +11,12 @@ export interface Brand {
   industry: string | null;
   logo_url: string | null;
   colors: { hex: string; name: string }[] | null;
+  /**
+   * Both undefined until supabase/brand-language.sql is run. Every reader
+   * defaults to "en" on its own, so the app is correct before and after.
+   */
+  interface_language?: string | null;
+  output_language?: string | null;
 }
 
 interface UseBrandReturn {

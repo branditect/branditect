@@ -182,7 +182,7 @@ See the report entry "Inbox 2".
 
 ---
 
-## 3 · OPEN — Finnish: the onboarding content is translated, wire it up
+## 3 · PART DONE — Finnish: the onboarding content is translated, wire it up
 
 `lib/onboarding-questions.fi.ts` is new and written by the design side. All 20 questions,
 every per-track helper line and every worked example. Typechecks clean; a coverage check
@@ -236,13 +236,103 @@ both define structure; the one nobody reads is the one that drifts.
 4. The rubric check does not run for a non-English brand — asserted by a brand with
    `output_language = 'fi'` producing no rubric failure on copy that would fail in English.
 
-### What is NOT done, so nobody assumes it is
+### The interface dictionary is written too — 10 Sep
 
-The **interface itself** — roughly 690 strings and 2,400 words across `app/` and
-`components/` — is untranslated. It needs extraction to a dictionary in one pass **before**
-anyone translates a word of it: translating in place means doing the extraction later
-anyway, with twice the diff. Extraction is your job; the Finnish for it is the design side's.
-Do the extraction, commit `lib/i18n/en.ts` with the key scheme, and say so in the report —
-the translation comes back through this inbox.
+**This section replaces the earlier one that said the interface was untranslated. It is not.
+Do not wait for translations through the inbox; they are already in the repo.**
 
-The marketing site stays English for now, by Saara's decision.
+`lib/i18n/en.ts` and `lib/i18n/fi.ts` are new. **500 keys, every one translated**, typechecked
+clean. Everything behind the login: navigation, the common vocabulary, home, errors, chat and
+Andy, sidebar and plan, activity, readiness, welcome, sign-in and sign-up, onboarding, the
+questionnaire shell, all of Knowledge, the product card, all of Brand, and all of Numbers.
+
+**`fi` is typed `Record<StringKey, string>` where `StringKey` comes from `en`. A missing
+Finnish string is a compile error, not a silent English word on a Finnish screen.** That is
+the point of the flat dotted keys — keep them flat. Nested objects read nicer and then hide a
+gap three levels down.
+
+So what is left here is **the extraction pass, and only that**: replace the literals in `app/`
+and `components/` with `t()` calls against the keys that already exist. The keys were derived
+from the real strings in those files, so they should match what you find. Where one does not,
+add it to **both** files and say so in the report — do not invent Finnish, and do not quietly
+leave a literal in place.
+
+Two rules from the dictionary header that matter while you wire it:
+
+- **Never build a sentence by concatenating keys.** Word order differs by language, and
+  Finnish puts the case ending where English puts a preposition. Interpolate with
+  `{placeholders}`.
+- **`common.*` is only for a string used in more than one place.** A word used once stays
+  under its own screen even if it is a single word — "Type" on the media screen and "Type" on
+  the product card can diverge in Finnish, and sharing a key would force them together.
+
+Terminology is settled and approved: Knowledge → **Tieto**, Numbers → **Laskurit**, AI Chat →
+**Chat**, Visual identity → **Visuaalit**, Tone of voice → **Äänensävy**, plan → **Tilaus**.
+Do not change these while wiring.
+
+### Acceptance criteria for the extraction
+
+1. No user-facing literal remains in `app/(app)`, `app/login`, `app/signup`, `app/onboarding`,
+   `app/start` or `components/` — asserted by a test that scans for JSX text and
+   `placeholder`/`aria-label`/`title` attributes and fails on anything not coming from `t()`.
+   Allow an explicit ignore list, and fail if an ignore entry no longer matches anything.
+2. Every key in `en` is used at least once — an unused key means a screen was missed or the
+   key was guessed wrong.
+3. Switching `interface_language` to `fi` changes every screen, asserted by rendering the app
+   shell and finding none of a sample of known English strings.
+
+### Still not translated, and deliberately
+
+The marketing site under `app/(site)` — about 70 strings — stays English for now, by Saara's
+decision. Do not extract it.
+
+---
+
+**PART DONE 2026-09-10. Not marked DONE, because it is not.**
+
+Items 1-4 are built and tested. The extraction is four files of sixty-four, and
+it stops there on a measurement rather than on effort.
+
+- **1 · `supabase/brand-language.sql`** written, not run, rule 1. Both columns,
+  both defaulting to `en`, and every reader in the app defaults to `en` on its
+  own — so the interface is right before the migration as well as after.
+- **2 · `forLocale`** is `lib/onboarding-locale.ts`, falling back per field.
+  It is not beside `forTrack`: if the English table imported the Finnish
+  overlay, a third language would mean editing the structure file, which is the
+  dependency that lets two tables start defining the same thing.
+- **3 · The switch** is in a new `/settings` and on the onboarding welcome
+  screen, before the twenty questions. It writes the cookie and the column; the
+  column does not exist yet, so that write fails and the panel says the choice
+  is on this browser only rather than claiming to have saved it.
+- **4 · The rubric is suspended by field, not wholesale** — `spec/finnish.md`
+  section 2 says the blunt version was an earlier draft and is wrong, and half
+  the rubric holds in any language. Every suspended field reports as suspended
+  with its reason. One addition of mine: `cta_max_words`. The table lists
+  `cta_style` as surviving, and the style does, but the only part of it that is
+  mechanically checked is a word count.
+
+**The extraction is where this stops.** Measured against the real files:
+**2,107** user-facing literals in scope, **1,276** distinct strings with no key
+at all, and **150 of the 500 `en` keys** have a value that appears verbatim in
+the code. `brand/channels/page.tsx` has 69 strings and one key;
+`BrandBookClient.tsx` has 275 and one.
+
+Finishing as written would mean me writing over a thousand strings of Finnish,
+which this entry forbids in the same paragraph that asks for the extraction. So
+the boundary is made legible instead: **`branditect-ui/spec/i18n-gap.md`**,
+generated by `npm run i18n:gap`, lists all 1,276 by screen, untruncated. That
+file is what comes back through here translated; the extraction is mechanical
+after it.
+
+`lib/i18n-scope.ts` holds `EXTRACTED` and `OUTSTANDING` and the suite checks
+both directions, so neither a new English screen nor a finished file can drift
+past unnoticed.
+
+Thirteen keys were added to both dictionaries for the switch and the account
+menu. The Finnish in them is mine and has not been reviewed — they are listed
+by name in the report.
+
+`lib/i18n/.add-en.txt` and `.add-fi.txt` are in the tree and every key in them
+is already in `en.ts` and `fi.ts`. Not committed, not deleted.
+
+See the report entry "Inbox 3".

@@ -25,6 +25,7 @@
  */
 
 import { ARCHETYPES, type ArchetypeId } from "./onboarding-questions.ts";
+import type { Locale } from "./i18n/index.ts";
 
 /* ── measurement ─────────────────────────────────────────────────────────── */
 
@@ -121,7 +122,7 @@ export const HOUSE_BANNED_CONSTRUCTIONS: [RegExp, string][] = [
   [/in today's [a-z-]*\s?world/i, '"In today\'s fast-paced world" and variants'],
 ];
 
-export function houseRuleProblems(line: string): string[] {
+export function houseRuleProblems(line: string, locale: Locale = "en"): string[] {
   const problems: string[] = [];
   if (/[—–]/.test(line)) problems.push("uses an em or en dash, which house style bans outright");
   if (/\*\*|\*[^*]+\*|^#{1,6}\s|^\s*[-•*]\s/m.test(line)) problems.push("contains markdown");
@@ -131,7 +132,10 @@ export function houseRuleProblems(line: string): string[] {
   }
   // No stacks of three adjectives. Approximated as three comma-separated
   // single words in a row, which is the shape the rule is aimed at.
-  if (/\b(\w+),\s*(\w+),\s*(and\s+)?(\w+)\b/.test(line)) {
+  //
+  // English suffixes only, so outside English it matches nothing and would
+  // report a pass it never earned. Suspended rather than run.
+  if (locale === "en" && /\b(\w+),\s*(\w+),\s*(and\s+)?(\w+)\b/.test(line)) {
     const m = line.match(/\b(\w+),\s*(\w+),\s*(and\s+)?(\w+)\b/);
     if (m && [m[1], m[2], m[4]].every((w) => /(ous|ive|ful|able|ible|al|ic|y)$/i.test(w))) {
       problems.push("stacks three adjectives");
@@ -333,11 +337,50 @@ export const RUBRICS: Record<ArchetypeId, Rubric> = {
   },
 };
 
+/**
+ * Which rubric fields do not survive translation, and why.
+ *
+ * Section 2 of branditect-ui/spec/finnish.md, and item 4 of inbox entry 3.
+ * The spec is explicit that suspending the WHOLE check for a non-English brand
+ * is too blunt: roughly half of it is about rhetoric and punctuation and holds
+ * in any language, and turning that half off would mean a Finnish brand gets
+ * no voice check at all.
+ *
+ * So it splits by field. Everything not named here still runs in Finnish:
+ * fragments, hedging, exclamations, emoji, cta_style, the em and en dash,
+ * markdown, and the banned constructions.
+ *
+ * A suspended field reports as SUSPENDED, never as passing. That is the whole
+ * point — a check that passes vacuously is worse than no check, because it is
+ * believed.
+ */
+export const SUSPENDED_OUTSIDE_ENGLISH: Record<string, string> = {
+  sentence_words_avg:
+    "Finnish agglutinates. \"Tilauksesi lähti tänä aamuna\" is four words where English needs seven, so every band is roughly a third too high. Recalibrate against real Finnish copy, do not divide by a guessed constant.",
+  sentence_words_max:
+    "Same reason as sentence_words_avg: the number counts words, and the words hold more.",
+  sentences_per_para:
+    "Sentence count per paragraph moves with sentence length, which is itself uncalibrated here.",
+  contractions:
+    "Finnish has no contractions, so the field is undefined rather than false. The equivalent lever is written versus spoken form (minä/sinä against mä/sä), and nobody has written that rule yet.",
+  banned_words:
+    "The English list exists because someone noticed those tells. Finnish has its own and nobody has compiled them. Candidates to test rather than assume: ratkaisu, innovatiivinen, saumaton, hyödyntää, kokonaisvaltainen, ainutlaatuinen.",
+  cta_max_words:
+    "cta_style itself survives — a bare imperative is a bare imperative in any language — but the only part of it that is mechanically checked is a word count, and word counts are what agglutination breaks. spec/finnish.md lists cta_style as surviving; the bound attached to it does not, which is a distinction the table does not draw.",
+  adjective_stacks:
+    "The detector matches English adjective endings (-ous, -ive, -ful, -able). In Finnish it matches nothing, which would report as a pass on a line that stacks three adjectives.",
+};
+
 export interface Validation {
   ok: boolean;
   /** Real violations. Any entry here means the line must be rewritten. */
   problems: string[];
-  /** Rubric fields that could not be checked, and why. */
+  /**
+   * Rubric fields that could not be checked, and why.
+   *
+   * Non-empty means ok:true is a partial result. A caller showing a green tick
+   * without showing this is reporting success on work the check did not do.
+   */
   unchecked: string[];
 }
 
@@ -348,32 +391,39 @@ export interface Validation {
  * nobody wrote a rubric for is how a check reports success on work it never
  * did.
  */
-export function validateLine(line: string, id: ArchetypeId): Validation {
+export function validateLine(line: string, id: ArchetypeId, locale: Locale = "en"): Validation {
   const rubric = RUBRICS[id];
   if (!rubric) {
     return { ok: false, problems: [`no rubric for ${id}`], unchecked: [] };
   }
   const name = ARCHETYPES[id]?.name ?? id;
-  const problems = houseRuleProblems(line);
+  const english = locale === "en";
+  const problems = houseRuleProblems(line, locale);
+  const unchecked: string[] = english
+    ? []
+    : Object.keys(SUSPENDED_OUTSIDE_ENGLISH).map(
+        (field) => `${field}: suspended for ${locale} — ${SUSPENDED_OUTSIDE_ENGLISH[field]}`);
 
-  const avg = avgSentenceWords(line);
-  if (avg < rubric.avg[0] || avg > rubric.avg[1]) {
-    problems.push(
-      `sentence_words_avg is ${avg.toFixed(1)}, outside ${name}'s ${rubric.avg[0]}-${rubric.avg[1]}`);
-  }
-  const longest = maxSentenceWords(line);
-  if (longest > rubric.maxWords) {
-    problems.push(`longest sentence is ${longest} words, over ${name}'s max of ${rubric.maxWords}`);
-  }
+  if (english) {
+    const avg = avgSentenceWords(line);
+    if (avg < rubric.avg[0] || avg > rubric.avg[1]) {
+      problems.push(
+        `sentence_words_avg is ${avg.toFixed(1)}, outside ${name}'s ${rubric.avg[0]}-${rubric.avg[1]}`);
+    }
+    const longest = maxSentenceWords(line);
+    if (longest > rubric.maxWords) {
+      problems.push(`longest sentence is ${longest} words, over ${name}'s max of ${rubric.maxWords}`);
+    }
 
-  for (const p of perParaProblems(line, rubric.perPara)) problems.push(p);
+    for (const p of perParaProblems(line, rubric.perPara)) problems.push(p);
+  }
 
   const frags = fragmentsIn(line);
   if (rubric.fragments === "never" && frags.length) {
     problems.push(`fragments: never, but ${frags.length} sentence(s) have no finite verb: "${frags[0]}"`);
   }
 
-  if (rubric.contractions === "always" && !hasContraction(line)) {
+  if (english && rubric.contractions === "always" && !hasContraction(line)) {
     problems.push(`contractions: always, and the line has none`);
   }
 
@@ -391,7 +441,7 @@ export function validateLine(line: string, id: ArchetypeId): Validation {
   }
   if (rubric.emoji === "never" && emojiIn(line)) problems.push("emoji: never");
 
-  if (rubric.ctaMaxWords !== undefined) {
+  if (english && rubric.ctaMaxWords !== undefined) {
     const cta = wordsOf(lastSentence(line)).length;
     if (cta > rubric.ctaMaxWords) {
       problems.push(
@@ -399,15 +449,17 @@ export function validateLine(line: string, id: ArchetypeId): Validation {
     }
   }
 
-  const lower = line.toLowerCase();
-  for (const w of rubric.banned) {
-    if (lower.includes(w.toLowerCase())) problems.push(`banned word for ${name}: "${w}"`);
-  }
-  for (const w of HOUSE_BANNED_WORDS) {
-    if (new RegExp(`\\b${w}\\b`, "i").test(line)) problems.push(`house banned word: "${w}"`);
+  if (english) {
+    const lower = line.toLowerCase();
+    for (const w of rubric.banned) {
+      if (lower.includes(w.toLowerCase())) problems.push(`banned word for ${name}: "${w}"`);
+    }
+    for (const w of HOUSE_BANNED_WORDS) {
+      if (new RegExp(`\\b${w}\\b`, "i").test(line)) problems.push(`house banned word: "${w}"`);
+    }
   }
 
-  return { ok: problems.length === 0, problems, unchecked: [] };
+  return { ok: problems.length === 0, problems, unchecked };
 }
 
 /** True only when the governing document has actually been brought in. */

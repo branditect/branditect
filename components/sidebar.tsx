@@ -9,6 +9,7 @@ import Icon from "@/components/icon";
 import Logo from "@/components/logo";
 import AccountMenu from "@/components/account-menu";
 import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n/use-t.tsx";
 import { NAV, sectionFor, type NavItem } from "@/lib/nav";
 
 function NavRow({
@@ -27,6 +28,7 @@ function NavRow({
     : pathname === item.href;
 
   // The icon stays orange in both states — only the label colour changes.
+  const t = useT();
   const rowClass = `flex h-9 w-full items-center gap-[9px] rounded-nav px-[9px] text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
     isActive ? "bg-tint-1 text-accent" : "text-ink-2 hover:bg-tile"
   }`;
@@ -41,7 +43,7 @@ function NavRow({
         <span className="shrink-0 text-accent">
           <Icon name={item.icon} size={20} />
         </span>
-        {item.label}
+        {t(item.key)}
       </Link>
     );
   }
@@ -52,7 +54,7 @@ function NavRow({
         <span className="shrink-0 text-accent">
           <Icon name={item.icon} size={20} />
         </span>
-        {item.label}
+        {t(item.key)}
         <span
           className={`ml-auto text-[8px] text-faint transition-transform duration-200 ${
             expanded ? "rotate-90" : ""
@@ -76,7 +78,7 @@ function NavRow({
                   childActive ? "bg-tile text-ink" : "text-muted hover:bg-tile hover:text-ink"
                 }`}
               >
-                {child.label}
+                {t(child.key)}
               </Link>
             );
           })}
@@ -87,6 +89,7 @@ function NavRow({
 }
 
 export default function Sidebar() {
+  const t = useT();
   const pathname = usePathname();
   const { brandName } = useBrand();
   const { user } = useUser();
@@ -111,7 +114,7 @@ export default function Sidebar() {
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t("sidebar.primary")}
       className="m-3 mr-0 flex h-[calc(100dvh-24px)] w-sidebar shrink-0 flex-col rounded-panel border border-rule bg-card px-3 pb-4 pt-[18px] drop-shadow-panel stack:h-auto stack:min-h-0 stack:m-0 stack:w-full stack:rounded-none"
     >
       <Link href="/home" className="flex items-center gap-2 px-1.5 pb-5">
@@ -132,20 +135,27 @@ export default function Sidebar() {
 
       <div className="mt-auto shrink-0 pt-[18px]">
         <div className="rounded-card bg-tint-1 p-[13px]">
-          <div className="text-xs font-semibold text-ink">Your plan</div>
-          <div className="text-[19px] font-bold leading-[1.35] tracking-[-0.5px] text-accent">Pro</div>
+          <div className="text-xs font-semibold text-ink">{t("settings.yourPlan")}</div>
+          <div className="text-[19px] font-bold leading-[1.35] tracking-[-0.5px] text-accent">{t("sidebar.pro")}</div>
           <Link
             href="/settings/plan"
             className="mt-[9px] block rounded-[9px] bg-white p-[7px] text-center text-xs font-semibold text-accent drop-shadow-btn"
           >
-            View plan
+            {t("sidebar.viewPlan")}
           </Link>
         </div>
+
+        <Link
+          href="/settings"
+          className="mt-[9px] block rounded-[9px] px-[9px] py-2 text-xs font-semibold text-muted-2 hover:bg-tile"
+        >
+          {t("settings.title")}
+        </Link>
 
         <AccountMenu
           name={user?.fullName ?? user?.email ?? brandName}
           /* Only show the brand underneath when it isn't already the line above. */
-          org={user ? brandName : "Workspace"}
+          org={user ? brandName : t("sidebar.workspace")}
           avatar={<Logo variant="mark" height={32} className="shrink-0" />}
           onSignOut={handleSignOut}
         />

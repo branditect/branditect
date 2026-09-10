@@ -12,7 +12,9 @@
     "smoke:prod": "node scripts/smoke.mjs https://www.branditect.io",
     "rls:audit": "node --experimental-strip-types scripts/rls-audit.mjs",
     "rls:cross-tenant": "node scripts/cross-tenant.mjs",
-    "cache:probe": "node --experimental-strip-types scripts/prompt-cache-probe.mjs"
+    "cache:probe": "node --experimental-strip-types scripts/prompt-cache-probe.mjs",
+    "i18n:scan": "node --experimental-strip-types scripts/i18n-scan.mjs",
+    "i18n:gap": "node --experimental-strip-types scripts/i18n-gap.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

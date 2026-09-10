@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/en";
 
 /**
  * The account row at the foot of the sidebar, as a menu trigger.
@@ -19,24 +21,24 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
  */
 
 type Item = {
-  label: string;
+  key: StringKey;
   icon: React.ReactNode;
   soon?: boolean;
 };
 
 const ITEMS: Item[] = [
   {
-    label: "Profile",
+    key: "accountMenu.profile" as const,
     soon: true,
     icon: <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10m0 2c-5 0-9 2.7-9 6v2h18v-2c0-3.3-4-6-9-6" />,
   },
   {
-    label: "Settings",
+    key: "accountMenu.settings" as const,
     soon: true,
     icon: <path d="m19.4 13-.1-1 2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1l-.4-2.6h-4l-.4 2.6a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.4 2.6h4l.4-2.6a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7" />,
   },
   {
-    label: "Help",
+    key: "accountMenu.help" as const,
     soon: true,
     icon: <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 16.2a1.35 1.35 0 1 1 0-2.7 1.35 1.35 0 0 1 0 2.7m1.9-6.1c-.8.6-.9.9-.9 1.5v.3h-2v-.5c0-1.3.5-2 1.5-2.8.8-.6 1.1-.9 1.1-1.5 0-.8-.6-1.3-1.6-1.3s-1.7.6-1.8 1.6h-2c.1-2 1.6-3.4 3.8-3.4s3.6 1.2 3.6 3c0 1.2-.5 1.9-1.7 2.8" />,
   },
@@ -59,6 +61,7 @@ export default function AccountMenu({
   avatar: React.ReactNode;
   onSignOut: () => Promise<void>;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -142,7 +145,7 @@ export default function AccountMenu({
         >
           {ITEMS.map((item) => (
             <button
-              key={item.label}
+              key={item.key}
               type="button"
               role="menuitem"
               onClick={() => { /* Not built yet — the Soon tag says so. */ }}
@@ -151,9 +154,9 @@ export default function AccountMenu({
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[17px] w-[17px] flex-none fill-current text-faint">
                 {item.icon}
               </svg>
-              {item.label}
+              {t(item.key)}
               <span className="ml-auto rounded-[4px] bg-tile px-[5px] py-[2px] text-[9px] font-bold uppercase tracking-[.4px] text-muted-2">
-                Soon
+                {t("accountMenu.soon")}
               </span>
             </button>
           ))}
@@ -170,7 +173,7 @@ export default function AccountMenu({
             <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[17px] w-[17px] flex-none fill-current">
               {SIGN_OUT_ICON}
             </svg>
-            {signingOut ? "Signing out…" : "Log out"}
+            {signingOut ? t("accountMenu.signingOut") : t("accountMenu.logOut")}
           </button>
         </div>
       )}

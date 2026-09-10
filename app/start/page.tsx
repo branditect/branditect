@@ -6,6 +6,7 @@ import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
 import { gateFootNote, gateProgress } from "@/lib/rail-steps";
+import LanguageSwitch from "@/components/language-switch";
 
 export default function StartWelcome() {
   const { state, loading, flush } = useOnboarding();
@@ -51,6 +52,11 @@ export default function StartWelcome() {
           className="rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn">
           {partial ? "Pick up where you left off" : "Start"}
         </Link>
+      </div>
+
+      {/* Before twenty questions, not after them. */}
+      <div className="mt-10 max-w-[420px] rounded-card bg-white p-5 drop-shadow-panel">
+        <LanguageSwitch />
       </div>
 
       {partial && (

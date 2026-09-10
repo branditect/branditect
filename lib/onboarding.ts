@@ -13,6 +13,17 @@ export interface Profile {
   track: Track;
   charge_model: "one-off" | "recurring";
   team_size: "just-me" | "2-3" | "4-10";
+  /**
+   * What Studio writes in. Asked in onboarding because it is a decision about
+   * the customer, not a setting about the screen — the interface language is
+   * asked separately, in Settings.
+   *
+   * Optional, and isProfileComplete deliberately does not require it: it
+   * arrived after brands existed, and gating an existing founder's workspace on
+   * a question they were never asked would be a regression, not a feature.
+   * Absent means English.
+   */
+  output_language?: "en" | "fi";
 }
 
 export interface OnboardingState {

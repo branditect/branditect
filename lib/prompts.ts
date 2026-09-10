@@ -27,11 +27,13 @@
  */
 import { HOUSE_STYLE } from "./house-style.ts";
 import { perRequest, type PerRequestBlock } from "./prompt-cache.ts";
+import { languageDirective } from "./output-language.ts";
+import { DEFAULT_LOCALE, type Locale } from "./i18n/index.ts";
 
 // ─────────────────────────────────────────────────────────── AI Chat (Andy) ──
 
 /** Andy's whole system prompt is brand-stable: the context, then the rules. */
-export function andyStable(brandContext: string): string {
+export function andyStable(brandContext: string, language: Locale = DEFAULT_LOCALE): string {
   return `You are Andy, an AI brand assistant built into Branditect.
 
 ${brandContext}
@@ -45,7 +47,7 @@ RULES:
 - Never invent brand facts. Only use what's in the brand knowledge above.
 - Use a professional but friendly tone. Not corporate, not overly casual.
 - When generating copy, match the brand's tone of voice.
-- Keep responses focused — under 200 words unless the user asks for something longer.` + HOUSE_STYLE;
+- Keep responses focused — under 200 words unless the user asks for something longer.` + HOUSE_STYLE + languageDirective(language);
 }
 
 // ────────────────────────────────────────────────────── Studio ▸ Write copy ──
@@ -76,8 +78,12 @@ export function productBlock(product: Record<string, unknown> | null): string {
   return `\n\n=== THE PRODUCT THIS IS ABOUT ===\n${lines.join("\n")}`;
 }
 
-export function copyStable(args: { brandName: string; context: string }): string {
-  const { brandName, context } = args;
+export function copyStable(args: {
+  brandName: string;
+  context: string;
+  language?: Locale;
+}): string {
+  const { brandName, context, language = DEFAULT_LOCALE } = args;
   return `You are the copywriter for ${brandName}. You know this brand from the sources below and from nothing else.
 
 THE ONE RULE — no fact that is not in the sources below.
@@ -107,7 +113,7 @@ Complete the entire JSON including every closing brace. Do not stop mid-output.
 
 --- BRAND SOURCES BELOW ---
 
-${context || `Brand: ${brandName}\n(Nothing has been added to this brand yet.)`}${HOUSE_STYLE}`;
+${context || `Brand: ${brandName}\n(Nothing has been added to this brand yet.)`}${HOUSE_STYLE}${languageDirective(language)}`;
 }
 
 /**

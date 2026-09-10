@@ -12,6 +12,9 @@ import {
 import { findAllLiterals, isTechnical, isClassList, isPathData, isSourceFragment, looksLikeCopy } from "./i18n-scan.ts";
 import { SCOPE, OUT_OF_SCOPE, IGNORE, EXTRACTED, OUTSTANDING } from "./i18n-scope.ts";
 import { forLocale, sectionTitleFor, allForLocale } from "./onboarding-locale.ts";
+import { languageDirective, outputLanguageFor } from "./output-language.ts";
+import { copyStable, copyPerRequest, andyStable } from "./prompts.ts";
+import { cachedSystem } from "./prompt-cache.ts";
 import { QUESTIONS_FI } from "./onboarding-questions.fi.ts";
 import { QUESTIONS, type Track } from "./onboarding-questions.ts";
 import { validateLine, SUSPENDED_OUTSIDE_ENGLISH } from "./tone-rubric.ts";
@@ -404,5 +407,104 @@ describe("source code cannot reach the work list", () => {
     const leaked = entries.filter((e) => isSourceFragment(e) || isClassList(e));
     assert.deepEqual(leaked.slice(0, 8), [],
       `${leaked.length} source fragment(s) in the work list; regenerate it`);
+  });
+});
+
+// ─────────────────────────────── inbox 4b: what Studio writes, not what she reads ──
+
+describe("the output language is stated, never inferred", () => {
+  it("adds nothing at all for English", () => {
+    // Every one of these prompts was written and tuned against English. Adding
+    // "write in English" to a prompt that already produces English changes the
+    // cache prefix for every existing brand and buys nothing.
+    assert.equal(languageDirective("en"), "");
+  });
+
+  it("names the language and says it beats the sources", () => {
+    const d = languageDirective("fi");
+    assert.match(d, /Finnish/);
+    assert.match(d, /overrides any language you infer/i);
+    assert.match(d, /that is the material, not the instruction/i);
+  });
+
+  it("keeps JSON keys in English, because they are not copy", () => {
+    // Several of these routes parse their own output. A translated "drafts"
+    // key would come back unparseable and read as the model failing.
+    assert.match(languageDirective("fi"), /Field\s+names and JSON keys stay exactly as specified in English/);
+  });
+
+  it("obeys house style in its own text", () => {
+    // Prompt rules leak. A directive containing an em dash is an example of
+    // the thing HOUSE_STYLE bans two paragraphs earlier.
+    assert.ok(!/[—–]/.test(languageDirective("fi")), "the directive itself uses an em or en dash");
+  });
+
+  it("defaults to English on every path that can fail", async () => {
+    const reader = (row: unknown) => ({
+      from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row }) }) }) }),
+    });
+    assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), "b"), "fi");
+    assert.equal(await outputLanguageFor(reader({ output_language: "sv" }), "b"), "en");
+    assert.equal(await outputLanguageFor(reader({}), "b"), "en", "the column does not exist yet");
+    assert.equal(await outputLanguageFor(reader(null), "b"), "en", "no such brand");
+    assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), "default"), "en");
+    assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), null), "en");
+  });
+
+  it("does not throw when the read itself throws", async () => {
+    const angry = { from: () => { throw new Error("schema cache"); } } as never;
+    assert.equal(await outputLanguageFor(angry, "b"), "en",
+      "a brand's language is not worth failing a generation over");
+  });
+
+  it("puts the directive in the cached block, not beside the request", () => {
+    // It is brand state and byte-stable per brand, so it costs nothing there.
+    const stable = copyStable({ brandName: "ZZ", context: "ctx", language: "fi" });
+    const blocks = cachedSystem(stable, copyPerRequest({
+      deliverable: "a caption", wordTarget: "20 words", count: 1, product: null,
+    }));
+    assert.match(blocks[0].text, /OUTPUT LANGUAGE/);
+    assert.ok(!/OUTPUT LANGUAGE/.test(blocks[1].text));
+  });
+
+  it("keeps the prefix byte-stable for one brand and one language", () => {
+    const a = copyStable({ brandName: "ZZ", context: "ctx", language: "fi" });
+    const b = copyStable({ brandName: "ZZ", context: "ctx", language: "fi" });
+    assert.equal(a, b);
+    assert.notEqual(a, copyStable({ brandName: "ZZ", context: "ctx", language: "en" }));
+    assert.equal(copyStable({ brandName: "ZZ", context: "ctx" }),
+      copyStable({ brandName: "ZZ", context: "ctx", language: "en" }),
+      "the default has to be English, or every existing brand's prefix changes");
+  });
+
+  it("andy carries it too", () => {
+    assert.match(andyStable("ctx", "fi"), /OUTPUT LANGUAGE/);
+    assert.ok(!/OUTPUT LANGUAGE/.test(andyStable("ctx")));
+  });
+
+  it("the two routes that write brand copy read the column", () => {
+    for (const f of ["app/api/andy/route.ts", "app/api/copy-architect/route.ts"]) {
+      const src = readFileSync(f, "utf8");
+      assert.match(src, /outputLanguageFor\(/, `${f} never asks what language to write in`);
+    }
+  });
+
+  it("onboarding asks the question, separately from the interface setting", () => {
+    const raw = readFileSync("app/start/profile/[step]/page.tsx", "utf8");
+    assert.match(raw, /output_language/, "onboarding never asks");
+    assert.match(raw, /What language should we write in\?/);
+    // Comments stripped first. The block that adds this step explains itself by
+    // naming interface_language, and a check that flags its own explanation is
+    // a check that gets weakened until it stops working.
+    const code = raw.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+    // Separate question, separate column. Sharing one would force a wrong
+    // answer on the founder who wants English on screen and Finnish in the copy.
+    assert.ok(!/interface_language/.test(code), "onboarding conflates the two languages");
+  });
+
+  it("the end-to-end probe exists and says what it cannot prove", () => {
+    const probe = readFileSync("scripts/output-language-probe.mjs", "utf8");
+    assert.match(probe, /does NOT go through the HTTP route/i);
+    assert.match(probe, /brand-language\.sql is unrun/i);
   });
 });

@@ -5,6 +5,7 @@ import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import type { Profile } from "@/lib/onboarding";
+import { supabase } from "@/lib/supabase";
 import { gateFootNote, gateProgress } from "@/lib/rail-steps";
 
 /** Three taps, no typing. Sets the track, the voice rubric and the Numbers profile. */
@@ -15,6 +16,18 @@ const STEPS = [
     options: [["one-off", "One-off purchases"], ["recurring", "On subscription"]] },
   { key: "team_size", q: "Who is doing the work?",
     options: [["just-me", "Just me"], ["2-3", "Two or three of us"], ["4-10", "A team of four to ten"]] },
+  /**
+   * The half that matters, and the one that was missing.
+   *
+   * interface_language decides what the founder reads. This decides what her
+   * CUSTOMERS read, which is the thing she is paying for. Asked here rather
+   * than in Settings because it is a decision about the business, and asked
+   * separately from the interface because a founder who has read English
+   * software for fifteen years may well want English on screen and Finnish in
+   * the copy.
+   */
+  { key: "output_language", q: "What language should we write in?",
+    options: [["en", "English"], ["fi", "Suomi"]] },
 ] as const;
 
 export default function ProfileStep() {
@@ -29,6 +42,21 @@ export default function ProfileStep() {
   async function choose(value: string) {
     const next = { ...current, [step.key]: value } as Profile;
     setProfile(next);
+
+    // The output language also belongs on the brand row, because that is what
+    // every generation route reads. The column does not exist until
+    // supabase/brand-language.sql is run, so this write is allowed to fail —
+    // the answer is still kept in the onboarding profile either way, and
+    // outputLanguageFor defaults to English until the column is there.
+    if (step.key === "output_language") {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("brands")
+          .update({ output_language: value })
+          .eq("user_id", user.id);
+      }
+    }
+
     await flush(); // forced write on navigation
     router.push(idx + 1 < STEPS.length ? `/start/profile/${idx + 2}` : "/start/q/1");
   }
@@ -46,7 +74,7 @@ export default function ProfileStep() {
         <Rail
           eyebrow="Getting started"
           heading="Let’s get to know your business"
-          lede="Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs."
+          lede="Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs."
           foot={
             // The one place a count of the gate belongs: a reason to come back,
             // phrased as a fact. Never a warning that blocks.

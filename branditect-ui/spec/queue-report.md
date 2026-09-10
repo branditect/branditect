@@ -779,6 +779,118 @@ than editing it, so the record shows what was believed at the time.
 
 ---
 
+## Inbox 4b · `output_language` is asked, stated and proved to change the output
+
+The entry is right that this is the half that matters, and it is done except
+for the part the unrun migration blocks.
+
+### Asked, once, in onboarding
+
+A fourth step in `/start/profile` — *"What language should we write in?"*,
+English or Suomi. Four taps, no typing, same as the other three.
+
+It is a **separate question from the interface setting**, which stays in
+Settings, and it writes a **separate column**. A founder who has read English
+software for fifteen years may well want English on screen and Finnish in the
+copy, because Finnish is what her customers read. One shared value forces a
+wrong answer on half of them, and a test fails if onboarding ever writes both
+from one answer.
+
+The answer goes to `brands.output_language` **and** into the onboarding profile.
+The column does not exist until `supabase/brand-language.sql` is run, so that
+write is allowed to fail; the profile keeps the answer either way and every
+reader defaults to English until the column is there.
+
+`Profile.output_language` is **optional and not part of the gate**. It arrived
+after brands existed, and gating a founder's workspace on a question she was
+never asked is a regression, not a feature.
+
+### Stated, not inferred
+
+`lib/output-language.ts` is the one place. `outputLanguageFor(client, brandId)`
+reads the column and returns English on every failure path — no brand, no
+column, an unknown value, a throw. `languageDirective(locale)` returns the line
+that goes into the prompt.
+
+Wired into **`/api/andy`** and **`/api/copy-architect`**: the two routes that
+write brand copy and know which brand they are writing for.
+
+**English gets no directive at all**, and that is deliberate rather than lazy.
+Every one of these prompts was written and tuned against English; adding "write
+in English" to a prompt that already produces English changes the cached prefix
+for every existing brand and buys nothing. A test pins it both ways.
+
+The directive sits in the **cached** block, not beside the request. It is brand
+state and byte-stable per brand, so it costs nothing there — and a test fails if
+it moves, because a per-request directive would write a new cache entry on every
+call.
+
+Two details in the directive that are load-bearing:
+
+- **"that is the material, not the instruction."** The brand's own vault is
+  usually English. Without that sentence the model treats the sources as a
+  signal about language and hedges.
+- **JSON keys stay English.** Several of these routes parse their own output. A
+  translated `drafts` key comes back unparseable and reads as the model failing.
+
+### Asserted end to end, and honest about which end
+
+`npm run lang:probe` builds the real system prompt with the real builders, sets
+the language each way, and sends both to the real API with an **English** brand
+context:
+
+```
+output_language = en  ->  EN (en markers 4, fi markers 0)
+  The 20 litre granule from ZZ Probe absorbs 12 times its own weight, enough to
+  clear a spill before the shift ends. 42.00 EUR.
+
+output_language = fi  ->  FI (en markers 0, fi markers 9)
+  Vuoto sattuu aina kesken vuoron. ZZ Proben 20 litran rae imee 12 kertaa oman
+  painonsa nesteestä, ja lattia on siisti ennen työpäivän loppua. Hinta 42,00 euroa.
+```
+
+Language is classified by two independent signals that must agree — Finnish
+letters and function words, English stopwords. Letters alone would call an
+English sentence with a Finnish product name Finnish; stopwords alone would call
+a Finnish sentence quoting an English spec English.
+
+**What it is not:** it does not go through the HTTP route with a signed-in
+brand, and it cannot. `output_language` does not exist as a column, so there is
+no way to set a brand to `fi`. That half is blocked on the migration, not on
+effort — and it belongs in `scripts/route-ownership.mjs`'s shape once the column
+is there: a seeded `zz-` brand, a real token, a POST. The probe says so in its
+own header, and a test fails if that admission is ever deleted.
+
+### The two routes not wired, and why
+
+`/api/brand-strategy` and `/api/tone/generate` also produce brand copy and are
+**not** wired. Neither resolves a brand — they read the request body and nothing
+else, so there is no brand id to look the language up from. That is an ownership
+gap as much as a language one, and fixing it means giving them `resolveBrand`
+first. Named here rather than half-done.
+
+`/api/catalog/parse` and `/api/vault/extract` are extraction, not writing, and
+`/api/brand-code-architect` emits HTML. None of them should state a language.
+
+### Nine negative controls, all red
+
+| control | result |
+|---|---|
+| English gets a directive too | red |
+| the directive stops overriding the sources | red |
+| JSON keys get translated too | red |
+| an em dash back in the directive | red |
+| an unknown language stops meaning English | red |
+| the directive moves to the per-request block | red |
+| a route stops asking | red |
+| onboarding stops asking | red |
+| onboarding conflates the two settings | red |
+
+The em-dash one is not fussiness: prompt rules leak, and `HOUSE_STYLE` bans the
+em dash two paragraphs above where my directive originally used one.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

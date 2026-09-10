@@ -16,7 +16,8 @@
     "i18n:scan": "node --experimental-strip-types scripts/i18n-scan.mjs",
     "i18n:gap": "node --experimental-strip-types scripts/i18n-gap.mjs",
     "storage:audit": "node --experimental-strip-types scripts/storage-audit.mjs",
-    "storage:remediate": "node --experimental-strip-types scripts/storage-remediate.mjs"
+    "storage:remediate": "node --experimental-strip-types scripts/storage-remediate.mjs",
+    "lang:probe": "node --experimental-strip-types scripts/output-language-probe.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

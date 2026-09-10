@@ -5,6 +5,7 @@ import { serviceClient as supabase } from '@/lib/supabase-admin'
 import { resolveBrand } from "@/lib/api-auth";
 import { cachedSystem, logCacheUsage } from '@/lib/prompt-cache'
 import { copyStable, copyPerRequest } from '@/lib/prompts'
+import { outputLanguageFor, type BrandReader } from '@/lib/output-language'
 import { findFormat, normaliseDraft, isThinBrief, type Draft, type Length } from '@/lib/studio-write'
 
 // Three drafts of a long email is a real amount of generation.
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
     const deliverable = def.id === 'other' ? formatOther!.trim() : def.deliverable
 
     const facts = await readBrandFacts(brandId || 'default', productId || null)
+    const language = await outputLanguageFor(supabase as unknown as BrandReader, brandId)
 
     const userPrompt = `What it's about: ${brief.trim()}${
       facts.product ? `\n\nThis is about the product named above.` : ''
@@ -128,7 +130,7 @@ Write the ${count} draft${count > 1 ? 's' : ''} now. Return only the JSON.`
       thinking: { type: 'disabled' },
       max_tokens: 4000,
       system: cachedSystem(
-        copyStable({ brandName: facts.brandName, context: facts.context }),
+        copyStable({ brandName: facts.brandName, context: facts.context, language }),
         copyPerRequest({ deliverable, wordTarget: def.words[len], count, product: facts.product }),
       ),
       messages: [{ role: 'user', content: userPrompt }],

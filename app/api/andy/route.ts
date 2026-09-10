@@ -5,6 +5,7 @@ import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
 import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { andyStable } from "@/lib/prompts";
+import { outputLanguageFor, type BrandReader } from "@/lib/output-language";
 import { sanitiseOutput } from "@/lib/sanitise-output";
 
 export const maxDuration = 30
@@ -260,6 +261,13 @@ export async function POST(req: NextRequest) {
     try { brandContext = await getBrandContext(brandId) } catch {}
   }
 
+  // Stated, never inferred. Defaults to English, including while
+  // supabase/brand-language.sql is unrun and the column does not exist.
+  // The cast is the same one lib/output-language.ts explains: supabase-js's
+  // builder is generic over the schema and typing it precisely makes tsc give
+  // up. The row is narrowed inside that function rather than trusted here.
+  const language = await outputLanguageFor(supabase as unknown as BrandReader, brandId)
+
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-5',
@@ -268,7 +276,7 @@ export async function POST(req: NextRequest) {
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
       max_tokens: 1000,
-      system: cachedSystem(andyStable(brandContext)),
+      system: cachedSystem(andyStable(brandContext, language)),
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,

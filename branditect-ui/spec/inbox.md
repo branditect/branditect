@@ -339,7 +339,7 @@ See the report entry "Inbox 3".
 
 ---
 
-## 4 · OPEN — two loose ends from entry 3, then straight to queue item 3
+## 4 · DONE — two loose ends from entry 3, then straight to queue item 3
 
 Neither of these blocks queue item 3. **Do item 3 first.** These are here so they are not
 lost, and they are small.
@@ -362,6 +362,10 @@ with a negative control**: put a known JSX expression in a file, confirm it does
 in the regenerated list, and confirm a real new string does.
 
 ### 4b · `output_language` is stored and never asked — the half that matters most
+
+> **RAN 10 Sep.** Saara has run `supabase/brand-language.sql`. Both columns exist on
+> `brands` with a default of `en`. Rule 1 no longer blocks anything here: read and write them
+> for real, and the interface language stops living in a cookie.
 
 This is why entry 3 is PART DONE rather than DONE, and it is worth being blunt about which
 half is missing.
@@ -395,3 +399,51 @@ What is left is the deep tool screens — brand book, brand guideline, create im
 import, the Numbers page body, the code tool. **The design side is translating those and they
 come back through this inbox.** Do not translate them yourself and do not wait for them
 before doing anything else.
+
+**DONE 2026-09-10.**
+
+**4a — the work list was 40% source code, and the cause was one apostrophe.**
+409 of 1,276 entries were raw JSX, not 375. The literal scanner paired quotes
+left to right, so `don't` in ordinary JSX text opened a string that closed at
+the next apostrophe further down the file and every quote after it was off by
+one — what it reported from there on was the code *between* two real strings.
+An apostrophe now only opens a string where one can start, and
+`isSourceFragment` rejects what is still recognisably code. Two more found on
+the way out: class lists with arbitrary values (`bg-[#FFF2EE]`) were reading as
+copy, and `\'` reached the list as a backslash a translator would have copied
+into the Finnish. One rule deleted rather than tightened: "starts with a digit"
+was rejecting `124 of 6 required`, which CLAUDE.md names as the exact shape a
+sublabel must have.
+
+**The list is now 744 distinct strings across 58 files**, which is where you
+estimated it. `OUTSTANDING` is regenerated: 1,514 occurrences across 62 files.
+The 2,107 and 1,276 in the Inbox 3 entry were measured with the broken scanner
+and are superseded; that entry is left as written so the record shows what was
+believed at the time.
+
+The control you asked for: a file with a class list, a ternary, an `onClick`
+arrow, `useState`, apostrophe text and four real strings. Four strings in, zero
+fragments, and removing the file regenerates the list byte-for-byte. Six
+assertions cover it, one of which reads the committed `i18n-gap.md` and fails on
+any fragment.
+
+**4b — asked, stated, and proved.** A fourth onboarding step asks *"What
+language should we write in?"*, separate from the interface setting and writing
+a separate column. `lib/output-language.ts` is the one place that reads it;
+`/api/andy` and `/api/copy-architect` state it in the cached block. English gets
+no directive at all, deliberately — adding one changes the cache prefix for
+every existing brand and buys nothing.
+
+`npm run lang:probe` sends both directions to the real API with an **English**
+brand context and gets English one way, Finnish the other. **It does not go
+through the HTTP route, and cannot: `output_language` has no column yet, so no
+brand can be set to `fi`.** That half is blocked on the migration.
+
+**Not wired, and named rather than half-done:** `/api/brand-strategy` and
+`/api/tone/generate` also write brand copy but resolve no brand at all — they
+read the request body and nothing else. That is an ownership gap as much as a
+language one.
+
+Nine negative controls for 4b and six assertions for 4a. 1088 tests.
+
+See the report entries "Inbox 4a" and "Inbox 4b".

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_ORIGIN } from "@/lib/site-locale";
 import { DM_Mono } from "next/font/google";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -18,6 +19,15 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  /**
+   * Absolute URLs for canonical, hreflang and Open Graph.
+   *
+   * Without this Next emits them relative, and a relative `hreflang` is
+   * ignored outright: the Finnish routes would exist and announce nothing.
+   * It was already making the canonicals relative before inbox 7b; the
+   * hreflang is what made it matter.
+   */
+  metadataBase: new URL(SITE_ORIGIN),
   title: "Branditect",
   description: "AI-powered brand operating system",
 };

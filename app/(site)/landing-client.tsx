@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import SiteLink from "@/components/site/site-link";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/icon";
 import HeroAuthCard, { type Tab } from "@/components/site/hero-auth-card";
@@ -201,7 +201,7 @@ export default function LandingClient() {
                 </div>
                 <div className={s.vatline}>{plan.vatLine}</div>
                 <div className={s.planCta}>
-                  <Link href="/?auth=signup#auth" className={`${s.btn} ${plan.featured ? "" : s.line}`}>{plan.cta}</Link>
+                  <SiteLink page="home" auth="signup" className={`${s.btn} ${plan.featured ? "" : s.line}`}>{plan.cta}</SiteLink>
                 </div>
                 <div className={s.credits}>
                   <div className={s.creditsBig}>{plan.credits}</div>
@@ -211,7 +211,7 @@ export default function LandingClient() {
             ))}
           </div>
           <p className={s.allplans}>
-            <Link href="/pricing">Every plan side by side, and what a credit buys</Link>
+            <SiteLink page="pricing">Every plan side by side, and what a credit buys</SiteLink>
           </p>
         </section>
 
@@ -251,7 +251,7 @@ export default function LandingClient() {
               </p>
               <p className={s.aboutPunch}>They have a marketing team. You have Branditect.</p>
               <div className={s.bandCta} style={{ justifyContent: "flex-start", marginTop: 22 }}>
-                <Link href="/about" className={`${s.btn} ${s.line}`}>Read the whole thing</Link>
+                <SiteLink page="about" className={`${s.btn} ${s.line}`}>Read the whole thing</SiteLink>
               </div>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function LandingClient() {
             About four minutes for the five that matter. A hundred credits, no card, and nothing
             expires.
           </p>
-          <Link href="/?auth=signup#auth" className={s.btn}>Start free</Link>
+          <SiteLink page="home" auth="signup" className={s.btn}>Start free</SiteLink>
           <p className={s.finalFine}>No card required. Your brand brain is yours to keep.</p>
         </section>
       </div>

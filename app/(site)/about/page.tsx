@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import SiteLink from "@/components/site/site-link";
+import { alternatesFor } from "@/lib/site-locale";
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/icon";
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
   title: "About · Branditect",
   description:
     "Branditect is one place that knows your brand strategy, your products and your margins, and makes things from them. Built in Finland, on EU infrastructure.",
-  alternates: { canonical: "/about" },
+  alternates: alternatesFor("about"),
   openGraph: {
     title: "About · Branditect",
     description:
@@ -242,7 +244,7 @@ export default function AboutPage() {
             </p>
             <div className={s.bandCta}>
               <Link href="/signup" className={s.btn}>Start free</Link>
-              <Link href="/pricing" className={`${s.btn} ${s.line}`}>See the plans</Link>
+              <SiteLink page="pricing" className={`${s.btn} ${s.line}`}>See the plans</SiteLink>
             </div>
           </div>
         </section>

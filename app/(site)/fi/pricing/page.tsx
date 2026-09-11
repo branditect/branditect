@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { alternatesFor } from "@/lib/site-locale";
-import PricingClient from "./pricing-client";
+import PricingClient from "../../pricing/pricing-client";
 import { PLANS } from "@/lib/pricing-plans";
+import { alternatesFor, FI_COPY_READY } from "@/lib/site-locale";
 
-/* A server component so the page can carry metadata; the monthly and yearly
-   toggle needs state, so the body of the page is the client half. */
+/* The Finnish pricing route. See app/(site)/fi/page.tsx for why it is a real
+   route and why it is noindex until the copy lands. */
 const FROM = PLANS.find((p) => p.id === "pro")!.monthly;
 
 export const metadata: Metadata = {
@@ -12,14 +12,15 @@ export const metadata: Metadata = {
   description:
     `Build your brand brain free, with 100 credits and no card. Plans from ${FROM} a month including VAT.`,
   alternates: alternatesFor("pricing"),
+  robots: FI_COPY_READY ? undefined : { index: false, follow: true },
   openGraph: {
     title: "Pricing · Branditect",
     description: `Build your brand brain free. Plans from ${FROM} a month including VAT.`,
-    url: "/pricing",
+    url: "/fi/pricing",
     type: "website",
   },
 };
 
-export default function PricingPage() {
+export default function FinnishPricingPage() {
   return <PricingClient />;
 }

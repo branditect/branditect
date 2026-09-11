@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SiteLink from "@/components/site/site-link";
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/icon";
@@ -156,7 +157,7 @@ export default function PricingClient() {
             </p>
             <div className={s.bandCta}>
               <Link href="/signup" className={s.btn}>Start free</Link>
-              <Link href="/about" className={`${s.btn} ${s.line}`}>Read what it does</Link>
+              <SiteLink page="about" className={`${s.btn} ${s.line}`}>Read what it does</SiteLink>
             </div>
           </div>
         </section>

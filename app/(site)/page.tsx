@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { alternatesFor } from "@/lib/site-locale";
 import LandingClient from "./landing-client";
 
 export const metadata: Metadata = {
   title: "Branditect · The commercial brain for your brand",
   description:
     "One place that holds your strategy, your product truth and your margins, so everything you publish is on brand, accurate and profitable. Build it free.",
-  alternates: { canonical: "/" },
+  alternates: alternatesFor("home"),
   openGraph: {
     title: "Branditect · The commercial brain for your brand",
     description:

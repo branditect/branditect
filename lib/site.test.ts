@@ -123,8 +123,9 @@ describe("the prices match the reference the page was built from", () => {
 describe("every public page carries metadata", () => {
   const pages = SITE_FILES.filter((f) => f.endsWith("page.tsx"));
 
-  it("finds all three", () => {
-    assert.equal(pages.length, 3, pages.join(", "));
+  it("finds all six — three pages in two languages", () => {
+    // Inbox 7b added /fi, /fi/pricing and /fi/about as real routes.
+    assert.equal(pages.length, 6, pages.join(", "));
   });
 
   for (const page of pages) {
@@ -135,11 +136,17 @@ describe("every public page carries metadata", () => {
       assert.ok(/title:\s*"[^"]{8,}"/.test(src), `${name} has no real title`);
       assert.ok(/description:\s*\n?\s*[`"][^`"]{30,}/.test(src), `${name} has no real description`);
       assert.ok(/openGraph/.test(src), `${name} has no Open Graph block`);
-      // The card itself is a sibling file; a segment that declares openGraph
-      // without one ships with no image at all.
-      const dir = page.slice(0, page.lastIndexOf("/"));
-      assert.ok(SITE_FILES.some((f) => f === `${dir}/opengraph-image.tsx`),
-        `${name} declares openGraph but has no opengraph-image.tsx beside it`);
+      // The card itself is a file in this segment or an ancestor: Next walks
+      // up for opengraph-image, so /fi/about inherits the (site) card rather
+      // than shipping with none. Requiring a sibling would have forced three
+      // duplicate cards for the Finnish routes.
+      let dir = page.slice(0, page.lastIndexOf("/"));
+      let card = false;
+      while (dir.includes("(site)")) {
+        if (SITE_FILES.some((f) => f === `${dir}/opengraph-image.tsx`)) { card = true; break; }
+        dir = dir.slice(0, dir.lastIndexOf("/"));
+      }
+      assert.ok(card, `${name} declares openGraph but no opengraph-image.tsx is in scope`);
     });
   }
 });
@@ -149,18 +156,12 @@ describe("sitemap and robots", () => {
   const sitemap = read(new URL("../app/sitemap.ts", import.meta.url).pathname);
   const robots = read(new URL("../app/robots.ts", import.meta.url).pathname);
 
-  it("lists exactly the three public routes", () => {
-    const urls = Array.from(sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)).map((m) => m[1]);
-    assert.deepEqual(urls.sort(), ["/", "/about", "/pricing"]);
-  });
-
-  it("keeps the app, onboarding and the kit portal out of the sitemap", () => {
-    // The comment above the entries names what it excludes; the entries are
-    // what matters.
-    const urls = Array.from(sitemap.matchAll(/\$\{BASE\}(\/[a-z]*)/g)).map((m) => m[1]);
-    for (const path of ["/home", "/start", "/k", "/api"]) {
-      assert.ok(!urls.includes(path), `${path} is in the sitemap`);
-    }
+  it("builds its routes from the page list rather than naming them", () => {
+    // What it emits is asserted by calling it, in lib/site-locale.test.ts —
+    // a regex over the source stopped being able to see the URLs the moment
+    // they were composed rather than written out.
+    assert.match(sitemap, /SITE_PAGES\.map/);
+    assert.match(sitemap, /sitePath\("en", page\)/);
   });
 
   it("disallows the api, the kit portal, onboarding and the app routes", () => {

@@ -790,7 +790,7 @@ See the report entry "Inbox 7a".
 
 ---
 
-### 7b · NEW — Finnish on the marketing site, and one toggle in both places
+### 7b · PART DONE — Finnish on the marketing site, and one toggle in both places
 
 Saara's decision has changed: the marketing site is no longer English-only.
 
@@ -817,6 +817,51 @@ toggle points at first.
 The ~70 marketing strings are the design side's to translate and come back through this
 inbox. Do the routes, the toggle and the `hreflang` first — the copy can land into a
 structure that already works.
+
+**PART DONE 2026-09-11. The structure is built; the copy is yours.**
+
+Not marked DONE because `/fi` renders the English copy: the ~70 marketing
+strings are the design side's and have not arrived. **No Finnish has been
+invented.**
+
+- **Real routes.** `/fi`, `/fi/pricing`, `/fi/about` all serve 200.
+  `lib/site-locale.ts` is the one place that knows the pairing.
+- **hreflang, reciprocal and absolute.** Both pages of every pair carry en,
+  fi and x-default. They were relative until `metadataBase` was added to the
+  root layout: a relative hreflang is ignored outright, so the routes would
+  have existed and announced nothing. The canonicals were already relative
+  before this entry; the hreflang is what made it matter.
+- **The toggle changes the URL.** Two links with `hrefLang`, same two options
+  and the same labels as the Settings switch, asserted equal by a test so
+  they cannot drift into reading as two features.
+- **No redirect, and nothing reads `Accept-Language`.** The entry allows it
+  to decide which way the toggle points first; the toggle offers both at all
+  times, so there is nothing left for it to decide, and machinery that
+  changes no outcome is not built. A test fails if a redirect or an
+  `Accept-Language` read appears, middleware included.
+- **The language survives a navigation.** The nav and the footer were the
+  obvious half. The page bodies were still sending people from `/fi` back to
+  `/about` and `/?auth=signup` — the second click, which nobody checks.
+  `components/site/site-link.tsx` resolves those, and works inside
+  `about/page.tsx`, which is a server component rendered from both routes.
+
+**One constant, `FI_COPY_READY`, is false and holds three things back:** the
+fi routes are `noindex`, the toggle renders nothing, and the sitemap lists no
+alternate. A page indexed as Finnish and written in English is this entry's
+own problem inverted, and a toggle offering Suomi over English is a promise
+the page does not keep. Flipping it turns all three on at once.
+
+**One thing is owed at the flip and cannot be done now:** `<html lang="en">`
+is in the root layout, shared with the app. Today English is the truthful
+value for `/fi` because the copy is English. A test demands it be fixed the
+moment `FI_COPY_READY` goes true, rather than leaving it to be remembered.
+
+Verified in the browser: every link on `/fi` and `/fi/about` stays Finnish,
+every link on `/` stays English, hreflang is absolute in the served HTML.
+
+See the report entry "Inbox 7b".
+
+---
 
 ### The two bugs in that report are worth naming
 

@@ -32,6 +32,17 @@
 .links a:hover { color: theme('colors.ink.DEFAULT'); }
 .navRight { margin-left: auto; display: flex; align-items: center; gap: 9px; }
 
+/* The language toggle. Two links, not a select: on a public page the other
+   language is a URL, and a URL is something a crawler and a person can both
+   follow. Same two options and the same labels as the switch in Settings. */
+.langToggle { display: inline-flex; align-items: center; gap: 2px; margin-right: 4px;
+  border: 1px solid theme('colors.rule.2'); border-radius: theme('borderRadius.pill'); padding: 2px; }
+.langOn, .langOff { display: inline-flex; align-items: center; border-radius: theme('borderRadius.pill');
+  padding: 3px 10px; font-size: theme('fontSize.2xs[0]'); font-weight: 800; }
+.langOn { background: theme('colors.ink.DEFAULT'); color: #fff; }
+.langOff { color: theme('colors.muted.DEFAULT'); }
+.langOff:hover { color: theme('colors.ink.DEFAULT'); }
+
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   border-radius: theme('borderRadius.pill'); padding: 10px 18px; font-size: theme('fontSize.sm[0]');
   font-weight: 700; background: var(--s-grad-hero); color: #fff; white-space: nowrap; }

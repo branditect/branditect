@@ -1618,6 +1618,125 @@ seventeen checks, all passing.
 
 ---
 
+## Inbox 7b · The marketing site has real locale routes
+
+**Part done.** The routes, the toggle, the hreflang and the sitemap are
+built and tested. `/fi` renders the English copy, because the ~70 marketing
+strings are the design side's and have not arrived. **No Finnish has been
+invented anywhere in this commit**, and a test asserts that.
+
+### What is built
+
+`/fi`, `/fi/pricing`, `/fi/about`, all serving 200. `lib/site-locale.ts` is
+the only place that knows the pairing: `sitePath`, `readSitePath`,
+`otherLanguage`, `alternatesFor`. Three route files, a toggle, a footer split
+out of the layout so it can read the pathname, and `SiteLink`.
+
+hreflang is reciprocal — en, fi and x-default on **both** pages of every
+pair, because a one-directional annotation is discarded, which is the
+commonest way this is got wrong.
+
+### It was announcing nothing, and the reason was one missing line
+
+The annotations came out relative:
+
+```
+<link rel="alternate" hrefLang="fi" href="/fi/pricing"/>
+```
+
+**A relative hreflang is ignored.** The routes would have existed, the
+toggle would have worked, and search would have seen nothing at all — which
+is the exact failure this entry is about, arrived at from the other side.
+
+`metadataBase` was never set on the root layout. The canonicals had been
+relative since the site shipped; nobody noticed because a relative canonical
+still resolves. Adding it fixes both:
+
+```
+<link rel="canonical" href="https://www.branditect.io/pricing"/>
+<link rel="alternate" hrefLang="fi" href="https://www.branditect.io/fi/pricing"/>
+```
+
+### The second click, which nobody checks
+
+Making the nav and the footer locale-aware is the obvious half and it is not
+enough. `/fi` still had `href="/about"` and `href="/?auth=signup"` inside the
+landing body, the pricing body and the about body — eight links that walked
+someone straight back into English on their second click, undoing the route
+the page had just used.
+
+`components/site/site-link.tsx` resolves a page id against the current
+pathname. It is a client component so `about/page.tsx` can use it: that page
+is a server component rendered from **both** `/about` and `/fi/about`, so
+there is no prop to pass it and asking the pathname is the only way.
+
+`/signup` stays absolute — it is an app route, not a public page.
+
+Verified in the served HTML rather than asserted from source:
+
+| page | links |
+|---|---|
+| `/` | `/about`, `/pricing`, `/?auth=login`, `/?auth=signup` |
+| `/fi` | `/fi/about`, `/fi/pricing`, `/fi?auth=login`, `/fi?auth=signup` |
+| `/fi/about` | all `/fi…`, plus `/signup` |
+
+### One constant holds three things back
+
+`FI_COPY_READY` is `false`, and until it is not:
+
+- the fi routes are `noindex` — a page indexed as Finnish and written in
+  English is this entry's own duplicate-content problem, inverted;
+- the toggle renders nothing — offering "Suomi" over an English page is a
+  promise the page does not keep, and a dead control is worse than a missing
+  one;
+- the sitemap lists no alternate — naming a noindex page as an alternate
+  tells a crawler two contradictory things and the hreflang goes with it.
+
+Flipping it turns all three on together. The control: with it `true`, the
+toggle appears in the served HTML (`English` / `Suomi`), and two tests go
+red on purpose.
+
+**One of those two is work owed at the flip.** `<html lang="en">` is in the
+root layout, shared with the app. Today that is the *truthful* value for
+`/fi`, because the copy is English, and changing it now would be the lie. So
+the test does not demand it now — it demands it the moment `FI_COPY_READY`
+goes true, with the reason in the failure message. A comment would have been
+forgotten; a test that only fires on the flip cannot be.
+
+### No redirect, and nothing reads Accept-Language
+
+The entry's suggestion, taken. A signed-in Finnish user landing on `/` stays
+on `/`. Redirecting makes one URL serve different people different pages,
+which is the cookie problem wearing a different hat.
+
+The entry allows `Accept-Language` to decide "which one the toggle points at
+first". The toggle offers both at all times, so there is nothing left for it
+to decide, and machinery that changes no outcome is not built. A test fails
+if a redirect or an `Accept-Language` read appears in the site files — or in
+a `middleware.ts`, where it would be out of sight.
+
+### Two pre-existing tests had to change, and one got stronger
+
+- `site.test.ts` required an `opengraph-image.tsx` **beside** every page.
+  Next walks up for that file, so `/fi/about` inherits the `(site)` card
+  rather than shipping without one. The check now walks up too; requiring a
+  sibling would have forced three duplicate cards.
+- The sitemap test read URLs out of the source with a regex, which stopped
+  working the moment the URLs were composed rather than written out. The
+  sitemap now imports its helper relatively, with the extension, so the test
+  **calls it** and asserts what it returns. Strictly better than the regex it
+  replaced.
+
+### Still to come
+
+The strings. When they arrive they land in a structure that already works:
+three routes, reciprocal absolute hreflang, a toggle, a sitemap and a
+`lang` attribute all waiting on one boolean.
+
+1222 tests, tsc and lint clean.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

@@ -288,13 +288,12 @@ export default function MediaTab({
         )}
       </section>
 
-      {/* Entry 6b is its own item, but half this sentence stopped being true
-          the moment tagging from the library shipped above, so that half
-          goes now rather than standing as a promise of what already exists.
-          The rest still floats with no control attached and is left for 6b. */}
-      <p className="mt-[22px] text-2xs font-medium leading-[1.6] text-muted">
-        {UNTAG_NOTE}
-      </p>
+      {/* Entry 6b: cut, not attached. UNTAG_NOTE is already the `title` on
+          every untag control above — the image × and the document × — so
+          the floating copy was a second, weaker statement of a tooltip,
+          sitting under a Documents list it did not belong to. Half of it was
+          a roadmap promise, and that half stopped being true when tagging
+          from the library shipped in 6a. */}
 
       {lightbox && (
         <div className="fixed inset-0 z-[1300] grid place-items-center bg-ink/70 p-8"

@@ -406,3 +406,41 @@ function tsFilesUnder(dir: string): string[] {
   walk(dir);
   return out;
 }
+
+// ────────────────────────── inbox 6b and 6d: copy that says the right thing ──
+
+describe("6b · the floating sentence is gone, not reworded", () => {
+  const MEDIA = "components/products/media-tab.tsx";
+
+  it("no paragraph under the Documents list explaining nothing", () => {
+    // It sat at the bottom of the tab with no control beside it, describing
+    // an untag button two sections up.
+    const src = readFileSync(MEDIA, "utf8").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+    assert.ok(!/<p[^>]*>\s*\{UNTAG_NOTE\}\s*<\/p>/.test(src),
+      "the floating note is still rendered as a paragraph");
+  });
+
+  it("but the note still reaches the controls it describes", () => {
+    // Cut, not deleted: it is the title on both untag buttons, which is
+    // where an explanation of a control belongs.
+    const src = readFileSync(MEDIA, "utf8");
+    assert.ok((src.match(/title=\{UNTAG_NOTE\}/g) ?? []).length >= 2,
+      "the untag controls lost their explanation along with the paragraph");
+  });
+
+  it("and no roadmap promise is left in a product surface", () => {
+    assert.ok(!/arrive next|arrives in step|coming soon/i.test(readFileSync(MEDIA, "utf8")));
+  });
+});
+
+describe("6d · the hero shot and the tagged images are told apart", () => {
+  it("the Product image control says tagging does not change it", () => {
+    // The right model — a lifestyle photo should not replace the hero — but
+    // nothing said so, and the natural expectation after tagging is that the
+    // product now looks different.
+    const src = readFileSync("components/products/product-drawer.tsx", "utf8");
+    assert.match(src, /The shot on the product list\. Tagged images below do not change it\./);
+    assert.ok(!/Picked from your image library in Knowledge/.test(src),
+      "the old line, which explained where it came from rather than what it is");
+  });
+});

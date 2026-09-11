@@ -100,7 +100,11 @@ export function selectionLabel(n: number): string {
 export function confirmState(imageCount: number, productCount: number): {
   disabled: boolean; label: string;
 } {
-  if (productCount === 0) return { disabled: true, label: "Pick a product" };
+  // Entry 6c. It said "Pick a product" and stayed disabled until you had
+  // picked one, so it told you to do the thing you had just done and by the
+  // time it was pressable the label was already false. A button's label is
+  // what pressing it does; the modal title carries the instruction.
+  if (productCount === 0) return { disabled: true, label: "Tag" };
   const imgs = `${imageCount} image${imageCount === 1 ? "" : "s"}`;
   const prods = productCount === 1 ? "1 product" : `${productCount} products`;
   return { disabled: imageCount === 0, label: `Tag ${imgs} to ${prods}` };

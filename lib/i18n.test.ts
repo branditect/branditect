@@ -561,3 +561,36 @@ describe("the output language is stated, never inferred", () => {
     assert.deepEqual(stale, [], "the migration ran on 10 Sep");
   });
 });
+
+// ───────────────────────── inbox 6e: no placeholder reaches the screen ──
+
+describe("the brand placeholder never renders", () => {
+  it("useBrand still invents a name, and that is why callers must guard", () => {
+    // Left as it is on purpose: brandName is typed string and read in a
+    // dozen template literals. The fix is at the surfaces that render it
+    // before it is known, not a type change rippling through all of them.
+    const src = readFileSync("lib/useBrand.ts", "utf8");
+    assert.match(src, /brandName: brand\?\.brand_name \|\| "Your Brand"/);
+    assert.match(src, /loading/, "callers need something to guard on");
+  });
+
+  it("the sidebar renders nothing rather than the placeholder", () => {
+    const src = readFileSync("components/sidebar.tsx", "utf8");
+    // The person's line no longer falls back to the brand at all.
+    assert.match(src, /name=\{user\?\.fullName \?\? user\?\.email \?\? ""\}/);
+    assert.match(src, /org=\{brandLoading \? "" :/);
+  });
+
+  it("and the account row holds its height while it waits", () => {
+    // An empty string with no reserved space makes the row jump, which is
+    // the reason a placeholder string gets added back.
+    const src = readFileSync("components/account-menu.tsx", "utf8");
+    assert.match(src, /\{name \|\| <span[^>]*aria-hidden="true"/);
+    assert.match(src, /\{org \|\| <span[^>]*aria-hidden="true"/);
+  });
+
+  it("the Images heading drops the possessive rather than the name", () => {
+    const src = readFileSync("app/(app)/knowledge/images/page.tsx", "utf8");
+    assert.match(src, /brandLoading\s*\?\s*"Access and manage all your brand assets in one place\."/);
+  });
+});

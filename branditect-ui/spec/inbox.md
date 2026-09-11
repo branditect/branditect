@@ -564,7 +564,7 @@ example", it is "can this be wrong and still pass".
 
 ---
 
-## 6 · OPEN — product image tagging: the flow works, the way in does not
+## 6 · DONE — product image tagging: the flow works, the way in does not
 
 Walked end to end in a real browser on production, signed in as the Deklan brand. **The
 tagging itself is sound**: Knowledge ▸ Images → tick an image → "Tag to a product" → pick the
@@ -634,7 +634,7 @@ See the report entry "Inbox 6a".
 
 ---
 
-### 6b · A sentence with no control attached
+### 6b · DONE — A sentence with no control attached
 
 At the bottom of the Media tab, under Documents, floating on its own:
 
@@ -646,7 +646,7 @@ attach it to the control it explains — presumably a per-image Remove that only
 hover — or cut it. Half of it is also a roadmap promise ("arrive next") sitting in a product
 surface, which is the kind of line that is still there in a year.
 
-### 6c · "Pick a product" is the instruction, not the action
+### 6c · DONE — "Pick a product" is the instruction, not the action
 
 The modal's confirm button says **Pick a product**, and it stays disabled until you have
 picked one. So it tells you to do the thing you have just done. By the time it is pressable
@@ -655,7 +655,7 @@ the label is already false.
 It should say what pressing it does: **Tag** — or "Tag to 1 product" when the count is
 useful. The modal title already carries the instruction.
 
-### 6d · Tagging an image does not change the card thumbnail, and nothing says so
+### 6d · DONE — Tagging an image does not change the card thumbnail, and nothing says so
 
 Two different things share one screen: **Product image** (the single thumbnail on the list
 row, set by *Change product image*) and **Images and video** (everything tagged to this
@@ -668,7 +668,7 @@ image is that the product now looks different. It does not.
 One line under *Product image* fixes it: *"The shot on the product list. Tagged images below
 do not change it."*
 
-### 6e · The brand name shows a placeholder on first paint
+### 6e · DONE — The brand name shows a placeholder on first paint
 
 Knowledge ▸ Images renders **"Access and manage all of Your Brand's brand assets in one
 place"** and the sidebar footer reads **"Your Brand / Workspace"** for about a second, then
@@ -677,6 +677,32 @@ brand loads.
 
 Render the sentence without the name until the brand resolves, or hold the block. "Your
 Brand" is the kind of thing that ends up in a screenshot.
+
+**6b, 6c, 6d and 6e DONE 2026-09-11**, with 6a on the commit before.
+
+- **6b · cut, not attached.** `UNTAG_NOTE` is already the `title` on both
+  untag controls, so the paragraph was a second and weaker statement of a
+  tooltip, sitting under a Documents list it had nothing to do with. The
+  roadmap half went with 6a.
+- **6c · the confirm says `Tag`.** `confirmState` returned "Pick a product"
+  while disabled; it returns an action at every count now, and a test walks
+  five of them asserting none begins with "Pick".
+- **6d · one line under *Product image*,** exactly as written. The line it
+  replaced explained where the shot came from rather than what it is.
+- **6e · nothing renders until it is known.** The sidebar's person line no
+  longer falls back to the brand at all — it was the wrong fallback anyway —
+  and the account row holds its height with a skeleton so removing the
+  placeholder does not make the row jump. The Images heading drops the
+  possessive while it waits.
+
+`npm run placeholder:ui` is the check 6e needed: it polls the DOM every 40ms
+from navigation and fails on a single frame containing "Your Brand", across
+three pages. With the fix reverted it records 46, 64 and 42 frames, first at
+about 50ms and last at 1.9–3.1 seconds — which is the second you saw.
+
+See the report entry "Inbox 6b–6e".
+
+---
 
 ### Not a bug, worth knowing
 

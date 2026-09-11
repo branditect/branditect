@@ -211,6 +211,29 @@ try {
     ? ok("already-tagged images are shown as tagged, not hidden", JSON.stringify(taken))
     : bad("the chooser hides or re-offers tagged images", JSON.stringify(taken));
 
+  // ── 6d · the hero shot and the tagged images are told apart ──────────
+  const shot = await body();
+  /The shot on the product list\. Tagged images below do not change it\./.test(shot)
+    ? ok("6d · the Product image control says tagging does not change it")
+    : bad("6d · no line under Product image", shot.slice(0, 200));
+
+  // ── 6b · the floating sentence is gone ───────────────────────────────
+  // It described the untag buttons from the bottom of the tab, under a
+  // Documents list it had nothing to do with. The buttons carry it as a
+  // title, which is where an explanation of a control belongs.
+  const floating = await page.eval(`(() => {
+    const p = [...document.querySelectorAll("p")]
+      .filter((x) => /Removes it from this product/.test(x.textContent));
+    return p.length;
+  })()`);
+  floating === 0
+    ? ok("6b · no floating paragraph explaining a control two sections up")
+    : bad("6b · the floating note is still rendered", String(floating));
+  const titled = await page.eval(`[...document.querySelectorAll('[title^="Removes it from this product"]')].length`);
+  titled > 0
+    ? ok("6b · and the untag controls still explain themselves", `${titled} control(s)`)
+    : bad("6b · the note was deleted rather than moved");
+
   // ── documents: the copy must not name an action nothing can do ───────
   const docs = await body();
   /Attaching one to a product is not built yet/.test(docs)

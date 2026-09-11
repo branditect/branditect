@@ -1544,6 +1544,80 @@ the same wasted hour if it is diagnosed as a Tailwind bug.
 
 ---
 
+## Inbox 6b–6e · The rest of the tagging walk-through
+
+6a shipped on the commit before this one. These are the other four.
+
+### 6b · cut
+
+`UNTAG_NOTE` — "Removes it from this product. The file stays in Knowledge." —
+is already the `title` on both untag controls, the × on an image and the × on
+a document. The floating paragraph was a second, weaker statement of a
+tooltip, placed under the Documents list and describing buttons two sections
+up. Cut. A test asserts both halves: no paragraph, and the controls still
+carry the note.
+
+The roadmap half — "Tagging more, and matching from your library, arrive
+next" — went with 6a, when it stopped being true.
+
+### 6c · the button says what pressing it does
+
+`confirmState` returned `Pick a product` while disabled, so it instructed you
+to do the thing you had just done, and by the time it was pressable the label
+was false. It returns `Tag` now, and `Tag 3 images to 2 products` once there
+is a count worth showing.
+
+The test walks five (images, products) combinations and asserts no label
+begins with "Pick" and every one begins with "Tag" — rather than pinning the
+one string, which is how the next variant gets added without anyone noticing.
+
+### 6d · one line
+
+*"The shot on the product list. Tagged images below do not change it."*
+
+The line it replaced said where the shot came from — "Picked from your image
+library in Knowledge ▸ Images" — which answers a question nobody was asking
+in place of the one they were.
+
+### 6e · the placeholder, and why the check is a timing check
+
+`useBrand` answers `"Your Brand"` whenever it has no row, which includes the
+whole time it is loading. Two surfaces rendered it: the sidebar footer, on
+every page behind the login, and the Knowledge ▸ Images heading.
+
+- The sidebar's person line fell back to the brand name last. That was the
+  wrong fallback regardless — the line is a person — so it falls back to
+  nothing now.
+- `AccountMenu` holds the height of both lines with a skeleton. Without it,
+  removing the placeholder makes the row jump as the name arrives, which is
+  exactly the reason a placeholder string gets put back.
+- The Images heading drops the possessive while it waits rather than showing
+  a name it does not have.
+
+`useBrand` still invents the string, deliberately: `brandName` is typed
+`string` and read in a dozen template literals, and changing the type would
+ripple through all of them to fix two surfaces. A test records that decision
+so the next person does not read it as an oversight.
+
+**The check had to be a timing check.** A test that loads the page and then
+asserts proves nothing about a string that is gone by the time it looks.
+`npm run placeholder:ui` polls `document.body.innerText` every 40ms from the
+moment navigation starts, across three pages, and fails on one frame
+containing the placeholder. It also requires the real name to appear, or a
+page that never loads would pass by rendering nothing.
+
+| control | result |
+|---|---|
+| the sidebar fallback and the possessive heading put back | 46, 64 and 42 frames, first at ~50ms, last at 1.9–3.1s |
+
+That last column is the bug as the entry described it — "about a second" —
+measured rather than agreed with.
+
+1188 tests. `npm run tag:ui` now covers 6b and 6d in the browser as well:
+seventeen checks, all passing.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

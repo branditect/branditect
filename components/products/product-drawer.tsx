@@ -576,8 +576,16 @@ export default function ProductDrawer({
                       <span className="block text-sm font-bold text-ink">
                         {draft.imageUrl ? "Change product image" : "Choose a product image"}
                       </span>
+                      {/* Entry 6d. Two different things share this tab:
+                          this single shot, which is what the product list
+                          shows, and Images and video below, which is
+                          everything tagged to the product. Tagging adds to
+                          the second and leaves this alone — the right model,
+                          and nothing said so, so the natural expectation
+                          after tagging was that the product would look
+                          different. It does not. */}
                       <span className="mt-0.5 block text-2xs font-medium text-muted">
-                        Picked from your image library in Knowledge ▸ Images
+                        The shot on the product list. Tagged images below do not change it.
                       </span>
                     </span>
                   </button>

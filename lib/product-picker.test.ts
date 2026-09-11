@@ -88,7 +88,19 @@ describe("the selection bar", () => {
   });
 
   it("cannot confirm with no product picked", () => {
-    assert.deepEqual(confirmState(3, 0), { disabled: true, label: "Pick a product" });
+    assert.deepEqual(confirmState(3, 0), { disabled: true, label: "Tag" });
+  });
+
+  it("never labels the button with the instruction — inbox 6c", () => {
+    // It said "Pick a product" and was disabled until you had picked one, so
+    // it told you to do the thing you had just done, and by the time it was
+    // pressable the label was already false. The modal title carries the
+    // instruction; the button says what pressing it does.
+    for (const [imgs, prods] of [[0, 0], [3, 0], [1, 1], [3, 2], [0, 2]]) {
+      const { label } = confirmState(imgs, prods);
+      assert.ok(!/^Pick\b/i.test(label), `the confirm still instructs: ${label}`);
+      assert.match(label, /^Tag\b/, `the confirm does not say what it does: ${label}`);
+    }
   });
 
   it("says what it is about to do", () => {

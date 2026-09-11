@@ -15,14 +15,22 @@ const assetTypes = TYPE_TABS;
 
 export default function AssetsPage() {
   const [activeType, setActiveType] = useState("images");
-  const { brandId, brandName } = useBrand();
+  const { brandId, brandName, loading: brandLoading } = useBrand();
 
   return (
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light">
         <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
-        <p className="text-[0.78rem] text-muted">Access and manage all of {brandName}&apos;s brand assets in one place.</p>
+        {/* Entry 6e. useBrand answers "Your Brand" until the row loads, and
+            that literal was on screen for about a second before resolving to
+            the real name. The sentence drops the possessive while it waits
+            rather than showing a placeholder or collapsing the block. */}
+        <p className="text-[0.78rem] text-muted">
+          {brandLoading
+            ? "Access and manage all your brand assets in one place."
+            : `Access and manage all of ${brandName}\u2019s brand assets in one place.`}
+        </p>
       </div>
 
       {/* Asset type cards */}

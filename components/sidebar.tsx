@@ -91,7 +91,7 @@ function NavRow({
 export default function Sidebar() {
   const t = useT();
   const pathname = usePathname();
-  const { brandName } = useBrand();
+  const { brandName, loading: brandLoading } = useBrand();
   const { user } = useUser();
 
   // A full document load, not a client navigation.
@@ -153,9 +153,14 @@ export default function Sidebar() {
         </Link>
 
         <AccountMenu
-          name={user?.fullName ?? user?.email ?? brandName}
+          /* Entry 6e. The brand name was the last fallback here, so before
+             either hook resolved the row read "Your Brand / Workspace" —
+             useBrand invents that string when it has no row yet. Nothing
+             renders until it is known; AccountMenu holds the space. The
+             brand was the wrong fallback anyway: this line is a person. */
+          name={user?.fullName ?? user?.email ?? ""}
           /* Only show the brand underneath when it isn't already the line above. */
-          org={user ? brandName : t("sidebar.workspace")}
+          org={brandLoading ? "" : user ? brandName : t("sidebar.workspace")}
           avatar={<Logo variant="mark" height={32} className="shrink-0" />}
           onSignOut={handleSignOut}
         />

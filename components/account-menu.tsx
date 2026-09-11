@@ -219,9 +219,17 @@ export default function AccountMenu({
         className={`flex w-full items-center gap-2.5 rounded-[11px] px-[3px] py-[5px] text-left hover:bg-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${open ? "bg-tile" : ""}`}
       >
         {avatar}
+        {/* Entry 6e. An empty line is a line waiting, and it holds its own
+            height so the row does not jump when the name arrives. A literal
+            placeholder — "Your Brand" — would sit there being read instead,
+            and that is the kind of thing that ends up in a screenshot. */}
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold tracking-[-0.1px]">{name}</span>
-          <span className="block truncate text-2xs font-normal text-faint">{org}</span>
+          <span className="block h-[18px] truncate text-sm font-bold tracking-[-0.1px]">
+            {name || <span className="block h-[10px] w-[92px] rounded bg-tile" aria-hidden="true" />}
+          </span>
+          <span className="block h-[15px] truncate text-2xs font-normal text-faint">
+            {org || <span className="block h-[8px] w-[64px] rounded bg-tile" aria-hidden="true" />}
+          </span>
         </span>
         <span
           aria-hidden="true"

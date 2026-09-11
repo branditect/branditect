@@ -12,10 +12,11 @@
  * top item ships next is a list people stop checking".
  *
  * The tinted left edge is what says deliberate where flat grey says broken.
- * The reference draws it in violet, which is not in the palette; `lav-line`
- * into `lavender` is the closest pair that is. Credit use carries a dimmed
- * bar so the shape of the thing is visible before it works — decoration, with
- * no number behind it and `aria-hidden` so it is not read as data.
+ * Violet, as the reference draws it, now that 7a has made it a token — it
+ * ran on `lav-line` into `lavender` while it had no name. Credit use carries
+ * a dimmed bar so the shape of the thing is visible before it works —
+ * decoration, with no number behind it and `aria-hidden` so it is not read
+ * as data.
  */
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/en";
@@ -26,10 +27,10 @@ export default function ComingSoon() {
   return (
     <div className="mt-7">
       <div className="flex items-center gap-[9px] px-1 pb-[11px]">
-        <h2 className="text-micro font-extrabold uppercase tracking-[1px] text-lav-ink">
+        <h2 className="text-micro font-extrabold uppercase tracking-[1px] text-violet">
           {t("settings.comingUp")}
         </h2>
-        <div className="h-px flex-1 bg-gradient-to-r from-rule-3 to-transparent" />
+        <div className="h-px flex-1 bg-gradient-to-r from-violet-2 to-transparent" />
       </div>
       <div className="grid grid-cols-1 gap-[9px] sm:grid-cols-2">
         {COMING_SOON.map((row) => (
@@ -37,12 +38,12 @@ export default function ComingSoon() {
             key={row.key}
             className="relative select-none overflow-hidden rounded-card border border-rule bg-card py-[13px] pl-[17px] pr-[15px]"
           >
-            <div aria-hidden="true" className="absolute bottom-0 left-0 top-0 w-[3px] bg-gradient-to-b from-lav-line to-lavender" />
+            <div aria-hidden="true" className="absolute bottom-0 left-0 top-0 w-[3px] bg-gradient-to-b from-violet-2 to-lavender" />
             <div className="text-[13px] font-extrabold text-ink-2 opacity-[.72]">{t(row.titleKey as StringKey)}</div>
             <div className="mt-[3px] text-xs leading-snug text-muted opacity-[.82]">{t(row.descKey as StringKey)}</div>
             {row.meter && (
               <div aria-hidden="true" className="mt-[9px] h-[5px] overflow-hidden rounded-[3px] bg-lavender">
-                <i className="block h-full w-[38%] rounded-[3px] bg-lav-ink opacity-[.55]" />
+                <i className="block h-full w-[38%] rounded-[3px] bg-violet opacity-[.55]" />
               </div>
             )}
           </div>

@@ -36,10 +36,18 @@ type Kind = Product["kind"];
 const KIND_LABEL: Record<Kind, string> = {
   physical: "Physical", services: "Service", saas: "SaaS", digital: "Digital",
 };
+/**
+ * Brand tokens, not Tailwind's default scales.
+ *
+ * `saas` had to move: inbox 7a names `violet`, which shadows Tailwind's own
+ * violet-50..950 and would have left that pill with no colour at all — the
+ * same silent failure the amber pills had. The other two moved with it
+ * rather than leaving one row of this table on a different palette.
+ */
 const KIND_COLOR: Record<Kind, string> = {
-  physical: "bg-blue-50 text-blue-700 border-blue-200",
-  services: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  saas: "bg-violet-50 text-violet-700 border-violet-200",
+  physical: "bg-blue-wash text-blue-ink border-blue-line",
+  services: "bg-green-wash text-green-ink border-green-line",
+  saas: "bg-lavender text-violet-ink border-lav-line",
   digital: "bg-amber-wash text-amber border-amber",
 };
 const KIND_OPTIONS: { kind: Kind; icon: string; label: string; desc: string }[] = [

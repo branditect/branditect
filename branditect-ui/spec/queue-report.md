@@ -1477,6 +1477,73 @@ are English beside them. Extracting the file is the i18n job, not this one.
 
 ---
 
+## Inbox 7a · The violet is a token
+
+`--violet #6b53ac`, `--violet-2 #9b83d8`, `--violet-ink #4a3d73` and
+`--grad-violet` in `branditect-ui/design/tokens.css` beside `--lavender`, and
+the matching entries in `tailwind.config.ts`. `#8a5fb0` is dropped —
+`--grad-hero-settings` runs accent to violet and interpolates the midpoint on
+its own, because a gradient stop is not a colour anyone names.
+
+**One correction.** The entry says the hex already ships "in the auth screens,
+twice each". It ships in `components/studio-card.tsx`,
+`components/studio/write.module.css`, `visual-identity.module.css` and
+`components/site/site.module.css` — four files, none of them auth. That makes
+the case for promoting it stronger, not weaker. `studio-card.tsx` is on
+`bg-grad-violet` now; the CSS modules keep their own variables, since they are
+not Tailwind and converting them is a different job.
+
+### Naming it broke a screen, and the guard caught it
+
+`violet` shadows Tailwind's own `violet-50..950`, the same way `amber` does.
+`app/(app)/knowledge/products/import/page.tsx` styled its SaaS pill
+`bg-violet-50 text-violet-700 border-violet-200`, and all three would have
+rendered nothing the moment the token landed — invisibly, which is the whole
+hazard.
+
+`lib/tokens.test.ts` failed on exactly those three lines. All four pills on
+that screen are on brand tokens now rather than one row of the table being on
+Tailwind's defaults. **Third instance of this shape**: `text-danger` naming
+nothing, `amber` shadowing its scale, now `violet`.
+
+### The contrast is asserted as colour, not as class names
+
+7a is explicit that the for-you / for-customers pairing is the argument the
+screen exists to make, and that lavender against white is too faint to carry
+it. Both cards now take their hue at the same weight — violet eyebrow and
+edge against accent eyebrow and edge.
+
+`npm run settings:ui` reads it with `getComputedStyle`:
+
+```
+PASS  7a · for-you renders in the violet token — rgb(107, 83, 172)
+PASS  7a · for-your-customers renders in the accent — rgb(232, 72, 31)
+PASS  7a · and the two are visibly different, which is the argument
+```
+
+Class names would not have been enough. `lib/tokens.test.ts` catches a name
+nothing defines; this catches a name that is defined and still does not reach
+the screen — which is what happened below.
+
+### A Tailwind config change needs the dev server restarted
+
+`text-violet` rendered as inherited ink after the token was added, on a dev
+server that had been up since before the config changed. The symptom is
+identical to an undefined token: correct class, no colour. Stopping dev,
+clearing `.next` and restarting fixed it.
+
+That belongs beside the `npm run build` hazard in CLAUDE.md — same family, and
+the same wasted hour if it is diagnosed as a Tailwind bug.
+
+| control | result |
+|---|---|
+| the violet swapped back for `lav-ink` | red — `rgb(91, 74, 128)` |
+| `bg-violet-50` put back on the SaaS pill | red — three classes flagged |
+
+1179 tests. `npm run settings:ui` all pass.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

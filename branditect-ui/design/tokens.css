@@ -67,6 +67,15 @@
   --lavender:  #e8dff6;   /* cited-source chip */
   --plan-note: #a98a80;   /* plan card secondary text */
 
+  /* Violet — the second hue. Already shipping as raw hex in
+     components/studio-card.tsx, studio/write.module.css,
+     visual-identity.module.css and site/site.module.css; named here so it
+     stops being copied by hand. --lavender is the pale end of the same
+     family and already a token. */
+  --violet:     #6b53ac;  /* the anchor: labels, meters, section tiles */
+  --violet-2:   #9b83d8;  /* the light end, for gradients and edges     */
+  --violet-ink: #4a3d73;  /* text on lavender, contrast-safe            */
+
   /* ---- gradients ------------------------------------------ */
   --grad-hero:    linear-gradient(92.52deg, #f16d2c 11.42%, #fe4401 29.59%);
   --grad-mark:    linear-gradient(135deg, #f16d2c, #fe4401);
@@ -76,6 +85,10 @@
   --grad-assets:  linear-gradient(123.041deg, rgb(230,244,241) 28.392%, rgb(179,207,203) 83.262%);
   --grad-more:    linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%);
   --grad-chat:    linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%);
+  --grad-violet:  linear-gradient(150deg, var(--violet-2), var(--violet));
+  /* The Settings hero. Two stops, not three: #8a5fb0 was a midpoint picked to
+     smooth the run, and a gradient stop is not a colour anyone names. */
+  --grad-hero-settings: linear-gradient(118deg, var(--accent) 0%, var(--violet) 100%);
 
   /* ---- radii ---------------------------------------------- */
   --r-panel: 16px;  /* sidebar, hero, white panels */

@@ -43,6 +43,15 @@ const config: Config = {
         // colour or an ink as a background.
         lavender: "#e8dff6",
         "lav-ink": "#5b4a80",
+        // The second hue, promoted from raw hex on the design side's call —
+        // inbox 7a. It shipped in four files by hand before it had a name.
+        //
+        // THIS SHADOWS TAILWIND'S OWN violet-50..950, the same way `amber`
+        // below shadows amber's. That is not a side effect to work around:
+        // a brand palette and a framework default answering to one name is
+        // how `bg-violet-50` ends up rendering nothing. lib/tokens.test.ts
+        // fails on any class that relies on the shadowed scale.
+        violet: { DEFAULT: "#6b53ac", 2: "#9b83d8", ink: "#4a3d73" },
         "green-wash": "#e8f6ee",
         "green-ink": "#1c7a48",
         "blue-wash": "#e8effd",
@@ -98,6 +107,11 @@ const config: Config = {
         "grad-assets": "linear-gradient(123.041deg, rgb(230,244,241) 28.392%, rgb(179,207,203) 83.262%)",
         "grad-more": "linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%)",
         "grad-chat": "linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%)",
+        "grad-violet": "linear-gradient(150deg, #9b83d8, #6b53ac)",
+        // The Settings hero. Two stops, not three — #8a5fb0 was a midpoint
+        // picked to smooth the run, and a gradient stop is not a colour
+        // anyone names. accent to violet interpolates it on its own.
+        "grad-hero-settings": "linear-gradient(118deg, #f0562a 0%, #6b53ac 100%)",
         // The "How you sell" panel. Lilac so the setup reads as configuration
         // sitting beside the orange hero, not as another result card.
         "grad-setup": "linear-gradient(150deg, #f8f4fe 0%, #ece3f9 100%)",

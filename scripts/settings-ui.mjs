@@ -127,6 +127,33 @@ try {
         disabled: document.querySelector('input[aria-label="Brand name"]')?.disabled,
       }))()`)));
 
+  // ── inbox 7a · the two hues, as rendered ──────────────────────────────
+  // Not the class names — the computed colour. A Tailwind class naming a
+  // token that does not exist renders nothing at all, and `text-violet` was
+  // exactly that shape until 7a added the token. lib/tokens.test.ts catches
+  // an undefined name; this catches a name that is defined and still does
+  // not reach the screen.
+  const hues = await page.eval(`(() => {
+    const find = (t) => [...document.querySelectorAll("div")]
+      .find((d) => d.children.length === 0 && d.textContent.trim().toUpperCase() === t);
+    const you = find("FOR YOU"), them = find("FOR YOUR CUSTOMERS");
+    const hero = document.querySelector("main section, main div");
+    return {
+      you: you ? getComputedStyle(you).color : null,
+      them: them ? getComputedStyle(them).color : null,
+      heroBg: hero ? getComputedStyle(hero).backgroundImage.slice(0, 90) : null,
+    };
+  })()`);
+  hues.you === "rgb(107, 83, 172)"
+    ? ok("7a · for-you renders in the violet token", hues.you)
+    : bad("7a · for-you is not the violet", JSON.stringify(hues));
+  hues.them === "rgb(232, 72, 31)"
+    ? ok("7a · for-your-customers renders in the accent", hues.them)
+    : bad("7a · for-your-customers is not the accent", JSON.stringify(hues));
+  hues.you && hues.them && hues.you !== hues.them
+    ? ok("7a · and the two are visibly different, which is the argument")
+    : bad("7a · the contrast the screen exists to make is gone", JSON.stringify(hues));
+
   // ── criterion 6 · email read-only, and says why ───────────────────────
   const emailField = await page.eval(`(() => {
     const i = document.querySelector('input[aria-label="Email"]');

@@ -20,9 +20,9 @@ import ComingSoon from "@/components/settings/coming-soon";
  * section that reads the user or the brand is a client island.
  *
  * THE FOUR TILES ARE THE HIERARCHY — orange for you, sage for the brand,
- * lavender for language, navy for the account. You can find a section by
- * colour before reading a word. The reference uses violet for the third;
- * there is none in the palette, so it is the lavender pair that is there.
+ * violet for language, navy for the account. You can find a section by
+ * colour before reading a word. The violet became a token in inbox 7a; this
+ * page was built on lavender while it was still a raw hex nobody had named.
  */
 export default function SettingsPage() {
   const locale = localeFromCookies();
@@ -42,7 +42,7 @@ export default function SettingsPage() {
         <BrandPanel />
       </Panel>
 
-      <Panel tile={<Tile className="bg-lavender" fill="#5b4a80" d={ICON_LANG} />}
+      <Panel tile={<Tile className="bg-grad-violet" fill="#fff" d={ICON_LANG} />}
              title={t("settings.language")} sub={t("settings.languageIntro")}>
         <LanguagePanel />
       </Panel>

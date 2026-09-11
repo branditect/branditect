@@ -169,3 +169,79 @@ describe("every colour class names a colour that exists", () => {
     assert.deepEqual(bad, [], "colour classes naming a token that does not exist render nothing");
   });
 });
+
+// ────────────────────────────────────────── inbox 7a: the violet is a token ──
+
+describe("the violet is named, not copied by hand", () => {
+  const tokens = readFileSync("branditect-ui/design/tokens.css", "utf8");
+  const config = readFileSync("tailwind.config.ts", "utf8");
+
+  it("is in tokens.css, beside the pale end of its own family", () => {
+    // --lavender was already a token; the anchor and the light end were not,
+    // which is how the same hex reached four files by hand.
+    for (const decl of ["--violet:", "--violet-2:", "--violet-ink:"]) {
+      assert.ok(tokens.includes(decl), `tokens.css has no ${decl}`);
+    }
+    assert.ok(tokens.indexOf("--lavender") < tokens.indexOf("--violet:"),
+      "the violet block should sit with lavender, not somewhere else");
+  });
+
+  it("and in the config, in the same shape as lavender", () => {
+    assert.match(config, /violet: \{ DEFAULT: "#6b53ac", 2: "#9b83d8", ink: "#4a3d73" \}/);
+    assert.match(config, /"grad-violet"/);
+    assert.match(config, /"grad-hero-settings"/);
+  });
+
+  it("the two files agree on every violet value", () => {
+    // Two sources for one colour is the state this whole entry is about.
+    for (const hex of ["#6b53ac", "#9b83d8", "#4a3d73"]) {
+      assert.ok(tokens.includes(hex), `tokens.css is missing ${hex}`);
+      assert.ok(config.includes(hex), `tailwind.config.ts is missing ${hex}`);
+    }
+  });
+
+  it("drops the midpoint, which was a gradient stop and not a colour", () => {
+    // "accent to violet interpolates it on its own."
+    const code = (f: string) =>
+      readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+    for (const f of ["tailwind.config.ts", "branditect-ui/design/tokens.css",
+                     "components/settings/settings-hero.tsx"]) {
+      assert.ok(!code(f).includes("#8a5fb0"), `${f} still carries the midpoint`);
+    }
+    assert.match(config, /"grad-hero-settings": "linear-gradient\(118deg, #f0562a 0%, #6b53ac 100%\)"/);
+  });
+
+  it("the Settings page is on the tokens, not on lavender stand-ins", () => {
+    const page = readFileSync("app/(app)/settings/page.tsx", "utf8");
+    assert.match(page, /bg-grad-hero-settings|<SettingsHero/);
+    assert.match(page, /bg-grad-violet/, "the Language tile is not on the violet gradient");
+    assert.match(readFileSync("components/settings/settings-hero.tsx", "utf8"), /bg-grad-hero-settings/);
+  });
+
+  it("for-you and for-customers are two different hues, at the same weight", () => {
+    // The argument the screen exists to make. Lavender against white was too
+    // faint to read as a deliberate second voice, which is why 7a asked for
+    // the anchor rather than the pale end.
+    const src = readFileSync("components/settings/language-panel.tsx", "utf8");
+    const forYou = src.slice(src.indexOf("settings.forYou") - 400, src.indexOf("settings.forYou"));
+    const forThem = src.slice(src.indexOf("settings.forCustomers") - 400, src.indexOf("settings.forCustomers"));
+    assert.match(forYou, /text-violet\b/);
+    assert.match(forYou, /border-violet-2/);
+    assert.match(forThem, /text-accent-dark/);
+    assert.match(forThem, /border-accent-line/);
+    assert.ok(!/text-lav-ink/.test(src), "still on the faint stand-in");
+  });
+
+  it("nothing in the app writes the violet as raw hex any more", () => {
+    // CSS modules are out of scope — they carry their own variables and are
+    // not Tailwind — but no .tsx should be pasting the hex now it has a name.
+    const offenders: string[] = [];
+    for (const f of sourceFiles(["app", "components"])) {
+      if (!f.endsWith(".tsx")) continue;
+      const src = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+      if (/#6b53ac|#9b83d8/i.test(src)) offenders.push(f);
+    }
+    assert.deepEqual(offenders, [],
+      "a .tsx is pasting the violet hex — use `violet` or `bg-grad-violet`");
+  });
+});

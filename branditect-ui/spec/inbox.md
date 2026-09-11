@@ -692,7 +692,7 @@ confusion. 6b is a deletion. 6e is its own small thing.
 
 ## 7 · OPEN — the violet is a yes, and a new one: language on the marketing site
 
-### 7a · Add the violet block. My "nothing invented" was wrong, and you were right to stop.
+### 7a · DONE — Add the violet block. My "nothing invented" was wrong, and you were right to stop.
 
 The reference page's header says the colours came straight from `tokens.css`. For
 `#6b53ac`, `#9b83d8` and `#8a5fb0` that was false, and checking it rather than believing it
@@ -730,6 +730,39 @@ cannot carry it — lavender against white is too faint to read as a deliberate 
 While you are there: `lib/tokens.test.ts` is the most valuable thing in that commit. An
 undefined Tailwind colour renders **nothing** — no error, no fallback, invisible text. Four
 more of those plus five broken amber classes is a real haul from one test.
+
+**DONE 2026-09-11.**
+
+- `--violet`, `--violet-2`, `--violet-ink` and `--grad-violet` are in
+  `tokens.css` beside `--lavender`, and in `tailwind.config.ts` in the same
+  shape. `#8a5fb0` is dropped: `--grad-hero-settings` runs `--accent` to
+  `--violet` and interpolates the midpoint itself.
+- **One correction to the entry.** The hex ships in
+  `components/studio-card.tsx`, `studio/write.module.css`,
+  `visual-identity.module.css` and `site/site.module.css` — not the auth
+  screens. Four files, so the argument for promoting it is stronger than
+  stated, not weaker. `studio-card.tsx` is on `bg-grad-violet` now; the CSS
+  modules keep their own variables.
+- **Naming `violet` shadows Tailwind's `violet-50..950`**, exactly as `amber`
+  does. `products/import` was using `bg-violet-50 text-violet-700
+  border-violet-200` for the SaaS pill and would have lost all three
+  silently. `lib/tokens.test.ts` caught it; all four pills on that screen are
+  on brand tokens now.
+- Settings is on the tokens: hero gradient, the Language tile, the violet
+  eyebrow and edge below the line. **The for-you / for-customers contrast is
+  asserted as rendered colour, not as class names** — `rgb(107, 83, 172)`
+  against `rgb(232, 72, 31)`, read with `getComputedStyle` in
+  `npm run settings:ui`.
+- **A Tailwind config change needs the dev server restarted.** `text-violet`
+  rendered as inherited ink until it was, which looks exactly like an
+  undefined token. Worth knowing next to the `.next` hazard in CLAUDE.md.
+
+Two controls red: the violet swapped back for `lav-ink`, and `bg-violet-50`
+put back on the pill.
+
+See the report entry "Inbox 7a".
+
+---
 
 ### 7b · NEW — Finnish on the marketing site, and one toggle in both places
 

@@ -3,13 +3,15 @@
 /**
  * The hero. One gradient, at the top only.
  *
- * The reference runs orange into violet. **There is no violet in the
- * palette** — `--violet:#6b53ac`, `--violet-2:#9b83d8` and the `#8a5fb0` mid
- * stop are not in branditect-ui/design/tokens.css or in tailwind.config.ts,
- * despite the reference's comment saying nothing was invented. CLAUDE.md is
- * explicit that a missing colour is a design decision rather than a CSS one,
- * so this uses `grad-mark`, the brand gradient that exists, and the violet
- * is raised in the report instead of added here.
+ * Orange into violet, as the reference draws it. The violet was raised rather
+ * than added when this was built — it was not in the palette and CLAUDE.md is
+ * explicit that a missing colour is a design decision. Inbox 7a made that
+ * decision: `violet` is a token now, promoted from the raw hex it was already
+ * shipping as in four files.
+ *
+ * TWO STOPS, NOT THREE. The reference smooths the run with `#8a5fb0`; 7a
+ * drops it, because a gradient stop is not a colour anyone names and accent
+ * to violet interpolates the midpoint on its own.
  */
 import { useBrand } from "@/lib/useBrand";
 import { useUser } from "@/lib/useUser";
@@ -22,7 +24,7 @@ export default function SettingsHero() {
   const locale = useLocale();
 
   return (
-    <div className="relative overflow-hidden rounded-panel bg-grad-mark px-7 py-[26px] drop-shadow-hero">
+    <div className="relative overflow-hidden rounded-panel bg-grad-hero-settings px-7 py-[26px] drop-shadow-hero">
       {/* A light sweep, so the gradient has depth rather than reading as a flat fill. */}
       <div
         aria-hidden="true"

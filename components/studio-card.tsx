@@ -52,7 +52,11 @@ function Art({ variant }: { variant: StudioVariant }) {
         <span aria-hidden="true" className="pointer-events-none absolute bottom-2.5 left-3.5 h-[46px] w-[92px]">
           <span className="absolute bottom-0 left-0 h-[38px] w-[27px] rounded-[5px] bg-[linear-gradient(160deg,#f6875c,#ef5a2f)] shadow-[0_5px_10px_-6px_rgba(20,30,60,.45)]" />
           <span className="absolute bottom-0 left-8 h-8 w-[26px] rounded-[5px] bg-[linear-gradient(160deg,#7fa4d8,#4a6ea8)] shadow-[0_5px_10px_-6px_rgba(20,30,60,.45)]" />
-          <span className="absolute bottom-0 left-[62px] h-[42px] w-[26px] rounded-[5px] bg-[linear-gradient(160deg,#9b83d8,#6b53ac)] shadow-[0_5px_10px_-6px_rgba(20,30,60,.45)]" />
+          {/* The violet bar is the token now — inbox 7a named exactly this
+              gradient. The orange and blue bars beside it are still raw hex:
+              neither is in the palette, and inventing two more colours to
+              tidy one line is the thing 7a is careful about. */}
+          <span className="absolute bottom-0 left-[62px] h-[42px] w-[26px] rounded-[5px] bg-grad-violet shadow-[0_5px_10px_-6px_rgba(20,30,60,.45)]" />
         </span>
       );
     case "assets":

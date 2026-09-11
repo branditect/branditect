@@ -561,3 +561,95 @@ form: it names the property that makes a policy safe, so anything lacking it fai
 whatever it looks like. **Apply that test to the next guard you write, and to the
 deletion work in queue item 4:** the question is never "does this look like the bad
 example", it is "can this be wrong and still pass".
+
+---
+
+## 6 · OPEN — product image tagging: the flow works, the way in does not
+
+Walked end to end in a real browser on production, signed in as the Deklan brand. **The
+tagging itself is sound**: Knowledge ▸ Images → tick an image → "Tag to a product" → pick the
+product → it appears on the card under *Images and video*, and the Untagged count drops 27 →
+26. Nothing is broken in the mechanism.
+
+What is wrong is everything around it.
+
+### 6a · The product card tells you to tag and gives you no way to do it — **fix this one**
+
+The Media tab's empty state reads:
+
+> No images yet. Generate some in Studio, or tag existing ones from Knowledge.
+
+There is no link on "Knowledge", no button, nothing. The card names the thing you should do
+and then makes you find it yourself, in a different section, by remembering that the verb
+lives on the other side. Same for Documents: *"Tag a safety sheet, a spec or a certificate
+from Knowledge ▸ Documents."*
+
+**Tagging is one-directional today.** You can tag an image to a product from Images. You
+cannot tag an image to a product from the product. The product card is a read-only view of a
+decision made elsewhere, and its own copy does not admit that.
+
+Two ways to fix it, and the first is much cheaper:
+
+1. **Make the empty state actionable.** "Tag existing ones from Knowledge" becomes a button
+   that opens Knowledge ▸ Images filtered to untagged, or opens the same picker the *Change
+   product image* control already uses. The picker exists — `components/products/image-picker.tsx`
+   — so this is wiring, not building.
+2. Add a real "Tag images" control to the Media tab that writes the same join the Images-side
+   modal writes. More work, and it needs both sides to use one function, not two.
+
+**Do not leave the sentence as it is.** An empty state that names an action it does not offer
+is worse than one that says nothing, because the reader assumes they have missed a control.
+
+### 6b · A sentence with no control attached
+
+At the bottom of the Media tab, under Documents, floating on its own:
+
+> Removes it from this product. The file stays in Knowledge. Tagging more, and matching from
+> your library, arrive next.
+
+No button near it, nothing it describes. It reads as a stray note to a developer. Either
+attach it to the control it explains — presumably a per-image Remove that only appears on
+hover — or cut it. Half of it is also a roadmap promise ("arrive next") sitting in a product
+surface, which is the kind of line that is still there in a year.
+
+### 6c · "Pick a product" is the instruction, not the action
+
+The modal's confirm button says **Pick a product**, and it stays disabled until you have
+picked one. So it tells you to do the thing you have just done. By the time it is pressable
+the label is already false.
+
+It should say what pressing it does: **Tag** — or "Tag to 1 product" when the count is
+useful. The modal title already carries the instruction.
+
+### 6d · Tagging an image does not change the card thumbnail, and nothing says so
+
+Two different things share one screen: **Product image** (the single thumbnail on the list
+row, set by *Change product image*) and **Images and video** (everything tagged to this
+product). Tagging an image adds it to the second and leaves the first alone.
+
+That is the right model — the hero shot should not change because someone tagged a lifestyle
+photo — but nothing on the screen explains it, and the natural expectation after tagging an
+image is that the product now looks different. It does not.
+
+One line under *Product image* fixes it: *"The shot on the product list. Tagged images below
+do not change it."*
+
+### 6e · The brand name shows a placeholder on first paint
+
+Knowledge ▸ Images renders **"Access and manage all of Your Brand's brand assets in one
+place"** and the sidebar footer reads **"Your Brand / Workspace"** for about a second, then
+both resolve to "Deklan". A literal placeholder string is reaching the screen before the
+brand loads.
+
+Render the sentence without the name until the brand resolves, or hold the block. "Your
+Brand" is the kind of thing that ends up in a screenshot.
+
+### Not a bug, worth knowing
+
+The type switch across the top — IMG / VID / SND / GFX / WEB — renders and reads well. The
+selection bar, the Untagged filter and the All products dropdown all behave.
+
+### Suggested order
+
+6a, then 6c, then 6d — all three are copy or wiring and together they are most of the
+confusion. 6b is a deletion. 6e is its own small thing.

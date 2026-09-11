@@ -573,7 +573,7 @@ product → it appears on the card under *Images and video*, and the Untagged co
 
 What is wrong is everything around it.
 
-### 6a · The product card tells you to tag and gives you no way to do it — **fix this one**
+### 6a · DONE — The product card tells you to tag and gives you no way to do it — **fix this one**
 
 The Media tab's empty state reads:
 
@@ -599,6 +599,40 @@ Two ways to fix it, and the first is much cheaper:
 
 **Do not leave the sentence as it is.** An empty state that names an action it does not offer
 is worse than one that says nothing, because the reader assumes they have missed a control.
+
+**DONE 2026-09-11.** Tagging goes both ways now, and the Documents half of
+this entry turned out to be worse than a missing link.
+
+- **Images.** "Tag images" on the empty state and in the section header, both
+  opening the chooser *Change product image* already uses — extended with a
+  multi-select mode rather than copied, so there is one grid over
+  `brand_images` and not a third. It posts to `/api/products/attachments`,
+  the same endpoint the Images side posts to, with the arguments the other
+  way round: many images, one product. Images already on the product are
+  shown as **Tagged** and not selectable, rather than hidden — hiding them
+  makes this grid disagree with Knowledge.
+- **The new confirm button was born with 6c's bug** and was fixed before it
+  shipped: it says `Tag 2 images`, never "Pick an image".
+- **Documents cannot be tagged anywhere in this app.** Not from this tab, not
+  from Knowledge ▸ Documents, not through the API — the POST takes `imageIds`
+  only, and nothing in `app/`, `components/` or `lib/` inserts into
+  `product_documents`. So that empty state was not missing a link, it was
+  naming an action with no destination. Its copy now says what is true and
+  links to Knowledge ▸ Documents for the files themselves. **Building it is a
+  real piece of work and is not in this entry** — a route change and a second
+  picker — so it is named in the report rather than half-built.
+- Half of 6b's floating sentence — "matching from your library, arrive next"
+  — stopped being true the moment this shipped, so that half is gone. The
+  rest still floats with no control beside it and is left for 6b.
+
+`npm run tag:ui` drives it in a browser against a `zz-tag-` brand with its own
+product and three seeded images: fourteen checks, ending with two real rows in
+`product_images`. Two controls red — the button removed from the empty state,
+and the insert made a no-op.
+
+See the report entry "Inbox 6a".
+
+---
 
 ### 6b · A sentence with no control attached
 

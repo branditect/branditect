@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import Icon from "@/components/icon";
 import { docRoleLabel, fileSize, isVideo, UNTAG_NOTE } from "@/lib/product-attachments";
 import ProductPicker from "@/components/products/product-picker";
-import { authedFetch } from "@/lib/authed-fetch";
+import ImagePicker from "@/components/products/image-picker";
+import { authedFetch, authedJson } from "@/lib/authed-fetch";
 
 interface MediaImage {
   id: string; file_url: string; file_name: string;
@@ -20,10 +22,24 @@ interface MediaDoc {
 /**
  * What is tagged to this product.
  *
- * Read-only for now: tagging arrives in step 3. The counts are derived from
- * the rows on screen rather than from catalog_products.image_count, which is
- * written once and never maintained, so the number and the grid cannot
- * disagree after an untag.
+ * The counts are derived from the rows on screen rather than from
+ * catalog_products.image_count, which is written once and never maintained,
+ * so the number and the grid cannot disagree after an untag.
+ *
+ * TAGGING GOES BOTH WAYS NOW — inbox entry 6a. It used to go one way: you
+ * could tag an image to a product from Knowledge ▸ Images, and this tab was a
+ * read-only view of that decision whose own empty state told you to go and
+ * make it somewhere else, with no link. "Tag images" opens the same chooser
+ * *Change product image* uses, in its multi-select mode, and posts to the
+ * same `/api/products/attachments` endpoint the Images side posts to. One
+ * endpoint, one chooser, two directions.
+ *
+ * DOCUMENTS DO NOT WORK THIS WAY AND CANNOT YET. Nothing anywhere in this
+ * app inserts into `product_documents` — not this tab, not Knowledge ▸
+ * Documents, not the API, whose POST takes imageIds only. The Documents
+ * empty state used to name tagging as something you do elsewhere; there is
+ * no elsewhere. Its copy says what is true instead, and the gap is in the
+ * report rather than papered over with a link to a screen that cannot do it.
  */
 export default function MediaTab({
   productId, brandId, onCounts,
@@ -40,6 +56,9 @@ export default function MediaTab({
      An image tagged here shows on that image's tile in Knowledge too. */
   const [tagMoreFor, setTagMoreFor] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<MediaImage | null>(null);
+  /* Entry 6a: tagging from this side, into this product. */
+  const [picking, setPicking] = useState(false);
+  const [tagging, setTagging] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -76,6 +95,34 @@ export default function MediaTab({
     }
   }, [productId, brandId, load]);
 
+  /**
+   * Tag chosen library images to this product.
+   *
+   * The same endpoint the Images screen posts to, with the arguments the
+   * other way round: many images, one product. It skips pairs that already
+   * exist server-side, so a double-tag is a no-op rather than a failed batch.
+   */
+  const tagImages = useCallback(async (imageIds: string[]) => {
+    if (!imageIds.length) return;
+    setTagging(true);
+    setError(null);
+    try {
+      const res = await authedJson("/api/products/attachments", "POST", {
+        imageIds, productIds: [productId],
+      });
+      const json = await res.json().catch(() => ({}));
+      // fetch resolves on 4xx and 5xx. Reading json without checking res.ok
+      // is how a tag reports success and writes nothing.
+      if (!res.ok) { setError(json.error ?? "Could not tag. Nothing was added."); return; }
+      setPicking(false);
+      await load();
+    } catch {
+      setError("Could not tag. Nothing was added.");
+    } finally {
+      setTagging(false);
+    }
+  }, [productId, load]);
+
   const loading = images === null || documents === null;
 
   return (
@@ -94,18 +141,46 @@ export default function MediaTab({
               {images.length}
             </span>
           )}
+          {/* In the header as well as in the empty state: once there is one
+              image the empty state is gone, and adding a second should not
+              mean emptying the first. */}
+          {!loading && images.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              className="ml-auto rounded-tile border border-rule-2 px-2.5 py-1 text-2xs font-bold text-ink-2 hover:border-accent-line hover:text-accent-dark"
+            >
+              Tag images
+            </button>
+          )}
         </div>
 
         {loading ? (
           <p className="mt-2 text-2xs font-medium text-muted">Loading…</p>
         ) : images.length === 0 ? (
-          /* The empty state names the fix rather than the absence. Matching
-             from the library arrives in step 3 and lands here. */
+          /* The empty state names the fix AND offers it. Naming an action
+             with no control attached is worse than saying nothing, because
+             the reader assumes they have missed a button. */
           <div className="mt-2 rounded-card border border-dashed border-rule-2 bg-tile px-3.5 py-4">
             <p className="text-xs font-semibold text-ink-2">No images yet.</p>
             <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-              Generate some in Studio, or tag existing ones from Knowledge.
+              Tag images from your library, or generate some in Studio.
             </p>
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPicking(true)}
+                className="rounded-tile bg-grad-mark px-3 py-1.5 text-2xs font-bold text-white"
+              >
+                Tag images
+              </button>
+              <Link
+                href="/studio/create-images"
+                className="text-2xs font-semibold text-accent underline underline-offset-2"
+              >
+                Create images in Studio
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="mt-2 grid grid-cols-4 gap-2">
@@ -168,8 +243,17 @@ export default function MediaTab({
         {loading ? null : documents.length === 0 ? (
           <div className="mt-2 rounded-card border border-dashed border-rule-2 bg-tile px-3.5 py-4">
             <p className="text-xs font-semibold text-ink-2">No documents yet.</p>
+            {/* It used to say "Tag a safety sheet, a spec or a certificate
+                from Knowledge ▸ Documents." Nothing in this app can do that:
+                no screen and no endpoint inserts into product_documents. An
+                empty state that names an action which exists nowhere sends
+                someone hunting for a control that was never built. */}
             <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-              Tag a safety sheet, a spec or a certificate from Knowledge ▸ Documents.
+              Documents live in{" "}
+              <Link href="/knowledge/documents" className="font-semibold text-accent underline underline-offset-2">
+                Knowledge ▸ Documents
+              </Link>
+              . Attaching one to a product is not built yet.
             </p>
           </div>
         ) : (
@@ -204,8 +288,12 @@ export default function MediaTab({
         )}
       </section>
 
+      {/* Entry 6b is its own item, but half this sentence stopped being true
+          the moment tagging from the library shipped above, so that half
+          goes now rather than standing as a promise of what already exists.
+          The rest still floats with no control attached and is left for 6b. */}
       <p className="mt-[22px] text-2xs font-medium leading-[1.6] text-muted">
-        {UNTAG_NOTE} Tagging more, and matching from your library, arrive next.
+        {UNTAG_NOTE}
       </p>
 
       {lightbox && (
@@ -215,6 +303,16 @@ export default function MediaTab({
           <img src={lightbox.file_url} alt={lightbox.file_name}
             className="max-h-full max-w-full rounded-panel object-contain" />
         </div>
+      )}
+      {picking && (
+        <ImagePicker
+          brandId={brandId}
+          mode="multi"
+          busy={tagging}
+          alreadyPicked={(images ?? []).map((i) => i.id)}
+          onPickMany={(ids) => void tagImages(ids)}
+          onClose={() => { if (!tagging) setPicking(false); }}
+        />
       )}
       {tagMoreFor && (
         <ProductPicker

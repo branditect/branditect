@@ -18,33 +18,63 @@ interface BrandImage {
 }
 
 /**
- * Pick a product shot from the brand's image library.
+ * Pick from the brand's image library.
  *
  * Reads brand_images directly rather than duplicating an uploader — Knowledge
  * ▸ Images is the one home for images, and this is a chooser, not a second
  * place to put files.
+ *
+ * TWO MODES, ONE CHOOSER. `single` returns one image for the product hero,
+ * which is what *Change product image* has always used. `multi` returns
+ * several, which is what the Media tab needs to tag images to a product —
+ * inbox entry 6a. A second modal that also browsed brand_images would be the
+ * third grid over the same table and the one nobody keeps in step; the
+ * ProductPicker beside this file carries the same note for the same reason.
+ *
+ * Only the footer, the title and what a tile click does change between them.
  */
 export default function ImagePicker({
   brandId,
   currentUrl,
   onPick,
   onClose,
+  mode = "single",
+  alreadyPicked,
+  busy = false,
+  onPickMany,
 }: {
   brandId: string;
-  currentUrl: string | null;
+  currentUrl?: string | null;
   /**
    * Both, not just the URL. note_blocks.image_id is a foreign key with
    * ON DELETE SET NULL, and that is what lets a note survive its picture being
    * deleted from Knowledge — a block holding only a URL would render a broken
    * image instead. Callers that want the URL alone can ignore the id.
+   *
+   * Single mode only.
    */
-  onPick: (picked: { id: string; url: string } | null) => void;
+  onPick?: (picked: { id: string; url: string } | null) => void;
   onClose: () => void;
+  mode?: "single" | "multi";
+  /**
+   * Multi mode. Images already tagged to this product — shown as already
+   * there and not selectable, rather than hidden. Hiding them makes the grid
+   * disagree with Knowledge, and someone looking for an image they know they
+   * have concludes it is gone.
+   */
+  alreadyPicked?: string[];
+  /** Multi mode. Keeps the modal open and the button honest while it saves. */
+  busy?: boolean;
+  /** Multi mode. Closing is the caller's to do, after the write succeeds. */
+  onPickMany?: (ids: string[]) => void;
 }) {
   const [images, setImages] = useState<BrandImage[] | null>(null);
   const [query, setQuery] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const multi = mode === "multi";
+  const taken = new Set(alreadyPicked ?? []);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -104,15 +134,19 @@ export default function ImagePicker({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Choose a product image"
+        aria-label={multi ? "Tag images to this product" : "Choose a product image"}
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[80vh] w-full max-w-[720px] flex-col overflow-hidden rounded-panel border border-rule bg-card shadow-[0_24px_60px_-20px_rgba(20,20,26,.35)]"
       >
         <div className="flex items-center gap-3 border-b border-rule px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-h3 font-bold">Choose a product image</h2>
+            <h2 className="text-h3 font-bold">
+              {multi ? "Tag images to this product" : "Choose a product image"}
+            </h2>
             <p className="mt-0.5 text-xs font-normal text-muted-2">
-              From your image library. This is the shot the image creator reads as a reference.
+              {multi
+                ? "From your image library. They show under Images and video on this product."
+                : "From your image library. This is the shot the image creator reads as a reference."}
             </p>
           </div>
           <label className="ml-auto flex h-9 w-[190px] items-center gap-2 rounded-tile border border-rule-2 px-3 focus-within:border-accent-line">
@@ -169,20 +203,35 @@ export default function ImagePicker({
           {shown.length > 0 && (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3">
               {shown.map((img) => {
-                const active = img.file_url === currentUrl;
+                const here = taken.has(img.id);
+                const chosen = multi ? picked.includes(img.id) : img.file_url === currentUrl;
+                const active = chosen || here;
                 return (
                   <button
                     key={img.id}
                     type="button"
+                    disabled={here || busy}
                     onClick={() => {
-                      onPick({ id: img.id, url: img.file_url });
-                      onClose();
+                      if (!multi) {
+                        onPick?.({ id: img.id, url: img.file_url });
+                        onClose();
+                        return;
+                      }
+                      setPicked((prev) =>
+                        prev.includes(img.id) ? prev.filter((x) => x !== img.id) : [...prev, img.id]);
                     }}
                     aria-pressed={active}
-                    className={`group overflow-hidden rounded-card border text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      active ? "border-accent ring-2 ring-accent-line" : "border-rule hover:border-accent-line"
+                    className={`group relative overflow-hidden rounded-card border text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                      here ? "border-rule opacity-50"
+                        : active ? "border-accent ring-2 ring-accent-line"
+                        : "border-rule hover:border-accent-line"
                     }`}
                   >
+                    {here && (
+                      <span className="absolute right-1.5 top-1.5 z-10 rounded-pill bg-ink/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.4px] text-white">
+                        Tagged
+                      </span>
+                    )}
                     <span className="block aspect-square overflow-hidden bg-tile">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -202,11 +251,35 @@ export default function ImagePicker({
         </div>
 
         <div className="flex items-center gap-2.5 border-t border-rule px-5 py-3.5">
-          {currentUrl && (
+          {multi && (
+            <>
+              <button
+                type="button"
+                disabled={picked.length === 0 || busy}
+                onClick={() => onPickMany?.(picked)}
+                className={
+                  picked.length === 0 || busy
+                    ? "rounded-tile bg-tile px-3.5 py-2.5 text-sm font-bold text-muted-2"
+                    : "rounded-tile bg-grad-mark px-3.5 py-2.5 text-sm font-bold text-white"
+                }
+              >
+                {/* Entry 6c: the label says what pressing it does, not what
+                    you have already done. The count is the useful part. */}
+                {busy ? "Tagging…"
+                  : picked.length === 1 ? "Tag image"
+                  : picked.length > 1 ? `Tag ${picked.length} images`
+                  : "Tag images"}
+              </button>
+              <span className="text-xs font-medium text-muted-2">
+                {picked.length === 0 ? "Pick one or more" : `${picked.length} selected`}
+              </span>
+            </>
+          )}
+          {!multi && currentUrl && (
             <button
               type="button"
               onClick={() => {
-                onPick(null);
+                onPick?.(null);
                 onClose();
               }}
               className="rounded-tile border border-rule-2 px-3.5 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile"

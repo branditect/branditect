@@ -1367,6 +1367,116 @@ warning in onboarding.
 
 ---
 
+## Inbox 6a · Tagging goes both ways now — and Documents was worse than a missing link
+
+### The images half
+
+"Tag images" appears on the Media tab's empty state and, once there are
+images, in the section header — both places, because the empty state
+disappears after the first tag and adding a second should not mean emptying
+the first.
+
+It opens the chooser that already exists. `components/products/image-picker.tsx`
+gained a **multi-select mode** rather than being copied: `single` still
+returns one image for the product hero, which is what *Change product image*
+has always used and which is unchanged. A second modal browsing
+`brand_images` would have been the third grid over that table and the one
+nobody keeps in step — the same reason `ProductPicker` is one component with
+three entry points.
+
+It posts to `/api/products/attachments`, the endpoint the Images side already
+posts to, with the arguments the other way round: many images, one product.
+The route needed no change. It already skips pairs that exist, so a
+double-tag is a no-op rather than a failed batch.
+
+**Images already on the product are shown as Tagged and not selectable, not
+hidden.** Hiding them makes this grid disagree with Knowledge, and someone
+looking for an image they know they have concludes it is gone.
+
+### The new confirm button was born with 6c's bug
+
+6c is about the Images-side modal saying **Pick a product** on a button that
+is disabled until you have picked one. The button I added here would have said
+"Pick an image" for exactly the same reason, so it says what pressing it does
+instead: `Tag image`, `Tag 2 images`, `Tagging…`. Fixed before it shipped
+rather than added to the list.
+
+### Documents cannot be tagged. Anywhere.
+
+The entry reads the Documents empty state as the same shape as the images one
+— a sentence with no link. It is worse than that.
+
+**Nothing in this application inserts into `product_documents`.** Not the
+Media tab, not Knowledge ▸ Documents, not the API: the POST takes `imageIds`
+and `productIds` only, and a grep across `app/`, `components/` and `lib/`
+finds one file touching that table at all — the attachments route, which
+selects from it and deletes from it. The untag button on the Documents list
+can only ever act on rows nothing can create.
+
+So the empty state was not missing a link to a screen that does the job. It
+named an action with no destination, and adding a link would have sent
+someone to a screen that cannot do it either.
+
+The copy says what is true now, and links to Knowledge ▸ Documents for the
+files themselves. **Building document tagging is a real piece of work and is
+not in this entry** — the route needs a `documentIds` path with its own
+ownership check, and a picker over `brand_documents` with the `doc_role` the
+schema already carries. Named rather than half-built. Say the word and it is
+the next thing.
+
+A test asserts the claim rather than remembering it: if anything ever inserts
+into `product_documents`, or a `documentIds` parameter appears, the suite
+fails and the copy has to be updated in the same commit.
+
+### Half of 6b went with it
+
+"Tagging more, and matching from your library, arrive next" — the second half
+stopped being true the moment this shipped, so it is gone. The rest of that
+sentence still floats with no control beside it and is left for 6b, which is
+its own item.
+
+### `npm run tag:ui`
+
+Fourteen checks in a real browser, against a `zz-tag-` brand with its own
+product and three seeded library images. **No real product or image is
+touched.** It ends on two actual rows in `product_images`, read back from the
+database rather than from the screen.
+
+Worth recording: **CLAUDE.md's scratch product `ZZ TEST — do not use` is still
+missing**, which is why this seeds its own brand rather than using it. Flagged
+in the item 4 entry too.
+
+| control | result |
+|---|---|
+| the button removed from the empty state, sentence left | 8 red |
+| the insert made a no-op, so the POST reports success and writes nothing | 2 red |
+
+The harness was wrong four times before it was right, each time in a way that
+would have reported a working feature as broken:
+
+- it asserted before the Media tab had loaded, so neither the empty state nor
+  the header button existed yet;
+- the product drawer is also `role="dialog"` and its tab strip has
+  `aria-pressed` buttons, so an unscoped query clicked drawer tabs instead of
+  image tiles and read the drawer's control as the confirm;
+- the page's own "Tag images" button sits behind the modal, and matching it
+  reported the confirm as enabled with nothing picked;
+- it read `product_images` on a fixed four-second wait and found the table
+  empty two rows before it was.
+
+All four found by running it.
+
+### Not translated
+
+`components/products/media-tab.tsx` is one of the 62 files on `OUTSTANDING`
+and stays there: it holds its own English literals, and the strings added here
+are English beside them. Extracting the file is the i18n job, not this one.
+`lib/i18n-scope.ts` is unchanged, and the two-sided scope test still passes.
+
+1172 tests, tsc and lint clean.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

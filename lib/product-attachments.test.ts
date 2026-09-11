@@ -1,7 +1,8 @@
 /** Run with: npm test — criteria from branditect-ui/spec/product-attachments.md */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import {
   decideDownloadAccess, suggestProduct, suggestionCopy, zipName,
   isVideo, durationBadge, fileSize, docRoleLabel, isDocRole, DOC_ROLES, UNTAG_NOTE,
@@ -297,3 +298,111 @@ describe("the image search both boxes use", () => {
     assert.ok(picker.includes("IMAGE_SEARCH_COLUMNS"), "the picker still selects its own column list");
   });
 });
+
+// ─────────────────────────────────── inbox 6a: tagging goes both ways now ──
+
+describe("the product card can tag, not only untag", () => {
+  const read = (f: string) => readFileSync(f, "utf8");
+  const code = (f: string) =>
+    read(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1")
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+
+  const MEDIA = "components/products/media-tab.tsx";
+
+  it("the images empty state offers the action it names", () => {
+    // "An empty state that names an action it does not offer is worse than
+    // one that says nothing, because the reader assumes they have missed a
+    // control." So the sentence and the button are asserted together.
+    const src = code(MEDIA);
+    const empty = src.slice(src.indexOf("No images yet."), src.indexOf("No images yet.") + 900);
+    assert.match(empty, /Tag images from your library/);
+    assert.match(empty, /onClick=\{\(\) => setPicking\(true\)\}/,
+      "the empty state names tagging and offers no control");
+  });
+
+  it("and does not tell anyone to go and do it elsewhere", () => {
+    assert.ok(!/tag existing ones from Knowledge/i.test(read(MEDIA)),
+      "the old sentence, which pointed at a screen and gave no link, is back");
+  });
+
+  it("tagging is reachable once there are already images", () => {
+    // The empty state disappears after the first tag. Adding a second image
+    // must not mean removing the first.
+    const src = code(MEDIA);
+    assert.equal((src.match(/setPicking\(true\)/g) ?? []).length, 2,
+      "only one way in — the empty state or the header, not both");
+  });
+
+  it("posts to the endpoint the Images side already uses", () => {
+    // One endpoint for both directions. A second insert path is how the two
+    // sides start writing different rows.
+    const src = code(MEDIA);
+    assert.match(src, /authedJson\("\/api\/products\/attachments", "POST", \{\s*imageIds, productIds: \[productId\]/);
+    assert.match(src, /if \(!res\.ok\)/, "the tag reports success without checking the response");
+  });
+
+  it("uses the chooser that already exists rather than a second grid", () => {
+    const src = code(MEDIA);
+    assert.match(src, /<ImagePicker/);
+    assert.match(src, /mode="multi"/);
+    // Images already on the product are shown as taken, not hidden: hiding
+    // them makes this grid disagree with Knowledge.
+    assert.match(src, /alreadyPicked=/);
+  });
+
+  it("the chooser is one component in two modes", () => {
+    const src = code("components/products/image-picker.tsx");
+    assert.match(src, /mode\?: "single" \| "multi"/);
+    // Single mode is what Change product image has always used, unchanged.
+    assert.match(src, /onPick\?\.\(\{ id: img\.id, url: img\.file_url \}\)/);
+    assert.match(src, /onPickMany\?\.\(picked\)/);
+  });
+
+  it("the confirm button says what pressing it does", () => {
+    // Entry 6c, which this button is a new instance of. It would have been
+    // born saying "Pick an image" otherwise.
+    const src = read("components/products/image-picker.tsx");
+    assert.match(src, /`Tag \$\{picked\.length\} images`/);
+    assert.ok(!/>\s*Pick (an image|images)\s*</.test(src));
+  });
+
+  it("the documents empty state no longer names an action nothing can do", () => {
+    // Nothing in this app inserts into product_documents — see the next test.
+    const src = read(MEDIA);
+    assert.ok(!/Tag a safety sheet, a spec or a certificate from Knowledge/.test(src));
+    assert.match(src, /Attaching one to a product is not built yet/);
+  });
+
+  it("and that claim is checked against the code, not remembered", () => {
+    // If document tagging is built later this fails, and the copy above has
+    // to be updated in the same commit.
+    const writers: string[] = [];
+    for (const dir of ["app", "components", "lib"]) {
+      for (const f of tsFilesUnder(dir)) {
+        const src = readFileSync(f, "utf8");
+        if (/from\("product_documents"\)[\s\S]{0,40}\.(insert|upsert)\(/.test(src)) writers.push(f);
+        if (/documentIds/.test(src)) writers.push(f);
+      }
+    }
+    assert.deepEqual(writers, [],
+      "something can tag a document now — update the Media tab's empty state to say so");
+  });
+
+  it("the half-true floating sentence lost the half that is now false", () => {
+    // 6b proper is still open: the rest of it still has no control beside it.
+    assert.ok(!/matching from your library, arrive next/.test(read(MEDIA)));
+  });
+});
+
+function tsFilesUnder(dir: string): string[] {
+  const out: string[] = [];
+  const walk = (d: string) => {
+    for (const e of readdirSync(d)) {
+      const p = join(d, e);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.(ts|tsx)$/.test(e) && !/\.test\.ts$/.test(e)) out.push(p);
+    }
+  };
+  walk(dir);
+  return out;
+}

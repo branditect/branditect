@@ -63,14 +63,20 @@ With an exception worth stating rather than hiding: Anthropic may use data where
 up/down that forwards content to Anthropic, that content leaves the default protection.** There is
 no such control today. Do not add one without changing this policy.
 
-### There is no way to delete an account
+### Account deletion — built 2026-09-11, queue item 4
 
-No route in `app/api` and nothing in Settings deletes a user or their data. The policy therefore
-cannot promise self-serve deletion. It must give an email route and a response time, and the
-self-serve version becomes a piece of work.
+~~No route in `app/api` and nothing in Settings deletes a user or their data.~~ Superseded.
+`POST /api/account/delete` and the panel at the foot of Settings delete every row in every
+relation carrying a `brand_id`, every storage object under the brand's prefixes in every bucket,
+and then the auth user. Confirmation is typing the brand name. The relations are enumerated from
+the live schema at run time, so a table added later is included without the code changing.
 
-This matters more than it looks: erasure is a right, not a feature, and *"email us"* is a lawful
-answer only if someone actually answers.
+**So the policy stops promising an email route and 30 days, and the two paragraphs below are
+rewritten.** The wording that needed most care is the retention one: it said data goes "from
+encrypted backups within a further 60 days", and there are no backups — Supabase Free has no
+scheduled backups and no point-in-time recovery. Deletion is immediate and there is nothing to
+restore from. A policy that promises a 60-day backup sweep describes a system that does not
+exist, which is the same category of error as promising a button that does not exist.
 
 ### `/privacy` and `/terms` 404 and there is no footer
 
@@ -161,13 +167,15 @@ and is worded that way below.
 > We do not sell your data, and we do not use it to train anything of our own.
 >
 > **How long we keep it**
-> While your account exists. After you ask us to delete it, your data is removed within 30 days, and
-> from encrypted backups within a further 60 days. Invoices are kept for six years because Finnish
-> accounting law requires it.
+> While your account exists. When you delete it, everything goes at once: we hold no backup copy to
+> restore from, so there is no second deletion to wait for. Invoices are kept for six years because
+> Finnish accounting law requires it.
 >
 > **Deleting your account**
-> Email saara@cgl.agency from the address on the account. We will delete everything and confirm within 30
-> days. A self-service button is coming; until it does, this is the route and we answer it.
+> Settings, at the foot of the page. You type your brand name and press the button, and your brand,
+> your files and your sign-in are removed immediately. It cannot be undone and we cannot get it
+> back for you. If you would rather we did it, email saara@cgl.agency from the address on the
+> account.
 >
 > **Your rights**
 > You may ask for a copy of your data, correct it, delete it, take it elsewhere, restrict what we do

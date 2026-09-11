@@ -1021,6 +1021,180 @@ pre-existing `--target` errors in unrelated test files.
 
 ---
 
+## 4 · Account deletion that actually deletes — done
+
+`POST /api/account/delete`, a panel at the foot of Settings, and two probes.
+All seven criteria met, with one substitution and one criterion that had
+nowhere to land. Both are below.
+
+### What it deletes, and how it knows
+
+Storage first, rows second, the auth user last. Every step is verified by
+**re-reading**, not by the absence of an error — the whole failure mode here is
+a deletion that returns 200 and leaves the files behind, and that is invisible
+from the caller's side.
+
+`lib/account-deletion.ts` holds the decisions and **contains no table name at
+all** — a test asserts that, because a name here is a list and a list goes
+stale. The relations come from PostgREST's own OpenAPI document, which it
+generates from the live catalogue and refreshes when the schema changes. 27
+relations carry a `brand_id` today; a 28th added tomorrow is deleted tomorrow
+with nothing edited.
+
+**This is not `information_schema`, which the spec names.** Reaching that
+through PostgREST needs a SECURITY DEFINER function, which needs a migration,
+and rule 1 allows none — while the queue entry says this item needs no schema
+at all. The OpenAPI document is the same fact from the same catalogue, read
+without DDL. Saying so rather than quietly substituting it.
+
+### It does not try to tell a table from a view, and that is deliberate
+
+`product_attachment_counts` is a view with a `brand_id`, and it is
+auto-updatable, so a DELETE through it reaches `catalog_products`. The obvious
+move is to classify relations and skip the views. **Nothing in the schema
+document says which is which.** The one available signal — an absent
+`required` array — is also absent from any table whose columns all have
+defaults, and skipping a real table is exactly the silent failure this item is
+about.
+
+So it does not classify. Every delete is `WHERE brand_id = <this brand>`, and
+that is the property that makes it safe: whatever relation the name resolves
+to, it can only remove rows belonging to the brand being deleted. A view is
+then redundant rather than dangerous. This is the note at the end of inbox
+entry 5 applied — name the property, not the shape of the example — and a test
+asserts every `.delete()` in the route carries the filter.
+
+### Two prefixes, not one
+
+`brand-assets` holds objects under the brand's **UUID** as well as its slug —
+the same slug/UUID confusion that made templates render nowhere. The spec's
+"the brand's prefix" describes half of what is on disk. `storagePrefixesFor`
+returns both, and the probe places an object under each in all four buckets.
+
+**Four buckets, not the three the spec names**: `brand-images`,
+`brand-assets`, `brand-documents` and `brand-reference-images`. The last is the
+one inbox entry 5c asks about; deletion enumerates buckets at run time rather
+than from a list, so it is covered either way.
+
+### The probes
+
+`npm run delete:probe` — two real accounts, two real brands, a real token, a
+real POST. It seeds a row in **every** relation with a `brand_id`, generically:
+
+- a **template row** copied from one that already exists in the table, because
+  half these columns carry CHECK constraints (`catalog_products.type`,
+  `brand_images.format`, `note_blocks.kind`) and nothing in the schema says
+  what they allow. The copy lives under a `zz-del-` brand for the run and is
+  deleted in the `finally`; nothing is written to the row it copied from.
+- the **FK annotation** PostgREST puts in each column description, so a
+  `*_id` is filled with the id of the row the seeder already made in the table
+  it points at. No map of parents here to go stale.
+
+25 of 26 insertable relations seed; the 26th is the view. All 27 come back
+zero. It also seeds a `product_specs` row — no `brand_id`, scoped through
+`catalog_products` with ON DELETE CASCADE, so it is precisely the row a
+brand_id-shaped deletion strands — and confirms the cascade took it.
+
+`npm run delete:ui` — the same thing through a browser, because criterion 4 is
+a statement about one: sign in, open Settings, watch the button stay disabled
+until the brand name matches, press it, land signed out on `/`, and fail to
+sign in again.
+
+### Criterion by criterion
+
+| # | criterion | how |
+|---|---|---|
+| 1 | every relation with a `brand_id`, enumerated at run time | 27 seeded and cleared in `delete:probe`; the throwaway table is a unit test, see below |
+| 2 | every storage object under the prefix, all buckets | 8 objects, 4 buckets, both prefixes, all gone |
+| 3 | the auth user is gone and the email can sign up again | both asserted |
+| 4 | a clean signup afterwards, not a broken session | `delete:ui`: signed out to `/`, old password refused |
+| 5 | brand B completely untouched | counted in all 27 relations before and after, plus its 8 storage objects |
+| 6 | logged with table names and counts | `formatDeletionLog`, one line per relation and per bucket, including the empty ones |
+| 7 | `/privacy` no longer promises an email route | **the page does not exist** — see below |
+
+**Criterion 1's own proof needed DDL, so it is in two halves.** The spec asks
+for a throwaway table with a `brand_id`, confirmed cleared with the deletion
+code untouched. Rule 1 allows no DDL, so the throwaway table is created in a
+synthetic schema document in `lib/account-deletion.test.ts` — a table this
+codebase has never heard of, appearing in the plan with nothing edited — and
+the live half is the probe clearing all 27 real relations.
+
+**Criterion 7 has nowhere to land: there is no `/privacy` page.** Queue item 11
+has not been built and `spec/privacy-and-terms.md` says so itself. So the
+policy text in that spec is what changed, since it is what item 11 will copy
+from, and a test fails if the page ever appears carrying the old promise.
+
+While rewriting it: the retention paragraph promised removal "from encrypted
+backups within a further 60 days". **There are no backups.** Supabase Free has
+no scheduled backups and no point-in-time recovery, so deletion is immediate
+and there is nothing to restore from. A policy describing a 60-day backup
+sweep describes a system that does not exist, which is the same error as
+promising a button that does not exist.
+
+### Four controls, and three of them found something
+
+| control | result | what it found |
+|---|---|---|
+| the route skips storage entirely | **green, then red** | with no buckets enumerated the route reported success having looked at nothing. `deletionComplete` now fails on an empty bucket list |
+| a listing that errors | red | `objectsUnder` returned the keys it had so far, before **and** after, so the verification agreed with the deletion because both were blind the same way. It returns the error now |
+| one table dropped from the enumeration | **green, then red** | the probe was calling the same function as the route, so removing a table removed it from the check too. The probe enumerates for itself now — a verification that shares its subject's reasoning verifies nothing |
+| the confirm button armed unconditionally | red | as intended |
+
+Not run as a control, deliberately: a delete with the `brand_id` filter
+removed. That statement empties a table for every brand in the live database
+and there is no recovery. It is asserted by reading the route source instead.
+
+### Two bugs of mine, for the record
+
+- The route's pre-check called `deletionFailures` before attempting the auth
+  user, and that function reports the auth user, so the pre-check always
+  failed and the user was never deleted. Caught by the probe on its first run.
+- The UI check cleared the confirmation field with the native value setter and
+  a synthetic input event. It drove React state only sometimes, so one run
+  found `not the nameZZ UI Delete` in the box and reported that the right name
+  does not arm the button — the exact trap CLAUDE.md names. It selects the
+  text and types over it now.
+
+### One thing outside the item, because the feature is not shipped without it
+
+`spec/settings.md` arrived untracked in the tree while this was being built,
+and it names a bug that lands squarely on this work: `components/account-menu.tsx`
+tagged **Settings** `soon: true` over a page that already existed, so
+`/settings` could be reached by typing the URL and no other way. Putting an
+irreversible delete on a page nobody can click to is not a shipped feature, so
+Settings is a real link now, with no Soon tag. Profile and Help keep theirs —
+the rest of that spec is its own piece of work and is not done here.
+
+Two things fell out of it: the keyboard walk queried `HTMLButtonElement` and
+would have skipped an anchor, and the browser check now reaches Settings
+through the menu rather than by URL, so the link is exercised rather than
+asserted in source alone.
+
+`branditect-ui/spec/settings.md` and `branditect-ui/reference/settings.html`
+are committed as they arrived, unedited, in their own commit — an untracked
+spec is the thing CLAUDE.md records going wrong before.
+
+### Accounts and data
+
+Every account these probes create deletes itself in a `finally`, including the
+one the UI check deletes through the interface. Confirmed by enumerating
+`auth.users` and `brands` afterwards: no `zz-del-` or `zz-uidel-` residue, and
+the only `zz-` accounts left are the four `zz-doc-` ones already listed at the
+foot of this report.
+
+**One thing that is missing and was not mine.** CLAUDE.md names a scratch
+product `ZZ TEST — do not use` (`43655187-c36a-445c-ab29-1b485f7e60f5`, brand
+`sorbify-13t9`) and says to insert one directly if it is gone. It is gone —
+`sorbify-13t9` has SORBIFY OIL, ALL, ULTRA and a soft-deleted PUSSI, and 10
+products exist in total. I have not inserted it: nothing here needed it, and
+writing a row to a real brand is the thing rule 2 forbids. Flagging it so the
+next person does not discover it mid-test.
+
+1121 tests. `npx tsc --noEmit` clean apart from six pre-existing `--target`
+errors in unrelated test files.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

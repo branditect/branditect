@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/en";
 
@@ -12,9 +13,16 @@ import type { StringKey } from "@/lib/i18n/en";
  * relative wrapper around the row, not the panel, so it stays correct when the
  * sidebar collapses on narrow screens.
  *
- * Profile, Settings and Help render enabled with a no-op handler and a `Soon`
- * tag. Deliberately not `disabled`: a disabled item takes no focus, so a
- * keyboard user never discovers it exists. The tag is what tells the truth.
+ * Profile and Help render enabled with a no-op handler and a `Soon` tag.
+ * Deliberately not `disabled`: a disabled item takes no focus, so a keyboard
+ * user never discovers it exists. The tag is what tells the truth.
+ *
+ * **Settings is a real link.** It carried a Soon tag while `/settings` already
+ * existed, so the page could be typed into the address bar and reached no
+ * other way — and queue item 4 put account deletion on it. An item tagged
+ * Soon over a screen that is built is the inverse of a dead nav entry and
+ * just as misleading. spec/settings.md names this as the fix; the rest of
+ * that spec is its own piece of work.
  *
  * Log out is the only wired item and the only destructive one. It sits last,
  * behind a separator, so it is never adjacent to something clicked casually.
@@ -24,6 +32,8 @@ type Item = {
   key: StringKey;
   icon: React.ReactNode;
   soon?: boolean;
+  /** A real destination. Mutually exclusive with `soon`. */
+  href?: string;
 };
 
 const ITEMS: Item[] = [
@@ -34,7 +44,7 @@ const ITEMS: Item[] = [
   },
   {
     key: "accountMenu.settings" as const,
-    soon: true,
+    href: "/settings",
     icon: <path d="m19.4 13-.1-1 2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1l-.4-2.6h-4l-.4 2.6a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.4 2.6h4l.4-2.6a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7" />,
   },
   {
@@ -78,7 +88,7 @@ export default function AccountMenu({
   // Opening moves focus to the first item.
   useEffect(() => {
     if (!open) return;
-    menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
   }, [open]);
 
   // A click anywhere outside closes it. mousedown rather than click so the
@@ -109,11 +119,13 @@ export default function AccountMenu({
   function onMenuKeyDown(e: React.KeyboardEvent) {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     e.preventDefault();
+    // HTMLElement, not HTMLButtonElement: Settings is an anchor now, and a
+    // button-only query would skip it in the keyboard walk.
     const items = Array.from(
-      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
     );
     if (!items.length) return;
-    const i = items.indexOf(document.activeElement as HTMLButtonElement);
+    const i = items.indexOf(document.activeElement as HTMLElement);
     const next = e.key === "ArrowDown" ? i + 1 : i - 1;
     items[(next + items.length) % items.length].focus();
   }
@@ -143,23 +155,37 @@ export default function AccountMenu({
           onKeyDown={onMenuKeyDown}
           className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-40 rounded-[14px] border border-rule bg-card p-[5px] shadow-[0_18px_40px_-14px_rgba(20,20,26,.28),0_2px_6px_rgba(20,20,26,.06)]"
         >
-          {ITEMS.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              role="menuitem"
-              onClick={() => { /* Not built yet — the Soon tag says so. */ }}
-              className="flex w-full items-center gap-[9px] rounded-[9px] px-[9px] py-2 text-sm font-semibold text-muted-2 hover:bg-tile focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[17px] w-[17px] flex-none fill-current text-faint">
-                {item.icon}
-              </svg>
-              {t(item.key)}
-              <span className="ml-auto rounded-[4px] bg-tile px-[5px] py-[2px] text-[9px] font-bold uppercase tracking-[.4px] text-muted-2">
-                {t("accountMenu.soon")}
-              </span>
-            </button>
-          ))}
+          {ITEMS.map((item) => {
+            const row = "flex w-full items-center gap-[9px] rounded-[9px] px-[9px] py-2 text-sm font-semibold text-muted-2 hover:bg-tile focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent";
+            const body = (
+              <>
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[17px] w-[17px] flex-none fill-current text-faint">
+                  {item.icon}
+                </svg>
+                {t(item.key)}
+                {item.soon && (
+                  <span className="ml-auto rounded-[4px] bg-tile px-[5px] py-[2px] text-[9px] font-bold uppercase tracking-[.4px] text-muted-2">
+                    {t("accountMenu.soon")}
+                  </span>
+                )}
+              </>
+            );
+            return item.href ? (
+              <Link key={item.key} href={item.href} role="menuitem" onClick={() => close()} className={row}>
+                {body}
+              </Link>
+            ) : (
+              <button
+                key={item.key}
+                type="button"
+                role="menuitem"
+                onClick={() => { /* Not built yet — the Soon tag says so. */ }}
+                className={row}
+              >
+                {body}
+              </button>
+            );
+          })}
 
           <div role="separator" className="mx-1 my-[5px] h-px bg-rule" />
 

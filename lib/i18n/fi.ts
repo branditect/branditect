@@ -652,6 +652,17 @@ export const fi: Record<StringKey, string> = {
     "Painikkeiden, selitteiden ja ohjetekstien kieli.",
   "settings.languageSavedLocally":
     "Tallennettu vain tähän selaimeen. Tällä tilillä ei ole vielä brändiä, johon valinnan voisi tallentaa.",
+  "settings.deleteSection": "Poista tili",
+  "settings.deleteAccount": "Poista tili",
+  "settings.deleteAccountHelp":
+    "Brändisi, kaikki Tieto-osion sisältö, kaikki Studion tekemä ja kirjautumisesi. Tätä ei voi perua eikä palauttaa varmuuskopiosta.",
+  "settings.deleteWhatGoes":
+    "Tämä poistaa jokaisen tähän brändiin kuuluvan rivin ja tiedoston ja sen jälkeen itse tilin. Toimintoa ei voi peruuttaa.",
+  "settings.deleteTypeName": "Vahvista kirjoittamalla {name}.",
+  "settings.deleteTypeNameLabel": "Brändin nimi",
+  "settings.deleteForever": "Poista kaikki",
+  "settings.deleting": "Poistetaan…",
+  "settings.deleteFailed": "Mitään ei poistettu. Yritä uudelleen.",
 
   "guardrails.title": "Rajat, joita Studio noudattaa",
   "guardrails.whichProduct": "Mikä tuote",

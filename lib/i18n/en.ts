@@ -622,6 +622,17 @@ export const en = {
     "The language of buttons, labels and help text.",
   "settings.languageSavedLocally":
     "Saved in this browser only. There is no brand on this account yet to save it to.",
+  "settings.deleteSection": "Delete this account",
+  "settings.deleteAccount": "Delete account",
+  "settings.deleteAccountHelp":
+    "Your brand, everything in Knowledge, everything Studio has made, and your sign-in. There is no undo and no backup to restore from.",
+  "settings.deleteWhatGoes":
+    "This removes every row and every file belonging to this brand, then the account itself. It cannot be reversed.",
+  "settings.deleteTypeName": "Type {name} to confirm.",
+  "settings.deleteTypeNameLabel": "Brand name",
+  "settings.deleteForever": "Delete everything",
+  "settings.deleting": "Deleting…",
+  "settings.deleteFailed": "Nothing was deleted. Try again.",
 
   "guardrails.title": "Guardrails Studio obeys",
   "guardrails.whichProduct": "Which product",

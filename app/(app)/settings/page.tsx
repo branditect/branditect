@@ -1,9 +1,10 @@
 import LanguageSwitch from "@/components/language-switch";
+import DeleteAccount from "@/components/delete-account";
 import { localeFromCookies } from "@/lib/i18n/server.tsx";
 import { translate } from "@/lib/i18n/index.ts";
 
 /**
- * Settings. Today it holds one thing: the interface language.
+ * Settings. The interface language, and deleting the account.
  *
  * A server component so the page title is right on the first paint rather than
  * after a hook resolves. The switch itself is a client island.
@@ -28,6 +29,17 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm font-medium text-muted">{t("settings.languageIntro")}</p>
         <div className="mt-5">
           <LanguageSwitch />
+        </div>
+      </section>
+
+      {/* Last on the page, and in its own panel. Nothing else belongs beside
+          an action with no undo. */}
+      <section className="mt-6 rounded-card bg-white p-6 drop-shadow-panel">
+        <h2 className="text-section font-bold tracking-[-0.4px] text-ink">
+          {t("settings.deleteSection")}
+        </h2>
+        <div className="mt-5">
+          <DeleteAccount />
         </div>
       </section>
     </div>

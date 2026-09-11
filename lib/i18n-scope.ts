@@ -59,6 +59,7 @@ export const EXTRACTED = [
   "components/account-menu.tsx",
   "components/language-switch.tsx",
   "app/(app)/settings/page.tsx",
+  "components/delete-account.tsx",
 ];
 
 /** [file, literals found] at the time of writing. 1514 strings across 62 files. */

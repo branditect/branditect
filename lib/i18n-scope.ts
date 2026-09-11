@@ -60,6 +60,13 @@ export const EXTRACTED = [
   "components/language-switch.tsx",
   "app/(app)/settings/page.tsx",
   "components/delete-account.tsx",
+  "components/settings/save-state.tsx",
+  "components/settings/settings-hero.tsx",
+  "components/settings/you-panel.tsx",
+  "components/settings/brand-panel.tsx",
+  "components/settings/language-panel.tsx",
+  "components/settings/account-panel.tsx",
+  "components/settings/coming-soon.tsx",
 ];
 
 /** [file, literals found] at the time of writing. 1514 strings across 62 files. */

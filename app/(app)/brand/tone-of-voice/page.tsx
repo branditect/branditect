@@ -722,7 +722,7 @@ export default function ToneOfVoicePage() {
                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
                       checked[i]
                         ? "bg-brand-orange border-primary text-white"
-                        : "border-light hover:border-primary-mid"
+                        : "border-light hover:border-brand-orange-mid"
                     }`}
                   >
                     {checked[i] && (

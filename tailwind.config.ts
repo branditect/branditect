@@ -28,6 +28,13 @@ const config: Config = {
         // list reads as a set rather than a stripe of identical squares.
         tint: { 1: "#fef0ea", 2: "#fdede6", 3: "#fdeee7", 4: "#fbe7e2", 5: "#fcedeb" },
         good: "#2fbf71",
+        // Destructive. PROMOTED, NOT INVENTED: components/account-menu.tsx has
+        // rendered Log out in #c8402a on #fdeeea since it was ported, as
+        // arbitrary values. `text-danger` was then used in three places where
+        // no such token existed and rendered nothing at all — an undefined
+        // Tailwind colour is invisible, not an error. Naming the hex the app
+        // already uses removes two arbitrary values rather than adding one.
+        danger: { DEFAULT: "#c8402a", wash: "#fdeeea" },
         navy: "#1d2748",
         plannote: "#a98a80",
 

@@ -102,8 +102,8 @@ function SkeletonRow({ name }: { name: string }) {
       <span className="flex-1 text-[0.85rem] font-medium text-ink truncate">{name}</span>
       <span className="w-20 h-4 bg-pale rounded animate-pulse shrink-0" />
       <span className="w-8 h-4 bg-pale rounded animate-pulse shrink-0" />
-      <span className="flex items-center gap-1.5 text-[0.72rem] text-amber-600 shrink-0">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+      <span className="flex items-center gap-1.5 text-[0.72rem] text-amber shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse inline-block" />
         Processing…
       </span>
       <span className="w-5 h-5 shrink-0" />
@@ -152,8 +152,8 @@ function DocumentRow({
           Error
         </span>
       ) : (
-        <span className="shrink-0 flex items-center gap-1.5 text-[0.72rem] text-amber-600 w-24">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+        <span className="shrink-0 flex items-center gap-1.5 text-[0.72rem] text-amber w-24">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse shrink-0" />
           Processing…
         </span>
       )}
@@ -465,7 +465,7 @@ export default function KnowledgeVaultPage() {
     vaultStatus === "Active"
       ? "text-emerald-600"
       : vaultStatus === "Building…"
-      ? "text-amber-600"
+      ? "text-amber"
       : "text-muted";
 
   // Filtered documents

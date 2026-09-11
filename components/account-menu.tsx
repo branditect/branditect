@@ -38,8 +38,12 @@ type Item = {
 
 const ITEMS: Item[] = [
   {
+    // Profile and Settings are one destination. For a single-seat product
+    // they hold the same three fields, and a separate Profile page is a
+    // second place to look for the same thing. spec/settings.md: it becomes
+    // a link to /settings as well, or it goes.
     key: "accountMenu.profile" as const,
-    soon: true,
+    href: "/settings",
     icon: <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10m0 2c-5 0-9 2.7-9 6v2h18v-2c0-3.3-4-6-9-6" />,
   },
   {
@@ -194,7 +198,7 @@ export default function AccountMenu({
             type="button"
             role="menuitem"
             onClick={handleSignOut}
-            className="flex w-full items-center gap-[9px] rounded-[9px] px-[9px] py-2 text-sm font-semibold text-[#c8402a] hover:bg-[#fdeeea] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+            className="flex w-full items-center gap-[9px] rounded-[9px] px-[9px] py-2 text-sm font-semibold text-danger hover:bg-danger-wash focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[17px] w-[17px] flex-none fill-current">
               {SIGN_OUT_ICON}

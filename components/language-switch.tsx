@@ -1,9 +1,19 @@
 "use client";
 
 /**
- * The interface language switch. Item 3 of inbox entry 3.
+ * The language switch. Item 3 of inbox entry 3, and section 3 of
+ * spec/settings.md.
  *
- * TWO PLACES IT WRITES, AND WHY BOTH.
+ * ONE COMPONENT, TWO FIELDS. `interface_language` is what Saara reads;
+ * `output_language` is what her customers read. They are two different
+ * questions and the Settings page asks them as two cards, but the mechanics
+ * are identical — read the brand, write the column, report the result — and
+ * two copies of that drift. The field is a prop.
+ *
+ * The cookie belongs to the interface only. There is no first-paint problem
+ * for the output language: nothing on screen is rendered in it.
+ *
+ * TWO PLACES THE INTERFACE SWITCH WRITES, AND WHY BOTH.
  *
  * The cookie is what the server layout reads on the next request, so it is
  * what makes the first paint correct rather than English-then-Finnish.
@@ -20,44 +30,78 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
-import { LOCALES, LOCALE_NAME, type Locale } from "@/lib/i18n/index.ts";
+import { LOCALES, LOCALE_NAME, toLocale, type Locale } from "@/lib/i18n/index.ts";
 import { useLocale, useT, writeLocaleCookie } from "@/lib/i18n/use-t.tsx";
 
-export default function LanguageSwitch() {
+export type LanguageField = "interface" | "output";
+
+export default function LanguageSwitch({ field = "interface" }: { field?: LanguageField } = {}) {
   const t = useT();
-  const current = useLocale();
+  const interfaceLocale = useLocale();
   const router = useRouter();
   const { brand } = useBrand();
   const [pending, start] = useTransition();
   const [localOnly, setLocalOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [outputLocale, setOutputLocale] = useState<Locale | null>(null);
+
+  // The output language has no cookie and no server render behind it, so it
+  // is read from the brand and held here. `undefined` while the brand loads,
+  // which toLocale reads as English.
+  const stored = toLocale(brand?.output_language);
+  const current = field === "interface" ? interfaceLocale : (outputLocale ?? stored);
+  const column = field === "interface" ? "interface_language" : "output_language";
 
   async function choose(next: Locale) {
     if (next === current) return;
     setError(null);
 
-    // The cookie first: it is the one that cannot fail, and the one the next
-    // paint reads.
-    writeLocaleCookie(next);
+    if (field === "interface") {
+      // The cookie first: it is the one that cannot fail, and the one the
+      // next paint reads.
+      writeLocaleCookie(next);
+    } else {
+      // Optimistic, because there is no cookie to hold the answer and no
+      // re-render that would bring it back. Rolled back if the write fails.
+      setOutputLocale(next);
+    }
 
     if (brand?.id) {
-      const { error: dbError } = await supabase
-        .from("brands").update({ interface_language: next }).eq("id", brand.id);
+      // `.select()` for the same reason as brand-panel: an UPDATE filtered
+      // out by RLS resolves with no error and no rows, so the absence of an
+      // error is not evidence that anything was written.
+      const { data: written, error: dbError } = await supabase
+        .from("brands").update({ [column]: next }).eq("id", brand.id).select("id");
       // supabase-js resolves { data, error } and never throws, so an unchecked
       // call here would report a saved preference that was never written.
-      if (dbError) setError(dbError.message);
-      else setLocalOnly(false);
+      if (!dbError && (!written || written.length === 0)) {
+        setLocalOnly(field === "interface");
+        if (field === "output") setOutputLocale(current);
+      } else if (dbError) {
+        setError(dbError.message);
+        if (field === "output") setOutputLocale(current);
+      } else {
+        setLocalOnly(false);
+      }
     } else {
+      // Only the interface can live in a browser. An output language with
+      // nowhere to be stored has not been set, and saying otherwise would
+      // promise Studio a language it will not read.
+      if (field === "output") setOutputLocale(current);
       setLocalOnly(true);
     }
 
-    start(() => router.refresh());
+    if (field === "interface") start(() => router.refresh());
   }
 
   return (
     <div>
-      <div className="text-sm font-semibold text-ink">{t("settings.interfaceLanguage")}</div>
-      <p className="mt-1 text-xs font-medium text-muted">{t("settings.interfaceLanguageHelp")}</p>
+      <div className="text-sm font-semibold text-ink">
+        {t(field === "interface" ? "settings.interfaceLanguage" : "settings.outputLanguage")}
+      </div>
+      <p className="mt-1 text-xs font-medium text-muted">
+        {t(field === "interface" ? "settings.interfaceLanguageHelp" : "settings.outputLanguageHelp")}
+      </p>
 
       <div className="mt-3 flex gap-2">
         {LOCALES.map((l) => (

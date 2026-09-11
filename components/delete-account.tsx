@@ -50,7 +50,13 @@ export default function DeleteAccount() {
         setBusy(false);
         return;
       }
-      await supabase.auth.signOut();
+      // Bound, not discarded — but it cannot be shown to anyone. The account
+      // is gone by now, so a failed sign-out means only a stale local session
+      // for a user that no longer exists, and there is nothing the person can
+      // do about it. It is logged and the redirect happens either way;
+      // leaving them on a settings page for a deleted brand is worse.
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) console.error("[delete-account] signed out locally:", signOutError.message);
       router.replace("/");
     } catch {
       setError(t("settings.deleteFailed"));

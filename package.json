@@ -19,7 +19,8 @@
     "storage:remediate": "node --experimental-strip-types scripts/storage-remediate.mjs",
     "lang:probe": "node --experimental-strip-types scripts/output-language-probe.mjs",
     "delete:probe": "node --experimental-strip-types scripts/account-delete-probe.mjs",
-    "delete:ui": "node scripts/account-delete-ui.mjs"
+    "delete:ui": "node scripts/account-delete-ui.mjs",
+    "settings:ui": "node scripts/settings-ui.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

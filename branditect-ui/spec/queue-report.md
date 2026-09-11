@@ -1195,6 +1195,178 @@ errors in unrelated test files.
 
 ---
 
+## Settings phase 1 — done, and the reference has three colours that do not exist
+
+`spec/settings.md` and `reference/settings.html`. All eight criteria met. The
+account-menu line the entry asked about had already gone out with queue item 4,
+so `/settings` has been clickable since `54e5aac`.
+
+### The page
+
+Hero, then You, Brand, Language, Account, then the line and five named rows.
+A server component with client islands, `app/(app)/settings/page.tsx`, and the
+panels under `components/settings/`.
+
+- **You** — name into `user_metadata.full_name`, email read-only with the
+  sentence saying why. `lib/useUser.ts` has always *read* that field and
+  nothing had ever written it, so it was empty for everyone and Home greeted
+  people by their email address.
+- **Brand** — `brand_name`, `website`, `industry`, the three asked in
+  onboarding and never editable since. A typed `sorbify.fi` is stored as
+  `https://sorbify.fi`; an empty field clears rather than failing, which is
+  why `normaliseWebsite` returns a three-state result instead of a string or
+  null.
+- **Language** — two cards, one component. `LanguageSwitch` took a `field`
+  prop rather than being copied, so there is one implementation of
+  read-the-brand, write-the-column, report-the-result. **This is the first
+  place `output_language` can be changed after onboarding.**
+- **Account** — sign out, then deletion. The reference shows an email route
+  and a 30-day promise here with "self-service is coming"; it came, so the
+  note is replaced by the control it stood in for.
+- **Profile** now links to `/settings` too. One destination, per the spec.
+
+### Three colours in the reference are not in the palette
+
+`--violet: #6b53ac`, `--violet-2: #9b83d8` and the hero's `#8a5fb0` mid stop
+are in neither `branditect-ui/design/tokens.css` nor the v6 block in
+`tailwind.config.ts`, although the reference's own comment says "straight from
+tokens.css — nothing invented". CLAUDE.md: a colour missing from the palette
+is a design decision, not a CSS one. So they are not added.
+
+| reference | built with | where |
+|---|---|---|
+| orange → violet hero gradient | `grad-mark` | the hero |
+| `--violet` section tile | `lavender` with `lav-ink` | Language |
+| `--violet` eyebrow and edge | `lav-ink`, `lav-line` → `lavender` | Coming up |
+
+The contrast the reference is arguing for — violet for you, orange for your
+customers — survives, because `lav-ink` against `accent-dark` reads as two
+different things. **If the violet is wanted, it needs adding to the v6 block
+first.** Say so and I will move the page onto it.
+
+### One colour was promoted, and it was already broken
+
+`text-danger` was in `components/language-switch.tsx` against a token that
+does not exist. **An undefined Tailwind colour renders nothing at all** — no
+error, no warning — so that error message had been the inherited body colour
+since it was written, and I copied the same class into the delete panel in
+item 4 without noticing.
+
+`danger` is now in the v6 block as `#c8402a` with a `wash` of `#fdeeea`. That
+is promotion rather than invention: `components/account-menu.tsx` has rendered
+Log out in exactly those two hexes as arbitrary values since it was ported.
+Naming them removed two arbitrary values instead of adding one.
+
+**`lib/tokens.test.ts` is new and it found four more.** It reads the colour
+and font-size names out of `tailwind.config.ts` and fails on any class naming
+something that is not there:
+
+| class | file | what it rendered |
+|---|---|---|
+| `text-page-title`, `text-section` | the old Settings page | nothing — the v6 scale has `display` and `h2` |
+| `border-primary-mid` | `brand/tone-of-voice` | nothing — `primary` has no `mid` |
+| `bg-amber-50`, `text-amber-700`, `border-amber-200` | `products/import` | nothing — the v6 block redefines `amber` as one colour, which kills Tailwind's scale |
+| `text-amber-600`, `bg-amber-400` | `knowledge/documents` | same |
+
+All fixed. The amber case is why the guard computes which built-in families
+are still usable rather than listing them: a family the config redefines as a
+single colour silently loses its 50..950 scale, and a list would have hidden
+exactly that.
+
+Writing that guard took three passes. It first flagged `text-mid` across six
+files — the config puts several colours on one line, `dark: … , mid: … ,
+subtle: …`, and a line-anchored regex sees only the first. It is a depth-aware
+parse now, with a sanity assertion that fails if the parse stops finding
+colours it should.
+
+### Criterion 4 found a real bug, by forcing a failure
+
+The criterion asks for a forced failure and a visible message, so
+`npm run settings:ui` deletes the brand's owner out from under the page
+between typing and saving. What came back was **"Saved"**.
+
+**An UPDATE that RLS filters out resolves `{ error: null }` and changes
+nothing.** supabase-js cannot tell "you are not allowed" from "done", so
+checking the error is not enough — the panel has to read back what it wrote.
+`.select("id")` on both the brand update and the language update, with zero
+rows treated as a failure. That would have shipped as the third silent failure
+the spec names, and no amount of reading the code would have shown it.
+
+`components/settings/save-state.tsx` is the other half: a panel cannot render
+a save button without rendering somewhere for the answer to go, because both
+come from the same component. A throw is reported too, not only a resolved
+`{ error }`.
+
+One more, in my own item-4 code: `delete-account.tsx` discarded the error from
+`supabase.auth.signOut()` after a successful deletion. Bound and logged now —
+it cannot be shown to anyone, since the account is gone by then.
+
+### Criterion by criterion
+
+| # | how |
+|---|---|
+| 1 | menu link asserted in source and clicked in the browser; Profile links there too, Help keeps its tag |
+| 2 | `settings:ui` types a name, saves, loads Home and reads "Good afternoon, Aino" off the screen |
+| 3 | brand fields saved, read back from the database, then re-read from a reloaded page |
+| 4 | forced failure, described above |
+| 5 | five rows, each with its line, none focusable or linked — asserted in source and in the browser |
+| 6 | `readOnly` and the sentence, both checked live |
+| 7 | see below |
+| 8 | every key used exists in `en` and `fi`; all eight files are on `EXTRACTED` |
+
+**Criterion 7, taken literally, fails the real button.** "A test fails on a
+disabled control whose label contains delete" — but the delete button *is*
+disabled until the brand name is typed, which is a guard rather than a
+placeholder. The test is on the reason instead: a delete control disabled by a
+constant, or with no handler, or not calling the route. If the literal
+reading was meant, say so and I will change it.
+
+### Controls
+
+| control | result |
+|---|---|
+| the read-back dropped from the brand save | criterion 4 red |
+| a coming row given `onClick` and `tabIndex` | criterion 5 red |
+| `readOnly` removed from the email | criterion 6 red |
+| Settings re-tagged `soon` | criterion 1 red (from item 4) |
+
+The browser harness was wrong three times before it was right, each time in a
+way that would have passed something broken: it clicked the first **Save** on
+the page, which is the You panel's, so every Brand assertion was reporting on
+the wrong section; it searched `main` for section names, and `main` contains
+the sidebar, whose nav has a "Brand" item; and it slept two seconds for
+`useBrand` instead of waiting for it, which reported the brand panel as empty
+and disabled. Found by running it, not by reading it.
+
+### Not done, and deliberately
+
+The industry list is in `lib/industries.ts` and `app/onboarding/page.tsx`
+still holds its own copy. That screen is one of the 62 unextracted files, and
+importing a shared list into it would half-extract it. A test asserts the two
+lists match exactly, in order, and fails if either drifts; when onboarding is
+extracted it imports from here and the test becomes trivially true.
+
+The stored value is the English label — `"Food & Beverage"`, not a slug —
+because that is what onboarding has always written into `brands.industry`.
+Changing it to a slug needs a backfill of live rows, and rule 1 allows no
+migration.
+
+### Finnish
+
+Thirty-seven keys added to both dictionaries. The Finnish for the section
+titles, labels and the five coming rows is **lifted from
+`reference/settings.html`**, which the design side wrote — `Sinä`, `Brändi`,
+`Tili`, `Tulossa`, `Krediittien käyttö` and the rest. The ones with no
+counterpart in the reference are mine and unreviewed:
+`settings.saveFailed`, `settings.websiteInvalid`, `settings.saving`,
+`settings.signingOut`, `settings.industry`, `industry.ecommerce`.
+
+1162 tests, `npx tsc --noEmit` clean apart from the six pre-existing
+`--target` errors, `npm run lint` clean apart from one pre-existing `<img>`
+warning in onboarding.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

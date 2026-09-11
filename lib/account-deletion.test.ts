@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  BRAND_KEY, ANCHOR_TABLE,
+  ANCHOR_TABLE,
   relationsWithBrandId, storagePrefixesFor, confirmationMatches,
   deletionComplete, deletionFailures, formatDeletionLog,
   type DeletionLog,
@@ -269,8 +269,11 @@ describe("the page it lives on can be reached by clicking", () => {
       "Settings is tagged Soon over a page that exists");
   });
 
-  it("and the Settings page renders the delete panel", () => {
+  it("and the Settings page still reaches the delete panel", () => {
+    // Through the Account section since phase 1 restructured the page, so
+    // the chain is followed rather than a single file grepped.
     const page = readFileSync("app/(app)/settings/page.tsx", "utf8");
-    assert.match(page, /<DeleteAccount \/>/);
+    assert.match(page, /<AccountPanel \/>/);
+    assert.match(readFileSync("components/settings/account-panel.tsx", "utf8"), /<DeleteAccount \/>/);
   });
 });

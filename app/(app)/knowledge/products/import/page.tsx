@@ -40,7 +40,7 @@ const KIND_COLOR: Record<Kind, string> = {
   physical: "bg-blue-50 text-blue-700 border-blue-200",
   services: "bg-emerald-50 text-emerald-700 border-emerald-200",
   saas: "bg-violet-50 text-violet-700 border-violet-200",
-  digital: "bg-amber-50 text-amber-700 border-amber-200",
+  digital: "bg-amber-wash text-amber border-amber",
 };
 const KIND_OPTIONS: { kind: Kind; icon: string; label: string; desc: string }[] = [
   { kind: "physical", icon: "PHY", label: "Physical Product", desc: "Tangible goods, shipped to customers" },
@@ -432,7 +432,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
               {KIND_LABEL[product.kind]}
             </span>
             {product.kind === "saas" && product.flagship && (
-              <span className="text-[0.6rem] font-mono px-1.5 py-0.5 rounded border bg-amber-50 text-amber-700 border-amber-200">Flagship</span>
+              <span className="text-[0.6rem] font-mono px-1.5 py-0.5 rounded border bg-amber-wash text-amber border-amber">Flagship</span>
             )}
           </div>
           <h3 className="font-semibold text-ink text-[0.95rem] leading-snug">{product.name || "Unnamed product"}</h3>

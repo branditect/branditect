@@ -891,6 +891,136 @@ em dash two paragraphs above where my directive originally used one.
 
 ---
 
+## Inbox 5a · The migration was run, and the probe was still saying it was not
+
+**You were right, and the admission was the smaller half of it.** The claim was
+in eight files, not one.
+
+### The column is there
+
+Read straight off the live database rather than from the entry:
+`brands.output_language` and `brands.interface_language` both exist, both
+default to `'en'`, and every brand row carries them. So the half entry 4b
+correctly refused to claim is provable, and now is.
+
+### `npm run lang:probe` has a second phase
+
+Phase 1 is unchanged — the real builders, straight to the API, proving that
+stating the language changes the output. Phase 2 is the one that was missing:
+
+- a seeded `zz-lang-…` user, a real password grant, a real bearer token
+- a seeded brand with **English** material — a product with a description,
+  `ideal_client` and a price, in the columns `buildBrandContext` actually reads
+- `output_language` flipped on the brand row between the two calls, and
+  nothing else changed
+- a real `POST /api/copy-architect`, classified by the same two-signal test
+
+Both directions pass. The English call comes back English, the Finnish call
+comes back Finnish, from the same English brand material:
+
+```
+PASS  POST /api/copy-architect with output_language='en' -> EN — en markers 7, fi markers 1
+      Granule 20L is an industrial absorbent built for spills that cannot wait...
+PASS  POST /api/copy-architect with output_language='fi' -> FI — en markers 0, fi markers 16
+      Granule 20L on teollisuuskäyttöön suunniteltu imeytysrae. Se imee...
+```
+
+The user, brand and product are deleted in a `finally`, and I confirmed by
+enumerating rather than trusting it: zero `zz-lang-` brands, products or
+accounts left.
+
+**Three things in phase 2 exist only so it cannot pass vacuously**, which is the
+failure this probe is most exposed to — every one of them ends with the reply
+in English, which is also what a broken directive looks like:
+
+1. It checks the two columns exist before it trusts anything. A missing column
+   makes `outputLanguageFor` return `"en"`, so the `fi` call would come back
+   English and read as a broken feature rather than a missing migration.
+2. It reads `output_language` back after setting it, so an update that quietly
+   matched no rows is reported as itself.
+3. It checks the seeded product is readable through `buildBrandContext`'s own
+   column list. My first version inserted `price`, which that builder does not
+   read — the route got no material and answered "there are no confirmed
+   details" in two languages. That classified correctly and proved nothing.
+
+### The admission is gone, and so is the test that guarded it
+
+`lib/i18n.test.ts` no longer asserts the probe says what it cannot do. It
+asserts the opposite: that the probe POSTs to the route, sends a bearer token,
+sets the column, and no longer carries the sentence.
+
+**That assertion was wrong twice before it was right**, both times in the way
+this queue keeps finding:
+
+- It matched `/api/copy-architect` anywhere in the file, and the probe's own
+  header names the route. Pointing the `fetch` elsewhere left it green.
+  Comments are stripped now.
+- With comments stripped it still matched two `console.log` strings that name
+  the route. It matches the `fetch` call itself now.
+
+Found by running the control, not by reading the assertion.
+
+### The same stale fact in seven other places
+
+Nothing went red when the migration ran, and nothing would go red if it were
+reverted, because every reader defaults to English on its own. That is correct
+behaviour and it is exactly why the prose drifted unnoticed.
+
+| file | what it said |
+|---|---|
+| `lib/output-language.ts` | "written and not run, so today this always returns en" |
+| `lib/useBrand.ts` | "both undefined until brand-language.sql is run" |
+| `lib/i18n/index.ts` | "the column does not exist until…" |
+| `lib/i18n/use-t.tsx` | "undefined until brand-language.sql is run" |
+| `app/api/andy/route.ts` | "while brand-language.sql is unrun and the column does not exist" |
+| `app/start/profile/[step]/page.tsx` | "this write is allowed to fail" |
+| `components/language-switch.tsx` | "the column does not exist yet" |
+
+All corrected, and a test now fails on any **present-tense** claim that
+`brand-language.sql` is unrun. Past tense passes: a file recording why a check
+used to be weaker is history, not a claim, and a guard that cannot tell those
+apart gets loosened until it stops working. It skips `lib/i18n.test.ts`, which
+would otherwise flag its own test name.
+
+### Two behaviour changes that came out of the prose, not with it
+
+Both were code written to be correct while the column was missing, and both are
+the discarded-`{ error }` shape entry 5c names.
+
+- **`app/start/profile/[step]/page.tsx`** discarded the result of the
+  `output_language` write, deliberately, because the column might not exist.
+  It does. The error is logged now rather than dropped. The answer is still
+  kept in the onboarding profile, so this does not block the step — a visible
+  error state for it is not built, and I have not built one here.
+- **`components/language-switch.tsx`** had an `isMissingColumn` helper that
+  relabelled a failed write as "saved in this browser". That branch now guards
+  nothing and would hide a real write failure behind a reassuring note, so it
+  is deleted. The browser-only note survives for the case that is still real —
+  no brand row yet — and any other error surfaces as an error.
+
+`settings.languageSavedLocally` said "It will follow your account once language
+settings go live", which is no longer true. **Both strings are rewritten and the
+Finnish is mine, unreviewed** — same standing as the thirteen keys in the Inbox 3
+entry:
+
+- en: "Saved in this browser only. There is no brand on this account yet to save it to."
+- fi: "Tallennettu vain tähän selaimeen. Tällä tilillä ei ole vielä brändiä, johon valinnan voisi tallentaa."
+
+### Controls
+
+| control | result |
+|---|---|
+| the route ignores the column (`outputLanguageFor` pinned to `en`) | phase 2 `fi` red |
+| the probe's `fetch` pointed at another path | red |
+| the admission sentence put back in the probe | red |
+| a present-tense "written and not run" put back in `lib/output-language.ts` | red |
+| a column that does not exist, to prove the column guard is not inert | errors as required |
+
+1089 tests, all passing. `npx tsc --noEmit` is clean apart from six
+pre-existing `--target` errors in unrelated test files.
+
+---
+
 ## Test accounts to clean up
 
 Created by me, still present at the time of writing. Everything under a `zz-`

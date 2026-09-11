@@ -68,9 +68,9 @@ export function readLocaleCookie(): Locale | null {
  * Keep the cookie in step with the brand's `interface_language`.
  *
  * Mounted once in the app shell. Takes the value the brand actually has —
- * `undefined` until supabase/brand-language.sql is run, which `toLocale`
- * reads as English — and writes it to the cookie when it differs. The current
- * render is left alone.
+ * `undefined` while the brand is still loading, which `toLocale` reads as
+ * English — and writes it to the cookie when it differs. The current render is
+ * left alone.
  */
 export function useBrandLocale(interfaceLanguage: unknown): void {
   useEffect(() => {

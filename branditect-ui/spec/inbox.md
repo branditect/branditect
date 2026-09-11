@@ -447,3 +447,117 @@ language one.
 Nine negative controls for 4b and six assertions for 4a. 1088 tests.
 
 See the report entries "Inbox 4a" and "Inbox 4b".
+
+---
+
+## 5 · OPEN — four things from item 3, and one of my facts is stale
+
+### 5a · DONE — The migration IS run. Your probe's admission is out of date.
+
+`npm run lang:probe` says it cannot go through the HTTP route because
+`output_language` has no column. **It has.** Saara ran `supabase/brand-language.sql`
+on 10 Sep; both columns exist on `brands` with a default of `'en'`. You read that
+file before the note landed in entry 4b.
+
+So finish the half you correctly refused to claim: set a brand to `fi`, call the
+route over HTTP, and assert the reply is Finnish. Then delete the admission and the
+test that guards it — a test asserting a limitation that no longer exists is worse
+than no test, because the next person believes it.
+
+**DONE 2026-09-11.** The column is there, the route half is proved over HTTP,
+and the admission was in eight files rather than one.
+
+- `npm run lang:probe` has a second phase: a seeded `zz-lang-` user, a real
+  token, an English-material brand, `output_language` flipped between two real
+  POSTs to `/api/copy-architect`. English in, English out; `fi` in, Finnish out.
+  It seeds and deletes its own user, brand and product.
+- Three guards in that phase exist only so it cannot pass vacuously: the
+  columns must exist, the update must read back, and the seeded product must be
+  readable through `buildBrandContext`'s own column list. My first version
+  inserted `price`, which that builder does not read, so the route had no
+  material and answered "no confirmed details" in two languages — classified
+  correctly, proved nothing.
+- The test asserting the admission is replaced by one asserting the opposite.
+  It was wrong twice first: it matched the route name in the probe's own header
+  comment, then in two `console.log` strings. It matches the `fetch` call now.
+  Found by running the control.
+- The same stale fact was in seven other files. All corrected, and a test fails
+  on any present-tense claim that `brand-language.sql` is unrun.
+- Two behaviour changes fell out of it, both the discarded-`{ error }` shape 5c
+  names: the onboarding `output_language` write no longer drops its error, and
+  `language-switch.tsx`'s `isMissingColumn` branch — which relabelled a failed
+  write as "saved in this browser" — is deleted.
+- `settings.languageSavedLocally` is rewritten in both dictionaries. **The
+  Finnish is mine and unreviewed.**
+
+Five controls, all red or erroring as required. 1089 tests.
+
+See the report entry "Inbox 5a".
+
+---
+
+### 5b · `/api/brand-strategy` and `/api/tone/generate` — my audit was wrong
+
+You flagged these as a language gap. They are also an ownership gap, and it is mine:
+`spec/security-hardening.md` lists both under *"No brand data at all, no change
+needed"*. That was wrong. Both write brand copy, and neither resolves a brand — I
+checked, zero references to `resolveBrand` or `api-auth` in either file.
+
+The spec said to confirm each of that list individually rather than trusting it.
+You did, and it did not hold. Wire both: `resolveBrand`, use `auth.brandId`, state
+the output language from the brand's column.
+
+**Then re-check the rest of that "no change needed" list the same way**, because if
+two of eleven were misclassified, the list was a guess and not an audit.
+
+### 5c · The onboarding logo upload has never worked
+
+`app/onboarding/page.tsx:148` uploads to `brand-logos`, a bucket that does not
+exist. The handler is:
+
+```js
+.then(({ error }) => { if (!error) { …set state, build the URL… } })
+```
+
+There is no else. A founder picks their logo on step 2 of onboarding, the upload
+fails, and the screen says nothing at all — no error, no retry, no missing-file
+state. It has behaved this way since it was written.
+
+**Fix the swallowed error first, before the bucket.** A create-the-bucket change
+makes the symptom disappear while leaving the same code ready to hide the next
+failure — and this is the second time in this codebase that a discarded
+`{ error }` has made a refusal indistinguishable from a success. Surface it, then
+decide which bucket logos belong in: reusing `brand-assets` is probably right, since
+a fourth bucket is a fourth set of policies to get wrong.
+
+`brand-reference-images` — public, holding objects, in no spec and no code — needs
+an answer before the flip, not after: what wrote it, is anything reading it, and can
+it be closed.
+
+### 5d · The four bad rows, and who presses the button
+
+Criterion 3 being red is the criterion working. Do not soften it.
+
+`scripts/storage-remediate.mjs` writes to production storage, so **rule 2 holds: do
+not run it.** Saara runs it, after reading what it will do. Put a dry-run mode in it
+if it does not have one — printing each object's from-path and to-path and changing
+nothing — so what she approves is a list, not a description.
+
+The five template thumbnails under the UUID are the same slug/UUID confusion that
+made templates render nowhere for weeks. Accepting both keys in the policy is the
+right call for now, but it should carry a comment saying it is a bridge, and the
+UUID side should eventually go.
+
+### And a note on the guard, because this is the third time
+
+Entry 1's guard missed `USING (bucket_id = 'brand-assets')` because it matched the
+literal text `USING (true)`. My criterion in `spec/security-hardening.md` before that
+missed `product_specs` because it matched *tables with a `brand_id` column*. Both
+times the guard was written to the shape of the example rather than the shape of the
+danger.
+
+Your fix — every `storage.objects` policy must reference `auth.uid()` — is the right
+form: it names the property that makes a policy safe, so anything lacking it fails
+whatever it looks like. **Apply that test to the next guard you write, and to the
+deletion work in queue item 4:** the question is never "does this look like the bad
+example", it is "can this be wrong and still pass".

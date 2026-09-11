@@ -40,8 +40,8 @@ export function isLocale(v: unknown): v is Locale {
  * Everything that produces one of these — the `interface_language` column, a
  * cookie, a select element — can produce null, an empty string, or a language
  * with no dictionary. All of them mean English, and none of them is worth
- * throwing over. The column does not exist until supabase/brand-language.sql
- * is run, so `undefined` is the normal case today, not an error case.
+ * throwing over. `undefined` reaches here routinely — a brand not loaded yet,
+ * a request with no cookie — so it is a normal case, not an error case.
  */
 export function toLocale(v: unknown): Locale {
   return isLocale(v) ? v : DEFAULT_LOCALE;

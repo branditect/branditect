@@ -651,7 +651,7 @@ export const fi: Record<StringKey, string> = {
   "settings.interfaceLanguageHelp":
     "Painikkeiden, selitteiden ja ohjetekstien kieli.",
   "settings.languageSavedLocally":
-    "Tallennettu toistaiseksi tähän selaimeen. Siirtyy tilillesi, kun kieliasetukset otetaan käyttöön.",
+    "Tallennettu vain tähän selaimeen. Tällä tilillä ei ole vielä brändiä, johon valinnan voisi tallentaa.",
 
   "guardrails.title": "Rajat, joita Studio noudattaa",
   "guardrails.whichProduct": "Mikä tuote",

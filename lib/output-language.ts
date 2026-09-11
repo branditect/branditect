@@ -70,9 +70,11 @@ export interface BrandReader {
 /**
  * Read the brand's output language.
  *
- * Defaults to English on every failure path, and the column not existing is
- * one of them: supabase/brand-language.sql is written and not run, so today
- * this always returns "en" and every route behaves exactly as it did. It does
+ * Defaults to English on every failure path. supabase/brand-language.sql was
+ * run on 10 Sep, so `output_language` is a real column now and a brand set to
+ * 'fi' gets Finnish through the route — `npm run lang:probe` phase 2 asserts
+ * exactly that. The defensive paths below stay: a brand with no row, a
+ * language with no dictionary and a read that throws all mean English. It does
  * not throw and it does not log — a brand's language is not worth failing a
  * generation over.
  */

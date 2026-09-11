@@ -445,7 +445,7 @@ describe("the output language is stated, never inferred", () => {
     });
     assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), "b"), "fi");
     assert.equal(await outputLanguageFor(reader({ output_language: "sv" }), "b"), "en");
-    assert.equal(await outputLanguageFor(reader({}), "b"), "en", "the column does not exist yet");
+    assert.equal(await outputLanguageFor(reader({}), "b"), "en", "a row with no language column");
     assert.equal(await outputLanguageFor(reader(null), "b"), "en", "no such brand");
     assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), "default"), "en");
     assert.equal(await outputLanguageFor(reader({ output_language: "fi" }), null), "en");
@@ -502,9 +502,62 @@ describe("the output language is stated, never inferred", () => {
     assert.ok(!/interface_language/.test(code), "onboarding conflates the two languages");
   });
 
-  it("the end-to-end probe exists and says what it cannot prove", () => {
+  it("the probe goes through the HTTP route, and its old admission is gone", () => {
+    // Inbox 5a. The migration ran on 10 Sep, so the half this probe used to
+    // decline to prove is provable — and the sentence saying it was not is the
+    // kind of stale fact the next person believes. The probe must POST.
     const probe = readFileSync("scripts/output-language-probe.mjs", "utf8");
-    assert.match(probe, /does NOT go through the HTTP route/i);
-    assert.match(probe, /brand-language\.sql is unrun/i);
+    // Comments stripped first. The header names the route it POSTs to, so a
+    // match against the raw file passes on the prose alone — the same mistake
+    // as the CSS assertion that read the stylesheet as text. Verified by
+    // control: pointing the fetch at another path must turn this red.
+    const code = probe.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+    // The fetch, not a mention. Two log lines name the route as well, so a
+    // bare path match stays green with the fetch pointed anywhere — checked
+    // by control.
+    assert.match(code, /fetch\(\s*`\$\{BASE\}\/api\/copy-architect`/,
+      "the probe never POSTs to the route");
+    assert.match(code, /Authorization.*Bearer/, "the probe never sends a real token");
+    assert.match(code, /output_language: language|output_language: "en"/,
+      "the probe never sets the column it is testing");
+    // The admission itself, against the whole file including the prose, which
+    // is where it lived.
+    assert.ok(!/does NOT go through the HTTP route/i.test(probe),
+      "the probe still says it cannot do the thing it now does");
+  });
+
+  /** Every source file under these roots — .ts, .tsx and .mjs alike. */
+  function sourceFiles(roots: string[]): string[] {
+    const out: string[] = [];
+    const walk = (dir: string) => {
+      if (!existsSync(dir)) return;
+      for (const e of readdirSync(dir)) {
+        const p = join(dir, e);
+        if (statSync(p).isDirectory()) walk(p);
+        else if (/\.(ts|tsx|mjs)$/.test(e)) out.push(p);
+      }
+    };
+    roots.forEach(walk);
+    return out;
+  }
+
+  it("no file still claims brand-language.sql is unrun", () => {
+    // The same stale fact was in eight places, not one. It defaults every
+    // reader to English correctly, which is why nothing went red when the
+    // migration ran and nothing would go red if it were reverted — so the
+    // claim has to be guarded in prose.
+    // Present tense only. "was unrun" in a file recording why a check used to
+    // be weaker is history, not a claim, and a guard that cannot tell the two
+    // apart gets loosened until it stops working. This file is skipped for the
+    // same reason: it would otherwise flag its own name.
+    const CLAIMS = /\b(is|are)\s+(unrun|not\s+run)\b|\bdoes\s+not\s+exist\b|\buntil\b[^.]*\bis\s+run\b|written\s+and\s+not\s+run/i;
+    const stale: string[] = [];
+    for (const f of sourceFiles(["app", "components", "lib", "scripts"])) {
+      if (f === "lib/i18n.test.ts") continue;
+      for (const line of readFileSync(f, "utf8").split("\n")) {
+        if (/brand-language\.sql/.test(line) && CLAIMS.test(line)) stale.push(`${f}: ${line.trim()}`);
+      }
+    }
+    assert.deepEqual(stale, [], "the migration ran on 10 Sep");
   });
 });

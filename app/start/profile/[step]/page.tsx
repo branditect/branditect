@@ -44,16 +44,19 @@ export default function ProfileStep() {
     setProfile(next);
 
     // The output language also belongs on the brand row, because that is what
-    // every generation route reads. The column does not exist until
-    // supabase/brand-language.sql is run, so this write is allowed to fail —
-    // the answer is still kept in the onboarding profile either way, and
-    // outputLanguageFor defaults to English until the column is there.
+    // every generation route reads. The column is real since 10 Sep, so this
+    // write is expected to succeed and its error is no longer discarded —
+    // supabase-js resolves { data, error } and never throws, so an unchecked
+    // call here is a lost answer that looks exactly like a saved one. The
+    // answer is still kept in the onboarding profile either way, which is why
+    // this logs rather than blocking the step.
     if (step.key === "output_language") {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("brands")
+        const { error } = await supabase.from("brands")
           .update({ output_language: value })
           .eq("user_id", user.id);
+        if (error) console.error("[onboarding] output_language not saved:", error.message);
       }
     }
 

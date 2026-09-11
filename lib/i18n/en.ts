@@ -621,7 +621,7 @@ export const en = {
   "settings.interfaceLanguageHelp":
     "The language of buttons, labels and help text.",
   "settings.languageSavedLocally":
-    "Saved in this browser for now. It will follow your account once language settings go live.",
+    "Saved in this browser only. There is no brand on this account yet to save it to.",
 
   "guardrails.title": "Guardrails Studio obeys",
   "guardrails.whichProduct": "Which product",

@@ -10,11 +10,11 @@
  * `brands.interface_language` is the durable answer, so the same person on a
  * different machine gets their own language rather than the browser's.
  *
- * The column does not exist yet — supabase/brand-language.sql is written and
- * not run, per rule 1 of the queue. So the database write is allowed to fail
- * and the switch still works: the cookie holds, the interface changes, and the
- * panel says plainly that the choice is on this browser only. What it must
- * never do is change the language and claim to have saved it.
+ * `interface_language` is a real column since 10 Sep, so the write is expected
+ * to succeed and a failure is reported as one. The browser-only note survives
+ * for the case that is still real — no brand row yet, during onboarding —
+ * where the cookie is genuinely the only place the choice can live. What this
+ * must never do is change the language and claim to have saved it.
  */
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -22,12 +22,6 @@ import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 import { LOCALES, LOCALE_NAME, type Locale } from "@/lib/i18n/index.ts";
 import { useLocale, useT, writeLocaleCookie } from "@/lib/i18n/use-t.tsx";
-
-/** The shapes Postgres and PostgREST use to say "no such column". */
-function isMissingColumn(message: string): boolean {
-  return /column .*interface_language.* does not exist/i.test(message)
-    || /interface_language/.test(message) && /schema cache/i.test(message);
-}
 
 export default function LanguageSwitch() {
   const t = useT();
@@ -51,12 +45,8 @@ export default function LanguageSwitch() {
         .from("brands").update({ interface_language: next }).eq("id", brand.id);
       // supabase-js resolves { data, error } and never throws, so an unchecked
       // call here would report a saved preference that was never written.
-      if (dbError) {
-        if (isMissingColumn(dbError.message)) setLocalOnly(true);
-        else setError(dbError.message);
-      } else {
-        setLocalOnly(false);
-      }
+      if (dbError) setError(dbError.message);
+      else setLocalOnly(false);
     } else {
       setLocalOnly(true);
     }

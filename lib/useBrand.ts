@@ -12,8 +12,10 @@ export interface Brand {
   logo_url: string | null;
   colors: { hex: string; name: string }[] | null;
   /**
-   * Both undefined until supabase/brand-language.sql is run. Every reader
-   * defaults to "en" on its own, so the app is correct before and after.
+   * Real columns since 10 Sep, both defaulting to 'en' in the database.
+   * Optional here because a brand row read before that migration, or a
+   * partial select, can still arrive without them — and every reader
+   * defaults to "en" on its own rather than relying on the column.
    */
   interface_language?: string | null;
   output_language?: string | null;

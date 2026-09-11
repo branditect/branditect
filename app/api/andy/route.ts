@@ -261,8 +261,8 @@ export async function POST(req: NextRequest) {
     try { brandContext = await getBrandContext(brandId) } catch {}
   }
 
-  // Stated, never inferred. Defaults to English, including while
-  // supabase/brand-language.sql is unrun and the column does not exist.
+  // Stated, never inferred. Reads brands.output_language, which has existed
+  // since 10 Sep, and defaults to English on every path that can fail.
   // The cast is the same one lib/output-language.ts explains: supabase-js's
   // builder is generic over the schema and typing it precisely makes tsc give
   // up. The row is narrowed inside that function rather than trusted here.

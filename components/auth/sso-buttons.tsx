@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import s from "./auth.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * Google, Microsoft and Apple — none of them wired.
@@ -53,6 +54,7 @@ const PROVIDERS = [
 ];
 
 export default function SsoButtons({ emailFieldId }: { emailFieldId: string }) {
+  const t = useT();
   const [showNote, setShowNote] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -78,7 +80,7 @@ export default function SsoButtons({ emailFieldId }: { emailFieldId: string }) {
           >
             <span className={s.g}>{p.mark}</span>
             <span className={s.lbl}>Continue with {p.name}</span>
-            <span className={s.tag}>Demo</span>
+            <span className={s.tag}>{t("auth.demo")}</span>
             <span className={s.tip} role="tooltip">{NOTE}</span>
           </button>
         ))}

@@ -26,6 +26,7 @@ import {
 } from "@/lib/studio-write";
 import s from "@/components/studio/write.module.css";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 interface Product {
   id: string;
@@ -45,6 +46,7 @@ const LENGTHS: { id: Length; label: string }[] = [
 ];
 
 export default function WritePage() {
+  const t = useT();
   const { brandId, loading: brandLoading } = useBrand();
 
   // ── the brief
@@ -160,8 +162,8 @@ export default function WritePage() {
     <div className={s.wrap}>
       <div className={s.head}>
         <div>
-          <div className={s.kick}>Studio</div>
-          <h1>Write</h1>
+          <div className={s.kick}>{t("nav.studio")}</div>
+          <h1>{t("nav.studio.write")}</h1>
           <p className={s.sub}>
             Two answers and you have a draft. Everything it writes obeys your strategy, your tone of
             voice and your real product facts.
@@ -264,8 +266,8 @@ export default function WritePage() {
               </select>
             </div>
             <div className={s.orow}>
-              <span className={s.k}>Length</span>
-              <div className={s.seg} role="group" aria-label="Length">
+              <span className={s.k}>{t("common.length")}</span>
+              <div className={s.seg} role="group" aria-label={t("common.length")}>
                 {LENGTHS.map((l) => (
                   <button
                     key={l.id}
@@ -362,7 +364,7 @@ export default function WritePage() {
                     <>
                       <button type="button" className={s.act} onClick={() => copy(slot.draft.body, i)}>
                         <Icon name="copy" size={13} />
-                        {copied === i ? "Copied" : "Copy"}
+                        {copied === i ? "Copied" : t("common.copy")}
                       </button>
                       <button
                         type="button"
@@ -371,7 +373,7 @@ export default function WritePage() {
                         onClick={() => generate(1)}
                       >
                         <Icon name="redo" size={13} />
-                        Again
+                        {t("common.again")}
                       </button>
                     </>
                   ) : slot.state === "failed" ? (
@@ -382,12 +384,12 @@ export default function WritePage() {
                       onClick={() => generate(count)}
                     >
                       <Icon name="redo" size={13} />
-                      Retry
+                      {t("common.retry")}
                     </button>
                   ) : (
                     <button type="button" className={s.act} disabled>
                       <Icon name="copy" size={13} />
-                      Copy
+                      {t("common.copy")}
                     </button>
                   )}
                 </div>

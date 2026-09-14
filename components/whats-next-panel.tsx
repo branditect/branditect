@@ -2,6 +2,7 @@ import Link from "next/link";
 import Icon, { type IconName } from "@/components/icon";
 import IconTile from "@/components/icon-tile";
 import type { Check, CheckId } from "@/lib/readiness";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const ICONS: Record<CheckId, IconName> = {
   questionnaire: "target",
@@ -30,18 +31,19 @@ export default function WhatsNextPanel({
   passedCount,
   totalCount,
 }: WhatsNextPanelProps) {
+  const t = useT();
   return (
     <section
-      aria-label="What's next"
+      aria-label={t("whatsNext.title")}
       className="flex flex-col rounded-panel border border-rule bg-card drop-shadow-panel"
     >
       <div className="flex items-baseline justify-between gap-2.5 px-[15px] pt-4">
-        <h3 className="text-h3 font-bold">What&apos;s next</h3>
+        <h3 className="text-h3 font-bold">{t("whatsNext.title")}</h3>
         <Link
           href="/brand/strategy"
           className="text-xs font-semibold text-accent underline underline-offset-2"
         >
-          View all
+          {t("activity.viewAll")}
         </Link>
       </div>
 
@@ -59,7 +61,7 @@ export default function WhatsNextPanel({
             {check.passed ? (
               <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold text-good">
                 <Icon name="check" size={13} />
-                Done
+                {t("whatsNext.done")}
               </span>
             ) : (
               <Link
@@ -76,8 +78,8 @@ export default function WhatsNextPanel({
         <div className="flex items-center gap-2.5 border-b border-rule py-2.5 last-of-type:border-b-0">
           <IconTile icon="plus" size={30} tint="neutral" />
           <div className="min-w-0">
-            <div className="text-sm font-bold tracking-[-.1px]">Add more</div>
-            <div className="mt-px text-2xs font-medium text-muted">Explore more actions</div>
+            <div className="text-sm font-bold tracking-[-.1px]">{t("whatsNext.addMore")}</div>
+            <div className="mt-px text-2xs font-medium text-muted">{t("whatsNext.exploreMore")}</div>
           </div>
           <Link
             href="/studio/write"
@@ -89,7 +91,7 @@ export default function WhatsNextPanel({
 
         <div className="mt-auto flex items-center gap-2 rounded-tile bg-tint-1 px-3 py-2.5 text-xs font-semibold text-accent-dark">
           <span>
-            Each check is worth <b className="font-extrabold">25%</b>
+            {t("whatsNext.eachCheckWorth")} <b className="font-extrabold">25%</b>
           </span>
           <span className="ml-auto text-2xs font-bold tabular-nums text-accent">
             {passedCount} / {totalCount} · {score}%

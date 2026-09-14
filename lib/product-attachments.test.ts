@@ -314,7 +314,10 @@ describe("the product card can tag, not only untag", () => {
     // one that says nothing, because the reader assumes they have missed a
     // control." So the sentence and the button are asserted together.
     const src = code(MEDIA);
-    const empty = src.slice(src.indexOf("No images yet."), src.indexOf("No images yet.") + 900);
+    // Anchored on the key since batch A extracted "No images yet.".
+    const at = src.indexOf('t("media.noImages")');
+    assert.ok(at > 0, "the empty state no longer renders media.noImages");
+    const empty = src.slice(at, at + 900);
     assert.match(empty, /Tag images from your library/);
     assert.match(empty, /onClick=\{\(\) => setPicking\(true\)\}/,
       "the empty state names tagging and offers no control");

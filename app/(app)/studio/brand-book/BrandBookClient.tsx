@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 type PDFJSLib = typeof import('pdfjs-dist')
 let pdfjsLib: PDFJSLib | null = null
 
@@ -43,6 +44,7 @@ const ASSET_CATEGORIES = [
 ]
 
 export default function BrandBookClient() {
+  const t = useT()
   const { brandId, loading: brandLoading } = useBrand()
 
   const [pages, setPages] = useState<Page[]>([])
@@ -383,7 +385,7 @@ export default function BrandBookClient() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M3.5 4.5L7 1l3.5 3.5M1 11h12" stroke="var(--color-text-primary, #1a1a1a)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text-primary, #1a1a1a)', marginBottom: 3 }}>
-              {uploading ? (uploadProgress || 'Uploading...') : 'Upload brand book'}
+              {uploading ? (uploadProgress || t("files.uploading")) : 'Upload brand book'}
             </div>
             <div style={{ fontSize: 11, color: 'var(--color-text-secondary, #999)' }}>PNG, JPG, PDF, screenshots</div>
           </div>
@@ -477,10 +479,10 @@ export default function BrandBookClient() {
             {addColorOpen && (
               <div style={{ padding: 10, border: '0.5px solid var(--color-border-tertiary, #e5e5e5)', borderRadius: 8, marginBottom: 8, background: 'var(--color-background-primary, #fff)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <input value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#E16C00" style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'monospace', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
-                <input value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color name" style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+                <input value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder={t("onboarding.colors.nameLabel")} style={{ padding: '5px 8px', border: '0.5px solid var(--color-border-secondary, #ddd)', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={addColor} style={{ flex: 1, padding: '5px 0', borderRadius: 4, border: 'none', background: 'var(--color-text-primary, #1a1a1a)', color: 'var(--color-background-primary, #fff)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Add</button>
-                  <button onClick={() => setAddColorOpen(false)} style={{ flex: 1, padding: '5px 0', borderRadius: 4, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                  <button onClick={addColor} style={{ flex: 1, padding: '5px 0', borderRadius: 4, border: 'none', background: 'var(--color-text-primary, #1a1a1a)', color: 'var(--color-background-primary, #fff)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{t("common.add")}</button>
+                  <button onClick={() => setAddColorOpen(false)} style={{ flex: 1, padding: '5px 0', borderRadius: 4, border: '0.5px solid var(--color-border-secondary, #ddd)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>{t("common.cancel")}</button>
                 </div>
               </div>
             )}

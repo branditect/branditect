@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useBrand } from '@/lib/useBrand'
 import { supabase } from '@/lib/supabase'
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -40,6 +42,16 @@ const CHANNELS = ['Instagram', 'TikTok', 'LinkedIn', 'YouTube', 'X', 'Threads', 
 const GOALS = ['Awareness', 'Community', 'Authority', 'Leads', 'Sales', 'Recruiting']
 const VOLUMES = ['3', '5', '7–10', '12–15', '20+']
 const SETUPS = ['Just me', 'Me + freelancer', 'Internal team', 'Agency', 'Branditect produces it']
+// GOALS and SETUPS are the values saved to social_strategies and compared
+// against ('Just me'), so they stay English. Only what renders is looked up.
+const GOAL_LABEL: Record<string, StringKey> = {
+  Awareness: 'goal.awareness', Community: 'goal.community', Authority: 'goal.authority',
+  Leads: 'goal.leads', Sales: 'goal.sales', Recruiting: 'goal.recruiting',
+}
+const SETUP_LABEL: Record<string, StringKey> = {
+  'Just me': 'setup.justMe', 'Me + freelancer': 'setup.meFreelancer', 'Internal team': 'setup.internalTeam',
+  Agency: 'setup.agency', 'Branditect produces it': 'setup.branditect',
+}
 const ANTI_CHIPS = [
   'thirsty/desperate',
   'corporate/sterile',
@@ -54,36 +66,36 @@ const QUESTIONS = [
     key: 'channels' as const,
     field: 'channels',
     eyebrow: 'Q1 · Channels',
-    title: 'Which platforms are you committing to for the next 90 days?',
-    why: 'Strategy is platform-shaped. No TikTok scripts if you\'re not on TikTok.',
+    title: 'channels.q1' as StringKey,
+    why: 'channels.q1Why' as StringKey,
   },
   {
     key: 'goal' as const,
     field: 'primary_goal',
     eyebrow: 'Q2 · Primary goal',
-    title: 'What is social actually doing for the business right now?',
-    why: 'The same brand produces very different content if the goal shifts. Awareness content ≠ sales content.',
+    title: 'channels.q2' as StringKey,
+    why: 'channels.q2Why' as StringKey,
   },
   {
     key: 'capacity' as const,
     field: 'capacity_volume',
     eyebrow: 'Q3 · Realistic capacity',
-    title: 'How much can you actually produce per week — and who\'s behind it?',
-    why: 'Quality decay is the #1 reason social strategies fail. We won\'t propose 15 reels a week if one person on a laptop is making them.',
+    title: 'channels.q3' as StringKey,
+    why: 'channels.q3Why' as StringKey,
   },
   {
     key: 'refs' as const,
     field: 'reference_accounts',
     eyebrow: 'Q4 · Reference accounts',
-    title: 'Name 3–5 accounts whose social you admire — in your space or adjacent.',
-    why: 'Branditect studies their cadence, format mix, and topic patterns. Not to copy, to benchmark what good looks like in this category.',
+    title: 'channels.q4' as StringKey,
+    why: 'channels.q4Why' as StringKey,
   },
   {
     key: 'anti' as const,
     field: 'anti_patterns',
     eyebrow: 'Q5 · Anti-brand',
-    title: 'What do you NOT want to look or sound like on social?',
-    why: 'Knowing what to avoid is half of staying on-brand. This becomes a negative constraint the AI checks every social output against, forever.',
+    title: 'channels.q5' as StringKey,
+    why: 'channels.q5Why' as StringKey,
   },
 ] as const
 
@@ -92,6 +104,7 @@ const QUESTIONS = [
 /* ------------------------------------------------------------------ */
 
 export default function SocialStrategyPage() {
+  const t = useT()
   const { brandId, brandName, loading: brandLoading } = useBrand()
 
   const [phase, setPhase] = useState<Phase>('loading')
@@ -249,10 +262,10 @@ export default function SocialStrategyPage() {
         setQIdx(0)
         setPhase('questions')
       } else {
-        setError(json.error || 'Failed to start')
+        setError(json.error || t('channels.errStart'))
       }
     } catch {
-      setError('Failed to start')
+      setError(t('channels.errStart'))
     } finally {
       setBusy(false)
     }
@@ -279,14 +292,14 @@ export default function SocialStrategyPage() {
       // Persist current question's value
       if (qIdx === 0) {
         if (channels.length === 0) {
-          setError('Pick at least one platform.')
+          setError(t('channels.errPlatform'))
           setBusy(false)
           return
         }
         await saveField('channels', channels)
       } else if (qIdx === 1) {
         if (!primaryGoal) {
-          setError('Pick a primary goal.')
+          setError(t('channels.errGoal'))
           setBusy(false)
           return
         }
@@ -294,7 +307,7 @@ export default function SocialStrategyPage() {
         await saveField('secondary_goal', secondaryGoal || null)
       } else if (qIdx === 2) {
         if (!volume || !setup) {
-          setError('Both volume and production setup are required.')
+          setError(t('channels.errCapacity'))
           setBusy(false)
           return
         }
@@ -315,12 +328,12 @@ export default function SocialStrategyPage() {
           .map((s) => s.trim().replace(/^@/, ''))
           .filter(Boolean)
         if (accounts.length < 3) {
-          setError('Give us at least 3 accounts.')
+          setError(t('channels.errMinAccounts'))
           setBusy(false)
           return
         }
         if (accounts.length > 5) {
-          setError('Cap is 5 accounts — pick your sharpest.')
+          setError(t('channels.errMaxAccounts'))
           setBusy(false)
           return
         }
@@ -332,7 +345,7 @@ export default function SocialStrategyPage() {
           .filter(Boolean)
         const all = Array.from(new Set([...antiChips, ...free]))
         if (all.length === 0) {
-          setError('Tell us at least one anti-pattern — even just one chip.')
+          setError(t('channels.errAntiPattern'))
           setBusy(false)
           return
         }
@@ -352,7 +365,7 @@ export default function SocialStrategyPage() {
         // Step 2 will replace this with the real reveal screen.
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed')
+      setError(e instanceof Error ? e.message : t('channels.errSave'))
     } finally {
       setBusy(false)
     }
@@ -404,14 +417,13 @@ export default function SocialStrategyPage() {
           &larr; Back to Dashboard
         </Link>
         <div className="mt-8 inline-flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FFF2EE] text-[#ec5c36]">
-          Social strategy active · synced with brand
+          {t('channels.active')}
         </div>
         <h1 className="text-[2.4rem] font-semibold text-ink mt-4 mb-2 leading-tight">
           {brandName}&apos;s social strategy
         </h1>
         <p className="text-[0.88rem] text-muted leading-relaxed mb-6">
-          Step 2 ships the rendered Strategy Doc here — content pillars, platform style guides,
-          30-day calendar, anti-pattern card. Your answers are saved.
+          {t('channels.step2Ships')}
         </p>
         <button
           onClick={() => {
@@ -420,7 +432,7 @@ export default function SocialStrategyPage() {
           }}
           className="border border-outline-variant/15 rounded-[7px] px-3.5 py-2 text-[0.76rem] font-medium text-dark hover:border-brand-orange hover:text-brand-orange transition-colors"
         >
-          Edit answers
+          {t('channels.editAnswers')}
         </button>
       </div>
     )
@@ -436,20 +448,19 @@ export default function SocialStrategyPage() {
             <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
           </div>
           <h2 className="text-2xl font-semibold text-ink mb-3">
-            Branditect already knows your brand. Now it&apos;s deciding what you should post.
+            {t('channels.intro')}
           </h2>
           <p className="text-sm text-muted mb-8">
-            Reading your brand strategy → studying your reference accounts → cross-referencing your goals →
-            building your pillars → drafting examples.
+            {t('channels.working')}
           </p>
           <p className="text-xs font-mono uppercase tracking-wider text-muted">
-            Synthesis layer ships in step 2 — your answers are saved.
+            {t('channels.step2Note')}
           </p>
           <button
             onClick={() => setPhase('active')}
             className="mt-8 px-5 py-2 rounded-lg border border-outline-variant/15 text-sm font-medium text-dark hover:bg-surface-container-low transition-colors"
           >
-            Continue
+            {t('common.continue')}
           </button>
         </div>
       </div>
@@ -467,50 +478,49 @@ export default function SocialStrategyPage() {
 
         <div className="mt-8">
           <div className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-muted mb-3">
-            Social Strategy Architect
+            {t('channels.architect')}
           </div>
           <h1 className="text-[2.4rem] font-semibold text-ink leading-tight mb-3">
-            Build your social media strategy in 5 questions.
+            {t('channels.fiveQuestions')}
           </h1>
           <p className="text-[0.95rem] text-muted leading-relaxed max-w-[640px] mb-8">
-            Brand strategy answers <em>who we are</em>. BrandTone answers <em>how we sound</em>. This
-            answers <em>what we post on Wednesday</em>. Branditect already knows most of it — we
-            just need 5 things to fill the gaps.
+            {/* One key, rendered whole: the <em> seams did not survive Finnish word order. */}
+            {t('channels.whatThisAnswers')}
           </p>
         </div>
 
         {/* What we already know */}
         <div className="border border-outline-variant/15 rounded-2xl p-6 mb-8 bg-surface-container-lowest">
           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-4">
-            What we&apos;re pulling from your library
+            {t('channels.pullingFrom')}
           </div>
           <ul className="space-y-2.5">
             <ContextRow
               ok={!!context?.hasStrategy}
-              label="Brand Strategy"
+              label={t('channels.brandStrategy')}
               detail={
                 context?.archetype
                   ? `archetype: ${context.archetype}`
                   : context?.hasStrategy
                   ? 'positioning, audience, competitors, personas'
-                  : 'not set up yet'
+                  : t('channels.notSetUp')
               }
             />
             <ContextRow
               ok={!!context?.hasTone}
-              label="Tone of Voice"
+              label={t('channels.toneOfVoice')}
               detail={
                 context?.voiceDescription
                   ? truncate(context.voiceDescription, 80)
                   : context?.hasTone
-                  ? 'voice rules, vocab'
-                  : 'not set up yet'
+                  ? t('channels.voiceRules')
+                  : t('channels.notSetUp')
               }
             />
           </ul>
           {(!context?.hasStrategy || !context?.hasTone) && (
             <p className="text-[0.78rem] text-muted mt-4 pt-4 border-t border-outline-variant/15">
-              You can still proceed — but pillars and example posts get sharper once Brand Strategy and Tone of Voice are filled in.
+              {t('channels.proceedAnyway')}
             </p>
           )}
         </div>
@@ -518,14 +528,14 @@ export default function SocialStrategyPage() {
         {/* Preview of the 5 questions */}
         <div className="mb-10">
           <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-4">
-            What we&apos;ll ask you
+            {t('channels.willAsk')}
           </div>
           <ol className="space-y-2 list-decimal list-inside text-[0.88rem] text-dark">
-            <li>Channels you&apos;re committing to for 90 days</li>
-            <li>Primary goal social is doing for the business</li>
-            <li>Realistic capacity — volume + who&apos;s behind it</li>
+            <li>{t('channels.commitment')}</li>
+            <li>{t('channels.primaryGoalIntro')}</li>
+            <li>{t('channels.capacityIntro')}</li>
             <li>3–5 reference accounts to benchmark</li>
-            <li>The anti-brand — what you don&apos;t want to look like</li>
+            <li>{t('channels.antiBrand')}</li>
           </ol>
         </div>
 
@@ -536,7 +546,7 @@ export default function SocialStrategyPage() {
           disabled={busy}
           className="px-6 py-3 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:brightness-110 disabled:opacity-50 transition-colors"
         >
-          {busy ? 'Starting…' : record ? 'Resume' : 'Begin'}
+          {busy ? t('channels.starting') : record ? t('channels.resume') : t('channels.begin')}
           <span className="ml-2">&rarr;</span>
         </button>
       </div>
@@ -570,10 +580,10 @@ export default function SocialStrategyPage() {
       <div className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#ec5c36] mb-3">
         {q.eyebrow}
       </div>
-      <h2 className="text-[1.7rem] font-semibold text-ink leading-tight mb-3">{q.title}</h2>
+      <h2 className="text-[1.7rem] font-semibold text-ink leading-tight mb-3">{t(q.title)}</h2>
       <p className="text-[0.85rem] text-muted leading-relaxed mb-8 max-w-[600px]">
-        <span className="font-mono text-[0.65rem] uppercase tracking-wider text-muted/70 mr-2">Why we ask</span>
-        {q.why}
+        <span className="font-mono text-[0.65rem] uppercase tracking-wider text-muted/70 mr-2">{t('channels.whyWeAsk')}</span>
+        {t(q.why)}
       </p>
 
       {/* Q1 — Channels */}
@@ -603,7 +613,7 @@ export default function SocialStrategyPage() {
         <div className="space-y-6 mb-8">
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Primary goal (pick one)
+              {t('channels.primaryGoal')}
             </div>
             <div className="grid grid-cols-3 gap-2">
               {GOALS.map((g) => {
@@ -618,7 +628,7 @@ export default function SocialStrategyPage() {
                         : 'bg-white border-outline-variant/15 text-dark hover:border-[#ec5c36]/40'
                     }`}
                   >
-                    {g}
+                    {t(GOAL_LABEL[g])}
                   </button>
                 )
               })}
@@ -626,7 +636,7 @@ export default function SocialStrategyPage() {
           </div>
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Secondary goal (optional)
+              {t('channels.secondaryGoal')}
             </div>
             <div className="grid grid-cols-3 gap-2">
               {GOALS.filter((g) => g !== primaryGoal).map((g) => {
@@ -641,7 +651,7 @@ export default function SocialStrategyPage() {
                         : 'bg-white border-outline-variant/15 text-dark hover:border-[#87C5EA]/60'
                     }`}
                   >
-                    {g}
+                    {t(GOAL_LABEL[g])}
                   </button>
                 )
               })}
@@ -655,7 +665,7 @@ export default function SocialStrategyPage() {
         <div className="space-y-6 mb-8">
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Volume per week
+              {t('channels.volumePerWeek')}
             </div>
             <div className="flex flex-wrap gap-2">
               {VOLUMES.map((v) => {
@@ -678,7 +688,7 @@ export default function SocialStrategyPage() {
           </div>
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Production setup
+              {t('channels.productionSetup')}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SETUPS.map((s) => {
@@ -693,7 +703,7 @@ export default function SocialStrategyPage() {
                         : 'bg-white border-outline-variant/15 text-dark hover:border-[#ec5c36]/40'
                     }`}
                   >
-                    {s}
+                    {t(SETUP_LABEL[s])}
                   </button>
                 )
               })}
@@ -712,7 +722,7 @@ export default function SocialStrategyPage() {
             placeholder={'@example_one\n@example_two\n@example_three'}
             className="w-full rounded-xl border border-outline-variant/15 bg-white px-4 py-3 text-sm text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none font-mono"
           />
-          <p className="text-[0.75rem] text-muted mt-2">One per line. 3 minimum, 5 maximum.</p>
+          <p className="text-[0.75rem] text-muted mt-2">{t('channels.threeToFive')}</p>
         </div>
       )}
 
@@ -721,7 +731,7 @@ export default function SocialStrategyPage() {
         <div className="space-y-5 mb-8">
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Common pitfalls (pick any)
+              {t('channels.pitfalls')}
             </div>
             <div className="flex flex-wrap gap-2">
               {ANTI_CHIPS.map((c) => {
@@ -746,13 +756,13 @@ export default function SocialStrategyPage() {
           </div>
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-wider text-muted mb-2">
-              Anything else? (one per line)
+              {t('channels.anythingElse')}
             </div>
             <textarea
               value={antiText}
               onChange={(e) => setAntiText(e.target.value)}
               rows={4}
-              placeholder={'fake-vulnerable founder posts\nLinkedIn-bait listicles'}
+              placeholder={t('channels.antiExample')}
               className="w-full rounded-xl border border-outline-variant/15 bg-white px-4 py-3 text-sm text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
             />
           </div>
@@ -767,14 +777,14 @@ export default function SocialStrategyPage() {
           disabled={busy}
           className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-medium text-dark hover:bg-surface-container-low disabled:opacity-50 transition-colors"
         >
-          &larr; Back
+          &larr; {t('strategy.back')}
         </button>
         <button
           onClick={goNext}
           disabled={busy}
           className="px-6 py-3 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:brightness-110 disabled:opacity-50 transition-colors"
         >
-          {qIdx === QUESTIONS.length - 1 ? 'Generate strategy' : 'Continue'} <span className="ml-1">&rarr;</span>
+          {qIdx === QUESTIONS.length - 1 ? t('channels.generate') : t('common.continue')} <span className="ml-1">&rarr;</span>
         </button>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { useBrand } from "@/lib/useBrand";
 import { QUESTIONS, type QuestionDef } from "@/lib/strategy-questions";
 import StrategyDocument from "@/components/strategy/strategy-document";
 import { readStrategy, completeness, EMPTY_STRATEGY, type BrandStrategy } from "@/lib/strategy";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -173,6 +174,7 @@ function parseMarkdown(md: string): string {
 /* ------------------------------------------------------------------ */
 
 export default function BrandStrategyPage() {
+  const t = useT();
   const { brandId, loading: brandLoading } = useBrand();
   const [screen, setScreen] = useState<Screen>("entry");
   const [category, setCategory] = useState<Category | null>(null);
@@ -490,7 +492,7 @@ export default function BrandStrategyPage() {
       }
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Something went wrong";
+        err instanceof Error ? err.message : t("error.title");
       setError(message);
       setScreen("entry");
     } finally {
@@ -619,10 +621,10 @@ export default function BrandStrategyPage() {
           <div className="w-full max-w-xl">
             <div className="rounded-panel border border-rule bg-card p-8 drop-shadow-panel">
               <div className="text-micro font-bold uppercase tracking-[1.4px] text-accent">
-                Brand
+                {t("nav.brand")}
               </div>
               <h1 className="mt-2 text-display font-bold leading-[1.15] tracking-[-0.7px]">
-                No strategy yet.
+                {t("strategy.none")}
               </h1>
               <p className="mt-3 text-base font-normal leading-[1.6] text-muted">
                 It is built from the questionnaire. Twenty questions, five of them
@@ -641,7 +643,7 @@ export default function BrandStrategyPage() {
                   href="/start"
                   className="rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn"
                 >
-                  Start the questionnaire
+                  {t("strategy.startQuestionnaire")}
                 </Link>
               </div>
             </div>
@@ -655,10 +657,10 @@ export default function BrandStrategyPage() {
           <div className="max-w-xl w-full space-y-8 text-center">
             <div>
               <h1 className="text-3xl font-semibold text-ink mb-3">
-                What does your brand offer?
+                {t("strategy.whatDoYouOffer")}
               </h1>
               <p className="text-muted font-sans">
-                This helps us tailor the strategy framework.
+                {t("strategy.trackHelp")}
               </p>
             </div>
 
@@ -672,10 +674,10 @@ export default function BrandStrategyPage() {
               >
                 <div className="text-3xl mb-3">&#9634;</div>
                 <div className="font-bold text-ink text-lg font-sans group-hover:text-brand-orange transition-colors">
-                  Physical or Digital Products
+                  {t("strategy.trackProducts")}
                 </div>
                 <div className="text-sm text-muted mt-1 font-sans">
-                  E-commerce, SaaS, apps, physical goods
+                  {t("strategy.trackProductsHelp")}
                 </div>
               </button>
 
@@ -688,10 +690,10 @@ export default function BrandStrategyPage() {
               >
                 <div className="text-3xl mb-3">&#9672;</div>
                 <div className="font-bold text-ink text-lg font-sans group-hover:text-brand-orange transition-colors">
-                  Services
+                  {t("strategy.trackServices")}
                 </div>
                 <div className="text-sm text-muted mt-1 font-sans">
-                  Consulting, agency, freelance, professional services
+                  {t("strategy.trackServicesHelp")}
                 </div>
               </button>
             </div>
@@ -713,7 +715,7 @@ export default function BrandStrategyPage() {
           <aside className="w-72 border-r border-light bg-surface-container-low overflow-y-auto shrink-0 flex flex-col">
             <div className="p-5 space-y-1">
               <h2 className="text-sm font-bold text-ink font-sans uppercase tracking-wider mb-4">
-                Sections
+                {t("strategy.sections")}
               </h2>
               {SECTIONS.map((section) => {
                 const answered = answeredCountForSection(section);
@@ -763,7 +765,7 @@ export default function BrandStrategyPage() {
                 disabled={totalAnswered < 1}
                 className="w-full rounded-xl bg-primary text-white font-headline font-bold py-3 shadow-lg shadow-primary/20 text-sm hover:brightness-110 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-sans"
               >
-                Generate Strategy Now
+                {t("strategy.generateNow")}
               </button>
             </div>
           </aside>
@@ -861,7 +863,7 @@ export default function BrandStrategyPage() {
                   }}
                   className="px-5 py-2.5 rounded-xl border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
                 >
-                  Back
+                  {t("strategy.back")}
                 </button>
 
                 <div className="flex items-center gap-3">
@@ -874,7 +876,7 @@ export default function BrandStrategyPage() {
                     disabled={currentIndex >= QUESTIONS.length - 1}
                     className="px-5 py-2.5 rounded-xl text-sm text-muted hover:text-dark transition-colors disabled:opacity-30 font-sans"
                   >
-                    Skip
+                    {t("common.skip")}
                   </button>
                   <button
                     onClick={() => {
@@ -903,7 +905,7 @@ export default function BrandStrategyPage() {
           <div className="max-w-md w-full space-y-8 text-center">
             <div>
               <h2 className="text-2xl font-semibold text-ink mb-2">
-                Crafting your brand strategy
+                {t("strategy.crafting")}
               </h2>
               <p className="text-muted font-sans">
                 Synthesizing {totalAnswered} answers into a comprehensive
@@ -971,7 +973,7 @@ export default function BrandStrategyPage() {
                   }}
                   className="block mt-2 text-brand-orange hover:underline"
                 >
-                  Go back to questions
+                  {t("strategy.backToQuestions")}
                 </button>
               </div>
             )}
@@ -991,13 +993,13 @@ export default function BrandStrategyPage() {
                 }}
                 className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
               >
-                Edit Answers
+                {t("strategy.editAnswers")}
               </button>
               <button
                 onClick={() => generate(false)}
                 className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
               >
-                Regenerate
+                {t("common.regenerate")}
               </button>
             </div>
 
@@ -1006,13 +1008,13 @@ export default function BrandStrategyPage() {
                 onClick={copyToClipboard}
                 className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
               >
-                Copy
+                {t("common.copy")}
               </button>
               <button
                 onClick={downloadMd}
                 className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
               >
-                Download .md
+                {t("strategy.downloadMd")}
               </button>
               <button
                 onClick={saveToSupabase}

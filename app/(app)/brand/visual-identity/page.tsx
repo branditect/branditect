@@ -25,6 +25,7 @@ import { SLOTS, USE_CASES, canonicalSlot, formatOf } from "@/lib/logo-slots";
 import s from "@/components/visual-identity/visual-identity.module.css";
 import { AddLogo, AddColour, AddTypeface } from "@/components/visual-identity/uploads";
 import u from "@/components/visual-identity/uploads.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ------------------------------------------------------------------ */
 /*  Rows. Optional fields are the columns supabase/visual-identity.sql */
@@ -100,14 +101,16 @@ function cssSnippetFor(font: FontRow): string {
 function Mark({
   url, height = 30, width = 104, className,
 }: { url: string | null; height?: number; width?: number; className?: string }) {
+  const t = useT();
   if (!url) {
-    return <span className={`${s.placeholderMark} ${className ?? ""}`} style={{ height, width }}>Your logo</span>;
+    return <span className={`${s.placeholderMark} ${className ?? ""}`} style={{ height, width }}>{t("visual.yourLogo")}</span>;
   }
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={url} alt="" className={className} style={{ height, maxWidth: width, objectFit: "contain" }} />;
 }
 
 export default function VisualIdentityPage() {
+  const t = useT();
   const { brandId, brandName, loading: brandLoading } = useBrand();
 
   const [logos, setLogos] = useState<LogoRow[]>([]);
@@ -128,7 +131,7 @@ export default function VisualIdentityPage() {
       // `select("*")` is fine here and only here: this route is authenticated
       // and reads the signed-in brand's own rows. The explicit column allowlist
       // the spec requires belongs to the unauthenticated /k route.
-      const [l, c, f, t, v, p] = await Promise.all([
+      const [l, c, f, tp, v, p] = await Promise.all([
         supabase.from("brand_logos").select("*").eq("brand_id", brandId).order("created_at"),
         supabase.from("brand_book_colors").select("*").eq("brand_id", brandId).order("created_at"),
         supabase.from("brand_fonts").select("*").eq("brand_id", brandId).order("created_at"),
@@ -141,7 +144,7 @@ export default function VisualIdentityPage() {
       setLogos((l.data as LogoRow[]) ?? []);
       setColors((c.data as ColorRow[]) ?? []);
       setFonts((f.data as FontRow[]) ?? []);
-      setTemplates((t.data as TemplateRow[]) ?? []);
+      setTemplates((tp.data as TemplateRow[]) ?? []);
       setVisual((v.data as VisualRow) ?? null);
       setPageCount(p.count ?? 0);
       setLoading(false);
@@ -233,9 +236,9 @@ export default function VisualIdentityPage() {
     return (
       <div className={s.wrap}>
         <div className={s.sec}>
-          <h2 style={{ fontSize: 19, fontWeight: 800 }}>No brand yet.</h2>
+          <h2 style={{ fontSize: 19, fontWeight: 800 }}>{t("visual.noBrand")}</h2>
           <p style={{ marginTop: 8 }} className={s.emptyNote}>
-            Your logos, colours and typefaces appear here once a brand is set up.
+            {t("visual.noBrandHelp")}
           </p>
         </div>
       </div>
@@ -252,12 +255,12 @@ export default function VisualIdentityPage() {
             <div>
               <span className={s.badge}>
                 <Icon name="spark" size={13} />
-                Brand · Visual identity
+                {t("visual.breadcrumb")}
               </span>
-              <h1>Visual brand identity</h1>
+              <h1>{t("visual.title")}</h1>
               <p className={s.lede}>
                 Every logo, colour and typeface, in the versions that are actually current.{" "}
-                <b>Take what you need — you don&rsquo;t have to ask anyone.</b>
+                <b>{t("visual.intro")}</b>
               </p>
             </div>
             <div className={s.glass}>
@@ -265,11 +268,11 @@ export default function VisualIdentityPage() {
                 <div>
                   {/* A zero reads as empty. An em dash reads as broken. */}
                   <div className={s.statN}>{fileCount}</div>
-                  <div className={s.statK}>Files</div>
+                  <div className={s.statK}>{t("visual.files")}</div>
                 </div>
                 <div>
                   <div className={s.statN}>{version}</div>
-                  <div className={s.statK}>Current</div>
+                  <div className={s.statK}>{t("visual.current")}</div>
                 </div>
               </div>
               <div className={s.vrow}>
@@ -288,8 +291,8 @@ export default function VisualIdentityPage() {
             <section className={s.sec}>
               <div className={s.shead}>
                 <div>
-                  <div className={s.eyebrow}>Start here</div>
-                  <h2 style={{ marginTop: 5 }}>Which one do I use?</h2>
+                  <div className={s.eyebrow}>{t("visual.startHere")}</div>
+                  <h2 style={{ marginTop: 5 }}>{t("visual.whichOne")}</h2>
                   <p>
                     Files named &ldquo;primary&rdquo; and &ldquo;symbol only&rdquo; are a filing
                     cabinet. This is the same set, sorted by the question people actually arrive with.
@@ -311,7 +314,7 @@ export default function VisualIdentityPage() {
                       <div className={s.ucans}>
                         <div className={s.ucfile}>{u.answer}</div>
                         <div className={s.ucfmt}>{fmts.length ? fmts.join(" · ") : u.note}</div>
-                        <span className={s.go}>Download<Icon name="upload" size={12} /></span>
+                        <span className={s.go}>{t("common.download")}<Icon name="upload" size={12} /></span>
                       </div>
                     </button>
                   );
@@ -326,7 +329,7 @@ export default function VisualIdentityPage() {
           <section className={s.sec}>
             <div className={s.shead}>
               <div>
-                <h2>Logos</h2>
+                <h2>{t("visual.logos")}</h2>
                 <p>
                   Each plate is fixed to its slot, so you can see whether a reversed file actually
                   works before you use it. Download the one you need.
@@ -339,7 +342,7 @@ export default function VisualIdentityPage() {
 
             {bySlot.size === 0 ? (
               <div className={s.empty}>
-                <h3>No logos yet.</h3>
+                <h3>{t("visual.noLogos")}</h3>
                 <p>
                   Upload the primary, a reversed version and the symbol on its own — those three
                   cover almost every use.
@@ -381,7 +384,7 @@ export default function VisualIdentityPage() {
                             onClick={() => download(first.file_url, first.file_name)}
                           >
                             <Icon name="upload" size={12} />
-                            Download
+                            {t("common.download")}
                           </button>
                         </div>
                       </div>
@@ -392,7 +395,7 @@ export default function VisualIdentityPage() {
 
               {otherFiles.length > 0 && (
                 <>
-                  <div className={s.cglab} style={{ marginTop: 18 }}>All files</div>
+                  <div className={s.cglab} style={{ marginTop: 18 }}>{t("visual.allFiles")}</div>
                   <div className={s.fmts}>
                     {otherFiles.map((f) => (
                       <button
@@ -420,7 +423,7 @@ export default function VisualIdentityPage() {
             <section className={s.sec}>
               <div className={s.shead}>
                 <div>
-                  <h2>Colour</h2>
+                  <h2>{t("visual.colour")}</h2>
                   <p>
                     Every swatch copies. The contrast badge is measured against white at render, so
                     it cannot go stale — it is the difference between a colour you can set text in
@@ -434,7 +437,7 @@ export default function VisualIdentityPage() {
 
               {colors.length === 0 && (
                 <div className={s.empty}>
-                  <h3>No colours yet.</h3>
+                  <h3>{t("visual.noColours")}</h3>
                   <p>
                     Add the ones you actually use — a primary, an ink and a background will carry
                     most of what Studio makes. Or pull them straight out of a screenshot.
@@ -479,7 +482,7 @@ export default function VisualIdentityPage() {
                                 className={s.cta}
                                 style={{ color: isGradient ? "#fff" : readableInkOn(value) === "#15151b" ? "#fff" : "#fff" }}
                               >
-                                {isGradient ? "Copy CSS" : "Copy HEX"}
+                                {isGradient ? t("visual.copyCss") : "Copy HEX"}
                               </span>
                             </span>
                             <span className={s.meta}>
@@ -507,8 +510,8 @@ export default function VisualIdentityPage() {
           <section className={s.sec}>
             <div className={s.shead}>
               <div>
-                <h2>Typefaces</h2>
-                <p>Each specimen is set in the real typeface. Copy the CSS and it will be too.</p>
+                <h2>{t("visual.typefaces")}</h2>
+                <p>{t("visual.typefacesHelp")}</p>
               </div>
               <div className={u.headActions}>
                 <AddTypeface brandId={brandId} onDone={() => { reload(); flash("Typeface added"); }} />
@@ -517,8 +520,8 @@ export default function VisualIdentityPage() {
 
             {fonts.length === 0 ? (
               <div className={s.empty}>
-                <h3>No typefaces yet.</h3>
-                <p>Add the one for headlines and the one for everything else.</p>
+                <h3>{t("visual.noTypefaces")}</h3>
+                <p>{t("visual.typefacesEmpty")}</p>
                 <AddTypeface
                   brandId={brandId}
                   variant="empty"
@@ -548,12 +551,12 @@ export default function VisualIdentityPage() {
                         <div className={s.trow}>
                           <button type="button" className={`${s.act} ${s.prime}`} onClick={() => copy(snippet, "CSS copied")}>
                             <Icon name="doc" size={12} />
-                            Copy CSS
+                            {t("visual.copyCss")}
                           </button>
                           {font.file_url && (
                             <button type="button" className={s.act} onClick={() => download(font.file_url, font.name)}>
                               <Icon name="upload" size={12} />
-                              Download
+                              {t("common.download")}
                             </button>
                           )}
                         </div>
@@ -570,27 +573,27 @@ export default function VisualIdentityPage() {
             <section className={s.sec}>
               <div className={s.shead}>
                 <div>
-                  <h2>Templates</h2>
-                  <p>Sized and set up already. Open one and replace the words.</p>
+                  <h2>{t("visual.templates")}</h2>
+                  <p>{t("visual.templatesHelp")}</p>
                 </div>
               </div>
               <div className={s.tpl}>
-                {templates.map((t) => {
-                  const ratio = ratioOf(t.name);
+                {templates.map((tpl) => {
+                  const ratio = ratioOf(tpl.name);
                   return (
-                    <a key={t.id} href={t.url ?? "#"} target="_blank" rel="noopener noreferrer" className={s.tpc}>
+                    <a key={tpl.id} href={tpl.url ?? "#"} target="_blank" rel="noopener noreferrer" className={s.tpc}>
                       <span className={s.thumb}>
-                        {t.thumbnail_url ? (
+                        {tpl.thumbnail_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={t.thumbnail_url} alt="" />
+                          <img src={tpl.thumbnail_url} alt="" />
                         ) : (
                           <Icon name="img" size={24} />
                         )}
                         {ratio && <span className={s.ratio}>{ratio}</span>}
                       </span>
                       <span className={s.tb}>
-                        <span className={s.tn}>{t.name || "Template"}</span>
-                        <span className={s.td}>{t.platform ? `Opens in ${t.platform}` : "Opens in a new tab"}</span>
+                        <span className={s.tn}>{tpl.name || "Template"}</span>
+                        <span className={s.td}>{tpl.platform ? `Opens in ${tpl.platform}` : "Opens in a new tab"}</span>
                       </span>
                     </a>
                   );
@@ -607,7 +610,7 @@ export default function VisualIdentityPage() {
           <section className={s.sec}>
             <div className={s.shead}>
               <div>
-                <h2>How to hold it</h2>
+                <h2>{t("visual.howToHold")}</h2>
                 <p>
                   The four things that go wrong most often. They live here rather than on page 34
                   of a PDF, because a rule nobody reads is not a rule.
@@ -617,8 +620,8 @@ export default function VisualIdentityPage() {
             <div className={s.rules}>
               <div>
                 <div className={s.rbox}>
-                  <h4>Clear space</h4>
-                  <p>Keep the height of the symbol free on every side. Nothing crosses it — no text, no edge, no other logo.</p>
+                  <h4>{t("visual.clearSpace")}</h4>
+                  <p>{t("visual.clearSpaceHelp")}</p>
                   <div className={s.clearspace}>
                     <div className={s.csbox}>
                       <Mark url={heroLogo?.file_url ?? null} height={34} width={150} />
@@ -626,8 +629,8 @@ export default function VisualIdentityPage() {
                   </div>
                 </div>
                 <div className={s.rbox} style={{ marginTop: 12 }}>
-                  <h4>Minimum size</h4>
-                  <p>Below these, switch to the symbol on its own.</p>
+                  <h4>{t("visual.minSize")}</h4>
+                  <p>{t("visual.minSizeHelp")}</p>
                   <div className={s.minsize}>
                     <div className={s.ms}>
                       <Mark url={heroLogo?.file_url ?? null} height={22} width={120} />
@@ -642,7 +645,7 @@ export default function VisualIdentityPage() {
               </div>
 
               <div>
-                <div className={s.cglab}>Never</div>
+                <div className={s.cglab}>{t("common.never")}</div>
                 <div className={s.donts}>
                   {[
                     { cls: s.sq, title: "Don't stretch it", sub: "Scale both sides together, always", busy: false },
@@ -669,9 +672,9 @@ export default function VisualIdentityPage() {
           {/* ══════════ 7 · THE GUIDELINES PDF ══════════ */}
           {visual?.guideline_url && (
             <div className={s.guide}>
-              <div className={s.cov}><div className={s.covL}>Brand<br />Guidelines</div></div>
+              <div className={s.cov}><div className={s.covL}>{t("nav.brand")}<br />{t("visual.guidelines")}</div></div>
               <div className="min-w-0">
-                <h3>The full guidelines</h3>
+                <h3>{t("visual.fullGuidelines")}</h3>
                 <p>
                   Everything above, plus photography direction, tone of voice, iconography and the
                   print specifications. Read it once; come back to this page for the day-to-day.
@@ -689,7 +692,7 @@ export default function VisualIdentityPage() {
               <div className={s.gacts}>
                 <a className={s.act} href={visual.guideline_url} target="_blank" rel="noopener noreferrer">
                   <Icon name="doc" size={12} />
-                  Read here
+                  {t("visual.readHere")}
                 </a>
                 <button
                   type="button"
@@ -697,7 +700,7 @@ export default function VisualIdentityPage() {
                   onClick={() => download(visual.guideline_url, "brand-guidelines.pdf")}
                 >
                   <Icon name="upload" size={12} />
-                  Download
+                  {t("common.download")}
                 </button>
               </div>
             </div>

@@ -23,6 +23,7 @@
     "delete:ui": "node scripts/account-delete-ui.mjs",
     "settings:ui": "node scripts/settings-ui.mjs",
     "language:ui": "node scripts/language-toggle-ui.mjs",
+    "i18n:ui": "node --experimental-strip-types scripts/i18n-pages-ui.mjs",
     "tag:ui": "node scripts/tag-images-ui.mjs",
     "placeholder:ui": "node scripts/brand-placeholder-ui.mjs"
   },

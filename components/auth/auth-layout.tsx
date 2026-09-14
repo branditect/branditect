@@ -1,5 +1,10 @@
 import Showcase from "./showcase";
 import s from "./auth.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
+
+/** A key, or English with no key yet (rendered as written, listed by the gap scan). */
+type Copy = StringKey | { en: string };
 
 /**
  * Two full-height halves, each centring its own content — neither sticky nor
@@ -12,14 +17,16 @@ import s from "./auth.module.css";
  * needs it, and a returning one scrolls past in half a second.
  */
 
-const FEATURES = [
-  ["Write on brand", "On brand, on strategy, on the facts."],
-  ["Create images", "New visuals based on your products and style."],
-  ["Do the numbers", "Profitability, pricing and offers that make sense."],
-  ["Brand assets", "Logos, colors, guidelines and everything in one place."],
-] as const;
+const FEATURES: [Copy, Copy][] = [
+  [{ en: "Write on brand" }, "home.writeDesc"],
+  ["nav.studio.createImages", { en: "New visuals based on your products and style." }],
+  ["home.numbersTitle", { en: "Profitability, pricing and offers that make sense." }],
+  [{ en: "Brand assets" }, { en: "Logos, colors, guidelines and everything in one place." }],
+];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = useT();
+  const tx = (c: Copy) => (typeof c === "string" ? t(c) : c.en);
   return (
     <>
       <div className={s.bg} aria-hidden="true">
@@ -32,15 +39,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Decorative content beside the form, not a landmark. */}
         <div className={s.right}>
           <h2 className={s.pitch}>
-            They have a marketing team.<br />You have <em>Branditect.</em>
+            {t("auth.showcaseLine1")}<br />{t("auth.showcaseLine2")} <em>{t("auth.showcaseBrand")}</em>
           </h2>
 
           <div className={s.rightgrid}>
             <div className={s.feats}>
               {FEATURES.map(([title, line]) => (
-                <div key={title} className={s.feat}>
-                  <b>{title}</b>
-                  <span>{line}</span>
+                <div key={tx(title)} className={s.feat}>
+                  <b>{tx(title)}</b>
+                  <span>{tx(line)}</span>
                 </div>
               ))}
             </div>

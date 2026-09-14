@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import { supabase } from "@/lib/supabase";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -78,6 +79,7 @@ const EMPTY_TONE: ToneData = {
 /* ------------------------------------------------------------------ */
 
 export default function ToneOfVoicePage() {
+  const t = useT();
   const { brandId, brandName, loading: brandLoading } = useBrand();
   const [loading, setLoading] = useState(true);
   const [toneData, setToneData] = useState<ToneData | null>(null);
@@ -341,7 +343,7 @@ export default function ToneOfVoicePage() {
       onClick={() => openEdit(section)}
       className="absolute top-4 right-4 bg-surface-container-low hover:bg-light text-on-surface text-xs font-mono px-3 py-1.5 rounded-lg transition-colors"
     >
-      Edit
+      {t("common.edit")}
     </button>
   );
 
@@ -368,10 +370,10 @@ export default function ToneOfVoicePage() {
           {entryMode === "menu" ? (
             <>
               <h2 className="font-semibold text-2xl text-on-surface mb-2">
-                Set up your brand tone of voice
+                {t("tone.setUp")}
               </h2>
               <p className="text-outline text-sm mb-6">
-                Choose how you&apos;d like to define your brand&apos;s voice.
+                {t("tone.chooseHow")}
               </p>
 
               <div className="flex flex-col gap-3">
@@ -382,9 +384,9 @@ export default function ToneOfVoicePage() {
                 >
                   <span className="text-primary text-sm font-bold mt-0.5">*</span>
                   <div>
-                    <p className="font-headline font-bold text-on-surface text-sm">Paste writing samples</p>
+                    <p className="font-headline font-bold text-on-surface text-sm">{t("tone.pasteSamples")}</p>
                     <p className="text-outline text-xs mt-0.5">
-                      Paste examples of your brand writing and we&apos;ll extract your tone automatically.
+                      {t("tone.pasteSamplesHelp")}
                     </p>
                   </div>
                 </button>
@@ -397,9 +399,9 @@ export default function ToneOfVoicePage() {
                 >
                   <span className="text-primary text-xl mt-0.5">◇</span>
                   <div>
-                    <p className="font-headline font-bold text-on-surface text-sm">Pull from brand strategy</p>
+                    <p className="font-headline font-bold text-on-surface text-sm">{t("tone.fromStrategy")}</p>
                     <p className="text-outline text-xs mt-0.5">
-                      Use your saved brand strategy to auto-populate tone guidelines.
+                      {t("tone.fromStrategyHelp")}
                     </p>
                   </div>
                 </button>
@@ -414,9 +416,9 @@ export default function ToneOfVoicePage() {
                 >
                   <span className="text-primary text-xl mt-0.5">☰</span>
                   <div>
-                    <p className="font-headline font-bold text-on-surface text-sm">Build manually</p>
+                    <p className="font-headline font-bold text-on-surface text-sm">{t("tone.manual")}</p>
                     <p className="text-outline text-xs mt-0.5">
-                      Define each aspect of your tone step by step.
+                      {t("tone.manualHelp")}
                     </p>
                   </div>
                 </button>
@@ -431,16 +433,16 @@ export default function ToneOfVoicePage() {
                 &larr; Back
               </button>
               <h2 className="font-semibold text-2xl text-on-surface mb-2">
-                Paste writing samples
+                {t("tone.pasteSamples")}
               </h2>
               <p className="text-outline text-sm mb-4">
-                Paste examples of your brand writing below. The more, the better.
+                {t("tone.pasteSamplesIntro")}
               </p>
               <textarea
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
                 rows={8}
-                placeholder="Paste your website copy, emails, social posts, taglines..."
+                placeholder={t("tone.pastePlaceholder")}
                 className="w-full border border-outline-variant/15 rounded-xl p-4 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
               />
               {genProgress && (
@@ -484,14 +486,14 @@ export default function ToneOfVoicePage() {
           >
             &larr; Brand Library
           </Link>
-          <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mt-3">Brand Tone of Voice</h1>
+          <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mt-3">{t("tone.title")}</h1>
           <p className="text-outline text-sm mt-1">{brandName}</p>
         </div>
 
         {/* Section 1: Expression */}
         <section className="bg-surface-container-lowest rounded-2xl p-8 mb-8 shadow-sm border border-outline-variant/10">
           <p className="font-body text-primary text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            YOUR BRAND EXPRESSION
+            {t("tone.expression")}
           </p>
           <h2
             contentEditable
@@ -524,7 +526,7 @@ export default function ToneOfVoicePage() {
         {/* Section 2: Tone Pillars */}
         <section className="relative mb-8">
           <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            TONE PILLARS
+            {t("tone.pillars")}
           </p>
           {pillars.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -579,7 +581,7 @@ export default function ToneOfVoicePage() {
         {/* Section 3: Do & Don't */}
         <section className="relative mb-8">
           <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            DO &amp; DON&apos;T
+            {t("tone.doAndDont")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Dos */}
@@ -600,12 +602,12 @@ export default function ToneOfVoicePage() {
                 onClick={() => openEdit("dos")}
                 className="absolute top-3 right-3 bg-green-100 hover:bg-green-200 text-green-800 text-xs font-mono px-2.5 py-1 rounded-lg transition-colors"
               >
-                Edit
+                {t("common.edit")}
               </button>
             </div>
             {/* Donts */}
             <div className="relative bg-red-50 border border-red-200 rounded-xl p-5">
-              <h3 className="font-semibold text-red-700 text-sm mb-3">Don&apos;t</h3>
+              <h3 className="font-semibold text-red-700 text-sm mb-3">{t("tone.dont")}</h3>
               {donts.length > 0 ? (
                 <ul className="space-y-2">
                   {donts.map((d, i) => (
@@ -621,7 +623,7 @@ export default function ToneOfVoicePage() {
                 onClick={() => openEdit("donts")}
                 className="absolute top-3 right-3 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-mono px-2.5 py-1 rounded-lg transition-colors"
               >
-                Edit
+                {t("common.edit")}
               </button>
             </div>
           </div>
@@ -630,11 +632,11 @@ export default function ToneOfVoicePage() {
         {/* Section 4: Brand Vocabulary */}
         <section className="relative mb-8">
           <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            BRAND VOCABULARY
+            {t("tone.vocabulary")}
           </p>
           <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-6 space-y-5">
             <div>
-              <p className="text-xs font-semibold text-green-700 mb-2">Always use</p>
+              <p className="text-xs font-semibold text-green-700 mb-2">{t("tone.alwaysUse")}</p>
               {vocabYes.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {vocabYes.map((w, i) => (
@@ -651,7 +653,7 @@ export default function ToneOfVoicePage() {
               )}
             </div>
             <div>
-              <p className="text-xs font-semibold text-red-600 mb-2">Never use</p>
+              <p className="text-xs font-semibold text-red-600 mb-2">{t("tone.neverUse")}</p>
               {vocabNo.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {vocabNo.map((w, i) => (
@@ -674,7 +676,7 @@ export default function ToneOfVoicePage() {
         {/* Section 5: Touchpoints */}
         <section className="relative mb-8">
           <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            CHANNEL TOUCHPOINTS
+            {t("tone.touchpoints")}
           </p>
           {touchpoints.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -711,7 +713,7 @@ export default function ToneOfVoicePage() {
         {/* Section 6: Quick Checklist */}
         <section className="relative mb-8">
           <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            QUICK CHECKLIST
+            {t("tone.checklist")}
           </p>
           <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-6">
             <ul className="space-y-3">
@@ -761,22 +763,22 @@ export default function ToneOfVoicePage() {
             {editing === "expression" && (
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-mono text-outline block mb-1">Expression label</label>
+                  <label className="text-xs font-mono text-outline block mb-1">{t("tone.expressionLabel")}</label>
                   <input
                     type="text"
                     value={draft.expression_label || ""}
                     onChange={(e) => setDraft((d) => ({ ...d, expression_label: e.target.value }))}
-                    placeholder="e.g. Bold & Direct"
+                    placeholder={t("tone.exampleName")}
                     className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-mono text-outline block mb-1">Expression text</label>
+                  <label className="text-xs font-mono text-outline block mb-1">{t("tone.expressionText")}</label>
                   <textarea
                     value={draft.expression_text || ""}
                     onChange={(e) => setDraft((d) => ({ ...d, expression_text: e.target.value }))}
                     rows={4}
-                    placeholder="Describe how your brand sounds..."
+                    placeholder={t("tone.describeSound")}
                     className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                   />
                 </div>
@@ -797,7 +799,7 @@ export default function ToneOfVoicePage() {
                           arr[i] = { ...arr[i], name: e.target.value };
                           setDraft((d) => ({ ...d, pillars: arr }));
                         }}
-                        placeholder="Pillar name"
+                        placeholder={t("tone.pillarName")}
                         className="flex-1 border border-outline-variant/15 rounded-lg px-3 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                       />
                       <button
@@ -818,7 +820,7 @@ export default function ToneOfVoicePage() {
                         arr[i] = { ...arr[i], desc: e.target.value };
                         setDraft((d) => ({ ...d, pillars: arr }));
                       }}
-                      placeholder="Description"
+                      placeholder={t("common.description")}
                       className="w-full border border-outline-variant/15 rounded-lg px-3 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                     />
                     <div className="space-y-1">
@@ -848,7 +850,7 @@ export default function ToneOfVoicePage() {
             {/* ---- Dos ---- */}
             {editing === "dos" && (
               <div className="space-y-3">
-                <label className="text-xs font-mono text-outline">One per line</label>
+                <label className="text-xs font-mono text-outline">{t("common.onePerLine")}</label>
                 <textarea
                   value={(draft.dos || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, dos: e.target.value.split("\n") }))}
@@ -862,7 +864,7 @@ export default function ToneOfVoicePage() {
             {/* ---- Donts ---- */}
             {editing === "donts" && (
               <div className="space-y-3">
-                <label className="text-xs font-mono text-outline">One per line</label>
+                <label className="text-xs font-mono text-outline">{t("common.onePerLine")}</label>
                 <textarea
                   value={(draft.donts || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, donts: e.target.value.split("\n") }))}
@@ -887,7 +889,7 @@ export default function ToneOfVoicePage() {
                       }))
                     }
                     rows={3}
-                    placeholder="innovative, partner, empower, ..."
+                    placeholder={t("tone.alwaysExample")}
                     className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                   />
                 </div>
@@ -902,7 +904,7 @@ export default function ToneOfVoicePage() {
                       }))
                     }
                     rows={3}
-                    placeholder="synergy, leverage, utilize, ..."
+                    placeholder={t("tone.neverExample")}
                     className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                   />
                 </div>
@@ -923,7 +925,7 @@ export default function ToneOfVoicePage() {
                           arr[i] = { ...arr[i], name: e.target.value };
                           setDraft((d) => ({ ...d, touchpoints: arr }));
                         }}
-                        placeholder="Channel name"
+                        placeholder={t("tone.channelName")}
                         className="flex-1 border border-outline-variant/15 rounded-lg px-3 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                       />
                       <input
@@ -934,7 +936,7 @@ export default function ToneOfVoicePage() {
                           arr[i] = { ...arr[i], badge: e.target.value };
                           setDraft((d) => ({ ...d, touchpoints: arr }));
                         }}
-                        placeholder="Badge"
+                        placeholder={t("tone.badge")}
                         className="w-24 border border-outline-variant/15 rounded-lg px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                       />
                       <button
@@ -949,7 +951,7 @@ export default function ToneOfVoicePage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-mono text-red-500 block mb-1">Wrong example</label>
+                        <label className="text-xs font-mono text-red-500 block mb-1">{t("tone.wrongExample")}</label>
                         <textarea
                           value={tp.bad}
                           onChange={(e) => {
@@ -962,7 +964,7 @@ export default function ToneOfVoicePage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-mono text-green-600 block mb-1">Right example</label>
+                        <label className="text-xs font-mono text-green-600 block mb-1">{t("tone.rightExample")}</label>
                         <textarea
                           value={tp.good}
                           onChange={(e) => {
@@ -994,7 +996,7 @@ export default function ToneOfVoicePage() {
             {/* ---- Checklist ---- */}
             {editing === "checklist" && (
               <div className="space-y-3">
-                <label className="text-xs font-mono text-outline">One item per line</label>
+                <label className="text-xs font-mono text-outline">{t("tone.oneItemPerLine")}</label>
                 <textarea
                   value={(draft.checklist || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, checklist: e.target.value.split("\n") }))}
@@ -1011,7 +1013,7 @@ export default function ToneOfVoicePage() {
                 onClick={() => setEditing(null)}
                 className="px-4 py-2 text-sm text-outline hover:text-on-surface transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={() => {
@@ -1031,7 +1033,7 @@ export default function ToneOfVoicePage() {
                 disabled={saving}
                 className="px-5 py-2 bg-brand-orange text-white text-sm font-semibold rounded-xl hover:brightness-110 disabled:opacity-50 transition-colors"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? t("import.saving") : t("settings.save")}
               </button>
             </div>
           </div>

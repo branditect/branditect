@@ -7,6 +7,7 @@ import PasswordField from "./password-field";
 import SsoButtons from "./sso-buttons";
 import { AUTH_COPY, MIN_PASSWORD, looksLikeEmail, type AuthError } from "@/lib/auth-errors";
 import s from "./auth.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export interface AuthValues {
   email: string;
@@ -31,6 +32,7 @@ export default function AuthForm({
   error?: AuthError | null;
   pending?: boolean;
 }) {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -67,18 +69,18 @@ export default function AuthForm({
         <Logo height={32} />
       </div>
 
-      <h1 className={s.title}>{isSignup ? "Create your account" : "Welcome back 👋"}</h1>
+      <h1 className={s.title}>{isSignup ? t("auth.createAccount") : t("auth.welcomeBack")}</h1>
       <p className={s.sub}>
-        {isSignup ? "Start building your brand workspace" : "Log in to your brand workspace"}
+        {isSignup ? t("auth.startBuilding") : t("auth.logInToWorkspace")}
       </p>
 
       <SsoButtons emailFieldId="email" />
 
-      <div className={s.or}>or continue with email</div>
+      <div className={s.or}>{t("auth.orContinueEmail")}</div>
 
       <form onSubmit={handleSubmit} noValidate>
         <div className={s.field}>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t("auth.email")}</label>
           <div className={s.inp}>
             <input
               id="email"
@@ -87,7 +89,7 @@ export default function AuthForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
-              placeholder="name@company.com"
+              placeholder={t("auth.emailPlaceholder")}
               aria-describedby={fieldErrors.email ? "email-error" : undefined}
               aria-invalid={fieldErrors.email ? true : undefined}
             />
@@ -104,11 +106,11 @@ export default function AuthForm({
 
         <PasswordField
           id="password"
-          label="Password"
+          label={t("auth.password")}
           value={password}
           onChange={setPassword}
           autoComplete={isSignup ? "new-password" : "current-password"}
-          placeholder={isSignup ? `At least ${MIN_PASSWORD} characters` : "Enter your password"}
+          placeholder={isSignup ? t("auth.minChars", { MIN_PASSWORD }) : t("auth.enterPassword")}
           describedBy={fieldErrors.password ? "password-error" : undefined}
           invalid={Boolean(fieldErrors.password)}
         />
@@ -145,7 +147,7 @@ export default function AuthForm({
         )}
 
         <button className={s.submit} type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? (isSignup ? "Creating account…" : "Signing in…") : isSignup ? "Create account" : "Log in"}
+          {pending ? (isSignup ? t("auth.creatingAccount") : t("auth.signingIn")) : isSignup ? t("auth.createAccountBtn") : t("auth.logIn")}
           {!pending && (
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M13.06 4.4a1.3 1.3 0 0 0-1.84 1.84L16.98 12l-5.76 5.76a1.3 1.3 0 1 0 1.84 1.84l6.68-6.68a1.3 1.3 0 0 0 0-1.84z" />
@@ -156,9 +158,9 @@ export default function AuthForm({
 
       <p className={s.swap}>
         {isSignup ? (
-          <>Already have an account? <Link href="/login">Log in</Link></>
+          <>{t("auth.haveAccount")} <Link href="/login">{t("auth.logIn")}</Link></>
         ) : (
-          <>Don&apos;t have an account? <Link href="/signup">Create one</Link></>
+          <>{t("auth.noAccount")} <Link href="/signup">{t("auth.createOne")}</Link></>
         )}
       </p>
     </section>

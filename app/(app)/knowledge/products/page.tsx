@@ -17,12 +17,14 @@ import {
   type Product,
 } from "@/lib/products";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const PAGE_SIZE = 12;
 
 type SortKey = "margin" | "price" | "name";
 
 export default function ProductsPage() {
+  const t = useT();
   const { brandId } = useBrand();
 
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -154,7 +156,7 @@ export default function ProductsPage() {
       {removeError && (
         <div role="alert" className="fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 rounded-pill bg-[#a63232] px-5 py-3 text-sm font-semibold text-white shadow-float">
           {removeError}
-          <button type="button" onClick={() => setRemoveError(null)} className="ml-3 underline">Dismiss</button>
+          <button type="button" onClick={() => setRemoveError(null)} className="ml-3 underline">{t("common.dismiss")}</button>
         </div>
       )}
       {confirming && (
@@ -177,7 +179,7 @@ export default function ProductsPage() {
         <header className="flex flex-wrap items-start gap-3.5">
           <div>
             <h1 className="flex items-center gap-[9px] text-h2 font-bold">
-              Products
+              {t("nav.knowledge.products")}
               {!loading && (
                 <span className="rounded-pill bg-tint-1 px-2.5 py-[3px] text-xs font-bold tabular-nums text-accent">
                   {products?.length ?? 0}
@@ -185,7 +187,7 @@ export default function ProductsPage() {
               )}
             </h1>
             <p className="mt-1 text-sm font-normal text-muted-2">
-              Everything Branditect can write about, price, and photograph.
+              {t("products.intro")}
             </p>
           </div>
 
@@ -200,8 +202,8 @@ export default function ProductsPage() {
                   setQuery(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search products…"
-                aria-label="Search products"
+                placeholder={t("products.searchPlaceholder")}
+                aria-label={t("products.search")}
                 className="w-full border-0 bg-transparent p-0 text-sm text-ink placeholder:text-faint focus:outline-none"
               />
             </label>
@@ -209,23 +211,23 @@ export default function ProductsPage() {
               href="/knowledge/products/import"
               className="grid h-9 place-items-center rounded-tile border border-rule-2 px-3 text-sm font-semibold text-ink-2 hover:bg-tile"
             >
-              Import
+              {t("common.import")}
             </Link>
             <Link
               href="/knowledge/products/import"
               className="inline-flex h-9 items-center gap-[7px] rounded-tile bg-grad-mark px-[15px] text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)]"
             >
               <Icon name="plus" size={14} />
-              Add product
+              {t("products.add")}
             </Link>
           </div>
         </header>
 
-        {loading && <p className="mt-8 text-sm text-muted">Loading products…</p>}
+        {loading && <p className="mt-8 text-sm text-muted">{t("products.loading")}</p>}
 
         {isEmpty && (
           <div className="mt-8 rounded-card border border-rule bg-tile p-6">
-            <h2 className="text-h3 font-bold">No products yet</h2>
+            <h2 className="text-h3 font-bold">{t("products.none")}</h2>
             <p className="mt-2 max-w-[52ch] text-sm font-medium leading-[1.6] text-ink-2">
               Branditect can&apos;t write about products it doesn&apos;t know. Add your first, or
               import your catalogue.
@@ -235,13 +237,13 @@ export default function ProductsPage() {
                 href="/knowledge/products/import"
                 className="rounded-tile bg-grad-mark px-4 py-2.5 text-sm font-bold text-white"
               >
-                Add product
+                {t("products.add")}
               </Link>
               <Link
                 href="/knowledge/products/import"
                 className="rounded-tile border border-rule-2 bg-white px-4 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile"
               >
-                Import
+                {t("common.import")}
               </Link>
             </div>
           </div>
@@ -249,7 +251,7 @@ export default function ProductsPage() {
 
         {noResults && (
           <div className="mt-8 rounded-card border border-rule bg-tile p-6">
-            <h2 className="text-h3 font-bold">Nothing matches “{query}”</h2>
+            <h2 className="text-h3 font-bold">{t("notes.noMatch", { query })}</h2>
             <p className="mt-2 text-sm font-medium text-ink-2">
               {products?.length} products in the catalogue, none with that name, SKU or category.
             </p>
@@ -258,7 +260,7 @@ export default function ProductsPage() {
               onClick={() => setQuery("")}
               className="mt-4 rounded-tile border border-rule-2 bg-white px-4 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile"
             >
-              Clear search
+              {t("products.clearSearch")}
             </button>
           </div>
         )}
@@ -274,18 +276,18 @@ export default function ProductsPage() {
                   <tr>
                     <SortHeader label="Product" active={sort === "name"} dir={dir} onClick={() => toggleSort("name")} />
                     <th scope="col" className="border-b border-rule px-2.5 pb-2.5 text-left text-2xs font-bold tracking-[0.3px] text-muted-2">
-                      Category
+                      {t("common.category")}
                     </th>
                     <th scope="col" className="whitespace-nowrap border-b border-rule px-2.5 pb-2.5 text-right text-2xs font-bold tracking-[0.3px] text-muted-2">
-                      Stock
+                      {t("products.stock")}
                     </th>
                     <th scope="col" className="whitespace-nowrap border-b border-rule px-2.5 pb-2.5 text-right text-2xs font-bold tracking-[0.3px] text-muted-2">
-                      Cost
+                      {t("common.cost")}
                     </th>
                     <SortHeader label="Price" numeric active={sort === "price"} dir={dir} onClick={() => toggleSort("price")} />
                     <SortHeader label="Margin" numeric active={sort === "margin"} dir={dir} onClick={() => toggleSort("margin")} />
                     <th scope="col" className="border-b border-rule pb-2.5">
-                      <span className="sr-only">Open detail</span>
+                      <span className="sr-only">{t("products.openDetail")}</span>
                     </th>
                   </tr>
                 </thead>
@@ -381,7 +383,7 @@ export default function ProductsPage() {
                             </span>
                           ) : (
                             // A wrong margin is worse than a blank one.
-                            <span className="text-sm font-bold text-faint" title="No cost recorded, so no margin can be calculated">
+                            <span className="text-sm font-bold text-faint" title={t("products.noCost")}>
                               —
                             </span>
                           )}
@@ -424,10 +426,10 @@ export default function ProductsPage() {
               </p>
             )}
 
-            <nav className="mt-auto flex flex-wrap items-center gap-2.5 pt-4" aria-label="Pagination">
+            <nav className="mt-auto flex flex-wrap items-center gap-2.5 pt-4" aria-label={t("products.pagination")}>
               <button
                 type="button"
-                aria-label="Previous page"
+                aria-label={t("products.prevPage")}
                 disabled={current === 1}
                 onClick={() => setPage(current - 1)}
                 className="grid h-[30px] min-w-[30px] place-items-center rounded-lg text-muted hover:bg-tile disabled:opacity-40"
@@ -457,7 +459,7 @@ export default function ProductsPage() {
               </div>
               <button
                 type="button"
-                aria-label="Next page"
+                aria-label={t("products.nextPage")}
                 disabled={current === pageCount}
                 onClick={() => setPage(current + 1)}
                 className="grid h-[30px] min-w-[30px] place-items-center rounded-lg text-muted hover:bg-tile disabled:opacity-40"

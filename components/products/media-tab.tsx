@@ -7,6 +7,7 @@ import { docRoleLabel, fileSize, isVideo, UNTAG_NOTE } from "@/lib/product-attac
 import ProductPicker from "@/components/products/product-picker";
 import ImagePicker from "@/components/products/image-picker";
 import { authedFetch, authedJson } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 interface MediaImage {
   id: string; file_url: string; file_name: string;
@@ -48,6 +49,7 @@ export default function MediaTab({
   brandId: string;
   onCounts?: (c: { images: number; documents: number }) => void;
 }) {
+  const t = useT();
   const [images, setImages] = useState<MediaImage[] | null>(null);
   const [documents, setDocuments] = useState<MediaDoc[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +137,7 @@ export default function MediaTab({
 
       <section>
         <div className="flex items-baseline gap-2">
-          <h4 className="text-sm font-bold tracking-[-0.15px]">Images and video</h4>
+          <h4 className="text-sm font-bold tracking-[-0.15px]">{t("media.imagesAndVideo")}</h4>
           {!loading && (
             <span className="rounded-pill bg-tile px-2 py-0.5 text-micro font-bold tabular-nums text-muted">
               {images.length}
@@ -156,13 +158,13 @@ export default function MediaTab({
         </div>
 
         {loading ? (
-          <p className="mt-2 text-2xs font-medium text-muted">Loading…</p>
+          <p className="mt-2 text-2xs font-medium text-muted">{t("common.loading")}</p>
         ) : images.length === 0 ? (
           /* The empty state names the fix AND offers it. Naming an action
              with no control attached is worse than saying nothing, because
              the reader assumes they have missed a button. */
           <div className="mt-2 rounded-card border border-dashed border-rule-2 bg-tile px-3.5 py-4">
-            <p className="text-xs font-semibold text-ink-2">No images yet.</p>
+            <p className="text-xs font-semibold text-ink-2">{t("media.noImages")}</p>
             <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
               Tag images from your library, or generate some in Studio.
             </p>
@@ -197,7 +199,7 @@ export default function MediaTab({
                 </button>
                 {img.is_primary && (
                   <span className="pointer-events-none absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-[0.5px] text-white">
-                    Primary
+                    {t("media.primary")}
                   </span>
                 )}
                 {isVideo(img) && (
@@ -207,7 +209,7 @@ export default function MediaTab({
                 )}
                 <button
                   type="button"
-                  title="Tag this image to another product"
+                  title={t("media.tagToAnother")}
                   aria-label={`Tag ${img.file_name} to another product`}
                   onClick={() => setTagMoreFor(img.id)}
                   className="absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
@@ -232,7 +234,7 @@ export default function MediaTab({
 
       <section className="mt-[22px]">
         <div className="flex items-baseline gap-2">
-          <h4 className="text-sm font-bold tracking-[-0.15px]">Documents</h4>
+          <h4 className="text-sm font-bold tracking-[-0.15px]">{t("media.documents")}</h4>
           {!loading && (
             <span className="rounded-pill bg-tile px-2 py-0.5 text-micro font-bold tabular-nums text-muted">
               {documents.length}
@@ -242,7 +244,7 @@ export default function MediaTab({
 
         {loading ? null : documents.length === 0 ? (
           <div className="mt-2 rounded-card border border-dashed border-rule-2 bg-tile px-3.5 py-4">
-            <p className="text-xs font-semibold text-ink-2">No documents yet.</p>
+            <p className="text-xs font-semibold text-ink-2">{t("media.noDocuments")}</p>
             {/* It used to say "Tag a safety sheet, a spec or a certificate
                 from Knowledge ▸ Documents." Nothing in this app can do that:
                 no screen and no endpoint inserts into product_documents. An

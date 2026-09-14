@@ -9,6 +9,7 @@ import {
   grossMargin, groupTotal, toggleLine, visibleLines,
   type CustomLine, type LineGroup, type LineId, type Preset, type Values,
 } from "@/lib/pricing-lines";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const fieldClass =
   "w-full rounded-lg border border-rule-2 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-2 focus:border-accent-line focus:outline-none focus:ring-2 focus:ring-tint-1";
@@ -43,6 +44,7 @@ export default function PricingTab({
   onCustom: (next: CustomLine[]) => void;
   onNotes: (v: string) => void;
 }) {
+  const t = useT();
   const shown = useMemo(() => visibleLines(visible, track), [visible, track]);
   const [adding, setAdding] = useState<LineGroup | null>(null);
   const [newLabel, setNewLabel] = useState("");
@@ -71,7 +73,7 @@ export default function PricingTab({
       <section className="[&+&]:mt-[22px]">
         <div className="grid grid-cols-2 gap-2.5">
           <MarginCard
-            label="Gross margin" tone="good" money={money}
+            label={t("num.rec.grossMargin")} tone="good" money={money}
             result={gross}
             note="Net of tax, against cost of goods."
           />
@@ -92,7 +94,7 @@ export default function PricingTab({
       {/* ── which lines this product uses ── */}
       <section className="mt-[22px]">
         <div className="flex items-center gap-2">
-          <h4 className="text-sm font-bold tracking-[-0.15px]">Lines on this product</h4>
+          <h4 className="text-sm font-bold tracking-[-0.15px]">{t("pricing.linesOnProduct")}</h4>
           <div className="ml-auto flex gap-1">
             {(Object.keys(PRESETS) as Preset[]).map((p) => (
               <button
@@ -109,7 +111,7 @@ export default function PricingTab({
           </div>
         </div>
         <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-          Turning one off hides the row and stops it asking. The number you typed stays put.
+          {t("pricing.linesHelp")}
         </p>
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {LINES.map((l) => {
@@ -169,7 +171,7 @@ export default function PricingTab({
               ))}
               {g.id === "in" && (
                 <>
-                  <dt className="pt-1.5 text-xs font-medium text-muted">Net price</dt>
+                  <dt className="pt-1.5 text-xs font-medium text-muted">{t("pricing.netPrice")}</dt>
                   <dd className="m-0 pt-1.5 text-xs font-semibold tabular-nums text-ink-2">
                     {gross ? money(gross.cash + (cogs ?? 0)) : "—"}
                   </dd>
@@ -181,18 +183,18 @@ export default function PricingTab({
               <div className="mt-2.5 rounded-card border border-rule bg-tile p-2.5">
                 <div className="grid grid-cols-[minmax(0,1fr)_86px] gap-2">
                   <input autoFocus value={newLabel} onChange={(e) => setNewLabel(e.target.value)}
-                    placeholder="What is it called?" aria-label="Line name" className={fieldClass} />
+                    placeholder={t("pricing.whatIsItCalled")} aria-label={t("pricing.lineName")} className={fieldClass} />
                   <input value={newValue} onChange={(e) => setNewValue(e.target.value.replace(/[^0-9.,-]/g, ""))}
-                    placeholder="0.00" aria-label="Line value" inputMode="decimal"
+                    placeholder="0.00" aria-label={t("pricing.lineValue")} inputMode="decimal"
                     className={`${fieldClass} tabular-nums`} />
                 </div>
                 <div className="mt-2 flex gap-2">
                   <button type="button" onClick={() => addCustom(g.id)} disabled={!newLabel.trim()}
                     className="rounded-tile bg-grad-mark px-3 py-1.5 text-2xs font-bold text-white disabled:opacity-50">
-                    Add it
+                    {t("pricing.addIt")}
                   </button>
                   <button type="button" onClick={() => { setAdding(null); setNewLabel(""); setNewValue(""); }}
-                    className="text-2xs font-bold text-muted hover:text-ink-2">Cancel</button>
+                    className="text-2xs font-bold text-muted hover:text-ink-2">{t("common.cancel")}</button>
                 </div>
               </div>
             ) : (
@@ -207,16 +209,16 @@ export default function PricingTab({
 
       {/* ── notes: the same field as Description, because it is one ── */}
       <section className="mt-[22px]">
-        <h4 className="text-sm font-bold tracking-[-0.15px]">Notes</h4>
+        <h4 className="text-sm font-bold tracking-[-0.15px]">{t("pricing.notes")}</h4>
         <div className="mt-2 grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
           <label htmlFor="f-pricing-notes" className="pt-1.5 text-xs font-medium text-muted">
-            Pricing notes
+            {t("pricing.pricingNotes")}
           </label>
           <div>
             <textarea
               id="f-pricing-notes" rows={3} value={notes}
               onChange={(e) => onNotes(e.target.value)}
-              placeholder="never quote below 26.00 on the webshop, it undercuts our own resellers"
+              placeholder={t("pricing.notesPlaceholder")}
               className={`${fieldClass} resize-y leading-[1.5]`}
             />
             <p className="mt-1 text-2xs font-medium text-muted">
@@ -230,7 +232,7 @@ export default function PricingTab({
         <p className="text-xs font-medium leading-[1.6] text-muted">
           Floor price, maximum discount and minimum margin now live in{" "}
           <Link href="/numbers/pricing" className="font-semibold text-accent-dark underline underline-offset-2">
-            Numbers ▸ Pricing &amp; offers
+            {t("pricing.numbersLink")}
           </Link>
           . Same limits, same enforcement, the room this app keeps pricing rules in.
         </p>

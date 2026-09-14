@@ -31,6 +31,7 @@ import {
   type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 interface NoteRow {
   id: string;
@@ -44,6 +45,7 @@ interface NoteRow {
 const AUTOSAVE_MS = 900;
 
 export default function NotesPage() {
+  const t = useT();
   const { brandId, loading: brandLoading } = useBrand();
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export default function NotesPage() {
     if (!brandId || brandId === "default") { setLoading(false); return; }
     const res = await authedFetch("/api/notes");
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) { setError(json.error ?? "Could not load your notes."); setLoading(false); return; }
+    if (!res.ok) { setError(json.error ?? t("notes.couldNotLoad")); setLoading(false); return; }
     setNotes(json.notes ?? []);
     setLoading(false);
   }, [brandId]);
@@ -83,7 +85,7 @@ export default function NotesPage() {
     setSaving("idle");
     const res = await authedFetch(`/api/notes/blocks?note_id=${id}`);
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) { setError(json.error ?? "Could not open that note."); return; }
+    if (!res.ok) { setError(json.error ?? t("notes.couldNotOpen")); return; }
     setTitle(titleInputValue(json.note?.title));
     // A note always has somewhere to type. With the ＋ Paragraph button gone,
     // an empty note had no textarea at all and Return had nothing to fire in.
@@ -97,7 +99,7 @@ export default function NotesPage() {
         .from("brand_images").select("id, file_url").in("id", ids);
       // A failed lookup must not render as a missing image: that is criterion
       // 10's message, and it would be a lie here.
-      if (imgErr) setError("Some images could not be loaded.");
+      if (imgErr) setError(t("notes.someImagesFailed"));
       const map: Record<string, string> = {};
       for (const row of data ?? []) map[row.id as string] = row.file_url as string;
       setImageUrls(map);
@@ -133,7 +135,7 @@ export default function NotesPage() {
     if (!res.ok) {
       // A save that fails must say so. Silence here is how an afternoon's
       // writing is lost while the screen looks fine.
-      setError(json.error ?? "Not saved. Your changes are still on screen.");
+      setError(json.error ?? t("notes.notSaved"));
       setSaving("idle");
       return;
     }
@@ -252,7 +254,7 @@ export default function NotesPage() {
   async function newNote() {
     const res = await authedJson("/api/notes", "POST", {});
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) { setError(json.error ?? "Could not make a note."); return; }
+    if (!res.ok) { setError(json.error ?? t("notes.couldNotCreate")); return; }
     setNotes((prev) => [json.note, ...prev]);
     setTitle(titleInputValue(json.note.title));
     setBlocks([{ kind: "text", body: "", sort_order: 0 }]);
@@ -266,8 +268,8 @@ export default function NotesPage() {
     if (id === "image") return setPickerOpen(true);
     // PDF is step 6. Say so rather than doing nothing.
     setPending(id === "pdf"
-      ? "Download as PDF is built server-side, and is not wired up yet."
-      : "Nothing else lives here yet.");
+      ? t("notes.pdfNotWired")
+      : t("notes.nothingElseHere"));
     window.setTimeout(() => setPending(null), 2600);
   }
 
@@ -288,14 +290,14 @@ export default function NotesPage() {
       n.title.toLowerCase().includes(q) || (n.flat_text ?? "").toLowerCase().includes(q));
   }, [notes, query]);
 
-  const savedLabel = saving === "saving" ? "Saving…" : saving === "saved" ? SAVED_INDICATOR.label : "";
+  const savedLabel = saving === "saving" ? t("settings.saving") : saving === "saved" ? SAVED_INDICATOR.label : "";
 
   return (
     <div className={s.wrap}>
       <aside className={s.left}>
         <div className={s.leftHead}>
           <span className={s.count}>{notes.length} note{notes.length === 1 ? "" : "s"}</span>
-          <button type="button" className={s.new} onClick={newNote} aria-label="New note">
+          <button type="button" className={s.new} onClick={newNote} aria-label={t("notes.new")}>
             <Icon name="plus" size={14} />
           </button>
         </div>
@@ -307,12 +309,12 @@ export default function NotesPage() {
           aria-label="Search notes"
         />
         {loading ? (
-          <p className={s.note}>Loading…</p>
+          <p className={s.note}>{t("common.loading")}</p>
         ) : shown.length === 0 ? (
           <p className={s.note}>
             {notes.length === 0
-              ? "Nothing here yet. A note is a scratchpad — anything you write in one reaches AI Chat."
-              : `Nothing matches “${query}”.`}
+              ? t("notes.empty")
+              : t("notes.noMatch", { query })}
           </p>
         ) : (
           <div className={s.grid}>
@@ -325,9 +327,9 @@ export default function NotesPage() {
               >
                 <span className={s.cardTitle}>
                   {n.pinned && <Icon name="target" size={10} />}
-                  {n.title || "Untitled"}
+                  {n.title || t("notes.untitled")}
                 </span>
-                <span className={s.cardPreview}>{previewOf(n.flat_text) || "Empty"}</span>
+                <span className={s.cardPreview}>{previewOf(n.flat_text) || t("notes.emptyPreview")}</span>
                 <span className={s.cardDate}>
                   {new Date(n.updated_at).toLocaleDateString("en-GB",
                     { day: "numeric", month: "short" })}
@@ -340,10 +342,10 @@ export default function NotesPage() {
 
       <section className={s.right}>
         {!openId ? (
-          <p className={s.note}>Pick a note, or start one.</p>
+          <p className={s.note}>{t("notes.pickOne")}</p>
         ) : (
           <>
-            <div className={s.toolbar} role="toolbar" aria-label="Note">
+            <div className={s.toolbar} role="toolbar" aria-label={t("notes.note")}>
               {TOOLBAR.map((c, i) => (
                 <span key={c.id} className={s.tbSlot}>
                   {i === 1 && <span className={s.sep} aria-hidden="true" />}
@@ -371,8 +373,8 @@ export default function NotesPage() {
               className={s.title}
               value={title}
               onChange={(e) => editTitle(e.target.value)}
-              placeholder="Untitled"
-              aria-label="Note title"
+              placeholder={t("notes.untitled")}
+              aria-label={t("notes.title")}
             />
 
             <div
@@ -399,7 +401,7 @@ export default function NotesPage() {
                       ) : (
                         <>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={imageUrls[b.image_id ?? ""] ?? ""} alt={b.caption ?? "Image"} />
+                          <img src={imageUrls[b.image_id ?? ""] ?? ""} alt={b.caption ?? t("notes.image")} />
                           <button
                             type="button"
                             className={s.widthBtn}
@@ -414,8 +416,8 @@ export default function NotesPage() {
                         className={s.captionInput}
                         value={b.caption ?? ""}
                         onChange={(e) => editCaption(i, e.target.value)}
-                        placeholder="Caption"
-                        aria-label="Image caption"
+                        placeholder={t("notes.caption")}
+                        aria-label={t("notes.imageCaption")}
                       />
                     </figure>
                   ) : (
@@ -424,7 +426,7 @@ export default function NotesPage() {
                       className={`${s.block} ${b.kind === "heading" ? s.heading : ""} ${b.kind === "list" ? s.list : ""}`}
                       value={b.body ?? ""}
                       onChange={(e) => editBlock(i, e.target.value)}
-                      placeholder={b.kind === "heading" ? "Heading" : b.kind === "list" ? "One item per line" : "Write"}
+                      placeholder={b.kind === "heading" ? t("notes.heading") : b.kind === "list" ? t("tone.oneItemPerLine") : t("nav.studio.write")}
                       aria-label={`${b.kind} block`}
                       rows={b.kind === "heading" ? 1 : 3}
                       onKeyDown={(e) => onBlockKeyDown(e, i)}

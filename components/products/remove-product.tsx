@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Icon from "@/components/icon";
 import { confirmCopy } from "@/lib/product-delete";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * The confirm step before a product is removed.
@@ -20,6 +21,7 @@ export default function RemoveProductDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const t = useT();
   const copy = confirmCopy(name);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -55,7 +57,7 @@ export default function RemoveProductDialog({
             disabled={busy}
             className="rounded-tile border border-rule-2 bg-card px-5 py-2.5 text-sm font-bold text-ink-2 hover:border-accent-line"
           >
-            Keep it
+            {t("products.keepIt")}
           </button>
           <button
             type="button"
@@ -79,9 +81,10 @@ export function UndoBar({
   onUndo: () => void;
   onDismiss: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
-    const t = window.setTimeout(onDismiss, 12_000);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(onDismiss, 12_000);
+    return () => window.clearTimeout(timer);
   }, [onDismiss]);
 
   return (
@@ -97,7 +100,7 @@ export function UndoBar({
         onClick={onUndo}
         className="rounded-pill bg-white/15 px-3.5 py-1.5 text-xs font-bold hover:bg-white/25"
       >
-        Undo
+        {t("products.undo")}
       </button>
     </div>
   );

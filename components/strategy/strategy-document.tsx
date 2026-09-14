@@ -9,6 +9,7 @@ import {
 } from "@/lib/strategy";
 import { I, Ico } from "./icons";
 import s from "./strategy.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * The strategy as a document that happens to be editable — not a form.
@@ -16,13 +17,14 @@ import s from "./strategy.module.css";
  */
 
 function SecHead({ def, onEdit }: { def: SectionDef; onEdit: (id: string) => void }) {
+  const t = useT();
   return (
     <div className={s.sechead}>
       <span className={s.secno}>{def.no}</span>
       <h2>{def.title}</h2>
       <span className={s.why}>{def.why}</span>
       <button type="button" className={s.edit} onClick={() => onEdit(def.id)}>
-        <Ico d={I.pen} size={13} /> Edit
+        <Ico d={I.pen} size={13} /> {t("common.edit")}
       </button>
     </div>
   );
@@ -60,6 +62,7 @@ export default function StrategyDocument({
   onExport: () => void;
   onRegenerate: () => void;
 }) {
+  const t = useT();
   const [activeSeg, setActiveSeg] = useState(0);
   const c = completeness(strategy);
   const pyr = derivePyramid(strategy);
@@ -82,7 +85,7 @@ export default function StrategyDocument({
       <section className={s.hero}>
         <span className={s.arc} aria-hidden="true" />
         <div>
-          <div className={s.kicker}>Brand strategy</div>
+          <div className={s.kicker}>{t("sdoc.title")}</div>
           {/* The difference statement headlines, not the page title — it is what
               a new team member needs and what the AI cites most. */}
           {/* Capped rather than shrunk — the remainder moves into the sub. */}
@@ -98,7 +101,7 @@ export default function StrategyDocument({
             <span className={s.chip}><Ico d={I.clock} size={12} /> Updated {updated}</span>
             {/* Counts sections. Never a percentage, and unrelated to Brand Readiness. */}
             <span className={s.chip}><Ico d={I.check} size={12} /> {c.label}</span>
-            <span className={s.chip}><Ico d={I.brain} size={12} /> Feeding 4 tools</span>
+            <span className={s.chip}><Ico d={I.brain} size={12} /> {t("sdoc.feeding")}</span>
           </div>
 
           <div className={s.hbtns}>
@@ -107,7 +110,7 @@ export default function StrategyDocument({
               {firstGap ? `Finish: ${firstGap.title}` : "Edit strategy"}
             </button>
             <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={onExport}>
-              <Ico d={I.dl} size={15} /> Export
+              <Ico d={I.dl} size={15} /> {t("sdoc.export")}
             </button>
           </div>
         </div>
@@ -129,7 +132,7 @@ export default function StrategyDocument({
                 </div>
               ))}
           </div>
-          <div className={s.pyrcap}>Derived from your positioning and proof points</div>
+          <div className={s.pyrcap}>{t("sdoc.derived")}</div>
         </div>
       </section>
 
@@ -137,15 +140,15 @@ export default function StrategyDocument({
       {summary.length > 0 && (
         <section className={s.summary}>
           <div className={s.summaryLab}>
-            <Ico d={I.spark} size={14} /> The whole strategy, in a paragraph
+            <Ico d={I.spark} size={14} /> {t("sdoc.inAParagraph")}
             <button type="button" onClick={onRegenerate}>
-              <Ico d={I.spark} size={12} /> Regenerate
+              <Ico d={I.spark} size={12} /> {t("common.regenerate")}
             </button>
           </div>
           <p>{summary.map((p, i) => (p.strong ? <b key={i}>{p.text}</b> : <span key={i}>{p.text}</span>))}</p>
           <div className={s.summaryFoot}>
             <Ico d={I.brain} size={13} />
-            Generated from the sections below and never stored, so it cannot go stale.
+            {t("sdoc.neverStored")}
           </div>
         </section>
       )}
@@ -184,7 +187,7 @@ export default function StrategyDocument({
           </div>
           <div className={s.diff}>
             <div>
-              <div className="k">What makes us different</div>
+              <div className="k">{t("sdoc.different")}</div>
               <div className="v">{strategy.positioning.difference || "Not defined yet"}</div>
             </div>
           </div>
@@ -192,7 +195,7 @@ export default function StrategyDocument({
           <div className={s.notfor}>
             <Ico d={I.ban} size={16} />
             <div>
-              <div className="k">Not for</div>
+              <div className="k">{t("sdoc.notFor")}</div>
               <div className="v">
                 {strategy.positioning.notFor ||
                   "Nobody excluded yet — a positioning that excludes nobody will drift the first time someone chases a cheaper segment."}
@@ -235,11 +238,11 @@ export default function StrategyDocument({
                   </div>
                   <div className={s.wf}>
                     <div>
-                      <div className="k">They want</div>
+                      <div className="k">{t("sdoc.theyWant")}</div>
                       <div className="v">{seg.wants || "—"}</div>
                     </div>
                     <div>
-                      <div className={`k ${s.kb}`}>Frustrated by</div>
+                      <div className={`k ${s.kb}`}>{t("sdoc.frustratedBy")}</div>
                       <div className="v">{seg.frustratedBy || "—"}</div>
                     </div>
                   </div>
@@ -284,10 +287,10 @@ export default function StrategyDocument({
               )}
               {showMap && <div className={s.map}>
                 <span className={`${s.ax} ${s.axv}`} /><span className={`${s.ax} ${s.axh}`} />
-                <span className={`${s.lb} ${s.lt}`}>Professional</span>
-                <span className={`${s.lb} ${s.lbm}`}>Consumer</span>
-                <span className={`${s.lb} ${s.ll}`}>Accessible</span>
-                <span className={`${s.lb} ${s.lr}`}>Premium</span>
+                <span className={`${s.lb} ${s.lt}`}>{t("sdoc.professional")}</span>
+                <span className={`${s.lb} ${s.lbm}`}>{t("sdoc.consumer")}</span>
+                <span className={`${s.lb} ${s.ll}`}>{t("sdoc.accessible")}</span>
+                <span className={`${s.lb} ${s.lr}`}>{t("sdoc.premium")}</span>
                 {strategy.competitors.map((k, i) => (
                   <span key={k.name + i}
                     className={`${s.dot} ${k.isUs ? s.dotUs : ""}`}
@@ -321,13 +324,13 @@ export default function StrategyDocument({
                 <div className="t">{p.title}</div>
                 <div className="v">{p.body}</div>
                 <div className={s.proof}>
-                  <div className={s.proofk}>Proof</div>
+                  <div className={s.proofk}>{t("sdoc.proof")}</div>
                   {p.proof ? (
                     <div className={s.proofv}><Ico d={I.check} size={13} />{p.proof}</div>
                   ) : (
                     /* Surfaced, not hidden — copy from adjectives reads like everyone else's. */
                     <div className={`${s.proofv} ${s.proofMissing}`}>
-                      <Ico d={I.ban} size={13} />No proof yet — add a fact with a number in it
+                      <Ico d={I.ban} size={13} />{t("sdoc.noProof")}
                     </div>
                   )}
                 </div>
@@ -376,9 +379,9 @@ export default function StrategyDocument({
         <div className={`${s.panel} ${s.bnd}`}>
           <div className={s.grid2}>
             <div className={`${s.bcol} ${s.bcolNo}`}>
-              <div className="k"><Ico d={I.x} size={14} /> We never</div>
+              <div className="k"><Ico d={I.x} size={14} /> {t("sdoc.weNever")}</div>
               {strategy.boundaries.never.length === 0 ? (
-                <ul><li><span>—</span>Nothing named yet. A model avoids a named mistake far better than it infers taste.</li></ul>
+                <ul><li><span>—</span>{t("sdoc.nothingNamedHelp")}</li></ul>
               ) : (
                 <ul>{strategy.boundaries.never.map((n, i) => (
                   <li key={i}><span>✕</span><span style={{ fontWeight: 500 }}>{n.rule}
@@ -387,9 +390,9 @@ export default function StrategyDocument({
               )}
             </div>
             <div className={`${s.bcol} ${s.bcolYes}`}>
-              <div className="k"><Ico d={I.check} size={14} /> We always</div>
+              <div className="k"><Ico d={I.check} size={14} /> {t("sdoc.weAlways")}</div>
               {strategy.boundaries.always.length === 0 ? (
-                <ul><li><span>—</span>Nothing named yet.</li></ul>
+                <ul><li><span>—</span>{t("sdoc.nothingNamed")}</li></ul>
               ) : (
                 <ul>{strategy.boundaries.always.map((a, i) => (
                   <li key={i}><span>✓</span><span style={{ fontWeight: 500 }}>{a}</span></li>
@@ -413,7 +416,7 @@ export default function StrategyDocument({
             <div className={s.goal}>
               <span className={s.gico}><Ico d={I.flag} size={22} /></span>
               <div>
-                <div className="k">Brand goal</div>
+                <div className="k">{t("sdoc.brandGoal")}</div>
                 <div className="v">{strategy.focus.goal}</div>
               </div>
             </div>
@@ -432,16 +435,16 @@ export default function StrategyDocument({
 
       {/* ============ WHERE THIS GOES NEXT ============ */}
       <section className={s.sec}>
-        <div className={s.sechead}><h2>Where this goes next</h2></div>
+        <div className={s.sechead}><h2>{t("sdoc.whereNext")}</h2></div>
         <div className={s.next}>
-          {([["Tone of voice", "How this strategy sounds", "/brand/tone-of-voice", s.n1, I.chat],
-             ["Visual identity", "How it looks", "/brand/visual-identity", s.n2, I.img],
-             ["Products", "What it is applied to", "/knowledge/products", s.n3, I.bag]] as const).map(
-            ([t, v, href, cls, icon]) => (
+          {([["nav.brand.tone", "How this strategy sounds", "/brand/tone-of-voice", s.n1, I.chat],
+             ["nav.brand.visual", "How it looks", "/brand/visual-identity", s.n2, I.img],
+             ["nav.knowledge.products", "What it is applied to", "/knowledge/products", s.n3, I.bag]] as const).map(
+            ([titleKey, v, href, cls, icon]) => (
               <Link key={href} href={href} className={s.ncard}>
                 <span className={`${s.nico} ${cls}`}><Ico d={icon} size={19} /></span>
                 <div>
-                  <div className="t">{t}</div>
+                  <div className="t">{t(titleKey)}</div>
                   <div className="v">{v}</div>
                 </div>
                 <span className="ar"><Ico d={I.arr} size={16} /></span>
@@ -452,7 +455,7 @@ export default function StrategyDocument({
         <div className={s.usedby}>
           <span className={s.usedbyIc}><Ico d={I.brain} size={19} /></span>
           <div>
-            <div className="t">Where Branditect uses this</div>
+            <div className="t">{t("sdoc.whereUsed")}</div>
             <div className="v">
               Studio ▸ Write cites your proof points and obeys the boundaries. Create images reads
               the positioning. AI Chat answers from all of it. The more of this page is filled in,

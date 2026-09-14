@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/logo'
+import { useT } from '@/lib/i18n/use-t.tsx'
+import type { StringKey } from '@/lib/i18n/index.ts'
 
 const C = {
   or: '#a63300', orl: '#fff0e6', blk: '#2b2f31', sec: '#5a6062', mu: '#767c7e',
@@ -10,30 +12,31 @@ const C = {
 }
 
 // Define \u2192 Feed \u2192 Make. Every step names a surface that exists in the nav.
-const STEPS = [
+const STEPS: { title: StringKey; desc: StringKey; href: string }[] = [
   {
-    title: 'Step 1: Brand',
-    desc: 'Answer the strategy questionnaire and set your tone of voice.',
+    title: 'welcome.step1',
+    desc: 'welcome.step1Body',
     href: '/start',
   },
   {
-    title: 'Step 2: Knowledge',
-    desc: 'Upload the documents, images and links your brand should know.',
+    title: 'welcome.step2',
+    desc: 'welcome.step2Body',
     href: '/knowledge/documents',
   },
   {
-    title: 'Step 3: Studio',
-    desc: 'Write copy and create images from everything you just fed it.',
+    title: 'welcome.step3',
+    desc: 'welcome.step3Body',
     href: '/studio/write',
   },
   {
-    title: 'Step 4: Numbers',
-    desc: 'Add costs and pricing so Studio never writes past your margins.',
+    title: 'welcome.step4',
+    desc: 'welcome.step4Body',
     href: '/numbers',
   },
 ]
 
 export default function WelcomeModal() {
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -65,17 +68,17 @@ export default function WelcomeModal() {
 
             {/* Headline */}
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 800, color: C.blk, lineHeight: 1.15, marginBottom: 16 }}>
-              Welcome to your workspace
+              {t('welcome.title')}
             </h1>
             <p style={{ fontSize: 16, color: C.sec, lineHeight: 1.6 }}>
-              Your brand&apos;s brain is ready to be trained.
+              {t('welcome.subtitle')}
             </p>
           </div>
 
           {/* Quote */}
           <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${C.bd}` }}>
             <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, color: C.or, fontStyle: 'italic', fontSize: 17, lineHeight: 1.5 }}>
-              &ldquo;They have a marketing team. You have Branditect.&rdquo;
+              {t('welcome.quote')}
             </p>
           </div>
         </div>
@@ -84,9 +87,9 @@ export default function WelcomeModal() {
         <div style={{ width: '60%', padding: '48px', overflowY: 'auto' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Getting Started</h2>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 11, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{t('welcome.gettingStarted')}</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: C.mu }}>4 steps</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.mu }}>{t('welcome.fourSteps')}</span>
               <div style={{ width: 80, height: 5, background: C.bd, borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{ width: '0%', height: '100%', background: C.or, borderRadius: 99 }} />
               </div>
@@ -106,8 +109,8 @@ export default function WelcomeModal() {
               >
                 <div style={{ marginTop: 2, width: 22, height: 22, border: `2px solid ${C.bd}`, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} />
                 <div>
-                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: C.blk, marginBottom: 4 }}>{step.title}</h3>
-                  <p style={{ fontSize: 13, color: C.sec, lineHeight: 1.5 }}>{step.desc}</p>
+                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 16, color: C.blk, marginBottom: 4 }}>{t(step.title)}</h3>
+                  <p style={{ fontSize: 13, color: C.sec, lineHeight: 1.5 }}>{t(step.desc)}</p>
                 </div>
               </Link>
             ))}
@@ -121,21 +124,21 @@ export default function WelcomeModal() {
                 onClick={() => dismiss()}
                 style={{ background: `linear-gradient(135deg, #a63300, #ff7949)`, color: 'white', padding: '14px 32px', borderRadius: 10, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '0.02em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: `0 4px 16px ${C.or}30` }}
               >
-                Enter workspace
+                {t('welcome.enter')}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </Link>
               <button
                 onClick={() => dismiss()}
                 style={{ background: 'transparent', color: C.sec, padding: '14px 24px', borderRadius: 10, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: 14, border: 'none', cursor: 'pointer' }}
               >
-                Explore first
+                {t('welcome.exploreFirst')}
               </button>
             </div>
             <button
               onClick={() => dismiss()}
               style={{ background: 'none', border: 'none', color: C.mu, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", padding: '4px 0', textAlign: 'left', width: 'fit-content' }}
             >
-              Don&apos;t show this to me anymore
+              {t('welcome.dontShowAgain')}
             </button>
           </div>
         </div>

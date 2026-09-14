@@ -1,17 +1,23 @@
 "use client";
 
 import { useBrand } from "@/lib/useBrand";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
-const basesTemplate = [
+// `title` stays English: it is the React key. `titleKey` is what renders,
+// where a key exists.
+const basesTemplate: { icon: string; title: string; titleKey?: StringKey; descTemplate: (name: string) => string; progress: number }[] = [
   {
     icon: "☰",
     title: "Brand Strategy",
+    titleKey: "channels.brandStrategy",
     descTemplate: (name: string) => `Define ${name}'s purpose, positioning, values, and competitive landscape`,
     progress: 100,
   },
   {
     icon: "◷",
     title: "Tone of Voice",
+    titleKey: "channels.toneOfVoice",
     descTemplate: (name: string) => `Establish how ${name} communicates — the BrandTone™ Architect output`,
     progress: 100,
   },
@@ -30,6 +36,7 @@ const basesTemplate = [
 ];
 
 export default function BrandBasesPage() {
+  const t = useT();
   const { brandName } = useBrand();
 
   const bases = basesTemplate.map((b) => ({
@@ -61,7 +68,7 @@ export default function BrandBasesPage() {
             <div className="w-8 h-8 bg-brand-orange-pale rounded-md flex items-center justify-center text-[0.9rem] mb-3">
               {base.icon}
             </div>
-            <div className="font-semibold text-[0.95rem] text-ink mb-1">{base.title}</div>
+            <div className="font-semibold text-[0.95rem] text-ink mb-1">{base.titleKey ? t(base.titleKey) : base.title}</div>
             <div className="text-[0.73rem] text-muted leading-relaxed mb-3.5">{base.desc}</div>
             <div className="flex items-center justify-between">
               <span className="font-mono text-[0.58rem] text-muted">Progress</span>

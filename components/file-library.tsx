@@ -6,6 +6,7 @@ import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
 import { storagePathFromUrl } from "@/lib/storage-paths";
 import { signedUrls } from "@/lib/signed-url";
 import { summariseUpload, anyLanded, type UploadFailure } from "@/lib/upload-report";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 interface FileItem {
   id: string;
@@ -31,6 +32,7 @@ interface FileLibraryProps {
 const DEFAULT_BRAND_ID = "default";
 
 export default function FileLibrary({ category, accept, acceptLabel, maxSize, icon, emptyMessage, previewType, brandId = DEFAULT_BRAND_ID }: FileLibraryProps & { brandId?: string }) {
+  const t = useT();
   const BRAND_ID = brandId;
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
 
   const saveEditTags = useCallback(async () => {
     if (!editingId) return;
-    const tags = editTags.split(",").map((t) => t.trim()).filter(Boolean);
+    const tags = editTags.split(",").map((tag) => tag.trim()).filter(Boolean);
     await supabase.from("brand_images").update({ tags }).eq("id", editingId);
     setFiles((prev) => prev.map((f) => (f.id === editingId ? { ...f, tags } : f)));
     setEditingId(null);
@@ -188,7 +190,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
   const filtered = files.filter((f) => {
     if (!filterText) return true;
     const q = filterText.toLowerCase();
-    return f.file_name.toLowerCase().includes(q) || (f.tags || []).some((t) => t.toLowerCase().includes(q));
+    return f.file_name.toLowerCase().includes(q) || (f.tags || []).some((tag) => tag.toLowerCase().includes(q));
   });
 
   return (
@@ -205,7 +207,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
           <button
             type="button"
             onClick={() => setUploadError(null)}
-            aria-label="Dismiss"
+            aria-label={t("common.dismiss")}
             className="font-bold text-red-400 hover:text-red-700 leading-none"
           >
             ×
@@ -218,7 +220,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
         <input
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          placeholder="Search by name or tag..."
+          placeholder={t("files.searchPlaceholder")}
           className="w-full max-w-xs px-3 py-1.5 text-[0.78rem] border border-light rounded-md outline-none focus:border-brand-orange bg-white text-ink placeholder:text-muted"
         />
       </div>
@@ -237,12 +239,12 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
         {uploading ? (
           <div className="flex items-center gap-3">
             <div className="h-5 w-5 rounded-full border-2 border-brand-orange border-t-transparent animate-spin" />
-            <span className="font-mono text-[0.65rem] text-muted">Uploading...</span>
+            <span className="font-mono text-[0.65rem] text-muted">{t("files.uploading")}</span>
           </div>
         ) : (
           <>
             <span className="text-lg mb-2 text-muted">{icon}</span>
-            <span className="font-mono text-[0.65rem] tracking-wide uppercase text-muted">Drop files here or click to browse</span>
+            <span className="font-mono text-[0.65rem] tracking-wide uppercase text-muted">{t("files.drop")}</span>
             <span className="font-mono text-[0.5rem] text-muted/60 mt-1">{acceptLabel} · Max {maxSize}MB</span>
           </>
         )}
@@ -252,19 +254,19 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
       {editingId && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={() => setEditingId(null)}>
           <div className="bg-white rounded-lg p-5 w-[340px] shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="text-[0.82rem] font-semibold text-ink mb-1">Edit tags</div>
-            <div className="text-[0.7rem] text-muted mb-3">Comma-separated. e.g. campaign, hero, streamerx</div>
+            <div className="text-[0.82rem] font-semibold text-ink mb-1">{t("files.editTags")}</div>
+            <div className="text-[0.7rem] text-muted mb-3">{t("files.tagsHelp")}</div>
             <input
               autoFocus
               value={editTags}
               onChange={(e) => setEditTags(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") saveEditTags(); }}
               className="w-full px-3 py-2 text-[0.78rem] border border-light rounded-md outline-none focus:border-brand-orange text-ink mb-3"
-              placeholder="tag1, tag2, tag3"
+              placeholder={t("files.tagsPlaceholder")}
             />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-[0.72rem] border border-light rounded-md text-muted hover:text-ink">Cancel</button>
-              <button onClick={saveEditTags} className="px-3 py-1.5 text-[0.72rem] bg-brand-orange text-white rounded-md font-medium">Save</button>
+              <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-[0.72rem] border border-light rounded-md text-muted hover:text-ink">{t("common.cancel")}</button>
+              <button onClick={saveEditTags} className="px-3 py-1.5 text-[0.72rem] bg-brand-orange text-white rounded-md font-medium">{t("files.save")}</button>
             </div>
           </div>
         </div>
@@ -312,16 +314,16 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
                     <div className="flex gap-1.5 flex-wrap justify-center">
                       <a href={srcOf(item)} download={item.file_name} onClick={e => e.stopPropagation()} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline">
-                        Download
+                        {t("common.download")}
                       </a>
                       <button onClick={() => copyUrl(srcOf(item))} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
-                        {copiedUrl === srcOf(item) ? "Copied" : "Copy URL"}
+                        {copiedUrl === srcOf(item) ? "Copied" : t("files.copyUrl")}
                       </button>
                       <button onClick={() => startEditTags(item)} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
-                        Edit tags
+                        {t("files.editTags")}
                       </button>
                       <button onClick={() => deleteFile(item)} className="px-2 py-1 rounded bg-red-500/60 text-white font-mono text-[0.5rem] uppercase hover:bg-red-500/80">
-                        Delete
+                        {t("common.delete")}
                       </button>
                     </div>
                   </div>
@@ -373,8 +375,8 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
             )}
             <div className="mt-3 flex items-center gap-3">
               <span className="text-white text-sm">{previewItem.file_name}</span>
-              <a href={srcOf(previewItem)} download={previewItem.file_name} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline">Download</a>
-              <button onClick={() => { navigator.clipboard.writeText(srcOf(previewItem)); }} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30">Copy URL</button>
+              <a href={srcOf(previewItem)} download={previewItem.file_name} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline">{t("common.download")}</a>
+              <button onClick={() => { navigator.clipboard.writeText(srcOf(previewItem)); }} className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30">{t("files.copyUrl")}</button>
             </div>
             <button onClick={() => setPreviewItem(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center text-lg hover:bg-black/70">&times;</button>
           </div>

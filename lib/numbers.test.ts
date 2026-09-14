@@ -192,3 +192,17 @@ describe("priceForMargin", () => {
     assert.equal(priceForMargin({ variableCost: 22.1, taxRatePct: 20, targetMarginPct: 100 }), null);
   });
 });
+
+describe("cost lines render from keys and stay English underneath", () => {
+  it("every line with a key names one whose English is the label", async () => {
+    const { en } = await import("./i18n/en.ts");
+    const all = [
+      ...costLines({ sells: "physical", charges: "recurring", channels: ["direct", "trade", "store"] }),
+      ...costLines({ sells: "digital", charges: "recurring", channels: ["direct", "trade", "store"] }),
+    ];
+    for (const l of all) {
+      if (l.labelKey) assert.equal(en[l.labelKey], l.label, `${l.label} renders a key with other words`);
+    }
+    assert.ok(all.filter((l) => l.labelKey).length >= 14);
+  });
+});

@@ -11,6 +11,7 @@ import {
   totalRunningCosts, unitNoun, type BusinessProfile, type RunningCosts,
 } from "@/lib/numbers";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const toNum = (s: string): number | null => {
   const t = s.trim().replace(",", ".");
@@ -21,6 +22,7 @@ const toNum = (s: string): number | null => {
 const str = (n: number | null | undefined) => (n == null ? "" : String(n));
 
 export default function RunningCostsPage() {
+  const t = useT();
   const { brandId } = useBrand();
   const [costs, setCosts] = useState<Record<keyof RunningCosts, string>>({
     rent: "", salaries: "", software: "", marketing: "", other: "",
@@ -107,10 +109,10 @@ export default function RunningCostsPage() {
         body: JSON.stringify({ brand_id: brandId, runningCosts: parsed, expectedVolume: vol }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Could not save");
+      if (!res.ok) throw new Error(body.error || t("num.run.couldNotSave"));
       setSaved(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save");
+      setError(e instanceof Error ? e.message : t("num.run.couldNotSave"));
     } finally {
       setSaving(false);
     }
@@ -123,25 +125,23 @@ export default function RunningCostsPage() {
       <header className="flex items-start gap-4">
         <div>
           <Link href="/numbers" className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold text-accent">
-            <Icon name="chevronLeft" size={11} /> Numbers
+            <Icon name="chevronLeft" size={11} /> {t("numbers.title")}
           </Link>
-          <h1 className="text-display font-bold leading-[1.15]">Running costs &amp; break-even</h1>
+          <h1 className="text-display font-bold leading-[1.15]">{t("numbers.runningCostsAndBreakEven")}</h1>
           <p className="mt-[3px] text-base font-normal text-muted-2">
-            Monthly totals, not receipts. Shared across every product — rent is not a property of a
-            hair dryer.
+            {t("num.run.monthlyTotals")}
           </p>
         </div>
         <span className="ml-auto shrink-0 rounded-pill bg-green-wash px-2.5 py-1 text-micro font-bold uppercase tracking-[0.7px] text-green-ink">
-          Per month
+          {t("common.perMonth")}
         </span>
       </header>
 
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-3 stack:grid-cols-1">
         <section className="rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel">
-          <h2 className="text-h3 font-bold">Your monthly costs</h2>
+          <h2 className="text-h3 font-bold">{t("numbers.yourMonthlyCosts")}</h2>
           <p className="mt-1 text-xs font-medium text-muted">
-            One figure per line. Leave a line blank if it doesn&apos;t apply — blank and zero mean
-            different things here.
+            {t("num.run.onePerLine")}
           </p>
           <div className="mt-3.5 flex flex-col gap-2.5">
             {RUNNING_COST_LINES.map((l) => (
@@ -160,14 +160,14 @@ export default function RunningCostsPage() {
               </label>
             ))}
             <div className="mt-1 flex items-center gap-2 border-t border-rule pt-3 text-sm font-bold">
-              Total
+              {t("numbers.total")}
               <b className="ml-auto tabular-nums">
                 {noCosts ? "—" : `${formatMoney(opEx, currency)} / mo`}
               </b>
             </div>
           </div>
 
-          <h2 className="mt-6 text-h3 font-bold">Expected volume</h2>
+          <h2 className="mt-6 text-h3 font-bold">{t("numbers.expectedVolume")}</h2>
           <p className="mt-1 text-xs font-medium text-muted">
             Roughly how many {unitNoun(profile)} you sell in a month. This is the second half of the
             floor price test — without it the floor only checks your margin.
@@ -193,28 +193,26 @@ export default function RunningCostsPage() {
 
           <button type="button" onClick={save} disabled={saving}
             className="mt-4 w-full rounded-tile bg-grad-mark px-4 py-2.5 text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)] disabled:opacity-60">
-            {saving ? "Saving…" : saved ? "Saved" : "Save running costs"}
+            {saving ? t("settings.saving") : saved ? t("common.saved") : t("num.run.save")}
           </button>
           <p className="mt-2 text-2xs font-medium leading-[1.5] text-muted">
-            Saved on the business, not on a product. Nothing here changes what Studio is allowed to
-            write — guardrails live on each product card.
+            {t("num.run.onBusiness")}
           </p>
         </section>
 
         <section className="rounded-panel border border-rule bg-card p-[18px] drop-shadow-panel">
-          <h2 className="text-h3 font-bold">What that means</h2>
+          <h2 className="text-h3 font-bold">{t("numbers.whatThatMeans")}</h2>
 
           {products.length === 0 ? (
             <p className="mt-2 text-xs font-medium leading-[1.6] text-muted">
-              No products yet, so there is no contribution to divide the overhead by. Your total
-              above is still saved and will apply the moment you add one.
+              {t("num.run.noProductsYet")}
             </p>
           ) : (
             <>
               <label className="mt-3 block">
-                <span className="text-2xs font-bold uppercase tracking-[0.7px] text-muted">Against which product</span>
+                <span className="text-2xs font-bold uppercase tracking-[0.7px] text-muted">{t("numbers.againstWhichProduct")}</span>
                 <select value={productId} onChange={(e) => setProductId(e.target.value)} className={`${field} mt-1.5`}>
-                  <option value="">Select a product…</option>
+                  <option value="">{t("numbers.selectProduct")}</option>
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -231,27 +229,26 @@ export default function RunningCostsPage() {
               {contrib != null && (
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-ink-2">
-                    Contribution per sale
+                    {t("numbers.contributionPerSale")}
                     <b className="ml-auto tabular-nums">{formatMoney(contrib, currency)}</b>
                   </div>
 
                   <div className="rounded-tile bg-tile px-3 py-2.5">
-                    <div className="text-micro font-bold uppercase tracking-[0.7px] text-muted">Break-even</div>
+                    <div className="text-micro font-bold uppercase tracking-[0.7px] text-muted">{t("numbers.breakEven")}</div>
                     {noCosts ? (
                       <>
                         <div className="text-[22px] font-bold tracking-[-0.5px] text-faint">—</div>
                         <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-                          Enter your running costs on the left.
+                          {t("numbers.enterCosts")}
                         </p>
                       </>
                     ) : be === Infinity ? (
                       <>
                         <div className="text-[22px] font-bold tracking-[-0.5px] text-accent">
-                          Never at this price
+                          {t("numbers.neverAtThisPrice")}
                         </div>
                         <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-                          Each sale loses money, so no volume covers the overhead. Fix the price or
-                          the cost before worrying about break-even.
+                          {t("num.run.eachSaleLoses")}
                         </p>
                       </>
                     ) : (
@@ -284,15 +281,15 @@ export default function RunningCostsPage() {
                       </div>
                       <p className="mt-1 text-2xs font-medium leading-[1.5] text-accent-dark">
                         {basis === "margin"
-                          ? `Set by your ${selected!.minMarginPct}% minimum margin — that test binds above the overhead one at this volume.`
-                          : "Set by covering overhead at your expected volume, which binds above your minimum margin. Without running costs this would read lower and be only half a floor."}
+                          ? t("num.run.setByMinMargin", { minMarginPct: String(selected!.minMarginPct) })
+                          : t("num.run.setByOverhead")}
                       </p>
                       <Link href={`/knowledge/products?product=${selected!.id}`}
                         className="mt-2.5 block rounded-lg bg-grad-mark px-3 py-2 text-center text-2xs font-bold text-white">
                         Apply to {selected!.name} →
                       </Link>
                       <p className="mt-1.5 text-micro font-medium leading-[1.5] text-accent-dark/80">
-                        Opens the product card. Nothing is saved until you press save there.
+                        {t("numbers.opensProductCard")}
                       </p>
                     </div>
                   )}
@@ -309,10 +306,8 @@ export default function RunningCostsPage() {
           )}
 
           <p className="mt-4 border-t border-rule pt-3 text-2xs font-medium leading-[1.6] text-muted">
-            Overhead is deliberately <b className="text-ink-2">not</b> divided across units. A
-            &ldquo;fully loaded&rdquo; unit cost makes every product&apos;s margin depend on how many
-            of everything else sold. Contribution plus break-even says the same thing without
-            moving whenever an unrelated product has a good month.
+            {t("numbers.overheadDeliberately")} <b className="text-ink-2">not</b>{" "}
+            {t("num.run.notFullyLoaded")}
           </p>
         </section>
       </div>

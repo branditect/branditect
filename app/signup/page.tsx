@@ -9,8 +9,10 @@ import { mapAuthError, AUTH_COPY, type AuthError } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
 import { ensureBrand } from "@/lib/brand-bootstrap";
 import { withTimeout, mapThrown } from "@/lib/auth-timeout";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export default function SignUpPage() {
+  const t = useT();
   const router = useRouter();
   const [error, setError] = useState<AuthError | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function SignUpPage() {
     return (
       <AuthLayout>
         <section className="w-full max-w-[420px] rounded-panel border border-rule bg-card p-8 drop-shadow-panel">
-          <h1 className="text-h2 font-bold tracking-[-0.5px]">Check your email</h1>
+          <h1 className="text-h2 font-bold tracking-[-0.5px]">{t("signup.checkEmail")}</h1>
           <p className="mt-3 text-sm font-normal leading-[1.6] text-muted">
             {AUTH_COPY.confirmSent}
           </p>
@@ -72,7 +74,7 @@ export default function SignUpPage() {
             href="/login"
             className="mt-7 inline-block rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn"
           >
-            Go to sign in
+            {t("signup.goToSignIn")}
           </Link>
         </section>
       </AuthLayout>

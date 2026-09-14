@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -22,6 +23,8 @@ interface Template {
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
 
+// Canva and Google Slides are product names. "Other" is read at render
+// through platformLabel so it follows the interface language.
 const PLATFORM_LABEL: Record<Platform, string> = { canva: 'Canva', slides: 'Google Slides', other: 'Other' }
 const PLATFORM_STYLE: Record<Platform, React.CSSProperties> = {
   canva:  { background: '#F0EAFE', color: '#7B2EE8' },
@@ -32,6 +35,7 @@ const PLATFORM_STYLE: Record<Platform, React.CSSProperties> = {
 /* ── Component ──────────────────────────────────────────────────────────────── */
 
 export default function TemplatesPage() {
+  const t = useT()
   // brand.brand_id, the TEXT slug — not brand.id, the UUID.
   //
   // This page was written when brand_templates keyed brands by UUID. Every
@@ -78,7 +82,7 @@ export default function TemplatesPage() {
           setTemplates(data as Template[])
           const names: Record<string, string> = {}
           const urls: Record<string, string> = {}
-          ;(data as Template[]).forEach(t => { names[t.id] = t.name; urls[t.id] = t.url })
+          ;(data as Template[]).forEach(tpl => { names[tpl.id] = tpl.name; urls[tpl.id] = tpl.url })
           setEditNames(names); setEditUrls(urls)
         }
         setLoading(false)
@@ -129,7 +133,7 @@ export default function TemplatesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: templateId, field: 'thumbnail_path', value: path }),
       })
-      setTemplates(p => p.map(t => t.id === templateId ? { ...t, thumbnail_url: thumbUrl } : t))
+      setTemplates(p => p.map(tpl => tpl.id === templateId ? { ...tpl, thumbnail_url: thumbUrl } : tpl))
     }
     setThumbUploading(p => ({ ...p, [templateId]: false }))
   }
@@ -144,7 +148,7 @@ export default function TemplatesPage() {
     })
     const json = await res.json()
     if (json.success) {
-      setTemplates(p => p.map(t => t.id === templateId ? { ...t, [field]: value } : t))
+      setTemplates(p => p.map(tpl => tpl.id === templateId ? { ...tpl, [field]: value } : tpl))
     }
   }
 
@@ -164,7 +168,7 @@ export default function TemplatesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: template.id, thumbnail_path: template.thumbnail_path }),
     })
-    setTemplates(p => p.filter(t => t.id !== template.id))
+    setTemplates(p => p.filter(tpl => tpl.id !== template.id))
   }
 
   /* ── Add new ─────────────────────────────────────────────────────────────── */
@@ -179,10 +183,10 @@ export default function TemplatesPage() {
     })
     const json = await res.json()
     if (json.success && json.data) {
-      const t = json.data as Template
-      setTemplates(p => [...p, t])
-      setEditNames(p => ({ ...p, [t.id]: t.name }))
-      setEditUrls(p => ({ ...p, [t.id]: t.url }))
+      const tpl = json.data as Template
+      setTemplates(p => [...p, tpl])
+      setEditNames(p => ({ ...p, [tpl.id]: tpl.name }))
+      setEditUrls(p => ({ ...p, [tpl.id]: tpl.url }))
       setModalOpen(false); setModalName(''); setModalUrl(''); setModalPlat('canva')
     }
     setSaving(false)
@@ -193,7 +197,7 @@ export default function TemplatesPage() {
   if (loading) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 13 }}>
-        Loading templates…
+        {t('templates.loading')}
       </div>
     )
   }
@@ -204,9 +208,9 @@ export default function TemplatesPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#0D0D0D', marginBottom: 5 }}>Templates</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#0D0D0D', marginBottom: 5 }}>{t('templates.title')}</h1>
           <p style={{ fontSize: 13.5, color: '#6B6760', lineHeight: 1.55, maxWidth: 500 }}>
-            Link your brand templates here. Branditect suggests them when you are creating new content.
+            {t('templates.intro')}
           </p>
         </div>
         <button
@@ -214,7 +218,7 @@ export default function TemplatesPage() {
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E16C00', color: 'white', border: 'none', borderRadius: 6, padding: '8px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
         >
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Add template
+          {t('templates.add')}
         </button>
       </div>
 
@@ -223,48 +227,48 @@ export default function TemplatesPage() {
         <textarea
           value={note}
           onChange={e => handleNoteChange(e.target.value)}
-          placeholder="Add notes about your templates — naming conventions, when to use which, links to design systems..."
+          placeholder={t('templates.notesPlaceholder')}
           style={{ width: '100%', minHeight: 60, fontSize: 13, lineHeight: 1.6, color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 8, padding: '10px 13px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
           onFocus={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#E16C00'; (e.target as HTMLTextAreaElement).style.background = 'white' }}
           onBlur={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#EDEBE8'; (e.target as HTMLTextAreaElement).style.background = '#F5F4F2' }}
         />
         {note && (
           <div style={{ position: 'absolute', bottom: 8, right: 10, fontSize: 10, color: noteSaved ? '#34C759' : '#B0ACA4' }}>
-            {noteSaved ? 'Saved' : 'Saving...'}
+            {noteSaved ? t('common.saved') : t('import.saving')}
           </div>
         )}
       </div>
 
       {/* Template list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 780 }}>
-        {templates.map(t => {
-          const isConnected = !!t.url
-          const currentUrl = editUrls[t.id] ?? t.url
+        {templates.map(tpl => {
+          const isConnected = !!tpl.url
+          const currentUrl = editUrls[tpl.id] ?? tpl.url
           return (
             <div
-              key={t.id}
+              key={tpl.id}
               style={{ background: 'white', border: `1px solid ${isConnected ? '#E16C00' : '#EDEBE8'}`, borderLeft: isConnected ? '3px solid #E16C00' : '1px solid #EDEBE8', borderRadius: 10, padding: '13px 15px', display: 'grid', gridTemplateColumns: '64px 1fr auto', alignItems: 'start', gap: 14 }}
             >
               {/* Thumbnail */}
               <label
                 style={{ width: 64, height: 64, borderRadius: 7, background: '#F5F4F2', border: '1.5px dashed #D9D6D0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', overflow: 'hidden', flexShrink: 0 }}
               >
-                {thumbUploading[t.id] ? (
+                {thumbUploading[tpl.id] ? (
                   <div style={{ width: 18, height: 18, border: '2px solid #D9D6D0', borderTopColor: '#E16C00', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
-                ) : t.thumbnail_url ? (
+                ) : tpl.thumbnail_url ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={t.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
+                  <img src={tpl.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#B0ACA4" strokeWidth="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="5.5" cy="7" r="1.5"/><path d="M1 11l3.5-3.5 3 3 2.5-2.5L15 11"/></svg>
-                    <span style={{ fontSize: 9, color: '#B0ACA4', fontWeight: 500, textAlign: 'center', lineHeight: 1.2 }}>Add image</span>
+                    <span style={{ fontSize: 9, color: '#B0ACA4', fontWeight: 500, textAlign: 'center', lineHeight: 1.2 }}>{t('templates.addImage')}</span>
                   </div>
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadThumbnail(t.id, f); e.target.value = '' }}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadThumbnail(tpl.id, f); e.target.value = '' }}
                 />
               </label>
 
@@ -273,17 +277,17 @@ export default function TemplatesPage() {
                 {/* Name */}
                 <input
                   type="text"
-                  value={editNames[t.id] ?? t.name}
-                  onChange={e => setEditNames(p => ({ ...p, [t.id]: e.target.value }))}
-                  onBlur={e => { if (e.target.value.trim() !== t.name) saveField(t.id, 'name', e.target.value.trim()) }}
+                  value={editNames[tpl.id] ?? tpl.name}
+                  onChange={e => setEditNames(p => ({ ...p, [tpl.id]: e.target.value }))}
+                  onBlur={e => { if (e.target.value.trim() !== tpl.name) saveField(tpl.id, 'name', e.target.value.trim()) }}
                   style={{ fontSize: 13.5, fontWeight: 500, color: '#0D0D0D', background: 'transparent', border: 'none', borderBottom: '1.5px solid transparent', outline: 'none', padding: '1px 2px', width: '100%', marginBottom: 7, fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                   onFocus={e => { (e.target as HTMLInputElement).style.borderBottomColor = '#E16C00' }}
                 />
 
                 {/* Tags */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 7px', borderRadius: 20, ...PLATFORM_STYLE[t.platform] }}>
-                    {PLATFORM_LABEL[t.platform]}
+                  <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 7px', borderRadius: 20, ...PLATFORM_STYLE[tpl.platform] }}>
+                    {tpl.platform === 'other' ? t('industry.other') : PLATFORM_LABEL[tpl.platform]}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: '#6B6760' }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: isConnected ? '#34C759' : '#D9D6D0', display: 'inline-block' }} />
@@ -293,36 +297,36 @@ export default function TemplatesPage() {
 
                 {/* URL row */}
                 {(() => {
-                  const urlDirty = (currentUrl?.trim() || '') !== (t.url || '')
+                  const urlDirty = (currentUrl?.trim() || '') !== (tpl.url || '')
                   return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input
                     type="text"
                     value={currentUrl || ''}
-                    onChange={e => setEditUrls(p => ({ ...p, [t.id]: e.target.value }))}
-                    placeholder="Paste template link…"
+                    onChange={e => setEditUrls(p => ({ ...p, [tpl.id]: e.target.value }))}
+                    placeholder={t('templates.linkPlaceholder')}
                     style={{ flex: 1, fontSize: 12, fontFamily: 'inherit', color: '#3A3835', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', outline: 'none', minWidth: 0, transition: 'border-color 0.15s' }}
                     onFocus={e => { (e.target as HTMLInputElement).style.borderColor = '#E16C00'; (e.target as HTMLInputElement).style.background = 'white' }}
                     onBlur={e => { (e.target as HTMLInputElement).style.borderColor = '#EDEBE8'; (e.target as HTMLInputElement).style.background = '#F5F4F2' }}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); connectTemplate(t.id) } }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); connectTemplate(tpl.id) } }}
                   />
                   {urlDirty || !isConnected ? (
                     <button
-                      onMouseDown={e => { e.preventDefault(); connectTemplate(t.id) }}
+                      onMouseDown={e => { e.preventDefault(); connectTemplate(tpl.id) }}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 12px', borderRadius: 6, background: '#E16C00', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
-                      {isConnected ? 'Save' : 'Connect'}
+                      {isConnected ? t('settings.save') : 'Connect'}
                     </button>
                   ) : (
                     <button style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '6px 11px', borderRadius: 6, background: '#E9F7EE', color: '#1A7A40', border: '1px solid #B8E6C8', cursor: 'default', flexShrink: 0 }}>
                       <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3,8 7,12 13,4"/></svg>
-                      Saved
+                      {t('common.saved')}
                     </button>
                   )}
                   {isConnected && !urlDirty && (
-                    <a href={t.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#6B6760', background: 'transparent', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <a href={tpl.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#6B6760', background: 'transparent', border: '1px solid #EDEBE8', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
                       <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/><polyline points="10,2 14,2 14,6"/><line x1="14" y1="2" x2="8" y2="8"/></svg>
-                      Open
+                      {t('templates.open')}
                     </a>
                   )}
                 </div>
@@ -333,11 +337,11 @@ export default function TemplatesPage() {
               {/* Delete */}
               <div style={{ paddingTop: 2 }}>
                 <button
-                  onClick={() => deleteTemplate(t)}
+                  onClick={() => deleteTemplate(tpl)}
                   style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, border: 'none', background: 'transparent', cursor: 'pointer', color: '#B0ACA4' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FDE8E8'; (e.currentTarget as HTMLButtonElement).style.color = '#C0392B' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#B0ACA4' }}
-                  title="Remove"
+                  title={t('templates.remove')}
                 >
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3,4 13,4"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><rect x="4" y="4" width="8" height="10" rx="1"/><line x1="6" y1="7" x2="6" y2="11"/><line x1="10" y1="7" x2="10" y2="11"/></svg>
                 </button>
@@ -356,7 +360,7 @@ export default function TemplatesPage() {
           <div style={{ width: 38, height: 38, borderRadius: 7, background: '#EDEBE8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6B6760" strokeWidth="1.5"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
           </div>
-          <span style={{ fontSize: 13, color: '#6B6760' }}>Add another template</span>
+          <span style={{ fontSize: 13, color: '#6B6760' }}>{t('templates.addAnother')}</span>
         </button>
       </div>
 
@@ -367,27 +371,27 @@ export default function TemplatesPage() {
           onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}
         >
           <div style={{ background: 'white', borderRadius: 14, width: 460, padding: 28, boxShadow: '0 8px 40px rgba(0,0,0,0.14)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0D0D0D', marginBottom: 4 }}>Add template</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0D0D0D', marginBottom: 4 }}>{t('templates.add')}</h2>
             <p style={{ fontSize: 13, color: '#6B6760', marginBottom: 22, lineHeight: 1.55 }}>
-              Name it however makes sense for your workflow — like &ldquo;Post — Product Launch — Square&rdquo;.
+              {t('templates.nameHelp')}
             </p>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Name</label>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>{t('templates.name')}</label>
               <input
                 ref={modalNameRef}
                 type="text"
                 value={modalName}
                 onChange={e => setModalName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && saveNewTemplate()}
-                placeholder="e.g. Post — Product Launch — Square"
+                placeholder={t('templates.namePlaceholder')}
                 style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '9px 12px', outline: 'none' }}
               />
-              <div style={{ fontSize: 11, color: '#B0ACA4', marginTop: 4 }}>Use dashes to separate type, campaign, and format.</div>
+              <div style={{ fontSize: 11, color: '#B0ACA4', marginTop: 4 }}>{t('templates.dashHelp')}</div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Platform</label>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>{t('templates.platform')}</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['canva', 'slides', 'other'] as Platform[]).map(p => (
                   <button
@@ -395,20 +399,20 @@ export default function TemplatesPage() {
                     onClick={() => setModalPlat(p)}
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px 10px', border: `1px solid ${modalPlat === p ? '#E16C00' : '#EDEBE8'}`, borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', background: modalPlat === p ? '#FBE9E2' : 'white', color: modalPlat === p ? '#E16C00' : '#3A3835', transition: 'all 0.12s' }}
                   >
-                    {PLATFORM_LABEL[p]}
+                    {p === 'other' ? t('industry.other') : PLATFORM_LABEL[p]}
                   </button>
                 ))}
               </div>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>Template link</label>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#3A3835', marginBottom: 6, display: 'block' }}>{t('templates.link')}</label>
               <input
                 type="url"
                 value={modalUrl}
                 onChange={e => setModalUrl(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && saveNewTemplate()}
-                placeholder="https://canva.link/… or docs.google.com/…"
+                placeholder={t('templates.linkExample')}
                 style={{ width: '100%', fontSize: 13, fontFamily: 'inherit', background: '#F5F4F2', border: '1px solid #EDEBE8', borderRadius: 6, padding: '9px 12px', outline: 'none' }}
               />
             </div>
@@ -418,14 +422,14 @@ export default function TemplatesPage() {
                 onClick={() => setModalOpen(false)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: '#6B6760', border: '1px solid #D9D6D0', borderRadius: 6, padding: '8px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={saveNewTemplate}
                 disabled={!modalName.trim() || saving}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: !modalName.trim() || saving ? '#F5F4F2' : '#E16C00', color: !modalName.trim() || saving ? '#B0ACA4' : 'white', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: !modalName.trim() || saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
               >
-                {saving ? 'Adding…' : 'Add template'}
+                {saving ? 'Adding…' : t('templates.add')}
               </button>
             </div>
           </div>

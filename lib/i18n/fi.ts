@@ -1113,4 +1113,365 @@ export const fi: Record<StringKey, string> = {
   "credit.indexing.cost": "Ilmaista",
   // Finnish puts the unit after the number and uses a space before the symbol.
   "credit.topUp": "9 € 200 lisäkrediitistä",
+
+  // ══ SIVUSTO, kolmas kierros ══ No em dashes. Placeholders kept verbatim.
+
+  // ── Tietoa: leipäteksti ───────────────────────────────────────────────────
+  "site.about.opening":
+    "Mitä me edustamme. Mitä tarkalleen myymme. Mitä meillä on varaa veloittaa. Vastaukset ovat jo olemassa, hautautuneina esitykseen jota kukaan ei avaa, sähköpostilaatikkoon josta kukaan ei hae ja taulukkoon jota yksi ihminen ylläpitää. Branditectissä ne ovat yhdessä paikassa.",
+  "site.about.homeCaption":
+    "Yksi näkymä, joka tietää kuinka paljon brändistäsi on kirjattu ylös ja mitä vielä puuttuu. Se kertoo diagnoosin, ei kehua.",
+  "site.about.asteriskCaption":
+    "Katso tähteä katesarakkeessa. Se on järjestelmän tapa kertoa, että luku on arvio koska kokonaishankintahinta puuttuu. Mieluummin se myöntää sen kuin liioittelee katettasi hiljaa.",
+  "site.about.threeVerbs":
+    "Kolme verbiä järjestyksessä. Jokainen näkymä kuuluu tasan yhteen niistä, eikä mitään sellaista jota ei voi sijoittaa yhteenkään rakenneta.",
+  "site.about.defineBody":
+    "Kaksikymmentä kysymystä rakentaa strategiasi, äänensävysi ja visuaalisen ilmeesi. Viisi niistä riittää avaamaan työtilan. Loput saavat odottaa.",
+  "site.about.feedBody":
+    "Tuotteet, dokumentit, kuvat, linkit. Kaikki lataamasi luetaan ja indeksoidaan, eikä se osa maksa koskaan krediittiä.",
+  "site.about.makeBody":
+    "Kaikki Studiossa lukee samoja aivoja. Millään täällä ei ole omaa erillistä käsitystä siitä, mikä brändisi on.",
+  // "five points" is percentage points, and Finnish has to say which:
+  // "prosenttiyksikköä", never "prosenttia". Getting this wrong turns a real
+  // number into a different real number.
+  "site.about.marginMath":
+    "Katteet lasketaan verottomina ja kokonaishankintahintaa vasten, ei koskaan tehdashintaa bruttohintaa vasten. Ero on noin viisi prosenttiyksikköä, ja se on ero tuotteen välillä jonka luulet olevan kannattava ja sellaisen joka on.",
+  "site.about.secondColumn":
+    "Toinen sarake ei ole vaatimattomuutta. Se on se, mikä tekee ensimmäisestä uskottavan, ja se säästää meiltä molemmilta yhden keskustelun.",
+  "site.about.oneInbox": "Yksi postilaatikko, jota lukevat ne jotka tämän rakentavat.",
+  "site.about.fourMinutes":
+    "Noin neljä minuuttia niihin viiteen, joilla on väliä. Sata krediittiä, ei korttia, eikä mikään vanhene.",
+  "site.about.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmius neljine tarkistuksineen, luvut aivojen lukemista tiedostoista ja Studion työkalut alla.",
+  "site.about.altProducts":
+    "Ruffle Studion Tuotteet-näkymä, jossa jokainen tuote kustannuksineen, hintoineen ja oikeine katteineen, ja yksi kateluku merkittynä tähdellä.",
+
+  // ── Tietoa: metatiedot ja OG ──────────────────────────────────────────────
+  "site.about.metaDesc":
+    "Branditect on yksi paikka, joka tietää brändistrategiasi, tuotteesi ja katteesi, ja tekee niistä asioita. Rakennettu Suomessa, EU:n infrastruktuurissa.",
+  "site.about.ogSub":
+    "Yksi paikka, joka tietää strategiasi, tuotteesi ja katteesi, ja tekee niistä asioita.",
+  "site.about.ogTag": "Mikä se on, mitä se ei tee, ja kenelle se on.",
+
+  // ── Etusivu: metatiedot ja OG ─────────────────────────────────────────────
+  "site.home.metaDesc":
+    "Yksi paikka, joka pitää strategiasi, tuotetotuutesi ja katteesi, joten kaikki mitä julkaiset on brändin mukaista, paikkansapitävää ja kannattavaa. Rakenna se ilmaiseksi.",
+  "site.home.ogSub":
+    "Yksi paikka, joka pitää strategiasi, tuotetotuutesi ja katteesi. Rakenna se ilmaiseksi.",
+  "site.home.ogTag": "Yksi paikka, joka tietää strategiasi, tuotteesi ja katteesi.",
+
+  // ── Hinnoittelu: metatiedot ja OG ─────────────────────────────────────────
+  "site.pricing.metaDesc":
+    "Rakenna brändiaivosi ilmaiseksi, sadalla krediitillä ja ilman korttia. Tilaukset alkaen {FROM} kuukaudessa, sis. alv.",
+  "site.pricing.ogSub":
+    "Rakenna brändiaivosi ilmaiseksi. Tilaukset alkaen {FROM} kuukaudessa, sis. alv.",
+  "site.pricing.ogTag": "Rakenna ilmaiseksi. Maksa kun haluat sen tekevän töitä puolestasi.",
+
+  // ── Etusivu ───────────────────────────────────────────────────────────────
+  "site.home.ledeFull":
+    "Kaupalliset aivot tuote- ja verkkokauppabrändeille. Se pitää strategiasi, tuotetotuutesi ja katteesi yhdessä, joten kaikki mitä julkaiset on brändin mukaista, paikkansapitävää ja kannattavaa. Se kirjoittaa tekstisi tuntien jokaisen tuotteesi, äänensävysi ja tyylisi. Ja tekee kuvasi siinä samalla. Se on kuin sinulla olisi huippuluokan markkinointitiimi takanasi.",
+  "site.home.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmiuspisteet neljine tarkistuksineen, luvut aivojen lukemista dokumenteista ja kuvista, ja rivi Studion työkaluja.",
+  "site.home.homeCaption":
+    "Brändin valmius kertoo mitä vielä puuttuu, ja Studio-rivi on se mitä voit tehdä sillä minkä aivot jo tietävät. Mikään tällä näytöllä ei ole arvaus.",
+  "site.home.eachUsable":
+    "Jokainen niistä on kaikkien muiden käytettävissä, ja siinä on koko ero brändiaivojen ja dokumenttikansion välillä.",
+  "site.home.altProducts":
+    "Ruffle Studion Tuotteet-näkymä, jossa jokainen tuote kustannuksineen, hintoineen ja oikeine katteineen, ja yksi kateluku tähdellä merkittynä.",
+  "site.home.sameBrain":
+    "Kaikki täällä lukee samoja aivoja. Millään ei ole omaa erillistä käsitystä siitä, mikä brändisi on.",
+  "site.home.builtBy":
+    "Rakentanut tiimi, joka on viettänyt kaksi vuosikymmentä brändien parissa ympäri maailmaa. Tehty Suomessa.",
+  "site.home.notInstincts":
+    "Isolla brändillä ei ole parempaa vaistoa kuin sinulla. Sillä on strategia ja infrastruktuuri.",
+  "site.home.givesYouBoth":
+    "Branditect antaa sinulle molemmat, olitpa missä vaiheessa tahansa. Ensimmäinen tuote tai neljässadas. Teet edelleen jokaisen päätöksen. Lakkaat vain tekemästä niitä muistin varassa.",
+  "site.home.fourMinutes":
+    "Noin neljä minuuttia niihin viiteen, joilla on väliä. Sata krediittiä, ei korttia, eikä mikään vanhene.",
+
+  // ── Hinnoittelusivu ───────────────────────────────────────────────────────
+  "site.pricing.lede":
+    "Branditect muuttaa hajallaan olevat tiedostosi, päätöksesi ja lukusi yhdeksi tietokerrokseksi, joka tuntee strategiasi, tuotteesi ja katteesi. Rakenna koko juttu ilmaiseksi. Maksa kun haluat sen tekevän töitä puolestasi.",
+  "site.pricing.billingPeriod": "Laskutusjakso",
+  "site.pricing.twoMonthsFree": "2 kuukautta ilmaiseksi",
+  "site.pricing.plans": "Tilaukset",
+  "site.pricing.vatYearly": "Sis. alv, laskutetaan {yearlyTotal} vuodessa",
+  "site.pricing.vatLine": "Sis. alv {VAT_RATE}",
+  "site.pricing.letsTalk": "Jutellaan",
+  "site.pricing.creditIs":
+    "Yksi yksikkö työtä, jonka aivot tekevät puolestasi. Lataamasi aineiston lukeminen ja indeksointi on aina ilmaista, koska aivot jotka laskuttavat oppimisesta ovat väärän muotoiset.",
+  "site.pricing.freeHomeCaption":
+    "Tämä on etusivusi ilmaisella tilauksella. Brändin valmius vasemmalla, mitä aivot ovat lukeneet oikealla, ja alla se mitä voit niillä tehdä.",
+  "site.pricing.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmiuspisteet neljine tarkistuksineen, luvut aivojen lukemista dokumenteista ja kuvista, ja rivi Studion työkaluja.",
+  "site.pricing.readinessIs":
+    "Brändin valmius on neljä tarkistusta, kukin neljäsosan arvoinen. Se kertoo mitä puuttuu sen sijaan että onnittelisi sinua, koska pistemäärä jonka voi ennustaa on arvokkaampi kuin sellainen joka näyttää tarkalta.",
+
+  // ── Yhteiset ──────────────────────────────────────────────────────────────
+  "site.perMonth": "/kk",
+  "site.signUpOrLogIn": "Luo tili tai kirjaudu sisään",
+  "site.ogTitle": "Branditect, brändisi kaupalliset aivot",
+
+  // ── Tilaukset: loput ──────────────────────────────────────────────────────
+  "plan.everythingInPro": "Kaikki Prosta, ja lisäksi",
+  "plan.proplus.f1": "3 brändiä, kullakin oma totuutensa. Ne eivät koskaan sekoitu keskenään",
+  "plan.proplus.f2": "3 käyttäjää, jotta tiimisi kirjoittaa samoista aivoista",
+  "plan.proplus.f3": "20 Gt",
+  "plan.proplus.f4": "Etusijainen tuki",
+  // Finnish uses Mt and Gt, not MB and GB. A Finnish page that says "200 MB"
+  // reads as untranslated, and it is the kind of thing a reader notices first.
+  "plan.storage200mb": "200 Mt",
+  "plan.storage5gb": "5 Gt",
+  "plan.storage20gb": "20 Gt",
+
+  // ══ SOVELLUS, erä A ══ Etusivu, koko Laskurit-osio, aloitusvirta,
+  // muistiinpanot ja tervetulomodaali.
+
+  // ── Etusivu ───────────────────────────────────────────────────────────────
+  "home.writeDesc": "Brändin mukaan, strategian mukaan, faktojen mukaan.",
+  "home.imagesDesc": "Uusia kuvia tuotteistasi ja tyylistäsi.",
+  "home.numbersTitle": "Laske luvut",
+  "home.numbersDesc": "Kannattavuus, hinnoittelu ja tarjoukset.",
+  "home.visualDesc": "Logosi, värisi ja kirjasimesi.",
+  "home.prompt1": "Mistä minun kannattaisi julkaista tällä viikolla?",
+  "home.prompt2": "Kuinka suuren alennuksen voin antaa?",
+  "home.prompt3": "Mitä brändistäni puuttuu?",
+
+  // ── Laskurit: kenttien nimet ──────────────────────────────────────────────
+  "num.productionCost": "Tuotantokustannus",
+  "num.freightDuty": "Rahti ja tulli",
+  "num.packaging": "Pakkaus",
+  "num.shipping": "Toimitus",
+  "num.returnsRate": "Palautusprosentti",
+  "num.refundRate": "Hyvitysprosentti",
+  "num.churnRate": "Poistuma",
+  "num.paymentFees": "Maksukulut",
+  "num.adCostPerSale": "Mainoskulu per kauppa",
+  "num.cartonPallet": "Laatikko tai lava",
+  "num.paymentTerms": "Maksuehdot",
+  "num.storeCommission": "Kaupan provisio %",
+  "num.resellerCommission": "Jälleenmyyjän provisio",
+  "num.retailPrice": "Myyntihinta",
+  "num.taxRate": "Verokanta",
+  "num.costPerUnit": "Yksikkökustannus",
+  "num.targetMargin": "Tavoitekate",
+  "num.minMargin": "Vähimmäiskate",
+  "num.monthlyPrice": "Kuukausihinta",
+  "num.costToAcquire": "Hankintakustannus",
+
+  // ── Laskurit: etusivu ─────────────────────────────────────────────────────
+  "num.costLede": "Tiedä mitä jokainen kauppa oikeasti maksaa.",
+  "num.costSub":
+    "Kaikki mitä yhden yksikön toimittaminen asiakkaalle vaatii, ja mitä tapahtuu kun jokin kustannus muuttuu.",
+  "num.priceLede": "Löydä hinta, joka antaa haluamasi katteen.",
+  "num.priceSub":
+    "Aseta tavoitekate ja saat hinnan joka osuu siihen, tai kirjoita hinta ja näe mitä sinulle oikeasti jää verojen ja kulujen jälkeen.",
+  "num.offersLede": "Tiedä paljonko voit antaa pois ennen kuin se sattuu.",
+  "num.offersSub":
+    "Mallinna ne tarjoukset joita oikeasti teet, ja löydä missä kohtaa kukin lakkaa kannattamasta.",
+  "num.recurringLede": "Näe mitä asiakas on ajan mittaan arvoinen.",
+  "num.recurringSub":
+    "MRR, poistuma ja elinkaariarvo, ja kuinka kauan kestää ansaita takaisin se mitä asiakkaan hankkimiseen meni.",
+  "num.discountCeiling": "Alennuskatto",
+  "num.freeShipThreshold": "Ilmaisen toimituksen raja",
+  "num.averageBasket": "Keskiostos",
+  "num.noLandedCost": "Kokonaishankintahintaa ei ole vielä kirjattu",
+  "num.noPrice": "Hintaa ei ole vielä kirjattu",
+  "num.usesPriceHere": "Käyttää tässä asettamaasi hintaa",
+  "num.shownBecauseSubscription": "Näkyy koska veloitat tilausmaksua",
+  "num.indexLede":
+    "Selvitä mitä oikeasti tienaat jokaisesta kaupasta, aseta hinnat jotka osuvat tavoitekatteeseesi, ja rakenna tarjouksia jotka eivät hiljaa maksa sinulle rahaa. Sen jälkeen",
+  "num.allCosted": "kaikki kustannettu",
+  "num.missingCosts": "{missing} kustannusta puuttuu",
+  "num.noCostedProducts": "ei kustannettuja tuotteita",
+  "num.addRunningCostsInline": "lisää juoksevat kulut",
+  "num.atYourBestMargin": "parhaalla katteellasi",
+  "num.physicalGoods": "Fyysiset tuotteet",
+  "num.digitalAccess": "Digitaaliset ja käyttöoikeudet",
+  "num.subscription": "Tilaus",
+  "num.allThatApply": "kaikki jotka pätevät",
+  "num.ownSite": "Oma verkkokauppa",
+  "num.wholesale": "Tukkumyynti",
+  "num.appStore": "Sovelluskauppa",
+  "num.overheadExplainer":
+    "Vuokra, palkat, ohjelmistot ja markkinointi eivät välitä siitä paljonko myyt. Laske ne yhteen kerran, jaettuna kaikille tuotteille, ja Branditect laskee sen määrän joka kattaa ne sekä oikean alarajahintasi.",
+  "num.addRunningCostsNote":
+    "Lisää juoksevat kulusi, niin tästä tulee oikea luku. Ilman niitä alaraja on vain puoli alarajaa.",
+  "num.noPricedProduct": "Yhdelläkään tuotteella ei ole vielä sekä hintaa että kustannusta.",
+  "num.everySaleLoses":
+    "Jokainen kauppa on näillä hinnoilla tappiollinen, joten mikään määrä ei kata yleiskuluja. Korjaa ensin hinta tai kustannus.",
+  "num.addRunningCosts": "Lisää juoksevat kulut",
+  "num.costOfEachSale": "kunkin kaupan kustannus",
+  // Finnish accounting has exact terms for these. Using an approximation here
+  // would make the figures unrecognisable to anyone who reads a Finnish P&L.
+  "num.grossProfit": "myyntikate",
+  "num.runningCosts": "juoksevat kulut",
+  "num.operatingProfit": "liikevoitto",
+  "num.notAdvice":
+    "Nämä ovat laskelmia syöttämistäsi luvuista, eivät neuvoja. Tarkista ne omaa kirjanpitoasi vasten ennen kuin muutat hintaa. Verokohtelu ja alustojen maksut vaihtelevat markkinoittain ja voivat siirtää katetta useita prosenttiyksikköjä.",
+
+  // ── Laskurit: kustannus ───────────────────────────────────────────────────
+  "num.cost.fromChannels":
+    "Nämä rivit tulevat siitä, miten kerroit myyväsi. Korostetut lisättiin kanaviesi perusteella, ja voit muuttaa niitä kohdassa",
+  "num.cost.onNumbers": "Laskureissa.",
+  "num.cost.sellingDirect": "suoramyynti",
+  "num.cost.addedBy": "lisännyt {from}",
+  "num.cost.spreadAcross": "Jaettuna",
+  "num.cost.unitsInBatch": "yksikölle erässä, jos nämä ovat eräkustannuksia",
+  "num.cost.costToServeOne": "Yhden palvelemisen kustannus",
+  "num.cost.fillLeft":
+    "Täytä rivit vasemmalla. Prosentit eivät ole summassa mukana: ne muuttavat kaupan kustannusta, mutta eivät ole yhteenlaskettavia.",
+  "num.cost.entered":
+    "{filled}/{costable} kuluriviä täytetty. Tämä on se luku, joka menee tuotekortin kokonaishankintahintaan.",
+  "num.cost.landedNotFactory":
+    "Kate lasketaan kokonaishankintahinnasta, ei tehdashinnasta. Pelkkä tehdashinta liioittelee katetta noin viidellä prosenttiyksiköllä, ja väärään lukuun rakennettu alennussääntö syö erotuksen jokaisessa kampanjassa.",
+
+  // ── Laskurit: hinnoittelu ─────────────────────────────────────────────────
+  "num.price.haveAPrice": "Minulla on hinta",
+  "num.price.haveATarget": "Minulla on tavoitekate",
+  "num.price.landedHint": "kokonaishankintahinta, ei tehdashinta",
+  "num.price.taxHint": "jos tyhjä, myyntihinta tulkitaan verottomaksi",
+  "num.price.grossHint": "brutto, se minkä asiakas maksaa",
+  "num.price.marginAtPrice": "Kate tällä hinnalla",
+  "num.price.enterCostPrice": "Syötä kustannus ja hinta.",
+  "num.price.losesMoney": "Tällä hinnalla häviät rahaa jokaisessa kaupassa.",
+  "num.price.priceForMargin": "Hinta {tgt} prosentin katteelle",
+  "num.price.enterCostTarget": "Syötä kustannus ja tavoitekate.",
+  "num.price.netOfTax":
+    "Kate lasketaan aina verottomana kokonaishankintahintaa vasten. Bruttohinnan vertaaminen tehdashintaan on imarteleva versio, ja se on väärässä noin viidellä prosenttiyksiköllä.",
+
+  // ── Laskurit: tarjoukset ──────────────────────────────────────────────────
+  "num.offers.ceilingNote":
+    "Se katto johon päädyt on raja, jonka sisällä Studio kirjoittaa. Se ei lupaa suurempaa alennusta kuin tuote sallii.",
+  "num.offers.lineYouWontCross": "raja jota et ylitä",
+  "num.offers.discountWanted": "Alennus jonka haluat antaa",
+  "num.offers.belowMinimum":
+    "Se alittaa {mm} prosentin vähimmäiskatteesi, eikä Studio kirjoittaisi tätä tarjousta.",
+  "num.offers.clearsMinimum": "Tämä ylittää vähimmäiskatteesi.",
+  "num.offers.deepest": "Suurin alennus jonka voit antaa",
+  "num.offers.enterThree": "Syötä hinta, kustannus ja vähimmäiskate.",
+  "num.offers.alreadyAtFloor":
+    "Hinnalla {currency} tuote on jo {mm} prosentin alarajallaan. Mikä tahansa alennus rikkoo sen.",
+  "num.offers.perProduct":
+    "Rajat ovat tuotekohtaisia. 6 euron pidike ei voi kantaa 99 euron alarajaa, joten tämä katto kuuluu vain tälle tuotteelle, ei brändille.",
+
+  // ── Laskurit: toistuva ────────────────────────────────────────────────────
+  "num.rec.lede":
+    "Kertahinnoittelu kysyy mitä kauppa on arvoinen. Toistuva kysyy mitä asiakas on arvoinen, ja kuinka kauan kestää ansaita takaisin se mitä hänen hankkimiseensa meni.",
+  "num.rec.revenuePerCustomer": "Liikevaihto per asiakas",
+  "num.rec.perMonthNet": "kuukaudessa, verottomana",
+  "num.rec.grossMargin": "Myyntikate",
+  "num.rec.afterCostToServe": "siitä liikevaihdosta, palvelukustannuksen jälkeen",
+  "num.rec.monthlyChurn": "Kuukausipoistuma",
+  "num.rec.shareWhoLeave": "osuus joka lähtee kuukaudessa",
+  "num.rec.acquisitionHint": "markkinointi ja myynti, per asiakas",
+  "num.rec.ltv": "Elinkaariarvo",
+  "num.rec.zeroChurn":
+    "Nollapoistumalla kukaan ei koskaan lähde, joten elinkaari on ääretön. Se ei ole luku jota kannattaa näyttää.",
+  "num.rec.fillFour": "Täytä kaikki neljä kenttää.",
+  "num.rec.payback": "Takaisinmaksu",
+  "num.rec.noMargin": "Katetta ei ole, joten hankintakustannus ei maksa itseään takaisin.",
+  "num.rec.paybackNote":
+    "Kuinka kauan kestää ennen kuin asiakas on maksanut takaisin hankintansa. Elinkaariarvo on {ltvToCac}× hankintakustannus.",
+  "num.rec.worthLess":
+    "Jokainen asiakas on vähemmän arvoinen kuin hänen hankkimisensa maksaa. Nopeampi kasvu pahentaa tätä, ei korjaa: ratkaisu on poistuma, kate tai hankintakustannus, ei määrä.",
+
+  // ── Laskurit: juoksevat kulut ─────────────────────────────────────────────
+  "num.run.couldNotSave": "Tallennus ei onnistunut",
+  "num.run.monthlyTotals":
+    "Kuukausisummat, ei kuitteja. Jaettuna kaikille tuotteille: vuokra ei ole hiustenkuivaajan ominaisuus.",
+  "num.run.onePerLine":
+    "Yksi luku per rivi. Jätä rivi tyhjäksi jos se ei koske sinua: tyhjä ja nolla tarkoittavat täällä eri asioita.",
+  "num.run.save": "Tallenna juoksevat kulut",
+  "num.run.onBusiness":
+    "Tallennetaan liiketoiminnalle, ei tuotteelle. Mikään täällä ei muuta sitä mitä Studio saa kirjoittaa: rajat ovat kunkin tuotteen kortilla.",
+  "num.run.noProductsYet":
+    "Ei vielä tuotteita, joten yleiskuluja ei ole millä jakaa. Yllä oleva summa on silti tallennettu ja astuu voimaan heti kun lisäät tuotteen.",
+  "num.run.eachSaleLoses":
+    "Jokainen kauppa on tappiollinen, joten mikään määrä ei kata yleiskuluja. Korjaa hinta tai kustannus ennen kuin mietit kriittistä pistettä.",
+  "num.run.setByMinMargin":
+    "Määräytyy {minMarginPct} prosentin vähimmäiskatteestasi. Tällä volyymilla se sitoo tiukemmin kuin yleiskuluehto.",
+  "num.run.setByOverhead":
+    "Määräytyy yleiskulujen kattamisesta odotetulla volyymilla, mikä sitoo tiukemmin kuin vähimmäiskatteesi. Ilman juoksevia kuluja tämä näyttäisi pienemmältä ja olisi vain puoli alarajaa.",
+  "num.run.notFullyLoaded":
+    "jaettuna yksiköille. ”Täysin kuormitettu” yksikkökustannus tekee jokaisen tuotteen katteesta riippuvaisen siitä, paljonko kaikkea muuta myytiin. Myyntikate ja kriittinen piste kertovat saman asian liikkumatta aina kun jollain toisella tuotteella on hyvä kuukausi.",
+
+  // ── Laskurin kehys ja rajat ───────────────────────────────────────────────
+  "calc.nothingSaved": "Mitään täällä ei tallenneta. Nämä luvut asuvat tuotekortilla, käytä",
+  "calc.pressSaveThere": "ja paina siellä tallenna.",
+  "calc.pickToApply":
+    "Valitse tuote yltä ottaaksesi tämän käyttöön. Ilman tuotetta tämä on pikalaskelma: hyödyllinen kun hinnoittelet jotain jota et ole vielä lisännyt, eikä mitään mene hukkaan jos jäät tänne.",
+  "calc.prefillFrom": "Esitäytä lähteestä",
+  "calc.noProductsToPrefill":
+    "Ei vielä tuotteita, joten esitäytettävää ei ole. Tämä on pikalaskelma, ja se on täysin normaali tapa käyttää sitä: laske luvut ensin, lisää tuote sen jälkeen.",
+  "guardrails.didNotSave": "Tallennus ei onnistunut.",
+  // The English says pounds. This is a Finnish screen and the currency
+  // everywhere else on it is euros, so the example is euros too.
+  "guardrails.pickToSet":
+    "Valitse tuote asettaaksesi sen rajat. Ne ovat tuotekohtaisia tarkoituksella: kuuden euron pidike ei voi kantaa yhdeksänkymmenenyhdeksän euron alarajaa.",
+  "guardrails.floorPrice": "Alarajahinta",
+  "guardrails.minMargin": "Vähimmäiskate",
+  "guardrails.saveLimits": "Tallenna rajat",
+
+  // ── Muistiinpanot ─────────────────────────────────────────────────────────
+  "notes.couldNotLoad": "Muistiinpanojasi ei voitu ladata.",
+  "notes.couldNotOpen": "Muistiinpanoa ei voitu avata.",
+  "notes.someImagesFailed": "Joitakin kuvia ei voitu ladata.",
+  "notes.notSaved": "Ei tallennettu. Muutoksesi ovat yhä näytöllä.",
+  "notes.couldNotCreate": "Muistiinpanoa ei voitu luoda.",
+  "notes.pdfNotWired": "PDF-lataus tehdään palvelimella, eikä sitä ole vielä kytketty.",
+  "notes.nothingElseHere": "Täällä ei ole vielä muuta.",
+  "notes.new": "Uusi muistiinpano",
+  "notes.empty":
+    "Täällä ei ole vielä mitään. Muistiinpano on luonnoslehtiö: kaikki mitä siihen kirjoitat päätyy Chatiin.",
+  "notes.noMatch": "Mikään ei vastaa hakua ”{query}”.",
+  "notes.untitled": "Nimetön",
+  "notes.emptyPreview": "Tyhjä",
+  "notes.pickOne": "Valitse muistiinpano tai aloita uusi.",
+  "notes.note": "Muistiinpano",
+  "notes.title": "Muistiinpanon otsikko",
+  "notes.image": "Kuva",
+  "notes.caption": "Kuvateksti",
+  "notes.imageCaption": "Kuvan teksti",
+  "notes.heading": "Otsikko",
+
+  // ── Aloitus: profiilin napautukset ────────────────────────────────────────
+  "profile.whatDoYouSell": "Mitä myyt?",
+  "profile.physicalProducts": "Fyysisiä tuotteita",
+  "profile.digitalProducts": "Digituotteita tai ohjelmistoja",
+  "profile.howDoTheyPay": "Miten asiakkaat maksavat?",
+  "profile.oneOff": "Kertaostoina",
+  "profile.onSubscription": "Tilauksena",
+  "profile.whoDoesWork": "Kuka tekee työn?",
+  "profile.twoOrThree": "Meitä on kaksi tai kolme",
+  "profile.whatLanguage": "Millä kielellä kirjoitamme?",
+  "profile.gettingStarted": "Aloitus",
+  "profile.getToKnow": "Tutustutaan liiketoimintaasi",
+  "profile.fourTaps":
+    "Neljä nopeaa napautusta, ei kirjoittamista. Tämä asettaa näkemäsi esimerkit, kielen jolla Studio kirjoittaa, ja profiilin jota Laskurit tarvitsee.",
+
+  // ── Kirjautumislomake ─────────────────────────────────────────────────────
+  "auth.createAccount": "Luo tilisi",
+  "auth.welcomeBack": "Tervetuloa takaisin 👋",
+  "auth.startBuilding": "Ala rakentaa brändisi työtilaa",
+  "auth.logInToWorkspace": "Kirjaudu brändisi työtilaan",
+  "auth.orContinueEmail": "tai jatka sähköpostilla",
+  "auth.password": "Salasana",
+  "auth.enterPassword": "Syötä salasanasi",
+  "auth.minChars": "Vähintään {MIN_PASSWORD} merkkiä",
+  "auth.creatingAccount": "Luodaan tiliä…",
+  "auth.signingIn": "Kirjaudutaan…",
+  "auth.createAccountBtn": "Luo tili",
+
+  // ── Tervetulomodaali ──────────────────────────────────────────────────────
+  "welcome.step1": "Vaihe 1: Brändi",
+  "welcome.step1Body": "Vastaa strategiakyselyyn ja määritä äänensävysi.",
+  "welcome.step2": "Vaihe 2: Tieto",
+  "welcome.step2Body": "Lataa dokumentit, kuvat ja linkit jotka brändisi pitäisi tietää.",
+  "welcome.step3": "Vaihe 3: Studio",
+  "welcome.step3Body": "Kirjoita tekstejä ja luo kuvia kaikesta minkä juuri syötit.",
+  "welcome.step4": "Vaihe 4: Laskurit",
+  "welcome.step4Body": "Lisää kustannukset ja hinnat, jotta Studio ei koskaan kirjoita katteidesi yli.",
+  "welcome.quote": "”Heillä on markkinointitiimi. Sinulla on Branditect.”",
+  "welcome.fourSteps": "4 vaihetta",
 };

@@ -10,6 +10,8 @@ import {
 } from "@/lib/document-batch";
 import AskPanel from "@/components/documents/ask-panel";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -45,13 +47,15 @@ type CategoryKey =
   | "presentations"
   | "other";
 
-const CATEGORIES: { key: CategoryKey; label: string }[] = [
+// `label` is the English for a category with no key yet; `labelKey` wins
+// where one exists. `key` is identity and never translated.
+const CATEGORIES: { key: CategoryKey; label: string; labelKey?: StringKey }[] = [
   { key: "all", label: "All" },
   { key: "product-info", label: "Product info" },
   { key: "company-info", label: "Company info" },
   { key: "pricing", label: "Pricing" },
-  { key: "presentations", label: "Presentations" },
-  { key: "other", label: "Other" },
+  { key: "presentations", label: "", labelKey: "nav.knowledge.presentations" },
+  { key: "other", label: "", labelKey: "industry.other" },
 ];
 
 const ACCEPTED = ".pdf,.pptx,.docx,.xlsx,.jpg,.jpeg,.png,.webp";
@@ -87,8 +91,10 @@ function fileTypeBadge(ext: string): string {
   }
 }
 
-function categoryLabel(key: string): string {
-  return CATEGORIES.find((c) => c.key === key)?.label ?? key;
+function categoryLabel(key: string, t: (k: StringKey) => string): string {
+  const c = CATEGORIES.find((c) => c.key === key);
+  if (!c) return key;
+  return c.labelKey ? t(c.labelKey) : c.label;
 }
 
 /* ------------------------------------------------------------------ */
@@ -96,6 +102,7 @@ function categoryLabel(key: string): string {
 /* ------------------------------------------------------------------ */
 
 function SkeletonRow({ name }: { name: string }) {
+  const t = useT();
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-white border border-light rounded-lg">
       <span className="w-10 h-5 bg-pale rounded animate-pulse shrink-0" />
@@ -104,7 +111,7 @@ function SkeletonRow({ name }: { name: string }) {
       <span className="w-8 h-4 bg-pale rounded animate-pulse shrink-0" />
       <span className="flex items-center gap-1.5 text-[0.72rem] text-amber shrink-0">
         <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse inline-block" />
-        Processing…
+        {t("common.processing")}
       </span>
       <span className="w-5 h-5 shrink-0" />
     </div>
@@ -118,6 +125,7 @@ function DocumentRow({
   doc: BrandDocument;
   onDelete: (id: string, storagePath: string) => void;
 }) {
+  const t = useT();
   const ext = doc.file_type || fileExtension(doc.file_name);
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-white border border-light rounded-lg hover:border-muted transition-all group">
@@ -134,7 +142,7 @@ function DocumentRow({
       </span>
 
       <span className="shrink-0 text-[0.72rem] text-muted bg-pale border border-light rounded px-2 py-0.5">
-        {categoryLabel(doc.category)}
+        {categoryLabel(doc.category, t)}
       </span>
 
       <span className="shrink-0 text-[0.72rem] text-muted w-10 text-right">
@@ -144,24 +152,24 @@ function DocumentRow({
       {doc.status === "ready" ? (
         <span className="shrink-0 flex items-center gap-1.5 text-[0.72rem] text-emerald-600 w-24">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-          Indexed
+          {t("docs.indexed")}
         </span>
       ) : doc.status === "error" ? (
         <span className="shrink-0 flex items-center gap-1.5 text-[0.72rem] text-red-500 w-24">
           <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-          Error
+          {t("docs.error")}
         </span>
       ) : (
         <span className="shrink-0 flex items-center gap-1.5 text-[0.72rem] text-amber w-24">
           <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse shrink-0" />
-          Processing…
+          {t("common.processing")}
         </span>
       )}
 
       <button
         onClick={() => onDelete(doc.id, doc.storage_path)}
         className="shrink-0 w-6 h-6 flex items-center justify-center text-muted hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 text-lg leading-none"
-        title="Delete document"
+        title={t("docs.deleteDocument")}
       >
         ×
       </button>
@@ -174,6 +182,7 @@ function DocumentRow({
 /* ------------------------------------------------------------------ */
 
 export default function KnowledgeVaultPage() {
+  const t = useT();
   const router = useRouter();
   const { brandId, loading: brandLoading } = useBrand();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -367,7 +376,7 @@ export default function KnowledgeVaultPage() {
       setTextDocType("other");
       setTextDescription("");
     } catch (err) {
-      setTextError(err instanceof Error ? err.message : "Save failed");
+      setTextError(err instanceof Error ? err.message : t("channels.errSave"));
     }
     setTextSaving(false);
   }
@@ -477,7 +486,7 @@ export default function KnowledgeVaultPage() {
   if (brandLoading || pageLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <span className="text-muted text-[0.85rem]">Loading vault…</span>
+        <span className="text-muted text-[0.85rem]">{t("docs.loadingVault")}</span>
       </div>
     );
   }
@@ -487,10 +496,10 @@ export default function KnowledgeVaultPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-[1.35rem] font-semibold text-ink tracking-tight">
-          Brand Knowledge Vault
+          {t("docs.vaultTitle")}
         </h1>
         <p className="text-[0.82rem] text-muted mt-1">
-          Upload brand documents. AI will use only this information when generating content.
+          {t("docs.vaultIntro")}
         </p>
       </div>
 
@@ -500,7 +509,7 @@ export default function KnowledgeVaultPage() {
         style={{ background: "#fdf1ed", borderColor: "#f5c4b0" }}
       >
         <p className="text-[0.8rem] text-ink leading-relaxed">
-          <span className="font-semibold text-brand-orange">AI-only rule:</span>{" "}
+          <span className="font-semibold text-brand-orange">{t("docs.aiOnlyRule")}</span>{" "}
           Branditect will only use information found in these documents. It will never
           invent product names, features, pricing, or company facts. If information is
           not in the vault, it will ask rather than guess.
@@ -513,19 +522,21 @@ export default function KnowledgeVaultPage() {
           <div className="text-[1.6rem] font-semibold text-ink leading-none">
             {indexedDocs.length}
           </div>
-          <div className="text-[0.75rem] text-muted mt-1.5">Documents indexed</div>
+          <div className="text-[0.75rem] text-muted mt-1.5">{t("docs.documentsIndexed")}</div>
         </div>
         <div className="bg-white border border-light rounded-lg px-5 py-4">
           <div className="text-[1.6rem] font-semibold text-ink leading-none">
             {totalPages}
           </div>
-          <div className="text-[0.75rem] text-muted mt-1.5">Pages processed</div>
+          <div className="text-[0.75rem] text-muted mt-1.5">{t("docs.pagesProcessed")}</div>
         </div>
         <div className="bg-white border border-light rounded-lg px-5 py-4">
           <div className={`text-[1.6rem] font-semibold leading-none ${vaultStatusColor}`}>
-            {vaultStatus}
+            {/* vaultStatus is identity (the colour compares it); only
+                "Empty" has a key so far. */}
+            {vaultStatus === "Empty" ? t("notes.emptyPreview") : vaultStatus}
           </div>
-          <div className="text-[0.75rem] text-muted mt-1.5">Vault status</div>
+          <div className="text-[0.75rem] text-muted mt-1.5">{t("docs.vaultStatus")}</div>
         </div>
       </div>
 
@@ -541,7 +552,7 @@ export default function KnowledgeVaultPage() {
                 : "bg-white text-mid border-light hover:border-muted hover:text-ink"
             }`}
           >
-            {cat.label}
+            {cat.labelKey ? t(cat.labelKey) : cat.label}
           </button>
         ))}
       </div>
@@ -566,7 +577,7 @@ export default function KnowledgeVaultPage() {
             <span className="text-brand-orange underline">browse</span>
           </p>
           <p className="text-[0.75rem] text-muted">
-            PDF, JPEG, PNG, PPTX, DOCX, XLSX — max 50 MB
+            {t("docs.acceptedFiles")}
           </p>
           <input
             ref={fileInputRef}
@@ -584,8 +595,8 @@ export default function KnowledgeVaultPage() {
           className="w-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-light rounded-lg bg-pale hover:border-muted transition-all shrink-0"
         >
           <span className="text-2xl text-muted select-none">✎</span>
-          <span className="text-[0.82rem] font-medium text-ink">Write text</span>
-          <span className="text-[0.72rem] text-muted">Paste or type notes</span>
+          <span className="text-[0.82rem] font-medium text-ink">{t("docs.writeText")}</span>
+          <span className="text-[0.72rem] text-muted">{t("docs.pasteOrType")}</span>
         </button>
       </div>
 
@@ -595,7 +606,7 @@ export default function KnowledgeVaultPage() {
           <div className="bg-white rounded-xl w-full max-w-xl flex flex-col shadow-xl overflow-hidden">
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-light">
-              <span className="text-[0.95rem] font-semibold text-ink">Add text to vault</span>
+              <span className="text-[0.95rem] font-semibold text-ink">{t("docs.addTextToVault")}</span>
               <button
                 onClick={() => { setTextOpen(false); setTextError(null); }}
                 className="text-muted hover:text-ink text-xl leading-none"
@@ -606,19 +617,19 @@ export default function KnowledgeVaultPage() {
             <div className="p-5 flex flex-col gap-4 overflow-y-auto max-h-[70vh]">
               {/* Title */}
               <div>
-                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Title</label>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">{t("docs.title")}</label>
                 <input
                   type="text"
                   value={textTitle}
                   onChange={e => setTextTitle(e.target.value)}
-                  placeholder="e.g. Product launch notes, Pricing overview…"
+                  placeholder={t("docs.titlePlaceholder")}
                   className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange transition-colors"
                 />
               </div>
 
               {/* Type — the category is derived from it. Criterion 5. */}
               <div>
-                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Type</label>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">{t("common.type")}</label>
                 <select
                   value={textDocType}
                   onChange={e => setTextDocType(e.target.value)}
@@ -633,24 +644,24 @@ export default function KnowledgeVaultPage() {
               {/* The same question the file path asks, in the same words. */}
               <div>
                 <label className="block text-[0.76rem] font-medium text-muted mb-1.5">
-                  What is this?
+                  {t("docs.whatIsThis")}
                 </label>
                 <textarea
                   rows={2}
                   value={textDescription}
                   onChange={e => setTextDescription(e.target.value)}
-                  placeholder="Studio reads this to decide when to cite it."
+                  placeholder={t("docs.typeHelp")}
                   className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange bg-white transition-colors"
                 />
               </div>
 
               {/* Content */}
               <div>
-                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">Content</label>
+                <label className="block text-[0.76rem] font-medium text-muted mb-1.5">{t("docs.content")}</label>
                 <textarea
                   value={textContent}
                   onChange={e => setTextContent(e.target.value)}
-                  placeholder="Paste or write your brand information here — product details, pricing, company info, talking points…"
+                  placeholder={t("docs.contentPlaceholder")}
                   rows={12}
                   className="w-full border border-light rounded-lg px-3 py-2.5 text-[0.85rem] text-ink outline-none focus:border-brand-orange transition-colors resize-none leading-relaxed"
                 />
@@ -672,14 +683,14 @@ export default function KnowledgeVaultPage() {
                 onClick={() => { setTextOpen(false); setTextError(null); }}
                 className="flex-1 py-2 rounded-lg border border-light text-[0.82rem] text-mid hover:border-muted hover:text-ink transition-all"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={saveTextEntry}
                 disabled={textSaving}
                 className="flex-2 px-6 py-2 rounded-lg bg-brand-orange text-white text-[0.82rem] font-medium hover:bg-brand-orange-hover transition-all disabled:opacity-50"
               >
-                {textSaving ? "Saving…" : "Save to vault →"}
+                {textSaving ? t("settings.saving") : "Save to vault →"}
               </button>
             </div>
           </div>

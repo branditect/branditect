@@ -49,15 +49,18 @@ describe("what a save does with what was typed", () => {
 });
 
 describe("the industry list is the one onboarding uses", () => {
-  it("matches app/onboarding/page.tsx exactly, in order", () => {
-    // The spec says "same list as onboarding". That screen is not extracted
-    // yet, so it keeps its own literals and this asserts they agree rather
-    // than half-extracting it. When it is extracted it imports from here.
+  it("is the list onboarding imports, not a copy of it", () => {
+    // The spec says "same list as onboarding". Until batch A the onboarding
+    // screen kept its own literals and this asserted they agreed. It was
+    // extracted on 2026-09-14 and now imports this list, which is what this
+    // test said would happen, so the check is that no second copy exists.
     const src = read("app/onboarding/page.tsx");
-    const block = src.slice(src.indexOf("const INDUSTRIES = ["), src.indexOf("];", src.indexOf("const INDUSTRIES = [")));
-    const labels = [...block.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-    assert.ok(labels.length > 5, "the onboarding list did not parse");
-    assert.deepEqual(INDUSTRIES.map((i) => i.value), labels);
+    assert.match(src, /import \{ INDUSTRIES \} from "@\/lib\/industries"/);
+    assert.ok(!/const INDUSTRIES = \[/.test(src), "onboarding keeps a copy of the industry list again");
+    assert.match(src, /setSelectedIndustry\(ind\.value\)/, "onboarding stores something other than the value");
+    assert.match(src, /t\(ind\.labelKey\)/);
+    assert.deepEqual(INDUSTRIES.map((i) => i.value), ["Tech & SaaS", "E-commerce", "Health & Wellness",
+      "Food & Beverage", "Professional Services", "Fashion & Beauty", "Education", "Real Estate", "Other"]);
   });
 
   it("every industry has a translated label on both sides", () => {

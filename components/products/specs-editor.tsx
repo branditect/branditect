@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/use-t.tsx";
+
 export interface Spec { id?: string; key: string; value: string }
 
 /** Max 2000. Studio quotes specs verbatim, so a long one is a smell, not a limit. */
@@ -13,12 +15,13 @@ export function SpecsEditor({
   loading: boolean;
   onChange: (next: Spec[]) => void;
 }) {
+  const t = useT();
   function update(i: number, patch: Partial<Spec>) {
     onChange(specs.map((s, j) => (j === i ? { ...s, ...patch } : s)));
   }
 
   if (loading) {
-    return <p className="py-2 text-xs font-medium text-muted">Loading specifications…</p>;
+    return <p className="py-2 text-xs font-medium text-muted">{t("specs.loading")}</p>;
   }
 
   return (
@@ -31,7 +34,7 @@ export function SpecsEditor({
                 aria-label={`Specification ${i + 1} name`}
                 value={s.key}
                 maxLength={KEY_MAX}
-                placeholder="Absorbency"
+                placeholder={t("specs.example")}
                 onChange={(e) => update(i, { key: e.target.value })}
                 className="h-8 rounded-tile border border-rule bg-card px-2.5 text-xs font-semibold text-ink outline-none focus:border-accent focus:ring-2 focus:ring-tint-1"
               />
@@ -85,11 +88,12 @@ export function DescriptionField({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const t = useT();
   const over = value.length > DESC_MAX * 0.9;
   return (
     <>
       <label htmlFor="f-description" className="pt-1.5 text-xs font-medium text-muted">
-        Description
+        {t("common.description")}
       </label>
       <div>
         <textarea
@@ -101,7 +105,7 @@ export function DescriptionField({
         />
         <div className="mt-1 flex items-baseline gap-3">
           <span className="text-2xs font-medium text-muted">
-            Studio writes from this. Facts, not adjectives — it will find its own.
+            {t("specs.help")}
           </span>
           <span className={`ml-auto font-mono text-2xs ${over ? "text-accent-dark" : "text-faint"}`}>
             {value.length} / {DESC_MAX}

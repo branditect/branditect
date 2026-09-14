@@ -22,11 +22,13 @@ import {
   UPLOAD_SLOTS, FONT_ROLES, googleFontUrl, normaliseHex, logoUploadType,
 } from "@/lib/visual-identity";
 import u from "./uploads.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 function Panel({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const t = useT();
   return (
     <div className={u.panel}>
-      <button type="button" className={u.close} onClick={onClose} aria-label="Close">
+      <button type="button" className={u.close} onClick={onClose} aria-label={t("common.close")}>
         <Icon name="close" size={12} />
       </button>
       {children}
@@ -39,6 +41,7 @@ function Panel({ children, onClose }: { children: React.ReactNode; onClose: () =
 export function AddLogo({
   brandId, onDone, variant = "act",
 }: { brandId: string; onDone: () => void; variant?: "act" | "empty" }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [slot, setSlot] = useState<string>("primary");
   const [busy, setBusy] = useState(false);
@@ -77,12 +80,12 @@ export function AddLogo({
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="upload" size={variant === "empty" ? 14 : 12} />
-        Upload a logo
+        {t("vupload.logo")}
       </button>
 
       {open && (
         <Panel onClose={() => setOpen(false)}>
-          <div className={u.plab}>Which version is this?</div>
+          <div className={u.plab}>{t("vupload.whichVersion")}</div>
           <div className={u.slots}>
             {UPLOAD_SLOTS.map((sl) => (
               <button
@@ -97,7 +100,7 @@ export function AddLogo({
             ))}
           </div>
           <p className={u.note}>
-            SVG or PNG. Uploading to a slot that already has a file replaces it.
+            {t("vupload.logoHelp")}
           </p>
           <button
             type="button"
@@ -126,6 +129,7 @@ export function AddLogo({
 export function AddColour({
   brandId, onDone, variant = "act",
 }: { brandId: string; onDone: () => void; variant?: "act" | "empty" }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [hex, setHex] = useState("");
   const [name, setName] = useState("");
@@ -173,12 +177,12 @@ export function AddColour({
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="plus" size={variant === "empty" ? 14 : 12} />
-        Add a colour
+        {t("vupload.addColour")}
       </button>
 
       {open && (
         <Panel onClose={() => setOpen(false)}>
-          <div className={u.plab}>Add one colour</div>
+          <div className={u.plab}>{t("vupload.addOneColour")}</div>
           <div className={u.row}>
             <span
               className={u.preview}
@@ -190,18 +194,18 @@ export function AddColour({
               placeholder="#1a1a1a"
               value={hex}
               onChange={(e) => setHex(e.target.value)}
-              aria-label="Hex value"
+              aria-label={t("vupload.hex")}
             />
           </div>
           <input
             className={u.input}
-            placeholder="What it is for — Primary, Ink, Wash"
+            placeholder={t("vupload.colourRole")}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-label="Colour name"
+            aria-label={t("vupload.colourName")}
           />
           <button type="button" className={u.go} disabled={busy || !parsed} onClick={save}>
-            {busy ? "Saving…" : "Add colour"}
+            {busy ? t("settings.saving") : "Add colour"}
           </button>
 
           <div className={u.orLine}><span>or</span></div>
@@ -212,7 +216,7 @@ export function AddColour({
             onClick={() => shotRef.current?.click()}
           >
             <Icon name="img" size={12} />
-            Pull them out of a screenshot
+            {t("vupload.fromScreenshot")}
           </button>
           <input
             ref={shotRef}
@@ -233,6 +237,7 @@ export function AddColour({
 export function AddTypeface({
   brandId, onDone, variant = "act",
 }: { brandId: string; onDone: () => void; variant?: "act" | "empty" }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("body");
@@ -261,18 +266,18 @@ export function AddTypeface({
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="plus" size={variant === "empty" ? 14 : 12} />
-        Add a typeface
+        {t("vupload.addTypeface")}
       </button>
 
       {open && (
         <Panel onClose={() => setOpen(false)}>
-          <div className={u.plab}>A Google font, by name</div>
+          <div className={u.plab}>{t("vupload.googleFont")}</div>
           <input
             className={u.input}
             placeholder="DM Sans"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-label="Typeface name"
+            aria-label={t("vupload.typefaceName")}
           />
           <div className={u.roles}>
             {FONT_ROLES.map((r) => (
@@ -291,7 +296,7 @@ export function AddTypeface({
             Fonts will show as a fallback rather than silently look right.
           </p>
           <button type="button" className={u.go} disabled={busy || !name.trim()} onClick={save}>
-            {busy ? "Saving…" : "Add typeface"}
+            {busy ? t("settings.saving") : "Add typeface"}
           </button>
           {error && <p className={u.err} role="alert">{error}</p>}
         </Panel>

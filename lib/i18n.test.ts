@@ -292,10 +292,15 @@ describe("the extraction, both sides of it", () => {
   });
 
   it("says how big the remaining job is rather than rounding it away", () => {
+    // This was a floor, "more than 1000 left", which batch A (2026-09-14)
+    // brought down to 571. Its own message said to tighten it rather than
+    // delete it, and a floor is the loose version: it passes on a list whose
+    // counts are invented. So now every count has to be the real one.
+    const distinct = (f: string) => new Set(literalsIn(f).map((l) => l.text.trim().replace(/\s+/g, " "))).size;
+    const wrong = OUTSTANDING.filter(([f, c]) => distinct(f) !== c).map(([f, c]) => `${f}: listed ${c}, holds ${distinct(f)}`);
+    assert.deepEqual(wrong, [], "OUTSTANDING counts are stale; update them to what the files hold");
     const total = OUTSTANDING.reduce((n, [, c]) => n + c, 0);
-    assert.ok(total > 1000,
-      `OUTSTANDING claims only ${total} literals left; if that is real, this assertion should be ` +
-      `tightened rather than deleted`);
+    assert.ok(total > 0 || OUTSTANDING.length === 0);
   });
 });
 
@@ -492,7 +497,11 @@ describe("the output language is stated, never inferred", () => {
   it("onboarding asks the question, separately from the interface setting", () => {
     const raw = readFileSync("app/start/profile/[step]/page.tsx", "utf8");
     assert.match(raw, /output_language/, "onboarding never asks");
-    assert.match(raw, /What language should we write in\?/);
+    // Extracted in batch A: the question is a key now, and its English is
+    // still the question.
+    assert.match(raw, /key: "output_language", q: "profile\.whatLanguage"/);
+    assert.match(raw, /\{t\(step\.q\)\}/);
+    assert.equal(en["profile.whatLanguage"], "What language should we write in?");
     // Comments stripped first. The block that adds this step explains itself by
     // naming interface_language, and a check that flags its own explanation is
     // a check that gets weakened until it stops working.
@@ -621,5 +630,32 @@ describe("the scanner sees what the site copy is made of", () => {
 
   it("a unit suffix between tags", () => {
     assert.deepEqual(findAllLiterals("<span className={s.per}>/month</span>").map((l) => l.text), ["/month"]);
+  });
+});
+
+describe("batch A's scanner catch never reaches the work list", () => {
+  it("font stacks, transitions and a currency code are not copy", () => {
+    for (const t of ["'DM Sans', sans-serif", "'Space Grotesk', sans-serif",
+                     '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                     "background 0.15s", "opacity 0.15s", "EUR"]) {
+      assert.ok(isTechnical(t), `${t} would be listed as copy`);
+    }
+  });
+  it("while the words beside them still are", () => {
+    for (const t of ["Sans serif fonts only", "Background image", "Price in EUR", "Opacity"]) {
+      assert.equal(isTechnical(t), null, `${t} is copy and was filtered`);
+    }
+  });
+});
+
+describe("a sentence with a value in it is still a sentence", () => {
+  it("reports JSX text around simple expressions, with named placeholders", () => {
+    const src = "<b>You&rsquo;re {onboarding.answered} of {questionTotal()} into your strategy.</b>";
+    assert.deepEqual(findAllLiterals(src).map((l) => l.text), ["You’re {answered} of {questionTotal} into your strategy."]);
+  });
+  it("but not numbers and punctuation between values, or real code", () => {
+    assert.deepEqual(findAllLiterals("<span>{passedCount} / {totalCount} · {score}%</span>"), []);
+    assert.deepEqual(findAllLiterals("<p>{items.map((x) => x.name)} items here</p>").filter((l) => l.where === "jsx"), []);
+    assert.deepEqual(findAllLiterals("<p>{t(\"home.studio\")}</p>"), []);
   });
 });

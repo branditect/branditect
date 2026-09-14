@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Icon, { type IconName } from "@/components/icon";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export type Tone = "green" | "lavender" | "orange" | "blue";
 
@@ -69,35 +70,36 @@ export function CalcShell({
 }: {
   n: number; tone: Tone; title: string; promise: string; children: React.ReactNode;
 }) {
-  const t = TONE[tone];
+  const t = useT();
+  const tn = TONE[tone];
   return (
     <div className="mx-auto flex max-w-shell flex-col gap-[18px] px-4 pb-12 pt-[22px]">
       <header className="flex flex-wrap items-start gap-3">
         <div className="min-w-0">
           <Link href="/numbers" className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold text-accent">
-            <Icon name="chevronLeft" size={11} /> Numbers
+            <Icon name="chevronLeft" size={11} /> {t("numbers.title")}
           </Link>
           <div className="flex items-center gap-[11px]">
-            <span className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-tile ${t.tile}`}>
+            <span className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-tile ${tn.tile}`}>
               <Icon name="numbers" size={18} />
-              <span className={`absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full text-micro font-bold text-white ${t.num}`}>
+              <span className={`absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full text-micro font-bold text-white ${tn.num}`}>
                 {n}
               </span>
             </span>
             <div>
               <h1 className="text-display font-bold leading-[1.15]">{title}</h1>
-              <div className={`mt-0.5 text-xs font-bold ${t.promise}`}>{promise}</div>
+              <div className={`mt-0.5 text-xs font-bold ${tn.promise}`}>{promise}</div>
             </div>
           </div>
         </div>
         <span className="ml-auto shrink-0 rounded-pill bg-lavender px-2.5 py-[3px] text-micro font-extrabold uppercase tracking-[0.9px] text-lav-ink">
-          Sandbox
+          {t("numbers.sandbox")}
         </span>
       </header>
       {children}
       <p className="text-2xs font-medium leading-[1.6] text-muted">
-        Nothing here is saved. These figures live on the product card — use{" "}
-        <b className="text-ink-2">Apply to product</b> and press save there.
+        {t("calc.nothingSaved")}{" "}
+        <b className="text-ink-2">{t("calc.applyToProduct")}</b> {t("calc.pressSaveThere")}
       </p>
     </div>
   );
@@ -115,7 +117,8 @@ export function ApplyPanel({
   disabled?: boolean; children: React.ReactNode;
   fields: Record<string, string | number>;
 }) {
-  const t = TONE[tone];
+  const t = useT();
+  const tn = TONE[tone];
   const query = new URLSearchParams(
     Object.entries(fields).reduce<Record<string, string>>((a, [k, v]) => {
       a[k] = String(v);
@@ -125,7 +128,7 @@ export function ApplyPanel({
   if (productId) query.set("product", productId);
 
   return (
-    <div className={`rounded-card border p-3.5 ${t.panel}`}>
+    <div className={`rounded-card border p-3.5 ${tn.panel}`}>
       {children}
       {productId ? (
         <Link href={`/knowledge/products?${query.toString()}`}
@@ -135,9 +138,8 @@ export function ApplyPanel({
           <Icon name="arrow" size={14} />
         </Link>
       ) : (
-        <p className={`mt-3 text-2xs font-medium leading-[1.5] ${t.ink} opacity-80`}>
-          Pick a product above to apply this. Without one this is a quick calculation — useful for
-          pricing something you haven&apos;t added yet, and nothing is lost by staying here.
+        <p className={`mt-3 text-2xs font-medium leading-[1.5] ${tn.ink} opacity-80`}>
+          {t("calc.pickToApply")}
         </p>
       )}
     </div>
@@ -145,11 +147,12 @@ export function ApplyPanel({
 }
 
 export function ProductPicker({
-  products, value, onChange, label = "Prefill from",
+  products, value, onChange, label,
 }: {
   products: { id: string; name: string }[];
   value: string; onChange: (v: string) => void; label?: string;
 }) {
+  const t = useT();
   if (products.length === 0) {
     return (
       <p className="rounded-card border border-rule bg-tile px-3.5 py-3 text-xs font-medium leading-[1.55] text-muted">
@@ -160,9 +163,9 @@ export function ProductPicker({
   }
   return (
     <label className="block">
-      <span className="text-micro font-extrabold uppercase tracking-[0.8px] text-muted-2">{label}</span>
+      <span className="text-micro font-extrabold uppercase tracking-[0.8px] text-muted-2">{label ?? t("calc.prefillFrom")}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)} className={`${fieldClass} mt-1.5`}>
-        <option value="">Quick calculation — no product</option>
+        <option value="">{t("calc.quickCalculation")}</option>
         {products.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}

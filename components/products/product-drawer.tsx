@@ -20,6 +20,7 @@ import {
   type StockStatus,
 } from "@/lib/products";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const TABS = ["Details", "Pricing", "Inventory", "Media", "History"] as const;
 type Tab = (typeof TABS)[number];
@@ -234,6 +235,7 @@ export default function ProductDrawer({
   onSaved: (updated: Product) => void;
   returnFocusTo?: HTMLElement | null;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<Tab>("Details");
   // catalog_products.type drives the preset. It is not on the Product model,
   // so it is read from the row the drawer was given.
@@ -336,7 +338,7 @@ export default function ProductDrawer({
         body: JSON.stringify({ id: product.id, brand_id: brandId, changes: toPatch(draft) }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Could not save");
+      if (!res.ok) throw new Error(body.error || t("num.run.couldNotSave"));
 
       onSaved({
         ...product,
@@ -363,7 +365,7 @@ export default function ProductDrawer({
         stockUnits: toNum(draft.stockUnits),
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save");
+      setError(e instanceof Error ? e.message : t("num.run.couldNotSave"));
     } finally {
       setSaving(false);
     }
@@ -384,7 +386,7 @@ export default function ProductDrawer({
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            aria-label={draft.imageUrl ? "Change product image" : "Choose a product image"}
+            aria-label={draft.imageUrl ? "Change product image" : t("picker.chooseImage")}
             className={`group relative grid h-[74px] w-[74px] shrink-0 place-items-center overflow-hidden rounded-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               draft.imageUrl ? "border border-rule" : categoryStyle(draft.category)
             }`}
@@ -396,7 +398,7 @@ export default function ProductDrawer({
               <Icon name="bag" size={34} />
             )}
             <span className="absolute inset-0 grid place-items-center bg-ink/55 text-micro font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none">
-              {draft.imageUrl ? "Change" : "Add image"}
+              {draft.imageUrl ? "Change" : t("templates.addImage")}
             </span>
           </button>
 
@@ -434,7 +436,7 @@ export default function ProductDrawer({
 
           <button
             type="button"
-            aria-label="Close"
+            aria-label={t("common.close")}
             onClick={requestClose}
             className="absolute right-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-lg text-muted hover:bg-tile hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
           >
@@ -446,27 +448,27 @@ export default function ProductDrawer({
         <div
           ref={tablistRef}
           role="tablist"
-          aria-label="Product detail sections"
+          aria-label={t("product.sections")}
           onKeyDown={onTabKey}
           className="mt-3.5 flex gap-0.5 border-b border-rule px-[18px] pt-3.5"
         >
-          {TABS.map((t) => (
+          {TABS.map((name) => (
             <button
-              key={t}
+              key={name}
               type="button"
               role="tab"
-              id={`tab-${t}`}
-              aria-selected={tab === t}
-              aria-controls={`panel-${t}`}
-              tabIndex={tab === t ? 0 : -1}
-              onClick={() => setTab(t)}
+              id={`tab-${name}`}
+              aria-selected={tab === name}
+              aria-controls={`panel-${name}`}
+              tabIndex={tab === name ? 0 : -1}
+              onClick={() => setTab(name)}
               className={`relative px-2.5 pb-2.5 text-sm focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
-                tab === t
+                tab === name
                   ? "font-bold text-accent after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-sm after:bg-accent after:content-['']"
                   : "font-semibold text-muted hover:text-ink-2"
               }`}
             >
-              {t}
+              {name}
             </button>
           ))}
         </div>
@@ -475,25 +477,25 @@ export default function ProductDrawer({
           <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {tab === "Details" && (
               <>
-                <Section title="Product information">
+                <Section title={t("product.information")}>
                   <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
                     <Field label="Product name" value={draft.name} onChange={(v) => set("name", v)} />
                     <DescriptionField
                       value={draft.description}
                       onChange={(v) => set("description", v)}
                     />
-                    <Field label="Category" value={draft.category} onChange={(v) => set("category", v)} />
+                    <Field label={t("common.category")} value={draft.category} onChange={(v) => set("category", v)} />
                     <Field label="SKU" value={draft.sku} onChange={(v) => set("sku", v)} />
                     <Field label="Barcode" value={draft.barcode} onChange={(v) => set("barcode", v)} />
                     <Field
-                      label="Tags"
+                      label={t("images.tags")}
                       value={draft.tags}
                       onChange={(v) => set("tags", v)}
-                      placeholder="Professional, Ionic"
+                      placeholder={t("product.tagsExample")}
                     />
                   </div>
                   <p className="mt-2 text-2xs font-medium text-muted">
-                    Tags steer tone and angle when Studio writes. Separate them with commas.
+                    {t("product.tagsHelp")}
                   </p>
                 </Section>
 
@@ -517,10 +519,10 @@ export default function ProductDrawer({
 
             {tab === "Inventory" && (
               <>
-                <Section title="Availability">
+                <Section title={t("product.availability")}>
                   <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
                     <label htmlFor="f-status" className="pt-1.5 text-xs font-medium text-muted">
-                      Status
+                      {t("product.status")}
                     </label>
                     <select
                       id="f-status"
@@ -528,7 +530,7 @@ export default function ProductDrawer({
                       onChange={(e) => set("stockStatus", e.target.value as StockStatus | "")}
                       className={fieldClass}
                     >
-                      <option value="">Not set</option>
+                      <option value="">{t("product.notSet")}</option>
                       {(Object.keys(STOCK_LABELS) as StockStatus[]).map((s) => (
                         <option key={s} value={s}>
                           {STOCK_LABELS[s]}
@@ -540,7 +542,7 @@ export default function ProductDrawer({
                   </div>
                   {status === "out_of_stock" && (
                     <p className={`mt-2 text-2xs font-semibold ${STOCK_STYLES[status]}`}>
-                      Studio will avoid promoting this while it&apos;s out of stock.
+                      {t("product.outOfStockNote")}
                     </p>
                   )}
                 </Section>
@@ -556,7 +558,7 @@ export default function ProductDrawer({
 
             {tab === "Media" && (
               <>
-                <Section title="Product image">
+                <Section title={t("product.image")}>
                   <button
                     type="button"
                     onClick={() => setPickerOpen(true)}
@@ -574,7 +576,7 @@ export default function ProductDrawer({
                     </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-bold text-ink">
-                        {draft.imageUrl ? "Change product image" : "Choose a product image"}
+                        {draft.imageUrl ? "Change product image" : t("picker.chooseImage")}
                       </span>
                       {/* Entry 6d. Two different things share this tab:
                           this single shot, which is what the product list
@@ -601,7 +603,7 @@ export default function ProductDrawer({
             )}
 
             {tab === "History" && (
-              <Section title="Changes">
+              <Section title={t("product.changes")}>
                 <p className="text-xs font-medium leading-[1.6] text-muted">
                   No changes recorded yet. Price and cost edits will appear here with who made them —
                   someone will eventually need to know when a price changed and why.
@@ -627,7 +629,7 @@ export default function ProductDrawer({
             onClick={() => setDraft(toDraft(product))}
             className="rounded-tile border border-rule-2 px-3.5 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile disabled:opacity-40 disabled:hover:bg-transparent"
           >
-            Revert
+            {t("product.revert")}
           </button>
           <button
             type="button"
@@ -635,7 +637,7 @@ export default function ProductDrawer({
             onClick={save}
             className="ml-auto rounded-tile bg-grad-mark px-5 py-2.5 text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)] disabled:bg-none disabled:bg-rule-2 disabled:text-muted disabled:drop-shadow-none"
           >
-            {saving ? "Saving…" : dirty ? "Save changes" : "Saved"}
+            {saving ? t("settings.saving") : dirty ? "Save changes" : t("common.saved")}
           </button>
         </div>
       </aside>

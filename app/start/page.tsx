@@ -7,8 +7,10 @@ import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
 import { gateFootNote, gateProgress } from "@/lib/rail-steps";
 import LanguageSwitch from "@/components/language-switch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export default function StartWelcome() {
+  const t = useT();
   const { state, loading, flush } = useOnboarding();
   const partial = !loading && state.status === "partial";
 
@@ -17,12 +19,12 @@ export default function StartWelcome() {
       flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
-          Before you begin
+          {t("start.beforeYouBegin")}
         </span>
       }
       rail={
         <Rail
-          eyebrow="Getting started"
+          eyebrow={t("profile.gettingStarted")}
           heading="Four sections, twenty questions."
           lede="Five of them open your workspace. The rest sharpen it whenever you come back."
           foot={
@@ -38,7 +40,7 @@ export default function StartWelcome() {
       }
     >
       <h1 className="max-w-[18ch] text-display font-bold leading-[1.12] tracking-[-0.7px]">
-        Let&apos;s teach Branditect your brand.
+        {t("start.teachUs")}
       </h1>
       {/* States the time cost honestly rather than hiding it. */}
       <p className="mt-4 max-w-[54ch] text-base font-normal leading-[1.6] text-muted">

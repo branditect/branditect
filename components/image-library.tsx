@@ -12,6 +12,7 @@ import {
   type PickableProduct,
 } from "@/lib/product-picker";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -54,6 +55,7 @@ const DEFAULT_BRAND_ID = "default";
    but never what an image was for, and the only way to audit tagging was to
    open every product card in turn. */
 export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?: string }) {
+  const t = useT();
   const BRAND_ID = brandId;
   const [images, setImages] = useState<BrandImage[]>([]);
   /**
@@ -206,7 +208,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
       const tags = item.tags
         .split(",")
-        .map((t) => t.trim())
+        .map((tag) => tag.trim())
         .filter(Boolean);
 
       await supabase.from("brand_images").insert({
@@ -270,7 +272,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
   const saveEditTags = useCallback(async () => {
     if (!editingId) return;
-    const tags = editTags.split(",").map((t) => t.trim()).filter(Boolean);
+    const tags = editTags.split(",").map((tag) => tag.trim()).filter(Boolean);
     await supabase.from("brand_images").update({ tags }).eq("id", editingId);
     setImages((prev) => prev.map((i) => (i.id === editingId ? { ...i, tags } : i)));
     setEditingId(null);
@@ -338,7 +340,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
       {/* Upload area */}
       <div className="mb-6">
         <div className="font-mono text-[0.58rem] tracking-[0.12em] uppercase text-muted mb-1.5">
-          Upload Images
+          {t("images.upload")}
         </div>
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -363,10 +365,10 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
           </svg>
           <span className="font-mono text-[0.65rem] tracking-wide uppercase text-muted">
-            Drop images here or click to browse
+            {t("images.drop")}
           </span>
           <span className="font-mono text-[0.5rem] text-muted/60 mt-1">
-            JPG, PNG, WEBP · Max 10MB · Bulk upload supported
+            {t("images.accepted")}
           </span>
         </div>
       </div>
@@ -391,14 +393,14 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                   <input
                     value={batchCampaign}
                     onChange={(e) => setBatchCampaign(e.target.value)}
-                    placeholder="Campaign name"
+                    placeholder={t("images.campaignName")}
                     className="font-mono text-[0.6rem] border border-light rounded px-2 py-1 text-ink w-[140px]"
                   />
                   <button
                     onClick={applyBatchSettings}
                     className="font-mono text-[0.55rem] uppercase px-2 py-1 rounded bg-pale border border-light text-mid hover:text-ink"
                   >
-                    Apply to all
+                    {t("images.applyToAll")}
                   </button>
                 </>
               )}
@@ -422,7 +424,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     <span className="font-mono text-[0.5rem] text-muted">{(item.file.size / 1024).toFixed(0)} KB</span>
                   </div>
                   <div>
-                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">Category</label>
+                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">{t("common.category")}</label>
                     <select
                       value={item.category}
                       onChange={(e) => updatePending(i, "category", e.target.value)}
@@ -432,7 +434,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     </select>
                   </div>
                   <div>
-                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">Format</label>
+                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">{t("images.format")}</label>
                     <select
                       value={item.format}
                       onChange={(e) => updatePending(i, "format", e.target.value)}
@@ -442,20 +444,20 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     </select>
                   </div>
                   <div>
-                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">Campaign</label>
+                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">{t("images.campaign")}</label>
                     <input
                       value={item.campaign_name}
                       onChange={(e) => updatePending(i, "campaign_name", e.target.value)}
-                      placeholder="Campaign name"
+                      placeholder={t("images.campaignName")}
                       className="w-full text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
                     />
                   </div>
                   <div>
-                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">Tags</label>
+                    <label className="font-mono text-[0.5rem] text-muted uppercase block mb-0.5">{t("images.tags")}</label>
                     <input
                       value={item.tags}
                       onChange={(e) => updatePending(i, "tags", e.target.value)}
-                      placeholder="tag1, tag2, tag3"
+                      placeholder={t("files.tagsPlaceholder")}
                       className="w-full text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
                     />
                   </div>
@@ -478,14 +480,14 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               onClick={() => { pendingUploads.forEach((p) => URL.revokeObjectURL(p.preview)); setPendingUploads([]); }}
               className="font-mono text-[0.6rem] text-muted hover:text-ink"
             >
-              Cancel all
+              {t("images.cancelAll")}
             </button>
             <button
               onClick={confirmUpload}
               disabled={uploading}
               className="px-5 py-2 rounded-lg bg-brand-orange text-white font-mono text-[0.65rem] uppercase tracking-wide hover:bg-brand-orange-hover disabled:opacity-50 transition-all"
             >
-              {uploading ? "Uploading..." : `Upload ${pendingUploads.length} image${pendingUploads.length > 1 ? "s" : ""}`}
+              {uploading ? t("files.uploading") : `Upload ${pendingUploads.length} image${pendingUploads.length > 1 ? "s" : ""}`}
             </button>
           </div>
         </div>
@@ -498,7 +500,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           onChange={(e) => setFilterCategory(e.target.value)}
           className="font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white"
         >
-          <option value="">All categories</option>
+          <option value="">{t("images.allCategories")}</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select
@@ -506,13 +508,13 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           onChange={(e) => setFilterFormat(e.target.value)}
           className="font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white"
         >
-          <option value="">All formats</option>
+          <option value="">{t("images.allFormats")}</option>
           {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
         </select>
         <input
           value={filterTags}
           onChange={(e) => setFilterTags(e.target.value)}
-          placeholder="Search tags, names, campaigns..."
+          placeholder={t("images.searchPlaceholder")}
           className="flex-1 min-w-[200px] font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white placeholder:text-muted/50 focus:outline-none focus:border-brand-orange"
         />
         <span className="font-mono text-[0.55rem] text-muted">
@@ -539,10 +541,10 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           <select
             value={filterProduct ?? ""}
             onChange={(e) => { setFilterProduct(e.target.value || null); setUntaggedOnly(false); }}
-            aria-label="Filter by product"
+            aria-label={t("images.filterByProduct")}
             className="text-[13px] font-semibold border border-light rounded-md px-2 py-1.5 bg-white text-ink"
           >
-            <option value="">All products</option>
+            <option value="">{t("images.allProducts")}</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -557,7 +559,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                 : "bg-white border-light text-ink hover:border-brand-orange"
             }`}
           >
-            Untagged <span data-untagged-count>{untaggedHere}</span>
+            {t("images.untagged")} <span data-untagged-count>{untaggedHere}</span>
           </button>
           <span className="text-[13px] text-muted" data-shown-count>
             {filtered.length} of {images.length} images
@@ -576,12 +578,12 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               onClick={() => setPickerFor(Array.from(selected))}
               className="text-[13px] font-bold rounded-md px-3 py-1.5 bg-brand-orange text-white"
             >
-              Tag to a product
+              {t("images.tagToProduct")}
             </button>
             <button
               type="button"
               onClick={() => setSelected(new Set())}
-              aria-label="Clear selection"
+              aria-label={t("images.clearSelection")}
               className="text-[13px] font-bold rounded-md px-2 py-1.5 bg-white/15 hover:bg-white/25"
             >
               ✕
@@ -639,25 +641,25 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                         onClick={e => e.stopPropagation()}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30 no-underline"
                       >
-                        Download
+                        {t("common.download")}
                       </a>
                       <button
                         onClick={() => copyUrl(srcOf(img))}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30"
                       >
-                        {copiedUrl === srcOf(img) ? "Copied ✓" : "Copy URL"}
+                        {copiedUrl === srcOf(img) ? "Copied ✓" : t("files.copyUrl")}
                       </button>
                       <button
                         onClick={() => startEditTags(img)}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30"
                       >
-                        Edit tags
+                        {t("files.editTags")}
                       </button>
                       <button
                         onClick={() => deleteImage(img)}
                         className="px-2 py-1 rounded bg-red-500/60 text-white font-mono text-[0.5rem] uppercase hover:bg-red-500/80"
                       >
-                        Delete
+                        {t("common.delete")}
                       </button>
                     </div>
                   </div>
@@ -671,13 +673,13 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     <input
                       value={editTags}
                       onChange={(e) => setEditTags(e.target.value)}
-                      placeholder="tag1, tag2, tag3"
+                      placeholder={t("files.tagsPlaceholder")}
                       className="w-full text-[0.65rem] border border-light rounded px-2 py-1 mb-1.5 text-ink focus:border-brand-orange outline-none"
                       autoFocus
                     />
                     <div className="flex gap-1">
-                      <button onClick={saveEditTags} className="font-mono text-[0.5rem] px-2 py-0.5 rounded bg-brand-orange text-white">Save</button>
-                      <button onClick={() => setEditingId(null)} className="font-mono text-[0.5rem] px-2 py-0.5 rounded bg-pale text-muted border border-light">Cancel</button>
+                      <button onClick={saveEditTags} className="font-mono text-[0.5rem] px-2 py-0.5 rounded bg-brand-orange text-white">{t("files.save")}</button>
+                      <button onClick={() => setEditingId(null)} className="font-mono text-[0.5rem] px-2 py-0.5 rounded bg-pale text-muted border border-light">{t("common.cancel")}</button>
                     </div>
                   </div>
                 ) : (
@@ -710,7 +712,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                         Without it you can see what a product has but never
                         what an image belongs to. */}
                     <div className="mt-2 pt-2 border-t border-light">
-                      <div className="text-[12px] font-semibold text-muted mb-1">On these products</div>
+                      <div className="text-[12px] font-semibold text-muted mb-1">{t("images.onTheseProducts")}</div>
                       {(() => {
                         const on = productsForImage(img.id, links, products);
                         if (on.length === 0) {
@@ -720,7 +722,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                               onClick={() => setPickerFor([img.id])}
                               className="w-full text-[12px] font-semibold text-muted border border-dashed border-light rounded-md px-2 py-1.5 hover:text-brand-orange hover:border-brand-orange"
                             >
-                              Tag to a product
+                              {t("images.tagToProduct")}
                             </button>
                           );
                         }
@@ -736,7 +738,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                                   type="button"
                                   onClick={() => untag(img.id, prod.id)}
                                   aria-label={`Remove ${prod.name} from ${img.file_name}`}
-                                  title="Removes the link, not the file."
+                                  title={t("images.removesLinkOnly")}
                                   className="text-muted hover:text-red-600 leading-none"
                                 >
                                   ×
@@ -748,7 +750,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                               onClick={() => setPickerFor([img.id])}
                               className="text-[12px] font-semibold text-muted border border-dashed border-light rounded px-1.5 py-0.5 hover:text-brand-orange hover:border-brand-orange"
                             >
-                              Tag to a product
+                              {t("images.tagToProduct")}
                             </button>
                           </div>
                         );
@@ -806,13 +808,13 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                   download={previewImg.file_name}
                   className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30 no-underline"
                 >
-                  Download
+                  {t("common.download")}
                 </a>
                 <button
                   onClick={() => { navigator.clipboard.writeText(srcOf(previewImg)); }}
                   className="px-3 py-1.5 rounded-md bg-white/20 text-white text-xs font-medium hover:bg-white/30"
                 >
-                  Copy URL
+                  {t("files.copyUrl")}
                 </button>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { NAV } from "./nav.ts";
+import { en } from "./i18n/en.ts";
 import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
@@ -474,7 +475,9 @@ describe("the page autosaves", () => {
   });
 
   it("a failed save says so instead of looking fine", () => {
-    assert.match(src, /Not saved\./);
+    // A key since batch A. The page must use it, and it must still say so.
+    assert.match(src, /t\("notes\.notSaved"\)/);
+    assert.match(en["notes.notSaved"], /^Not saved\./);
   });
 
   it("renders the six controls from the shared list, not its own", () => {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/icon";
 import { useBrandChat } from "@/lib/useBrandChat";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export interface SourceChip {
   filename: string;
@@ -27,6 +28,7 @@ interface ChatRailProps {
  * the Andy panel via useBrandChat so the two can't drift apart.
  */
 export default function ChatRail({ indexedFileCount, suggestions, source }: ChatRailProps) {
+  const t = useT();
   const { messages, loading, send } = useBrandChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -47,7 +49,7 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
 
   return (
     <aside
-      aria-label="AI Chat"
+      aria-label={t("chat.title")}
       className="sticky top-3 m-3 ml-0 flex h-[calc(100dvh-24px)] w-chatrail shrink-0 flex-col overflow-hidden rounded-panel border border-rule bg-grad-chat px-4 pb-4 pt-[18px] shadow-[0_6px_18px_-12px_rgba(20,20,26,.10),0_1px_2px_rgba(20,20,26,.04)] chat:hidden"
     >
       <span
@@ -57,13 +59,13 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
 
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center gap-[7px]">
-          <h3 className="text-[18px] font-bold tracking-[-.4px]">AI Chat</h3>
+          <h3 className="text-[18px] font-bold tracking-[-.4px]">{t("chat.title")}</h3>
           <span aria-hidden="true" className="text-sm text-[#8b6bd8]">✦</span>
           <Link
             href="/chat"
             className="ml-auto text-micro font-bold text-accent underline underline-offset-2"
           >
-            Full screen
+            {t("chatRail.fullScreen")}
           </Link>
         </div>
 
@@ -129,7 +131,7 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
             <div className="mt-4" aria-live="polite">
               <div className="text-micro font-bold tracking-[1px] text-accent">BRANDITECT</div>
               <p className="mt-[7px] text-xs font-normal text-muted">
-                Reading your brand
+                {t("chatRail.reading")}
                 <span className="gen-dot" />
                 <span className="gen-dot" />
                 <span className="gen-dot" />
@@ -143,15 +145,15 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about your brand…"
-              aria-label="Ask about your brand"
+              placeholder={t("chatRail.placeholder")}
+              aria-label={t("chatRail.ask")}
               disabled={loading}
               className="w-full border-0 bg-transparent p-0 text-xs font-normal text-ink placeholder:text-faint focus:outline-none disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              aria-label="Send"
+              aria-label={t("chatRail.send")}
               className="ml-auto grid h-[34px] w-[34px] shrink-0 place-items-center rounded-nav bg-grad-mark text-white drop-shadow-[0_5px_6px_rgba(232,73,32,.55)] disabled:bg-none disabled:bg-rule-2 disabled:text-muted disabled:drop-shadow-none"
             >
               <Icon name="send" size={16} />

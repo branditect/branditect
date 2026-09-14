@@ -5,72 +5,68 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/logo";
 import { supabase } from "@/lib/supabase";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
+// The same list Settings offers: `value` is stored on the brand row and stays
+// English; `labelKey` is what renders.
+import { INDUSTRIES } from "@/lib/industries";
+
+/** A key, or English with no key yet (rendered as written, listed by the gap scan). */
+type Copy = StringKey | { en: string };
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
 
-const INDUSTRIES = [
-  { emoji: "💻", label: "Tech & SaaS" },
-  { emoji: "🛒", label: "E-commerce" },
-  { emoji: "🧘", label: "Health & Wellness" },
-  { emoji: "🍽", label: "Food & Beverage" },
-  { emoji: "💼", label: "Professional Services" },
-  { emoji: "✨", label: "Fashion & Beauty" },
-  { emoji: "📚", label: "Education" },
-  { emoji: "🏠", label: "Real Estate" },
-  { emoji: "◈", label: "Other" },
+const LOGO_SLOTS: { key: string; label: StringKey }[] = [
+  { key: "primary", label: "logoSlot.primary" },
+  { key: "dark-bg", label: "logoSlot.dark" },
+  { key: "icon-mark", label: "logoSlot.mark" },
+  { key: "white", label: "logoSlot.white" },
 ];
 
-const LOGO_SLOTS = [
-  { key: "primary", label: "Primary Logo" },
-  { key: "dark-bg", label: "Dark Background Version" },
-  { key: "icon-mark", label: "Icon / Mark Only" },
-  { key: "white", label: "White Version" },
-];
-
-const STRATEGY_OPTIONS = [
+const STRATEGY_OPTIONS: { value: string; icon: string; title: StringKey; desc: Copy }[] = [
   {
     value: "questionnaire",
     icon: "✦",
-    title: "Answer our brand questionnaire",
-    desc: "38 strategic questions that build your complete brand foundation. Takes 15-30 minutes.",
+    title: "onboarding.strategy.questionnaire",
+    desc: { en: "38 strategic questions that build your complete brand foundation. Takes 15-30 minutes." },
   },
   {
     value: "paste",
     icon: "📋",
-    title: "Paste existing strategy",
-    desc: "Already have a brand strategy? Paste it and we'll structure it.",
+    title: "onboarding.strategy.paste",
+    desc: "onboarding.strategy.pasteHelp",
   },
   {
     value: "pdf",
     icon: "📄",
-    title: "Upload a PDF",
-    desc: "Upload your brand guidelines or strategy document.",
+    title: "onboarding.strategy.upload",
+    desc: "onboarding.strategy.uploadHelp",
   },
   {
     value: "skip",
     icon: "⏭",
-    title: "Skip for now",
-    desc: "You can always set this up later from the Brand Library.",
+    title: "common.skipForNow",
+    desc: "onboarding.strategy.later",
   },
 ];
 
-const MODULE_CARDS = [
-  { icon: "📊", title: "Dashboard", desc: "Your brand command centre at a glance." },
-  { icon: "✦", title: "Create", desc: "Generate on-brand content in seconds." },
-  { icon: "📖", title: "Brand Library", desc: "Voice, visuals, and strategy in one place." },
-  { icon: "🗂", title: "Asset Library", desc: "All your logos, images, and files organised." },
-  { icon: "🖼", title: "Image Architect", desc: "AI-powered image generation for your brand." },
-  { icon: "💼", title: "Business Tools", desc: "Pricing, finance, and operations support." },
+const MODULE_CARDS: { icon: string; title: StringKey; desc: StringKey }[] = [
+  { icon: "📊", title: "module.dashboard", desc: "module.dashboardDesc" },
+  { icon: "✦", title: "module.create", desc: "module.createDesc" },
+  { icon: "📖", title: "module.brandLibrary", desc: "module.brandLibraryDesc" },
+  { icon: "🗂", title: "module.assetLibrary", desc: "module.assetLibraryDesc" },
+  { icon: "🖼", title: "module.imageArchitect", desc: "module.imageArchitectDesc" },
+  { icon: "💼", title: "module.businessTools", desc: "module.businessToolsDesc" },
 ];
 
-const STEPS = [
-  { num: 1, title: "Brand Basics", subtitle: "Name, website & industry" },
-  { num: 2, title: "Logo Upload", subtitle: "Your brand visuals" },
-  { num: 3, title: "Brand Colors", subtitle: "Your color palette" },
-  { num: 4, title: "Brand Strategy", subtitle: "How you position your brand" },
-  { num: 5, title: "All Done", subtitle: "Your workspace is ready" },
+const STEPS: { num: number; title: StringKey; subtitle: StringKey }[] = [
+  { num: 1, title: "onboarding.basics.title", subtitle: "onboarding.step.basics" },
+  { num: 2, title: "onboarding.step.logo", subtitle: "onboarding.step.visuals" },
+  { num: 3, title: "onboarding.colors.title", subtitle: "onboarding.step.palette" },
+  { num: 4, title: "onboarding.step.strategy", subtitle: "onboarding.step.positioning" },
+  { num: 5, title: "onboarding.step.allDone", subtitle: "onboarding.step.workspaceReady" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -93,6 +89,8 @@ function makeBrandId(name: string) {
 /* ------------------------------------------------------------------ */
 
 export default function OnboardingPage() {
+  const t = useT();
+  const tx = (c: Copy) => (typeof c === "string" ? t(c) : c.en);
   const router = useRouter();
 
   /* ---- state ---- */
@@ -215,7 +213,7 @@ export default function OnboardingPage() {
       setStep(5);
     } catch (err) {
       console.error("Onboarding submit error:", err);
-      alert("Something went wrong saving your brand. Please try again.");
+      alert(t("onboarding.saveFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -228,45 +226,45 @@ export default function OnboardingPage() {
   function renderStep1() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-semibold text-2xl text-ink mb-1">Brand Basics</h2>
-        <p className="text-muted text-sm mb-8">Tell us a little about your brand to get started.</p>
+        <h2 className="font-semibold text-2xl text-ink mb-1">{t("onboarding.basics.title")}</h2>
+        <p className="text-muted text-sm mb-8">{t("onboarding.basics.intro")}</p>
 
         {/* Brand name */}
-        <label className="block text-sm font-medium text-dark mb-1.5">What&apos;s your brand called?</label>
+        <label className="block text-sm font-medium text-dark mb-1.5">{t("onboarding.basics.nameLabel")}</label>
         <input
           type="text"
           value={brandName}
           onChange={(e) => setBrandName(e.target.value)}
-          placeholder="e.g. Acme Inc."
+          placeholder={t("onboarding.basics.namePlaceholder")}
           className="w-full rounded-xl border border-light bg-white px-4 py-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand-orange mb-6"
         />
 
         {/* Website */}
-        <label className="block text-sm font-medium text-dark mb-1.5">Website URL</label>
+        <label className="block text-sm font-medium text-dark mb-1.5">{t("onboarding.basics.websiteLabel")}</label>
         <input
           type="url"
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
-          placeholder="https://..."
+          placeholder={t("onboarding.basics.websitePlaceholder")}
           className="w-full rounded-xl border border-light bg-white px-4 py-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand-orange mb-6"
         />
 
         {/* Industry */}
-        <label className="block text-sm font-medium text-dark mb-3">Industry</label>
+        <label className="block text-sm font-medium text-dark mb-3">{t("onboarding.basics.industryLabel")}</label>
         <div className="grid grid-cols-3 gap-2.5 mb-8">
           {INDUSTRIES.map((ind) => (
             <button
-              key={ind.label}
+              key={ind.value}
               type="button"
-              onClick={() => setSelectedIndustry(ind.label)}
+              onClick={() => setSelectedIndustry(ind.value)}
               className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border px-3 py-4 text-sm transition-all ${
-                selectedIndustry === ind.label
+                selectedIndustry === ind.value
                   ? "border-brand-orange bg-brand-orange-pale text-ink"
                   : "border-light bg-white text-mid hover:border-muted"
               }`}
             >
               <span className="text-xl">{ind.emoji}</span>
-              <span>{ind.label}</span>
+              <span>{t(ind.labelKey)}</span>
             </button>
           ))}
         </div>
@@ -276,7 +274,7 @@ export default function OnboardingPage() {
           onClick={() => setStep(2)}
           className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3 text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Continue →
+          {t("common.continueArrow")}
         </button>
       </div>
     );
@@ -285,8 +283,8 @@ export default function OnboardingPage() {
   function renderStep2() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-semibold text-2xl text-ink mb-1">Upload your brand logos</h2>
-        <p className="text-muted text-sm mb-8">Add your logo variants. You can always add more later.</p>
+        <h2 className="font-semibold text-2xl text-ink mb-1">{t("onboarding.logos.title")}</h2>
+        <p className="text-muted text-sm mb-8">{t("onboarding.logos.intro")}</p>
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           {LOGO_SLOTS.map((slot) => {
@@ -300,11 +298,11 @@ export default function OnboardingPage() {
                 className="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-light bg-white p-8 text-center hover:border-brand-orange transition-colors group"
               >
                 {preview ? (
-                  <img src={preview} alt={slot.label} className="max-h-16 max-w-[120px] object-contain" />
+                  <img src={preview} alt={t(slot.label)} className="max-h-16 max-w-[120px] object-contain" />
                 ) : (
                   <span className="text-3xl text-muted group-hover:text-brand-orange transition-colors">+</span>
                 )}
-                <span className="text-xs text-muted">{slot.label}</span>
+                <span className="text-xs text-muted">{t(slot.label)}</span>
                 {uploaded && (
                   <span className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px]">
                     ✓
@@ -330,13 +328,13 @@ export default function OnboardingPage() {
             onClick={() => setStep(3)}
             className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3 text-sm transition-colors"
           >
-            Continue →
+            {t("common.continueArrow")}
           </button>
           <button
             onClick={() => setStep(3)}
             className="text-sm text-muted hover:text-brand-orange transition-colors"
           >
-            Skip for now →
+            {t("onboarding.skipArrow")}
           </button>
         </div>
       </div>
@@ -346,8 +344,8 @@ export default function OnboardingPage() {
   function renderStep3() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-semibold text-2xl text-ink mb-1">Brand Colors</h2>
-        <p className="text-muted text-sm mb-8">Add your brand colors. You can always update these later.</p>
+        <h2 className="font-semibold text-2xl text-ink mb-1">{t("onboarding.colors.title")}</h2>
+        <p className="text-muted text-sm mb-8">{t("onboarding.colors.intro")}</p>
 
         {/* Color list */}
         <div className="flex flex-wrap gap-3 mb-6">
@@ -362,14 +360,14 @@ export default function OnboardingPage() {
             </div>
           ))}
           {brandColors.length === 0 && (
-            <p className="text-sm text-muted">No colors added yet.</p>
+            <p className="text-sm text-muted">{t("onboarding.colors.empty")}</p>
           )}
         </div>
 
         {/* Add color form */}
         <div className="flex items-end gap-3 mb-8 bg-white border border-light rounded-xl p-4">
           <div>
-            <label className="block text-xs font-medium text-dark mb-1">Color</label>
+            <label className="block text-xs font-medium text-dark mb-1">{t("onboarding.colors.color")}</label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -386,12 +384,12 @@ export default function OnboardingPage() {
             </div>
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-dark mb-1">Color name</label>
+            <label className="block text-xs font-medium text-dark mb-1">{t("onboarding.colors.nameLabel")}</label>
             <input
               type="text"
               value={newColorName}
               onChange={(e) => setNewColorName(e.target.value)}
-              placeholder="e.g. Primary Orange, Dark Navy"
+              placeholder={t("onboarding.colors.namePlaceholder")}
               className="w-full rounded-lg border border-light px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-brand-orange"
             />
           </div>
@@ -405,16 +403,16 @@ export default function OnboardingPage() {
             }}
             className="rounded-lg bg-brand-orange text-white px-4 py-2 text-sm font-semibold hover:bg-brand-orange-hover transition-colors shrink-0"
           >
-            Add
+            {t("common.add")}
           </button>
         </div>
 
         <div className="flex items-center gap-4">
           <button onClick={() => setStep(4)} className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-8 py-3 text-sm transition-colors">
-            Continue →
+            {t("common.continueArrow")}
           </button>
           <button onClick={() => setStep(4)} className="text-sm text-muted hover:text-brand-orange transition-colors">
-            Skip for now →
+            {t("onboarding.skipArrow")}
           </button>
         </div>
       </div>
@@ -424,8 +422,8 @@ export default function OnboardingPage() {
   function renderStep4() {
     return (
       <div className="max-w-2xl">
-        <h2 className="font-semibold text-2xl text-ink mb-1">How would you like to set up your brand strategy?</h2>
-        <p className="text-muted text-sm mb-8">Choose one option below. You can change this later.</p>
+        <h2 className="font-semibold text-2xl text-ink mb-1">{t("onboarding.strategy.title")}</h2>
+        <p className="text-muted text-sm mb-8">{t("onboarding.strategy.intro")}</p>
 
         <div className="flex flex-col gap-3 mb-8">
           {STRATEGY_OPTIONS.map((opt) => {
@@ -447,8 +445,8 @@ export default function OnboardingPage() {
                 >
                   <span className="text-xl mt-0.5 shrink-0">{opt.icon}</span>
                   <div>
-                    <div className="text-sm font-semibold text-ink">{opt.title}</div>
-                    <div className="text-xs text-muted mt-0.5 leading-relaxed">{opt.desc}</div>
+                    <div className="text-sm font-semibold text-ink">{t(opt.title)}</div>
+                    <div className="text-xs text-muted mt-0.5 leading-relaxed">{tx(opt.desc)}</div>
                   </div>
                 </button>
 
@@ -458,7 +456,7 @@ export default function OnboardingPage() {
                     value={strategyText}
                     onChange={(e) => setStrategyText(e.target.value)}
                     rows={6}
-                    placeholder="Paste your brand strategy here..."
+                    placeholder={t("onboarding.strategy.pastePlaceholder")}
                     className="mt-2 w-full rounded-xl border border-light bg-white px-4 py-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand-orange"
                   />
                 )}
@@ -516,7 +514,7 @@ export default function OnboardingPage() {
           <h2 className="font-semibold text-2xl text-white mb-2">
             Branditect for {brandName} is ready.
           </h2>
-          <p className="text-sm text-[#888]">Your brand workspace has been created.</p>
+          <p className="text-sm text-[#888]">{t("onboarding.done.title")}</p>
         </div>
 
         {/* Module cards */}
@@ -527,8 +525,8 @@ export default function OnboardingPage() {
               className="rounded-xl border border-light bg-white p-5 flex flex-col items-start"
             >
               <span className="text-xl mb-2">{mod.icon}</span>
-              <div className="text-sm font-semibold text-ink mb-0.5">{mod.title}</div>
-              <div className="text-xs text-muted leading-relaxed">{mod.desc}</div>
+              <div className="text-sm font-semibold text-ink mb-0.5">{t(mod.title)}</div>
+              <div className="text-xs text-muted leading-relaxed">{t(mod.desc)}</div>
             </div>
           ))}
         </div>
@@ -537,7 +535,7 @@ export default function OnboardingPage() {
           onClick={() => router.push("/home")}
           className="rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold px-10 py-3.5 text-sm transition-colors"
         >
-          Open my workspace →
+          {t("onboarding.done.open")}
         </button>
       </div>
     );
@@ -580,9 +578,9 @@ export default function OnboardingPage() {
                         isActive ? "font-bold text-ink" : isCompleted ? "font-medium text-ink" : "text-muted"
                       }`}
                     >
-                      {s.title}
+                      {t(s.title)}
                     </div>
-                    <div className="text-xs text-muted mt-0.5">{s.subtitle}</div>
+                    <div className="text-xs text-muted mt-0.5">{t(s.subtitle)}</div>
                   </div>
                 </li>
               );
@@ -597,7 +595,7 @@ export default function OnboardingPage() {
               onClick={() => setStep(step - 1)}
               className="text-sm text-muted hover:text-ink transition-colors"
             >
-              ← Back
+              {t("onboarding.back")}
             </button>
           </div>
         )}

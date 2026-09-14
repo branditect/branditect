@@ -37,7 +37,9 @@ export const ALLOWED_CATEGORIES: readonly string[] = [
  * noticing.
  */
 export const TYPE_TABS = [
-  { key: "images", label: "Images", icon: "IMG", category: "product",
+  // `labelKey` is what renders where the dictionary has one; `label` stays the
+  // English. The other tabs have no key yet and show `label`.
+  { key: "images", label: "Images", labelKey: "nav.knowledge.images", icon: "IMG", category: "product",
     desc: "Photos, screenshots, brand imagery",
     accept: "", acceptLabel: "", maxSize: 0, previewType: "image", emptyMessage: "" },
   { key: "videos", label: "Videos", icon: "VID", category: "video",

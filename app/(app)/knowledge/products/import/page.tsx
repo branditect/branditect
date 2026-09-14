@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/lib/useBrand";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -134,60 +135,61 @@ function TextArea({ label, value, onChange, placeholder, rows = 3 }: { label: st
 /* ------------------------------------------------------------------ */
 
 function ProductFormFields({ product, onChange }: { product: Product; onChange: (p: Product) => void }) {
+  const t = useT();
   const set = (fields: Partial<Product>) => onChange({ ...product, ...fields } as Product);
   switch (product.kind) {
     case "physical": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder="e.g. Face Serum 30ml" /></div>
-        <Field label="Category" value={product.category} onChange={v => set({ category: v })} placeholder="e.g. Skincare" />
-        <Field label="SKU" value={product.sku} onChange={v => set({ sku: v })} placeholder="e.g. SKU-001" />
-        <div className="col-span-2"><TextArea label="Description" value={product.description} onChange={v => set({ description: v })} placeholder="What is this product?" rows={2} /></div>
+        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exProductName")} /></div>
+        <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exProductCategory")} />
+        <Field label="SKU" value={product.sku} onChange={v => set({ sku: v })} placeholder={t("import.exSku")} />
+        <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsProduct")} rows={2} /></div>
         <Field label="RRP (€)" value={product.rrp} onChange={v => set({ rrp: v })} placeholder="29.99" type="number" />
         <Field label="Wholesale price (€)" value={product.wholesalePrice} onChange={v => set({ wholesalePrice: v })} placeholder="15.00" type="number" />
         <Field label="COGS (€)" value={product.cogs} onChange={v => set({ cogs: v })} placeholder="8.00" type="number" />
-        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder="3–5 days" />
-        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder="e.g. 500 units" /></div>
+        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exLeadTime")} />
+        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exUnits")} /></div>
       </div>
     );
     case "services": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Service name *" value={product.name} onChange={v => set({ name: v })} placeholder="e.g. Brand Strategy Session" /></div>
-        <Field label="Category" value={product.category} onChange={v => set({ category: v })} placeholder="e.g. Consulting" />
+        <div className="col-span-2"><Field label="Service name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exServiceName")} /></div>
+        <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exServiceCategory")} />
         <Field label="Price (€)" value={product.price} onChange={v => set({ price: v })} placeholder="500" type="number" />
         <div className="col-span-2">
-          <label className={lbl}>Price model</label>
+          <label className={lbl}>{t("import.priceModel")}</label>
           <select className={inp} value={product.priceModel} onChange={e => set({ priceModel: e.target.value })}>
             {PRICE_MODELS.map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
-        <div className="col-span-2"><TextArea label="Description" value={product.description} onChange={v => set({ description: v })} placeholder="What is included in this service?" rows={2} /></div>
-        <Field label="Ideal client" value={product.idealClient} onChange={v => set({ idealClient: v })} placeholder="e.g. Early-stage startups" />
-        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder="e.g. 2 weeks" />
-        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder="Strategy doc, 2 revision rounds, Q&A call" /></div>
-        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder="e.g. 4 clients" /></div>
+        <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsIncludedService")} rows={2} /></div>
+        <Field label="Ideal client" value={product.idealClient} onChange={v => set({ idealClient: v })} placeholder={t("import.exServiceAudience")} />
+        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exDuration")} />
+        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exDeliverables")} /></div>
+        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exCapacity")} /></div>
       </div>
     );
     case "saas": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Plan name *" value={product.name} onChange={v => set({ name: v })} placeholder="e.g. Pro Plan" /></div>
+        <div className="col-span-2"><Field label="Plan name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exPlanName")} /></div>
         <Field label="Monthly price (€)" value={product.monthlyPrice} onChange={v => set({ monthlyPrice: v })} placeholder="49" type="number" />
-        <div className="col-span-2"><TextArea label="Description" value={product.description} onChange={v => set({ description: v })} placeholder="What does this plan include?" rows={2} /></div>
-        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder="Unlimited projects, Analytics, API access" /></div>
+        <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsIncludedPlan")} rows={2} /></div>
+        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exPlanFeatures")} /></div>
         <label className="col-span-2 flex items-center gap-3 cursor-pointer">
           <button type="button" onClick={() => set({ flagship: !product.flagship })} className={`w-9 h-5 rounded-full transition-colors ${product.flagship ? "bg-brand-orange" : "bg-light"}`}>
             <span className={`block h-4 w-4 rounded-full bg-white shadow ml-0.5 transition-transform ${product.flagship ? "translate-x-4" : ""}`} />
           </button>
-          <span className="text-sm text-ink">Mark as flagship plan</span>
+          <span className="text-sm text-ink">{t("import.markFlagship")}</span>
         </label>
       </div>
     );
     case "digital": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder="e.g. Brand Identity Template Pack" /></div>
-        <Field label="Category" value={product.category} onChange={v => set({ category: v })} placeholder="e.g. Templates" />
+        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exDigitalName")} /></div>
+        <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exDigitalCategory")} />
         <Field label="Price (€)" value={product.price} onChange={v => set({ price: v })} placeholder="29" type="number" />
-        <div className="col-span-2"><TextArea label="Description" value={product.description} onChange={v => set({ description: v })} placeholder="What does the customer get?" rows={2} /></div>
-        <div className="col-span-2"><Field label="Delivery format" value={product.deliveryFormat} onChange={v => set({ deliveryFormat: v })} placeholder="e.g. PDF + Figma file" /></div>
+        <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatDoesCustomerGet")} rows={2} /></div>
+        <div className="col-span-2"><Field label="Delivery format" value={product.deliveryFormat} onChange={v => set({ deliveryFormat: v })} placeholder={t("import.exDigitalFormat")} /></div>
       </div>
     );
   }
@@ -198,6 +200,7 @@ function ProductFormFields({ product, onChange }: { product: Product; onChange: 
 /* ------------------------------------------------------------------ */
 
 function ProductModal({ initial, onSave, onClose }: { initial: Product | null; onSave: (p: Product) => void; onClose: () => void }) {
+  const t = useT();
   const [kind, setKind] = useState<Kind>(initial?.kind ?? "services");
   const [product, setProduct] = useState<Product>(initial ?? blankProduct("services"));
   const [pickingKind, setPickingKind] = useState(!initial);
@@ -213,7 +216,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
-          <h2 className="font-semibold text-ink text-[0.95rem]">{isEdit ? "Edit product" : "Add product"}</h2>
+          <h2 className="font-semibold text-ink text-[0.95rem]">{isEdit ? "Edit product" : t("products.add")}</h2>
           <button onClick={onClose} className="text-muted hover:text-ink text-lg leading-none">×</button>
         </div>
 
@@ -221,7 +224,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
           {/* Kind picker — only shown when adding new */}
           {!isEdit && (
             <div className="mb-5">
-              <label className={lbl + " mb-2"}>Product type</label>
+              <label className={lbl + " mb-2"}>{t("import.productType")}</label>
               <div className="grid grid-cols-2 gap-2">
                 {KIND_OPTIONS.map(o => (
                   <button key={o.kind} type="button" onClick={() => { setKind(o.kind); setPickingKind(false); }}
@@ -244,7 +247,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
 
         <div className="flex gap-2 px-6 pb-5">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-light text-mid text-sm hover:border-brand-orange hover:text-brand-orange transition-colors">
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={() => { if (product.name.trim()) onSave(product); }}
@@ -264,6 +267,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
 /* ------------------------------------------------------------------ */
 
 function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void; onClose: () => void }) {
+  const t = useT();
   const [tab, setTab] = useState<"text" | "file">("text");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -318,8 +322,8 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
       <div className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
           <div>
-            <h2 className="font-semibold text-ink text-[0.95rem]">Import products with AI</h2>
-            <p className="text-xs text-muted mt-0.5">Paste product info or upload a PDF — AI extracts each item automatically</p>
+            <h2 className="font-semibold text-ink text-[0.95rem]">{t("import.title")}</h2>
+            <p className="text-xs text-muted mt-0.5">{t("import.intro")}</p>
           </div>
           <button onClick={onClose} className="text-muted hover:text-ink text-lg leading-none ml-4 shrink-0">×</button>
         </div>
@@ -329,10 +333,10 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
             <>
               {/* Tabs */}
               <div className="flex gap-1 bg-pale rounded-lg p-1 mb-4">
-                {(["text", "file"] as const).map(t => (
-                  <button key={t} onClick={() => setTab(t)}
-                    className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${tab === t ? "bg-white text-ink shadow-sm" : "text-muted"}`}>
-                    {t === "text" ? "Paste text" : "Upload PDF"}
+                {(["text", "file"] as const).map(mode => (
+                  <button key={mode} onClick={() => setTab(mode)}
+                    className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${tab === mode ? "bg-white text-ink shadow-sm" : "text-muted"}`}>
+                    {mode === "text" ? "Paste text" : "Upload PDF"}
                   </button>
                 ))}
               </div>
@@ -357,8 +361,8 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                     <p className="text-sm font-medium text-ink">{file.name}</p>
                   ) : (
                     <>
-                      <p className="text-sm font-medium text-ink mb-1">Drop a PDF or image here</p>
-                      <p className="text-xs text-muted">Price lists, service menus, product catalogues</p>
+                      <p className="text-sm font-medium text-ink mb-1">{t("import.drop")}</p>
+                      <p className="text-xs text-muted">{t("import.dropHelp")}</p>
                     </>
                   )}
                 </div>
@@ -374,7 +378,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                 {extracting ? (
                   <>
                     <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Extracting products...
+                    {t("import.extracting")}
                   </>
                 ) : "Extract products with AI"}
               </button>
@@ -384,7 +388,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
               {/* Preview extracted products */}
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-ink">{preview.length} product{preview.length !== 1 ? "s" : ""} found — select which to add</p>
-                <button onClick={() => setPreview(null)} className="text-xs text-muted hover:text-ink">← Back</button>
+                <button onClick={() => setPreview(null)} className="text-xs text-muted hover:text-ink">{t("onboarding.back")}</button>
               </div>
 
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
@@ -408,7 +412,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
 
               <div className="flex gap-2 mt-4">
                 <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-light text-mid text-sm hover:border-brand-orange hover:text-brand-orange transition-colors">
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={() => { onAdd(selectedProducts); onClose(); }}
@@ -431,6 +435,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
 /* ------------------------------------------------------------------ */
 
 function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: () => void; onDelete: () => void }) {
+  const t = useT();
   return (
     <div className="bg-white border border-light rounded-xl p-5 flex flex-col gap-3 hover:border-brand-orange/30 transition-colors group">
       <div className="flex items-start justify-between gap-2">
@@ -440,7 +445,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
               {KIND_LABEL[product.kind]}
             </span>
             {product.kind === "saas" && product.flagship && (
-              <span className="text-[0.6rem] font-mono px-1.5 py-0.5 rounded border bg-amber-wash text-amber border-amber">Flagship</span>
+              <span className="text-[0.6rem] font-mono px-1.5 py-0.5 rounded border bg-amber-wash text-amber border-amber">{t("import.flagship")}</span>
             )}
           </div>
           <h3 className="font-semibold text-ink text-[0.95rem] leading-snug">{product.name || "Unnamed product"}</h3>
@@ -458,10 +463,10 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
 
       <div className="flex gap-2 mt-auto pt-2 border-t border-light opacity-0 group-hover:opacity-100 transition-opacity">
         <button onClick={onEdit} className="flex-1 text-xs text-mid hover:text-brand-orange py-1.5 rounded-lg border border-light hover:border-brand-orange-mid transition-colors">
-          Edit
+          {t("common.edit")}
         </button>
         <button onClick={onDelete} className="flex-1 text-xs text-mid hover:text-red-500 py-1.5 rounded-lg border border-light hover:border-red-200 transition-colors">
-          Delete
+          {t("common.delete")}
         </button>
       </div>
     </div>
@@ -473,6 +478,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
 /* ------------------------------------------------------------------ */
 
 export default function CatalogPage() {
+  const t = useT();
   const { brandId, brandName, loading: brandLoading } = useBrand();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -555,10 +561,10 @@ export default function CatalogPage() {
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light flex items-center justify-between">
         <div>
-          <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">Products & Services</h1>
+          <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">{t("import.productsAndServices")}</h1>
           <p className="text-[0.78rem] text-muted">
             {brandName}&apos;s full product catalogue
-            {saving && <span className="ml-2 text-brand-orange">Saving...</span>}
+            {saving && <span className="ml-2 text-brand-orange">{t("import.saving")}</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -566,13 +572,13 @@ export default function CatalogPage() {
             onClick={() => setShowImport(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-light text-mid text-[0.8rem] font-medium hover:border-brand-orange hover:text-brand-orange transition-colors"
           >
-            <span>↑</span> Import from text / PDF
+            <span>↑</span> {t("import.fromTextOrPdf")}
           </button>
           <button
             onClick={() => setShowAdd(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-orange text-white text-[0.8rem] font-semibold hover:bg-brand-orange-hover transition-colors"
           >
-            <span>+</span> Add product
+            <span>+</span> {t("products.add")}
           </button>
         </div>
       </div>
@@ -580,19 +586,19 @@ export default function CatalogPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-6">
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-muted text-sm">Loading catalogue...</div>
+          <div className="flex items-center justify-center h-40 text-muted text-sm">{t("import.loadingCatalogue")}</div>
         ) : products.length === 0 ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
             <div className="text-5xl mb-4">🗂</div>
-            <h2 className="font-semibold text-xl text-ink mb-2">No products yet</h2>
-            <p className="text-muted text-sm max-w-sm mb-8">Add your products and services manually, or paste in a price list and let AI extract them for you.</p>
+            <h2 className="font-semibold text-xl text-ink mb-2">{t("products.none")}</h2>
+            <p className="text-muted text-sm max-w-sm mb-8">{t("products.noneHelp")}</p>
             <div className="flex gap-3">
               <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover transition-colors">
                 + Add product
               </button>
               <button onClick={() => setShowImport(true)} className="px-5 py-2.5 rounded-lg border border-light text-mid text-sm font-medium hover:border-brand-orange hover:text-brand-orange transition-colors">
-                Import from text / PDF
+                {t("import.fromTextOrPdf")}
               </button>
             </div>
           </div>
@@ -612,7 +618,7 @@ export default function CatalogPage() {
               className="border-2 border-dashed border-light rounded-xl p-5 flex flex-col items-center justify-center gap-2 hover:border-brand-orange hover:bg-brand-orange-pale/20 transition-all min-h-[160px] text-muted hover:text-brand-orange"
             >
               <span className="text-2xl">+</span>
-              <span className="text-sm font-medium">Add product</span>
+              <span className="text-sm font-medium">{t("products.add")}</span>
             </button>
           </div>
         )}

@@ -7,6 +7,7 @@ import { railSteps } from "@/lib/rail-steps";
 import type { OnboardingState } from "@/lib/onboarding";
 import type { SectionId } from "@/lib/onboarding-questions";
 import s from "./start.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * The left rail. Guide on the left, the box you type in on the right — the
@@ -66,9 +67,10 @@ export function RailSteps({
   state: OnboardingState;
   activeSection?: SectionId | null;
 }) {
+  const t = useT();
   const rows = railSteps(state, activeSection);
   return (
-    <ol className={s.steps} aria-label="Your progress">
+    <ol className={s.steps} aria-label={t("start.yourProgress")}>
       {rows.map((row) => (
         <li
           key={row.id}
@@ -102,16 +104,17 @@ export function GuideCard({
   /** "a boot repair business" — the business the example came from. */
   exemplar?: string;
 }) {
+  const t = useT();
   return (
     <div className={s.guide}>
       <div className={s.guideKey}>
         <Icon name="spark" size={13} />
-        How to answer
+        {t("start.howToAnswer")}
       </div>
       <p className={s.help}>{help}</p>
       {example && (
         <>
-          <div className={s.exlab}>Example answer</div>
+          <div className={s.exlab}>{t("start.exampleAnswer")}</div>
           <p className={s.ex}>{example}</p>
           {exemplar && (
             <p className={s.exwho}>— {exemplar}, not yours. Copy the shape, not the words.</p>

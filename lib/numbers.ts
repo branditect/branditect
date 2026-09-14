@@ -10,6 +10,7 @@
  *   per month — fixed, paid whether you sell one or a thousand
  * Mixing them is how someone ends up subtracting rent from a unit price.
  */
+import type { StringKey } from "./i18n/en.ts";
 
 /** Net of tax. Every margin calculation starts here. */
 export function netPrice(retailGross: number, taxRatePct: number): number {
@@ -108,19 +109,27 @@ export const DEFAULT_PROFILE: BusinessProfile = {
 };
 
 /**
+ * One cost line. `label` is its identity: the values map, the rate-line set
+ * and anything saved are keyed on the English. `labelKey` is what renders,
+ * and is absent where the dictionary has no key yet ("Hosting & infra",
+ * "Support time", "Billing period"), in which case the English shows.
+ */
+export interface CostLine { label: string; labelKey?: StringKey; from: string }
+
+/**
  * The cost lines a profile implies.
  *
  * Base comes from `sells` — physical costs land per unit made, digital per
  * customer served. Channels add to it; ecommerce is a channel, not a business
  * type, so a brand can be direct AND trade at once.
  */
-export function costLines(p: BusinessProfile): { label: string; from: string }[] {
-  const lines: { label: string; from: string }[] =
+export function costLines(p: BusinessProfile): CostLine[] {
+  const lines: CostLine[] =
     p.sells === "physical"
       ? [
-          { label: "Production cost", from: "base" },
-          { label: "Freight & duty", from: "base" },
-          { label: "Packaging", from: "base" },
+          { label: "Production cost", labelKey: "num.productionCost", from: "base" },
+          { label: "Freight & duty", labelKey: "num.freightDuty", from: "base" },
+          { label: "Packaging", labelKey: "num.packaging", from: "base" },
         ]
       : [
           { label: "Hosting & infra", from: "base" },
@@ -131,30 +140,30 @@ export function costLines(p: BusinessProfile): { label: string; from: string }[]
     lines.push(
       ...(p.sells === "physical"
         ? [
-            { label: "Shipping", from: "direct" },
-            { label: "Returns rate", from: "direct" },
-          ]
-        : [{ label: "Refund rate", from: "direct" }]),
-      { label: "Payment fees", from: "direct" },
-      { label: "Ad cost per sale", from: "direct" },
+            { label: "Shipping", labelKey: "num.shipping", from: "direct" },
+            { label: "Returns rate", labelKey: "num.returnsRate", from: "direct" },
+          ] satisfies CostLine[]
+        : [{ label: "Refund rate", labelKey: "num.refundRate", from: "direct" }] satisfies CostLine[]),
+      { label: "Payment fees", labelKey: "num.paymentFees", from: "direct" },
+      { label: "Ad cost per sale", labelKey: "num.adCostPerSale", from: "direct" },
     );
   }
   if (p.channels.includes("trade")) {
     lines.push(
       p.sells === "physical"
-        ? { label: "Carton / pallet", from: "trade" }
-        : { label: "Reseller commission", from: "trade" },
-      { label: "Payment terms", from: "trade" },
+        ? { label: "Carton / pallet", labelKey: "num.cartonPallet", from: "trade" }
+        : { label: "Reseller commission", labelKey: "num.resellerCommission", from: "trade" },
+      { label: "Payment terms", labelKey: "num.paymentTerms", from: "trade" },
     );
   }
   if (p.channels.includes("store")) {
-    lines.push({ label: "Store commission %", from: "store" });
+    lines.push({ label: "Store commission %", labelKey: "num.storeCommission", from: "store" });
   }
   if (p.charges === "recurring") {
     lines.push(
       { label: "Billing period", from: "recurring" },
-      { label: "Churn rate", from: "recurring" },
-      { label: "Cost to acquire", from: "recurring" },
+      { label: "Churn rate", labelKey: "num.churnRate", from: "recurring" },
+      { label: "Cost to acquire", labelKey: "num.costToAcquire", from: "recurring" },
     );
   }
   return lines;

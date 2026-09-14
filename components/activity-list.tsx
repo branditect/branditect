@@ -1,6 +1,7 @@
 import Link from "next/link";
 import IconTile from "@/components/icon-tile";
 import type { IconName } from "@/components/icon";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export type ActivityType = "strategy" | "upload" | "created" | "chat";
 
@@ -49,22 +50,23 @@ export default function ActivityList({
   items: ActivityItem[];
   now: Date | null;
 }) {
+  const t = useT();
   return (
     <section className="rounded-panel border border-rule bg-card drop-shadow-panel">
       <div className="flex items-baseline justify-between gap-2.5 px-[15px] pt-4">
-        <h3 className="text-h3 font-bold">Recent activity</h3>
+        <h3 className="text-h3 font-bold">{t("activity.title")}</h3>
         <Link
           href="/knowledge/documents"
           className="text-xs font-semibold text-accent underline underline-offset-2"
         >
-          View all
+          {t("activity.viewAll")}
         </Link>
       </div>
 
       <div className="px-[15px] pb-3 pt-1">
         {items.length === 0 ? (
           <p className="py-4 text-xs font-normal text-muted-2">
-            Nothing yet. Anything you add to Brand, Knowledge or Studio shows up here.
+            {t("activity.empty")}
           </p>
         ) : (
           items.map((item) => (

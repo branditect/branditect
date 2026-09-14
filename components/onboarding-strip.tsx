@@ -6,6 +6,7 @@ import Icon from "@/components/icon";
 import { supabase } from "@/lib/supabase";
 import { questionTotal } from "@/lib/rail-steps";
 import type { OnboardingSummary } from "@/lib/useReadiness";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 const KEY = "branditect_onboarding_strip_dismissed";
 
@@ -19,6 +20,7 @@ const KEY = "branditect_onboarding_strip_dismissed";
  * sign-out rather than being written to the row.
  */
 export default function OnboardingStrip({ onboarding }: { onboarding: OnboardingSummary }) {
+  const t = useT();
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function OnboardingStrip({ onboarding }: { onboarding: Onboarding
 
   return (
     <section
-      aria-label="Continue your strategy"
+      aria-label={t("onboardingStrip.continue")}
       className="flex items-center gap-3 rounded-panel bg-grad-more px-[18px] py-3.5"
     >
       <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-tile bg-white/70 text-accent">
@@ -62,12 +64,12 @@ export default function OnboardingStrip({ onboarding }: { onboarding: Onboarding
         href="/start"
         className="ml-auto flex-none whitespace-nowrap text-xs font-bold text-accent-dark hover:underline"
       >
-        Continue →
+        {t("common.continueArrow")}
       </Link>
       <button
         type="button"
         onClick={dismiss}
-        aria-label="Dismiss"
+        aria-label={t("onboardingStrip.dismiss")}
         className="flex-none rounded-nav p-1 text-muted-2 hover:bg-white/60 hover:text-ink-2"
       >
         <Icon name="close" size={13} />

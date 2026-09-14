@@ -6,8 +6,10 @@ import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import { resumeQuestion } from "@/lib/onboarding";
 import { answeredTotal, questionTotal, sectionOf, gateFootNote } from "@/lib/rail-steps";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export default function Resume() {
+  const t = useT();
   const { state, loading, flush } = useOnboarding();
   const n = resumeQuestion(state);
   const answered = answeredTotal(state);
@@ -18,7 +20,7 @@ export default function Resume() {
       flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
-          Picking up where you left off
+          {t("start.resume.title")}
         </span>
       }
       rail={
@@ -35,7 +37,7 @@ export default function Resume() {
           }
           foot={
             <RailFoot icon="cloud">
-              Saved to your account, not this browser. Sign in anywhere and it&rsquo;s there.
+              {t("start.resume.body")}
             </RailFoot>
           }
         >
@@ -53,13 +55,13 @@ export default function Resume() {
       <div className="mt-7 flex flex-wrap gap-3">
         <Link href={`/start/q/${n}`}
           className="rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn">
-          Continue
+          {t("common.continue")}
         </Link>
         {/* Not optional. Trapping someone in a form they already abandoned once
             is how you lose them the second time. */}
         <Link href="/home"
           className="rounded-card border-[1.5px] border-rule-2 bg-card px-6 py-3 text-sm font-bold text-ink-2">
-          Open my workspace instead
+          {t("start.resume.openWorkspace")}
         </Link>
       </div>
     </StartShell>

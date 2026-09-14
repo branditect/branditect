@@ -1,6 +1,7 @@
 /** Run with: npm test — criteria from branditect-ui/spec/knowledge-images.md */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { en } from "./i18n/en.ts";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   productMatches, rowsToInsert, productsForImage, isUntagged,
@@ -229,7 +230,8 @@ describe("the filters are wired to those rules", () => {
   });
 
   it("both controls exist and are labelled", () => {
-    assert.ok(/aria-label="Filter by product"/.test(src));
+    assert.ok(/aria-label=\{t\("images\.filterByProduct"\)\}/.test(src), "the product filter is unlabelled");
+    assert.equal(en["images.filterByProduct"], "Filter by product");
     assert.ok(/aria-pressed=\{untaggedOnly\}/.test(src));
   });
 });

@@ -19,6 +19,7 @@ import {
   type Batch, setBatchType, overrideType, overrideDescription, stillUploading,
 } from "@/lib/document-batch";
 import p from "./ask-panel.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export default function AskPanel({
   batch, onChange, onSave, onSkip, saving,
@@ -29,6 +30,7 @@ export default function AskPanel({
   onSkip: () => void;
   saving: boolean;
 }) {
+  const t = useT();
   const [edited, setEdited] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(false);
   const [overridden, setOverridden] = useState(false);
@@ -44,7 +46,7 @@ export default function AskPanel({
   }
 
   return (
-    <div className={p.panel} role="dialog" aria-label="What are these files?">
+    <div className={p.panel} role="dialog" aria-label={t("ask.whatAreThese")}>
       <div className={p.head}>
         <div>
           <h2 className={p.title}>
@@ -59,40 +61,40 @@ export default function AskPanel({
         </div>
         <div className={p.headActs}>
           <button type="button" className={p.skip} onClick={onSkip} disabled={saving}>
-            Skip
+            {t("common.skip")}
           </button>
           <button type="button" className={p.save} onClick={onSave} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
+            {saving ? t("settings.saving") : t("files.save")}
           </button>
         </div>
       </div>
 
       <label className={p.field}>
-        <span className={p.lab}>What is this?</span>
+        <span className={p.lab}>{t("docs.whatIsThis")}</span>
         <textarea
           className={p.textarea}
           rows={3}
-          placeholder="Safety data sheet for the 500 ml bottle, TÜV tested Jan 2026"
+          placeholder={t("ask.descriptionPlaceholder")}
           value={batch.description}
           onChange={(e) => onChange({ ...batch, description: e.target.value })}
-          aria-label="Description"
+          aria-label={t("ask.description")}
         />
-        <span className={p.help}>Studio reads this to decide when to cite the file.</span>
+        <span className={p.help}>{t("ask.typeHelp")}</span>
       </label>
 
       <label className={p.field}>
-        <span className={p.lab}>Type</span>
+        <span className={p.lab}>{t("common.type")}</span>
         <select
           className={p.select}
           value={batch.docTypeId}
           onChange={(e) => onChange(setBatchType(batch, e.target.value, edited))}
-          aria-label="Document type"
+          aria-label={t("ask.documentType")}
         >
-          {DOC_TYPES.map((t) => (
-            <option key={t.id} value={t.id}>{t.label}</option>
+          {DOC_TYPES.map((dt) => (
+            <option key={dt.id} value={dt.id}>{dt.label}</option>
           ))}
         </select>
-        <span className={p.help}>Filled in from the file name. Change it if it is wrong.</span>
+        <span className={p.help}>{t("ask.titleFromFilename")}</span>
       </label>
 
       {/* Criterion 6 is step 3's, but the consequence is shown here as soon as
@@ -100,7 +102,7 @@ export default function AskPanel({
           choose, not afterwards. */}
       {contract && (
         <p className={p.contract}>
-          <strong>Not used in generated content.</strong> {CONTRACT_NOTE.replace("Not used in generated content. ", "")}
+          <strong>{t("ask.notUsedInContent")}</strong> {CONTRACT_NOTE.replace("Not used in generated content. ", "")}
         </p>
       )}
 
@@ -114,7 +116,7 @@ export default function AskPanel({
           >
             <Icon name={expanded ? "chevronLeft" : "chevronRight"} size={11} />
             {expanded ? "Hide the files" : `Set one file differently (${count})`}
-            {overridden && <span className={p.dot} aria-label="some files differ" />}
+            {overridden && <span className={p.dot} aria-label={t("ask.someFilesDiffer")} />}
           </button>
 
           {expanded && (
@@ -128,8 +130,8 @@ export default function AskPanel({
                     onChange={(e) => editFileType(f.tempId, e.target.value)}
                     aria-label={`Type for ${f.name}`}
                   >
-                    {DOC_TYPES.map((t) => (
-                      <option key={t.id} value={t.id}>{t.label}</option>
+                    {DOC_TYPES.map((dt) => (
+                      <option key={dt.id} value={dt.id}>{dt.label}</option>
                     ))}
                   </select>
                   <input
@@ -149,7 +151,7 @@ export default function AskPanel({
 
       <p className={p.foot}>
         Skip keeps the type above and no description. Files without one wait under{" "}
-        <strong>Not described yet</strong> until you add it.
+        <strong>{t("ask.notDescribed")}</strong> until you add it.
       </p>
       <span className={p.hiddenState} data-batch-type={batch.docTypeId}
             data-shown-label={docTypeLabel(batch.docTypeId)} />

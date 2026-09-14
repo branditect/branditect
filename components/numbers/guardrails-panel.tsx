@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Field, Panel, fieldClass, numStr, toNum } from "@/components/numbers/calc-shell";
 import { formatMoney, type Product } from "@/lib/products";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * The per-product guardrails, in the room CLAUDE.md says pricing rules live.
@@ -13,8 +14,8 @@ import { authedFetch } from "@/lib/authed-fetch";
  * writing that offers are "checked against your floor price before you see
  * them" — so deleting the field would make a public claim false.
  *
- * Guardrails are per product, not per brand: a six pound clip cannot carry a
- * ninety-nine pound floor.
+ * Guardrails are per product, not per brand: a six euro clip cannot carry a
+ * ninety-nine euro floor.
  */
 export default function GuardrailsPanel({
   brandId, products, productId, onProductChange, onSaved,
@@ -25,6 +26,7 @@ export default function GuardrailsPanel({
   onProductChange: (id: string) => void;
   onSaved?: (row: Record<string, unknown>) => void;
 }) {
+  const t = useT();
   const selected = products.find((p) => p.id === productId) ?? null;
 
   const [floor, setFloor] = useState("");
@@ -75,7 +77,7 @@ export default function GuardrailsPanel({
       // own error is the only signal that nothing was written.
       if (!res.ok || data.error) {
         setState("error");
-        setError(data.error || "That did not save.");
+        setError(data.error || t("guardrails.didNotSave"));
         return;
       }
       setState("saved");
@@ -83,9 +85,9 @@ export default function GuardrailsPanel({
       window.setTimeout(() => setState("idle"), 2200);
     } catch (err) {
       setState("error");
-      setError(err instanceof Error ? err.message : "That did not save.");
+      setError(err instanceof Error ? err.message : t("guardrails.didNotSave"));
     }
-  }, [selected, brandId, floor, maxDiscount, minMargin, onSaved]);
+  }, [selected, brandId, floor, maxDiscount, minMargin, onSaved, t]);
 
   const currency = selected?.currency ?? "EUR";
   const floorNum = toNum(floor);
@@ -94,16 +96,16 @@ export default function GuardrailsPanel({
   const floorAbovePrice = floorNum != null && retail != null && floorNum > retail;
 
   return (
-    <Panel title="Guardrails Studio obeys">
+    <Panel title={t("guardrails.title")}>
       <label className="mb-3 block">
-        <span className="mb-1.5 block text-2xs font-bold text-ink-2">Which product</span>
+        <span className="mb-1.5 block text-2xs font-bold text-ink-2">{t("guardrails.whichProduct")}</span>
         <select
           value={productId}
           onChange={(e) => onProductChange(e.target.value)}
           className={fieldClass}
-          aria-label="Which product"
+          aria-label={t("guardrails.whichProduct")}
         >
-          <option value="">Pick a product</option>
+          <option value="">{t("guardrails.pickProduct")}</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -112,15 +114,14 @@ export default function GuardrailsPanel({
 
       {!selected ? (
         <p className="rounded-card border border-rule bg-tile px-3.5 py-3 text-2xs font-medium leading-[1.6] text-muted">
-          Pick a product to set its limits. They are per product on purpose: a six pound clip
-          cannot carry a ninety-nine pound floor.
+          {t("guardrails.pickToSet")}
         </p>
       ) : (
         <>
           <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
-            <Field label="Floor price" value={floor} onChange={setFloor} suffix={currency} />
-            <Field label="Max discount" value={maxDiscount} onChange={setMaxDiscount} suffix="%" />
-            <Field label="Min margin" value={minMargin} onChange={setMinMargin} suffix="%" />
+            <Field label={t("guardrails.floorPrice")} value={floor} onChange={setFloor} suffix={currency} />
+            <Field label={t("numbers.maxDiscount")} value={maxDiscount} onChange={setMaxDiscount} suffix="%" />
+            <Field label={t("guardrails.minMargin")} value={minMargin} onChange={setMinMargin} suffix="%" />
           </div>
 
           {floorAbovePrice && (
@@ -137,10 +138,10 @@ export default function GuardrailsPanel({
               disabled={state === "saving"}
               className="rounded-tile bg-grad-mark px-4 py-2 text-xs font-bold text-white drop-shadow-btn disabled:opacity-60"
             >
-              {state === "saving" ? "Saving…" : "Save limits"}
+              {state === "saving" ? t("settings.saving") : t("guardrails.saveLimits")}
             </button>
             {state === "saved" && (
-              <span role="status" className="text-2xs font-bold text-green-ink">Saved ✓</span>
+              <span role="status" className="text-2xs font-bold text-green-ink">{t("guardrails.saved")}</span>
             )}
             {state === "error" && (
               <span role="alert" className="text-2xs font-bold text-accent-dark">{error}</span>

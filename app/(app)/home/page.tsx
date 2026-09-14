@@ -14,41 +14,42 @@ import OnboardingStrip from "@/components/onboarding-strip";
 import StudioCard, { type StudioVariant } from "@/components/studio-card";
 import ActivityList from "@/components/activity-list";
 import ChatRail from "@/components/chat-rail";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
-const STUDIO: { title: string; description: string; href: string; variant: StudioVariant }[] = [
+// Keys, not words: translated where they render, so the row follows the
+// interface language rather than being fixed at module load.
+const STUDIO: { title: StringKey; description: StringKey; href: string; variant: StudioVariant }[] = [
   {
-    title: "Write",
-    description: "On brand, on strategy, on the facts.",
+    title: "nav.studio.write",
+    description: "home.writeDesc",
     href: "/studio/write",
     variant: "write",
   },
   {
-    title: "Create images",
-    description: "New images based on your products and style.",
+    title: "nav.studio.createImages",
+    description: "home.imagesDesc",
     href: "/studio/create-images",
     variant: "images",
   },
   {
-    title: "Do the numbers",
-    description: "Profitability, pricing structure and offers.",
+    title: "home.numbersTitle",
+    description: "home.numbersDesc",
     href: "/numbers",
     variant: "numbers",
   },
   {
-    title: "Visual identity",
-    description: "Your logos, colors and typefaces.",
+    title: "nav.brand.visual",
+    description: "home.visualDesc",
     href: "/brand/visual-identity",
     variant: "assets",
   },
 ];
 
-const SUGGESTIONS = [
-  "What should I post about this week?",
-  "What's the deepest discount I can run?",
-  "What's missing from my brand?",
-];
+const SUGGESTIONS: StringKey[] = ["home.prompt1", "home.prompt2", "home.prompt3"];
 
 export default function HomePage() {
+  const t = useT();
   const { brandId } = useBrand();
   const { user } = useUser();
   const { readiness, counts, onboarding } = useReadiness(brandId);
@@ -92,14 +93,14 @@ export default function HomePage() {
           <div className="ml-auto flex shrink-0 gap-2">
             <Link
               href="/knowledge/documents"
-              aria-label="Search"
+              aria-label={t("home.search")}
               className="grid h-[34px] w-[34px] place-items-center rounded-nav text-accent hover:bg-tint-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Icon name="search" size={18} />
             </Link>
             <Link
               href="/home"
-              aria-label="Notifications"
+              aria-label={t("home.notifications")}
               className="relative grid h-[34px] w-[34px] place-items-center rounded-nav text-accent hover:bg-tint-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Icon name="bell" size={18} />
@@ -122,14 +123,14 @@ export default function HomePage() {
         </div>
 
         <h2 className="text-h2 font-bold">
-          Studio
+          {t("home.studio")}
           <small className="ml-[9px] text-sm font-medium tracking-normal text-muted-2">
-            Create with your brand
+            {t("home.createWithBrand")}
           </small>
         </h2>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3">
           {STUDIO.map((c) => (
-            <StudioCard key={c.href + c.title} {...c} />
+            <StudioCard key={c.href} {...c} title={t(c.title)} description={t(c.description)} />
           ))}
         </div>
 
@@ -138,7 +139,7 @@ export default function HomePage() {
 
       <ChatRail
         indexedFileCount={counts.documents + counts.presentations + counts.links}
-        suggestions={SUGGESTIONS}
+        suggestions={SUGGESTIONS.map((k) => t(k))}
       />
     </div>
   );

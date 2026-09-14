@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useBrand } from '@/lib/useBrand'
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -99,6 +101,11 @@ const NAV_GROUPS = [
 const ALL_LABELS: Record<string, string> = Object.fromEntries(
   NAV_GROUPS.flatMap(g => g.items).map(i => [i.id, i.label])
 )
+
+// What renders, where a key exists. ALL_LABELS stays English: it is sent to
+// /api/brand-guideline/edit as `sectionLabel`, inside the model's instructions.
+const NAV_ITEM_KEYS: Record<string, StringKey> = { logos: 'visual.logos' }
+const NAV_GROUP_KEYS: Record<string, StringKey> = { Products: 'nav.knowledge.products', Channels: 'nav.brand.channels' }
 
 /* ─── Asset gallery — module-level component ─────────────────────────────────── */
 
@@ -263,6 +270,8 @@ function buildInitialData(
 /* ─── Main component ─────────────────────────────────────────────────────────── */
 
 export default function BrandGuidelineClient() {
+  const t = useT()
+  const shownLabel = (id: string) => (NAV_ITEM_KEYS[id] ? t(NAV_ITEM_KEYS[id]) : ALL_LABELS[id] || id)
   const { brand, brandName, brandId } = useBrand()
 
   const [bd, setBd] = useState<BrandData | null>(null)
@@ -599,7 +608,7 @@ export default function BrandGuidelineClient() {
         style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '3px 9px', borderRadius: 4, border: '1px solid var(--bd-border)', background: 'white', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1.5l1.5 1.5-5 5-2 .5.5-2 5-5z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/></svg>
-        Edit
+        {t("common.edit")}
       </button>
     )
   }
@@ -703,10 +712,10 @@ export default function BrandGuidelineClient() {
         <div style={{ padding: '0 56px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
             { title: 'Clearspace rule', body: bd!.logos.clearspace },
-            { title: 'Minimum size',    body: bd!.logos.minimumSize },
-          ].map(({ title, body }) => (
+            { title: 'Minimum size',    titleKey: 'visual.minSize' as const, body: bd!.logos.minimumSize },
+          ].map(({ title, titleKey, body }) => (
             <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: '16px 18px' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{title}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{titleKey ? t(titleKey) : title}</div>
               <div style={{ fontSize: 13, color: 'var(--bd-text)', lineHeight: 1.75 }}>{body}</div>
             </div>
           ))}
@@ -764,7 +773,7 @@ export default function BrandGuidelineClient() {
           {[{ title: 'Do this', items: bd!.typography.dos, pass: true }, { title: 'Not this', items: bd!.typography.donts, pass: false }].map(({ title, items, pass }) => (
             <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: pass ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, letterSpacing: '0.05em' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title}
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title === 'Never use' ? t("tone.neverUse") : title}
               </div>
               {items.map((d, i) => (
                 <div key={i} style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 7, display: 'flex', gap: 7, lineHeight: 1.55 }}>
@@ -862,7 +871,7 @@ export default function BrandGuidelineClient() {
           {[{ title: 'Approved style', items: bd!.imgstyle.approved, pass: true }, { title: 'Never use', items: bd!.imgstyle.prohibited, pass: false }].map(({ title, items, pass }) => (
             <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: pass ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, letterSpacing: '0.05em' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title}
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title === 'Never use' ? t("tone.neverUse") : title}
               </div>
               {items.map((item, i) => (
                 <div key={i} style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 7, display: 'flex', gap: 7, lineHeight: 1.55 }}>
@@ -992,14 +1001,14 @@ export default function BrandGuidelineClient() {
         <div style={{ flex: 1 }}>
           {NAV_GROUPS.map(g => (
             <div key={g.group}>
-              <div style={{ padding: '14px 18px 4px', fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{g.group}</div>
+              <div style={{ padding: '14px 18px 4px', fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{NAV_GROUP_KEYS[g.group] ? t(NAV_GROUP_KEYS[g.group]) : g.group}</div>
               {g.items.map(item => (
                 <button
                   key={item.id}
                   onClick={() => setCur(item.id)}
                   style={{ padding: '8px 18px', fontSize: 12, color: cur === item.id ? 'white' : 'rgba(255,255,255,0.42)', cursor: 'pointer', display: 'block', width: '100%', textAlign: 'left', background: cur === item.id ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: cur === item.id ? `2px solid ${bd.theme.accentColor}` : '2px solid transparent', fontWeight: cur === item.id ? 500 : 400, fontFamily: 'inherit', transition: 'all 0.12s' }}
                 >
-                  {item.label}
+                  {shownLabel(item.id)}
                 </button>
               ))}
             </div>
@@ -1018,7 +1027,7 @@ export default function BrandGuidelineClient() {
         {/* TOPBAR */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 28px', borderBottom: '1px solid var(--bd-border)', flexShrink: 0, background: 'white', zIndex: 10 }}>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            {bd.meta.name} <span style={{ opacity: 0.4 }}>›</span> <strong style={{ color: 'var(--bd-text)', fontWeight: 500 }}>{ALL_LABELS[cur] || cur}</strong>
+            {bd.meta.name} <span style={{ opacity: 0.4 }}>›</span> <strong style={{ color: 'var(--bd-text)', fontWeight: 500 }}>{shownLabel(cur)}</strong>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
@@ -1096,7 +1105,7 @@ export default function BrandGuidelineClient() {
                 </div>
               </div>
               <div style={{ padding: '13px 18px', borderTop: '1px solid var(--bd-border)', display: 'flex', gap: 8 }}>
-                <button onClick={() => setEditOpen(false)} style={{ flex: 1, padding: 9, border: '1px solid var(--bd-border)', borderRadius: 6, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Cancel</button>
+                <button onClick={() => setEditOpen(false)} style={{ flex: 1, padding: 9, border: '1px solid var(--bd-border)', borderRadius: 6, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>{t("common.cancel")}</button>
                 <button
                   onClick={applyEdit}
                   disabled={!editText && !editImg}
@@ -1150,7 +1159,7 @@ export default function BrandGuidelineClient() {
               </div>
               <div style={{ padding: '14px 22px', borderTop: '1px solid var(--bd-border)', display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
                 {extractLoading && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Extracting…</span>}
-                <button onClick={() => { setModalOpen(false); setGuidelineImgs([]) }} style={{ padding: '8px 16px', border: '1px solid var(--bd-border)', borderRadius: 6, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
+                <button onClick={() => { setModalOpen(false); setGuidelineImgs([]) }} style={{ padding: '8px 16px', border: '1px solid var(--bd-border)', borderRadius: 6, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>{t("common.cancel")}</button>
                 <button
                   onClick={extractGuideline}
                   disabled={!guidelineImgs.length || extractLoading}

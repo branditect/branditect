@@ -1043,6 +1043,363 @@ export const en = {
   "credit.indexing": "Reading and indexing any file you upload",
   "credit.indexing.cost": "Free",
   "credit.topUp": "€9 for 200 extra credits",
+
+  // ══ SITE, round three ══ The 67 from spec/i18n-gap-site.md. Whole strings,
+  // placeholders preserved. The four dead keys this replaces —
+  // site.commercialBrain, site.home.q25, site.pricing.topUp, site.home.lede —
+  // should be deleted, not kept alongside these.
+
+  // ── About: the body ───────────────────────────────────────────────────────
+  "site.about.opening":
+    "What do we stand for. What exactly do we sell. What can we afford to charge. The answers exist already, buried in a slide deck nobody opens, an inbox nobody searches and a spreadsheet one person maintains. Branditect is where they live instead.",
+  "site.about.homeCaption":
+    "One screen that knows how much of your brand has been written down, and what is still missing. It says the diagnosis rather than the compliment.",
+  "site.about.asteriskCaption":
+    "Look at the asterisk in the margin column. That is the system telling you a figure is estimated because a landed cost is missing. It would rather admit that than quietly overstate your margin.",
+  "site.about.threeVerbs":
+    "Three verbs in order. Every screen belongs to exactly one of them, and anything that belongs to none of them is not built.",
+  "site.about.defineBody":
+    "Twenty questions build your strategy, your tone of voice and your visual identity. Five of them are enough to open the workspace. The rest can wait.",
+  "site.about.feedBody":
+    "Products, documents, images, links. Everything you upload is read and indexed, and that part never costs a credit.",
+  "site.about.makeBody":
+    "Everything in Studio reads the same brain. Nothing here has its own separate idea of what your brand is.",
+  "site.about.marginMath":
+    "Margins are calculated net of tax and against landed cost, never factory cost against a gross price. That difference is about five points, and it is the difference between a product you think is profitable and one that is.",
+  "site.about.secondColumn":
+    "The second column is not modesty. It is what makes the first one believable, and it saves us both a conversation.",
+  "site.about.oneInbox": "One inbox, read by the people who build it.",
+  "site.about.fourMinutes":
+    "About four minutes for the five that matter. A hundred credits, no card, and nothing expires.",
+  "site.about.altHome":
+    "The Branditect Home screen for a brand called Ruffle Studio: Brand Readiness with its four checks, counts of the files the brain has read, and the Studio tools underneath.",
+  "site.about.altProducts":
+    "The Products screen for Ruffle Studio, listing each product with its cost, its price and its real margin, one margin figure marked with an asterisk.",
+
+  // ── About: metadata and OG ────────────────────────────────────────────────
+  "site.about.metaDesc":
+    "Branditect is one place that knows your brand strategy, your products and your margins, and makes things from them. Built in Finland, on EU infrastructure.",
+  "site.about.ogSub":
+    "One place that knows your strategy, your products and your margins, and makes things from them.",
+  "site.about.ogTag": "What it is, what it will not do, and who it is for.",
+
+  // ── Home: metadata and OG ─────────────────────────────────────────────────
+  "site.home.metaDesc":
+    "One place that holds your strategy, your product truth and your margins, so everything you publish is on brand, accurate and profitable. Build it free.",
+  "site.home.ogSub":
+    "One place that holds your strategy, your product truth and your margins. Build it free.",
+  "site.home.ogTag": "One place that knows your strategy, your products and your margins.",
+
+  // ── Pricing: metadata and OG ──────────────────────────────────────────────
+  "site.pricing.metaDesc":
+    "Build your brand brain free, with 100 credits and no card. Plans from {FROM} a month including VAT.",
+  "site.pricing.ogSub": "Build your brand brain free. Plans from {FROM} a month including VAT.",
+  "site.pricing.ogTag": "Build it free. Pay when you want it working for you.",
+
+  // ── Landing ───────────────────────────────────────────────────────────────
+  "site.home.ledeFull":
+    "The commercial brain for product and ecommerce brands. It holds your strategy, your product truth and your margins together, so everything you publish is on brand, accurate and profitable. It writes your copy understanding each and every one of your products, your tone of voice and style. And makes your images, too. It’s like having a superstar marketing team behind you.",
+  "site.home.altHome":
+    "The Branditect home screen for a brand called Ruffle Studio: a Brand Readiness score with its four checks, counts of the documents and images the brain has read, and a row of Studio tools.",
+  "site.home.homeCaption":
+    "Brand Readiness tells you what is still missing, and the Studio row is what you can make with what the brain already knows. Nothing on this screen is a guess.",
+  "site.home.eachUsable":
+    "Each one is usable by everything else, which is the whole difference between a brand brain and a folder of documents.",
+  "site.home.altProducts":
+    "The Products screen for Ruffle Studio, listing each product with its cost, its price and its real margin, with one margin figure marked by an asterisk.",
+  "site.home.sameBrain":
+    "Everything here reads the same brain. Nothing has its own separate idea of what your brand is.",
+  "site.home.builtBy":
+    "Built by a team that has spent two decades building brands around the world. Made in Finland.",
+  "site.home.notInstincts":
+    "What a big brand has is not better instincts than you. It is strategy and infrastructure.",
+  "site.home.givesYouBoth":
+    "Branditect gives you both, at whatever stage you are at. First product or four hundredth. You still make every decision. You stop making them from memory.",
+  "site.home.fourMinutes":
+    "About four minutes for the five that matter. A hundred credits, no card, and nothing expires.",
+
+  // ── Pricing page ──────────────────────────────────────────────────────────
+  "site.pricing.lede":
+    "Branditect turns your scattered files, decisions and numbers into one knowledge layer that knows your strategy, your products and your margins. Build the whole thing for nothing. Pay when you want it working for you.",
+  "site.pricing.billingPeriod": "Billing period",
+  "site.pricing.twoMonthsFree": "2 months free",
+  "site.pricing.plans": "Plans",
+  "site.pricing.vatYearly": "Incl. VAT, billed {yearlyTotal} yearly",
+  "site.pricing.vatLine": "Incl. VAT {VAT_RATE}",
+  "site.pricing.letsTalk": "Let’s talk",
+  "site.pricing.creditIs":
+    "One unit of work the brain does for you. Reading and indexing whatever you upload is always free, because a brain that charges you to learn is the wrong shape.",
+  "site.pricing.freeHomeCaption":
+    "This is your Home screen on the free plan. Brand Readiness on the left, what the brain has read on the right, and what you can make with it underneath.",
+  "site.pricing.altHome":
+    "The Branditect Home screen for a brand called Ruffle Studio: a Brand Readiness score with its four checks, counts of the documents and images the brain has read, and a row of Studio tools.",
+  "site.pricing.readinessIs":
+    "Brand Readiness is four checks, each worth a quarter. It says what is missing rather than congratulating you, because a score you can predict is worth more than one that looks precise.",
+
+  // ── Shared ────────────────────────────────────────────────────────────────
+  "site.perMonth": "/month",
+  "site.signUpOrLogIn": "Sign up or log in",
+  "site.ogTitle": "Branditect, the commercial brain for your brand",
+
+  // ── Plans: the rest ───────────────────────────────────────────────────────
+  "plan.everythingInPro": "Everything in Pro, plus",
+  "plan.proplus.f1": "3 brands, each with its own truth. They never bleed into each other",
+  "plan.proplus.f2": "3 seats, so your team writes from the same brain",
+  "plan.proplus.f3": "20 GB",
+  "plan.proplus.f4": "Priority support",
+  "plan.storage200mb": "200 MB",
+  "plan.storage5gb": "5 GB",
+  "plan.storage20gb": "20 GB",
+
+  // ══ APP, batch A ══ Home, all of Numbers, the entry flow, notes and the
+  // welcome modal. From spec/i18n-gap.md.
+  //
+  // NOT INCLUDED, and deliberately: 'DM Sans', sans-serif · 'Space Grotesk',
+  // sans-serif · background 0.15s · EUR · English · Suomi. Those are font
+  // stacks, a CSS transition, a currency code and two language names that must
+  // read the same in both. They are scanner catch, not copy.
+
+  // ── Home: the Studio row and the chat prompts ─────────────────────────────
+  "home.writeDesc": "On brand, on strategy, on the facts.",
+  "home.imagesDesc": "New images based on your products and style.",
+  "home.numbersTitle": "Do the numbers",
+  "home.numbersDesc": "Profitability, pricing structure and offers.",
+  "home.visualDesc": "Your logos, colors and typefaces.",
+  "home.prompt1": "What should I post about this week?",
+  "home.prompt2": "What's the deepest discount I can run?",
+  "home.prompt3": "What's missing from my brand?",
+
+  // ── Numbers: shared field labels ──────────────────────────────────────────
+  "num.productionCost": "Production cost",
+  "num.freightDuty": "Freight & duty",
+  "num.packaging": "Packaging",
+  "num.shipping": "Shipping",
+  "num.returnsRate": "Returns rate",
+  "num.refundRate": "Refund rate",
+  "num.churnRate": "Churn rate",
+  "num.paymentFees": "Payment fees",
+  "num.adCostPerSale": "Ad cost per sale",
+  "num.cartonPallet": "Carton / pallet",
+  "num.paymentTerms": "Payment terms",
+  "num.storeCommission": "Store commission %",
+  "num.resellerCommission": "Reseller commission",
+  "num.retailPrice": "Retail price",
+  "num.taxRate": "Tax rate",
+  "num.costPerUnit": "Cost per unit",
+  "num.targetMargin": "Target margin",
+  "num.minMargin": "Minimum margin",
+  "num.monthlyPrice": "Monthly price",
+  "num.costToAcquire": "Cost to acquire",
+
+  // ── Numbers: index ────────────────────────────────────────────────────────
+  "num.costLede": "Know what every sale really costs.",
+  "num.costSub":
+    "Everything it takes to put one unit in a customer's hands, and what happens when a cost moves.",
+  "num.priceLede": "Find the price that gives you the margin you want.",
+  "num.priceSub":
+    "Set a target margin and get the price to hit it, or type a price and see what you'd actually keep after tax and fees.",
+  "num.offersLede": "Know what you can give away before it hurts.",
+  "num.offersSub": "Model the offers you actually run, and find where each one stops being worth it.",
+  "num.recurringLede": "See what a customer is worth over time.",
+  "num.recurringSub":
+    "MRR, churn and lifetime value, and how long it takes to earn back what you spent acquiring someone.",
+  "num.discountCeiling": "Discount ceiling",
+  "num.freeShipThreshold": "Free-ship threshold",
+  "num.averageBasket": "Average basket",
+  "num.noLandedCost": "No landed cost recorded yet",
+  "num.noPrice": "No price recorded yet",
+  "num.usesPriceHere": "Uses the price you set in here",
+  "num.shownBecauseSubscription": "Shown because you charge a subscription",
+  "num.indexLede":
+    "Work out what you really make on every sale, set prices that hit your target margin, and build offers that don't quietly cost you money. Then",
+  "num.allCosted": "all costed",
+  "num.missingCosts": "{missing} missing costs",
+  "num.noCostedProducts": "no costed products",
+  "num.addRunningCostsInline": "add running costs",
+  "num.atYourBestMargin": "at your best margin",
+  "num.physicalGoods": "Physical goods",
+  "num.digitalAccess": "Digital & access",
+  "num.subscription": "Subscription",
+  "num.allThatApply": "all that apply",
+  "num.ownSite": "Own site",
+  "num.wholesale": "Wholesale",
+  "num.appStore": "App store",
+  "num.overheadExplainer":
+    "Rent, salaries, software and marketing don't care how much you sell. Add them up once, shared across every product, and Branditect works out the volume that covers them, and what your real floor price is.",
+  "num.addRunningCostsNote":
+    "Add your running costs and this becomes a real number. Without them the floor price is only half a floor.",
+  "num.noPricedProduct": "No product has both a price and a cost yet.",
+  "num.everySaleLoses":
+    "Every sale loses money at these prices, so no volume covers the overhead. Fix the price or the cost first.",
+  "num.addRunningCosts": "Add running costs",
+  "num.costOfEachSale": "cost of each sale",
+  "num.grossProfit": "gross profit",
+  "num.runningCosts": "running costs",
+  "num.operatingProfit": "operating profit",
+  "num.notAdvice":
+    "These are calculations from the figures you enter, not advice. Check them against your own accounts before you change a price. Tax treatment and platform fees vary by market and can move a margin by several points.",
+
+  // ── Numbers: cost ─────────────────────────────────────────────────────────
+  "num.cost.fromChannels":
+    "These lines come from how you said you sell. Highlighted ones were added by your channels, and you can change them in",
+  "num.cost.onNumbers": "on Numbers.",
+  "num.cost.sellingDirect": "selling direct",
+  "num.cost.addedBy": "added by {from}",
+  "num.cost.spreadAcross": "Spread across",
+  "num.cost.unitsInBatch": "units in the batch, if these are batch costs",
+  "num.cost.costToServeOne": "Cost to serve one",
+  "num.cost.fillLeft":
+    "Fill in the lines on the left. Rates are excluded from the total: they change what a sale costs, but they aren't a sum.",
+  "num.cost.entered":
+    "{filled} of {costable} cost lines entered. This is what to put in the product card's landed cost.",
+  "num.cost.landedNotFactory":
+    "Landed cost, not factory cost, is what margin is computed from. Factory cost alone overstates the margin by about five points, and a discount rule built on the wrong figure eats the difference on every promotion.",
+
+  // ── Numbers: pricing ──────────────────────────────────────────────────────
+  "num.price.haveAPrice": "I have a price",
+  "num.price.haveATarget": "I have a target margin",
+  "num.price.landedHint": "landed, not factory",
+  "num.price.taxHint": "left blank, retail is treated as net",
+  "num.price.grossHint": "gross, what the customer pays",
+  "num.price.marginAtPrice": "Margin at that price",
+  "num.price.enterCostPrice": "Enter a cost and a price.",
+  "num.price.losesMoney": "You lose money on every sale at this price.",
+  "num.price.priceForMargin": "Price for {tgt}% margin",
+  "num.price.enterCostTarget": "Enter a cost and a target margin.",
+  "num.price.netOfTax":
+    "Margin is always net of tax against landed cost. Comparing a gross price to a factory cost is the flattering version, and it is wrong by about five points.",
+
+  // ── Numbers: offers ───────────────────────────────────────────────────────
+  "num.offers.ceilingNote":
+    "Whatever ceiling you land on becomes the limit Studio writes inside. It will not promise a deeper discount than the product allows.",
+  "num.offers.lineYouWontCross": "the line you won't cross",
+  "num.offers.discountWanted": "Discount you want to run",
+  "num.offers.belowMinimum": "That is below your {mm}% minimum, so Studio would refuse to write this offer.",
+  "num.offers.clearsMinimum": "That clears your minimum.",
+  "num.offers.deepest": "Deepest discount you can run",
+  "num.offers.enterThree": "Enter a price, a cost and a minimum margin.",
+  "num.offers.alreadyAtFloor":
+    "At {currency} this product is already at its {mm}% floor. Any discount breaks it.",
+  "num.offers.perProduct":
+    "Guardrails are per product. A €6 clip cannot carry a €99 floor, so this ceiling belongs to this product alone, not to the brand.",
+
+  // ── Numbers: recurring ────────────────────────────────────────────────────
+  "num.rec.lede":
+    "One-off pricing asks what a sale is worth. Recurring asks what a customer is worth, and how long it takes to earn back what you spent getting them.",
+  "num.rec.revenuePerCustomer": "Revenue per customer",
+  "num.rec.perMonthNet": "per month, net of tax",
+  "num.rec.grossMargin": "Gross margin",
+  "num.rec.afterCostToServe": "on that revenue, after cost to serve",
+  "num.rec.monthlyChurn": "Monthly churn",
+  "num.rec.shareWhoLeave": "share who leave each month",
+  "num.rec.acquisitionHint": "marketing and sales, per customer",
+  "num.rec.ltv": "Lifetime value",
+  "num.rec.zeroChurn":
+    "At zero churn nobody ever leaves, so lifetime is infinite, which is not a number worth showing.",
+  "num.rec.fillFour": "Fill in all four fields.",
+  "num.rec.payback": "Payback",
+  "num.rec.noMargin": "There is no margin to pay back the acquisition cost.",
+  "num.rec.paybackNote":
+    "How long before a customer has repaid what you spent acquiring them. LTV is {ltvToCac}× acquisition cost.",
+  "num.rec.worthLess":
+    "Each customer is worth less than they cost to acquire. Growing faster makes this worse, not better: the fix is churn, margin or acquisition cost, not volume.",
+
+  // ── Numbers: running costs ────────────────────────────────────────────────
+  "num.run.couldNotSave": "Could not save",
+  "num.run.monthlyTotals":
+    "Monthly totals, not receipts. Shared across every product: rent is not a property of a hair dryer.",
+  "num.run.onePerLine":
+    "One figure per line. Leave a line blank if it doesn't apply: blank and zero mean different things here.",
+  "num.run.save": "Save running costs",
+  "num.run.onBusiness":
+    "Saved on the business, not on a product. Nothing here changes what Studio is allowed to write: guardrails live on each product card.",
+  "num.run.noProductsYet":
+    "No products yet, so there is no contribution to divide the overhead by. Your total above is still saved and will apply the moment you add one.",
+  "num.run.eachSaleLoses":
+    "Each sale loses money, so no volume covers the overhead. Fix the price or the cost before worrying about break-even.",
+  "num.run.setByMinMargin":
+    "Set by your {minMarginPct}% minimum margin. That test binds above the overhead one at this volume.",
+  "num.run.setByOverhead":
+    "Set by covering overhead at your expected volume, which binds above your minimum margin. Without running costs this would read lower and be only half a floor.",
+  "num.run.notFullyLoaded":
+    "divided across units. A “fully loaded” unit cost makes every product's margin depend on how many of everything else sold. Contribution plus break-even says the same thing without moving whenever an unrelated product has a good month.",
+
+  // ── Calculator shell and guardrails ───────────────────────────────────────
+  "calc.nothingSaved": "Nothing here is saved. These figures live on the product card, use",
+  "calc.pressSaveThere": "and press save there.",
+  "calc.pickToApply":
+    "Pick a product above to apply this. Without one this is a quick calculation: useful for pricing something you haven't added yet, and nothing is lost by staying here.",
+  "calc.prefillFrom": "Prefill from",
+  "calc.noProductsToPrefill":
+    "No products yet, so there is nothing to prefill from. This is a quick calculation, and that is a normal way to use it: work out the numbers first, add the product after.",
+  "guardrails.didNotSave": "That did not save.",
+  "guardrails.pickToSet":
+    "Pick a product to set its limits. They are per product on purpose: a six euro clip cannot carry a ninety-nine euro floor.",
+  "guardrails.floorPrice": "Floor price",
+  "guardrails.minMargin": "Min margin",
+  "guardrails.saveLimits": "Save limits",
+
+  // ── Notes ─────────────────────────────────────────────────────────────────
+  "notes.couldNotLoad": "Could not load your notes.",
+  "notes.couldNotOpen": "Could not open that note.",
+  "notes.someImagesFailed": "Some images could not be loaded.",
+  "notes.notSaved": "Not saved. Your changes are still on screen.",
+  "notes.couldNotCreate": "Could not make a note.",
+  "notes.pdfNotWired": "Download as PDF is built server-side, and is not wired up yet.",
+  "notes.nothingElseHere": "Nothing else lives here yet.",
+  "notes.new": "New note",
+  "notes.empty":
+    "Nothing here yet. A note is a scratchpad: anything you write in one reaches AI Chat.",
+  "notes.noMatch": "Nothing matches “{query}”.",
+  "notes.untitled": "Untitled",
+  "notes.emptyPreview": "Empty",
+  "notes.pickOne": "Pick a note, or start one.",
+  "notes.note": "Note",
+  "notes.title": "Note title",
+  "notes.image": "Image",
+  "notes.caption": "Caption",
+  "notes.imageCaption": "Image caption",
+  "notes.heading": "Heading",
+
+  // ── Start: the profile taps ───────────────────────────────────────────────
+  "profile.whatDoYouSell": "What do you sell?",
+  "profile.physicalProducts": "Physical products",
+  "profile.digitalProducts": "Digital products or software",
+  "profile.howDoTheyPay": "How do people pay?",
+  "profile.oneOff": "One-off purchases",
+  "profile.onSubscription": "On subscription",
+  "profile.whoDoesWork": "Who is doing the work?",
+  "profile.twoOrThree": "Two or three of us",
+  "profile.whatLanguage": "What language should we write in?",
+  "profile.gettingStarted": "Getting started",
+  "profile.getToKnow": "Let’s get to know your business",
+  "profile.fourTaps":
+    "Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs.",
+
+  // ── Auth form ─────────────────────────────────────────────────────────────
+  "auth.createAccount": "Create your account",
+  "auth.welcomeBack": "Welcome back 👋",
+  "auth.startBuilding": "Start building your brand workspace",
+  "auth.logInToWorkspace": "Log in to your brand workspace",
+  "auth.orContinueEmail": "or continue with email",
+  "auth.password": "Password",
+  "auth.enterPassword": "Enter your password",
+  "auth.minChars": "At least {MIN_PASSWORD} characters",
+  "auth.creatingAccount": "Creating account…",
+  "auth.signingIn": "Signing in…",
+  "auth.createAccountBtn": "Create account",
+
+  // ── Welcome modal ─────────────────────────────────────────────────────────
+  "welcome.step1": "Step 1: Brand",
+  "welcome.step1Body": "Answer the strategy questionnaire and set your tone of voice.",
+  "welcome.step2": "Step 2: Knowledge",
+  "welcome.step2Body": "Upload the documents, images and links your brand should know.",
+  "welcome.step3": "Step 3: Studio",
+  "welcome.step3Body": "Write copy and create images from everything you just fed it.",
+  "welcome.step4": "Step 4: Numbers",
+  "welcome.step4Body": "Add costs and pricing so Studio never writes past your margins.",
+  "welcome.quote": "“They have a marketing team. You have Branditect.”",
+  "welcome.fourSteps": "4 steps",
 } as const;
 
 export type StringKey = keyof typeof en;

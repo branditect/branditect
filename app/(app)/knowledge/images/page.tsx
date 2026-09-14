@@ -5,6 +5,7 @@ import ImageLibrary from "@/components/image-library";
 import FileLibrary from "@/components/file-library";
 import { useBrand } from "@/lib/useBrand";
 import { TYPE_TABS } from "@/lib/media-categories";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /* The tabs and the category each one writes come from one list. They used to
    be two: a list for the buttons and a category= prop per panel, which could
@@ -14,6 +15,7 @@ import { TYPE_TABS } from "@/lib/media-categories";
 const assetTypes = TYPE_TABS;
 
 export default function AssetsPage() {
+  const t = useT();
   const [activeType, setActiveType] = useState("images");
   const { brandId, brandName, loading: brandLoading } = useBrand();
 
@@ -21,7 +23,7 @@ export default function AssetsPage() {
     <div className="flex flex-col flex-1 h-full">
       {/* Header */}
       <div className="px-8 pt-8 pb-5 border-b border-light">
-        <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">Brand Assets</h1>
+        <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">{t("assets.title")}</h1>
         {/* Entry 6e. useBrand answers "Your Brand" until the row loads, and
             that literal was on screen for about a second before resolving to
             the real name. The sentence drops the possessive while it waits
@@ -48,7 +50,7 @@ export default function AssetsPage() {
             >
               <span className="text-xl block mb-2">{type.icon}</span>
               <div className={`font-medium text-[0.82rem] mb-0.5 ${activeType === type.key ? "text-brand-orange" : "text-ink"}`}>
-                {type.label}
+                {"labelKey" in type ? t(type.labelKey) : type.label}
               </div>
               <div className="font-mono text-[0.55rem] text-muted leading-relaxed">{type.desc}</div>
             </button>

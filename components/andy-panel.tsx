@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useBrand } from '@/lib/useBrand'
 import { useBrandChat } from '@/lib/useBrandChat'
+import { useT } from '@/lib/i18n/use-t.tsx'
 
 interface Msg { role: 'user' | 'assistant'; content: string }
 interface SavedNote { id: number; content: string; ts: string }
@@ -22,6 +23,7 @@ const BUBBLE = (
 )
 
 export default function AndyPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT()
   const { brandName } = useBrand()
 
   const [tab, setTab] = useState<'chat' | 'saved'>('chat')
@@ -136,7 +138,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
         {historyOpen && (
           <div style={{ position: 'absolute', top: 42, left: 12, background: C.wh, border: `1px solid ${C.bd}`, borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', width: 260, zIndex: 100, overflow: 'hidden', maxHeight: 300, overflowY: 'auto' }}>
             {conversations.length === 0 ? (
-              <div style={{ padding: '16px 14px', fontSize: 13, color: C.mu2, textAlign: 'center' }}>No past conversations yet</div>
+              <div style={{ padding: '16px 14px', fontSize: 13, color: C.mu2, textAlign: 'center' }}>{t('andy.noConversations')}</div>
             ) : conversations.map(c => (
               <div key={c.id} onClick={() => loadConv(c)} style={{ padding: '10px 14px', fontSize: 13, color: C.sec, cursor: 'pointer', borderBottom: `1px solid ${C.bg}`, display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{c.title}</span>
@@ -152,14 +154,14 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{BUBBLE}</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.blk }}>Andy</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.blk }}>{t('andy.name')}</div>
             <div style={{ fontSize: 11, color: C.mu }}>{brandName ? `${brandName} workspace` : 'Branditect AI chat'}</div>
           </div>
         </div>
         <div style={{ display: 'flex', background: '#F4F4F1', borderRadius: 9, padding: 3, gap: 2 }}>
-          {(['chat', 'saved'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 7, border: 'none', background: tab === t ? C.wh : 'transparent', color: tab === t ? C.blk : C.mu, cursor: 'pointer', fontFamily: 'inherit', boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-              {t === 'chat' ? 'Chat' : 'Saved'}
+          {(['chat', 'saved'] as const).map(tabId => (
+            <button key={tabId} onClick={() => setTab(tabId)} style={{ fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 7, border: 'none', background: tab === tabId ? C.wh : 'transparent', color: tab === tabId ? C.blk : C.mu, cursor: 'pointer', fontFamily: 'inherit', boxShadow: tab === tabId ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+              {tabId === 'chat' ? 'Chat' : t('common.saved')}
             </button>
           ))}
         </div>
@@ -174,7 +176,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>{BUBBLE}</div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 3 }}>Andy</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 3 }}>{t('andy.name')}</div>
                 <div style={{ fontSize: 14, lineHeight: 1.65, color: C.blk }}>Hi{brandName ? ` — welcome to the ${brandName} workspace` : ''}. How can I help?</div>
               </div>
             </div>
@@ -189,8 +191,8 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
                 <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>{BUBBLE}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: C.blk }}>Andy</span>
-                    <button onClick={() => saveNote(msg.content, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }} title={savedIds.has(i) ? 'Saved' : 'Save to notes'}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: C.blk }}>{t('andy.name')}</span>
+                    <button onClick={() => saveNote(msg.content, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }} title={savedIds.has(i) ? t('common.saved') : 'Save to notes'}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill={savedIds.has(i) ? C.or : 'none'} stroke={savedIds.has(i) ? C.or : '#CCC'} strokeWidth="2">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
@@ -222,12 +224,12 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-                placeholder="Ask Andy anything..."
+                placeholder={t('andy.placeholder')}
                 rows={1}
                 style={{ background: 'transparent', border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: C.blk, lineHeight: 1.5, resize: 'none', width: '100%', maxHeight: 90, overflowY: 'auto' }}
               />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: '#CCC' }}>Reads from your brand vault</span>
+                <span style={{ fontSize: 11, color: '#CCC' }}>{t('andy.readsFrom')}</span>
                 <button onClick={send} disabled={loading || !input.trim()} style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: C.or, cursor: loading || !input.trim() ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: loading || !input.trim() ? 0.3 : 1, transition: 'opacity 0.15s' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
@@ -240,13 +242,13 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
       {/* Saved view */}
       {tab === 'saved' && (
         <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>Saved notes</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: C.mu, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 14 }}>{t('andy.savedNotes')}</div>
           {savedNotes.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '50px 10px', color: C.mu2 }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity={0.35} style={{ margin: '0 auto 12px', display: 'block' }}>
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
-              <p style={{ fontSize: 13 }}>Star any answer to save it here</p>
+              <p style={{ fontSize: 13 }}>{t('andy.starToSave')}</p>
             </div>
           ) : savedNotes.map(note => (
             <div key={note.id} style={{ border: `1px solid ${C.bd}`, borderRadius: 10, padding: '13px 14px', marginBottom: 10 }}>
@@ -255,7 +257,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
                   <div style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="18" height="18" viewBox="0 0 36 36" fill="none"><path d="M6 4C3.8 4 2 5.8 2 8V22C2 24.2 3.8 26 6 26H10L8 32L16 26H30C32.2 26 34 24.2 34 22V8C34 5.8 32.2 4 30 4H6Z" fill="#E16C00"/><circle cx="13" cy="15" r="2.5" fill="white"/><circle cx="23" cy="15" r="2.5" fill="white"/></svg>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: C.blk }}>Andy</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: C.blk }}>{t('andy.name')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 11, color: C.mu2 }}>{note.ts}</span>

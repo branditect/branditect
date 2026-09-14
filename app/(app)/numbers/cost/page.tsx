@@ -8,8 +8,10 @@ import {
   ApplyPanel, CalcShell, Field, Panel, ProductPicker, Readout, clean, numStr, toNum,
 } from "@/components/numbers/calc-shell";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export default function CostCalculator() {
+  const t = useT();
   const { brandId } = useBrand();
   const [profile, setProfile] = useState<BusinessProfile>(DEFAULT_PROFILE);
   const [products, setProducts] = useState<Product[]>([]);
@@ -71,12 +73,12 @@ export default function CostCalculator() {
 
   return (
     <CalcShell n={1} tone="green" title={costCalculatorTitle(profile)}
-      promise="Know what every sale really costs.">
+      promise={t("num.costLede")}>
       <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-start gap-3 stack:grid-cols-1">
-        <Panel title="Your cost lines">
+        <Panel title={t("numbers.yourCostLines")}>
           <p className="mt-1 text-xs font-medium leading-[1.55] text-muted">
             These lines come from how you said you sell. Highlighted ones were added by your
-            channels — change them in <b className="text-ink-2">How you sell</b> on Numbers.
+            channels — change them in <b className="text-ink-2">{t("numbers.howYouSell")}</b> {t("num.cost.onNumbers")}
           </p>
 
           <div className="mt-3.5">
@@ -87,8 +89,8 @@ export default function CostCalculator() {
             {lines.map((l) => (
               <div key={l.label} className={l.from === "base" ? "" : "rounded-lg bg-tint-1/60 px-2 py-1.5"}>
                 <Field
-                  label={l.label}
-                  hint={l.from === "base" ? undefined : `added by ${l.from === "direct" ? "selling direct" : l.from}`}
+                  label={l.labelKey ? t(l.labelKey) : l.label}
+                  hint={l.from === "base" ? undefined : t("num.cost.addedBy", { from: l.from === "direct" ? t("num.cost.sellingDirect") : l.from })}
                   value={values[l.label] ?? ""}
                   onChange={(v) => setValues({ ...values, [l.label]: v })}
                   suffix={RATE_LINES.has(l.label) ? "%" : currency}
@@ -98,24 +100,24 @@ export default function CostCalculator() {
           </div>
 
           <div className="mt-4 border-t border-rule pt-3.5">
-            <Field label="Spread across" hint="units in the batch, if these are batch costs"
+            <Field label={t("num.cost.spreadAcross")} hint={t("num.cost.unitsInBatch")}
               value={units} onChange={(v) => setUnits(clean(v))} suffix="×" />
           </div>
         </Panel>
 
         <div className="flex flex-col gap-3">
-          <Readout tone="green" label={profile.sells === "physical" ? "Cost per unit" : "Cost to serve one"}
+          <Readout tone="green" label={profile.sells === "physical" ? t("num.costPerUnit") : t("num.cost.costToServeOne")}
             value={filled === 0 ? "—" : formatMoney(perUnit, currency)}
             sub={filled === 0
-              ? "Fill in the lines on the left. Rates are excluded from the total — they change what a sale costs, but they aren't a sum."
-              : `${filled} of ${costable} cost lines entered. This is what to put in the product card's landed cost.`}
+              ? t("num.cost.fillLeft")
+              : t("num.cost.entered", { filled, costable })}
           />
 
           <ApplyPanel tone="green" productId={productId || null}
             productName={selected?.name ?? null}
             fields={{ landed_cost: perUnit.toFixed(2) }}>
             <div className="text-micro font-extrabold uppercase tracking-[0.8px] text-green-ink opacity-75">
-              Landed cost
+              {t("numbers.landedCost")}
             </div>
             <div className="text-[20px] font-bold tracking-[-0.5px] tabular-nums text-green-ink">
               {selected?.landedCost != null && filled > 0 ? (
@@ -134,9 +136,7 @@ export default function CostCalculator() {
           </ApplyPanel>
 
           <p className="rounded-card border border-rule bg-tile px-3.5 py-3 text-2xs font-medium leading-[1.6] text-muted">
-            Landed cost — not factory cost — is what margin is computed from. Factory cost alone
-            overstates the margin by about five points, and a discount rule built on the wrong
-            figure eats the difference on every promotion.
+            {t("num.cost.landedNotFactory")}
           </p>
         </div>
       </div>

@@ -7,15 +7,20 @@ import { Rail, RailFoot, RailSteps } from "@/components/start/rail";
 import type { Profile } from "@/lib/onboarding";
 import { supabase } from "@/lib/supabase";
 import { gateFootNote, gateProgress } from "@/lib/rail-steps";
+import { useT } from "@/lib/i18n/use-t.tsx";
+import { LOCALE_NAME, type StringKey } from "@/lib/i18n/index.ts";
+
+/** A key, or English with no key yet (rendered as written, listed by the gap scan). */
+type Copy = StringKey | { en: string };
 
 /** Three taps, no typing. Sets the track, the voice rubric and the Numbers profile. */
-const STEPS = [
-  { key: "track", q: "What do you sell?",
-    options: [["physical", "Physical products"], ["digital", "Digital products or software"], ["service", "A service"]] },
-  { key: "charge_model", q: "How do people pay?",
-    options: [["one-off", "One-off purchases"], ["recurring", "On subscription"]] },
-  { key: "team_size", q: "Who is doing the work?",
-    options: [["just-me", "Just me"], ["2-3", "Two or three of us"], ["4-10", "A team of four to ten"]] },
+const STEPS: { key: string; q: StringKey; options: [string, Copy][] }[] = [
+  { key: "track", q: "profile.whatDoYouSell",
+    options: [["physical", "profile.physicalProducts"], ["digital", "profile.digitalProducts"], ["service", { en: "A service" }]] },
+  { key: "charge_model", q: "profile.howDoTheyPay",
+    options: [["one-off", "profile.oneOff"], ["recurring", "profile.onSubscription"]] },
+  { key: "team_size", q: "profile.whoDoesWork",
+    options: [["just-me", "setup.justMe"], ["2-3", "profile.twoOrThree"], ["4-10", { en: "A team of four to ten" }]] },
   /**
    * The half that matters, and the one that was missing.
    *
@@ -26,11 +31,14 @@ const STEPS = [
    * software for fifteen years may well want English on screen and Finnish in
    * the copy.
    */
-  { key: "output_language", q: "What language should we write in?",
-    options: [["en", "English"], ["fi", "Suomi"]] },
-] as const;
+  // Each language is named in itself, the same in every interface language,
+  // so the names come from LOCALE_NAME rather than the dictionary.
+  { key: "output_language", q: "profile.whatLanguage",
+    options: [["en", { en: LOCALE_NAME.en }], ["fi", { en: LOCALE_NAME.fi }]] },
+];
 
 export default function ProfileStep() {
+  const t = useT();
   const router = useRouter();
   const params = useParams<{ step: string }>();
   const idx = Math.min(Math.max(Number(params.step) || 1, 1), STEPS.length) - 1;
@@ -75,9 +83,9 @@ export default function ProfileStep() {
       }
       rail={
         <Rail
-          eyebrow="Getting started"
-          heading="Let’s get to know your business"
-          lede="Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs."
+          eyebrow={t("profile.gettingStarted")}
+          heading={t("profile.getToKnow")}
+          lede={t("profile.fourTaps")}
           foot={
             // The one place a count of the gate belongs: a reason to come back,
             // phrased as a fact. Never a warning that blocks.
@@ -90,7 +98,7 @@ export default function ProfileStep() {
         </Rail>
       }
     >
-      <h1 className="text-h2 font-bold tracking-[-0.5px]">{step.q}</h1>
+      <h1 className="text-h2 font-bold tracking-[-0.5px]">{t(step.q)}</h1>
 
       <div className="mt-6 flex max-w-[640px] flex-col gap-2.5">
         {step.options.map(([value, label]) => {
@@ -99,7 +107,7 @@ export default function ProfileStep() {
             <button key={value} type="button" disabled={loading} onClick={() => choose(value)}
               className={`rounded-card border px-5 py-4 text-left text-base font-semibold transition-colors
                 ${on ? "border-accent bg-tint-1 text-accent-dark" : "border-rule bg-card text-ink-2 hover:border-accent-line"}`}>
-              {label}
+              {typeof label === "string" ? t(label) : label.en}
             </button>
           );
         })}
@@ -109,7 +117,7 @@ export default function ProfileStep() {
       <button type="button"
         onClick={() => (idx === 0 ? router.push("/start") : router.push(`/start/profile/${idx}`))}
         className="mt-6 text-sm font-semibold text-muted-2 hover:text-ink-2">
-        ← Back
+        {t("onboarding.back")}
       </button>
     </StartShell>
   );

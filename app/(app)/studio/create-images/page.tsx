@@ -22,6 +22,7 @@ import {
 } from "@/lib/image-brief";
 import s from "@/components/studio/create-images.module.css";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 type RefSource = "knowledge" | "product" | "upload";
 
@@ -87,6 +88,7 @@ async function referenceToBase64(ref: Reference): Promise<string> {
 }
 
 export default function CreateImagesPage() {
+  const t = useT();
   const { brandId, loading: brandLoading } = useBrand();
 
   const [kind, setKind] = useState<Kind>("other");
@@ -290,8 +292,8 @@ export default function CreateImagesPage() {
         <div className={s.wrap}>
           <div className={s.phead}>
             <div>
-              <div className={s.eyebrow}>Studio</div>
-              <h1>Create images</h1>
+              <div className={s.eyebrow}>{t("nav.studio")}</div>
+              <h1>{t("nav.studio.createImages")}</h1>
               <p>
                 Pick something that already looks right, say what you want to see, and get a new
                 image shot in the same light.
@@ -332,7 +334,7 @@ export default function CreateImagesPage() {
                         <label className={s.psel}>
                           <span className="sr-only">Which product?</span>
                           <select value={productId} onChange={(e) => chooseProduct(e.target.value)} aria-label="Which product?">
-                            <option value="">Pick a product</option>
+                            <option value="">{t("guardrails.pickProduct")}</option>
                             {products.map((p) => (
                               <option key={p.id} value={p.id}>{p.name}{p.category ? ` — ${p.category}` : ""}</option>
                             ))}
@@ -360,7 +362,7 @@ export default function CreateImagesPage() {
               <div className={s.step}>
                 <div className={s.slab}>
                   <span className={s.snum}>2</span><h3>Pick your reference pictures</h3>
-                  <span className={s.req}>Needed</span>
+                  <span className={s.req}>{t("common.required")}</span>
                 </div>
                 <p className={s.shint}>
                   Choose pictures that show what you are after. Up to three, and all of them are read.
@@ -416,7 +418,7 @@ export default function CreateImagesPage() {
               <div className={s.step}>
                 <div className={s.slab}>
                   <span className={s.snum}>4</span><h3>What do you want to see?</h3>
-                  <span className={s.req}>Needed</span>
+                  <span className={s.req}>{t("common.required")}</span>
                 </div>
                 <p className={s.shint}>Say it plainly, the way you would to a photographer.</p>
                 <textarea className={s.brf} value={subject} onChange={(e) => setSubject(e.target.value)}
@@ -467,7 +469,7 @@ export default function CreateImagesPage() {
                 </div>
                 <div className={s.seg} role="group" aria-label="Which images">
                   <button type="button" className={tab === "session" ? s.on : undefined} onClick={() => setTab("session")}>Session</button>
-                  <button type="button" className={tab === "saved" ? s.on : undefined} onClick={() => setTab("saved")}>Saved</button>
+                  <button type="button" className={tab === "saved" ? s.on : undefined} onClick={() => setTab("saved")}>{t("common.saved")}</button>
                 </div>
               </div>
 
@@ -511,7 +513,7 @@ export default function CreateImagesPage() {
                               <p className={s.failMsg}>{shot.reason}</p>
                               <div className={s.acts} style={{ marginTop: 9, gridTemplateColumns: "1fr" }}>
                                 <button type="button" className={s.act} disabled={busy} onClick={() => void generate()}>
-                                  <Icon name="repeat" size={12} />Retry
+                                  <Icon name="repeat" size={12} />{t("common.retry")}
                                 </button>
                               </div>
                             </>
@@ -527,7 +529,7 @@ export default function CreateImagesPage() {
                                 <Icon name="upload" size={12} />Get
                               </button>
                               <button type="button" className={s.act} disabled={busy} onClick={() => void generate()}>
-                                <Icon name="repeat" size={12} />Again
+                                <Icon name="repeat" size={12} />{t("common.again")}
                               </button>
                             </div>
                           )}
@@ -572,7 +574,7 @@ export default function CreateImagesPage() {
                   <h3>From Knowledge ▸ Images</h3>
                   <button type="button" className={s.act} style={{ marginLeft: "auto", width: "auto", padding: "7px 12px" }}
                     onClick={() => setLibrary(null)}>
-                    <Icon name="close" size={12} />Close
+                    <Icon name="close" size={12} />{t("common.close")}
                   </button>
                 </div>
                 {library.length === 0 ? (

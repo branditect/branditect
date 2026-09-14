@@ -19,6 +19,7 @@ import {
   productMatches, confirmState, type PickableProduct,
 } from "@/lib/product-picker";
 import Icon from "@/components/icon";
+import { useT } from "@/lib/i18n/use-t.tsx";
 import s from "./product-picker.module.css";
 
 export default function ProductPicker({
@@ -32,6 +33,7 @@ export default function ProductPicker({
   /** Set when the caller opened this from a suggestion, so it can be shown. */
   matchWord?: string | null;
 }) {
+  const t = useT();
   const [products, setProducts] = useState<PickableProduct[] | null>(null);
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -89,45 +91,45 @@ export default function ProductPicker({
       <div
         className={s.panel}
         role="dialog"
-        aria-label="Tag to a product"
+        aria-label={t("images.tagToProduct")}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={s.head}>
           <div>
-            <h2 className={s.title}>Tag to a product</h2>
+            <h2 className={s.title}>{t("images.tagToProduct")}</h2>
             <p className={s.sub}>
               {imageIds.length === 1
                 ? "This image will show on the product's card."
                 : `${imageIds.length} images will show on the product's card.`}
             </p>
           </div>
-          <button type="button" className={s.close} onClick={onClose} aria-label="Close">
+          <button type="button" className={s.close} onClick={onClose} aria-label={t("common.close")}>
             <Icon name="close" size={13} />
           </button>
         </div>
 
         {matchWord && (
           <p className={s.match}>
-            Opened from a suggestion on <b>{matchWord}</b>. Nothing is tagged until you confirm.
+            {t("products.openedFromSuggestion")} <b>{matchWord}</b>. Nothing is tagged until you confirm.
           </p>
         )}
 
         <input
           ref={inputRef}
           className={s.search}
-          placeholder="Search products by name or SKU"
+          placeholder={t("products.searchBySku")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="Search products by name or SKU"
+          aria-label={t("products.searchBySku")}
         />
 
         {products === null ? (
-          <p className={s.note}>Loading…</p>
+          <p className={s.note}>{t("common.loading")}</p>
         ) : shown.length === 0 ? (
           <p className={s.note}>
             {products.length === 0
               ? "No products yet. Add one in Knowledge ▸ Products first."
-              : `Nothing matches “${query}”.`}
+              : t("notes.noMatch", { query })}
           </p>
         ) : (
           <ul className={s.rows}>
@@ -152,7 +154,7 @@ export default function ProductPicker({
 
         <div className={s.foot}>
           <button type="button" className={s.cancel} onClick={onClose} disabled={busy}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"

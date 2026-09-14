@@ -13,7 +13,7 @@
 import { readdirSync, statSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { findAllLiterals } from "../lib/i18n-scan.ts";
-import { SCOPE, OUT_OF_SCOPE } from "../lib/i18n-scope.ts";
+import { SCOPE, OUT_OF_SCOPE, LIB_COPY } from "../lib/i18n-scope.ts";
 import { en } from "../lib/i18n/en.ts";
 
 function walk(dir) {
@@ -72,6 +72,31 @@ const lines = [
 
 for (const { f, rows } of sections) {
   lines.push(`## ${f}`, "", ...rows.map((r) => `- ${r.replace(/\|/g, "\\|")}`), "");
+}
+
+// Copy that lives in lib/ modules and renders on screen. See LIB_COPY.
+const libSections = [];
+let libStrings = 0;
+for (const f of LIB_COPY) {
+  const seen = new Set();
+  const rows = [];
+  for (const l of findAllLiterals(readFileSync(f, "utf8"))) {
+    const t = norm(l.text);
+    if (seen.has(t) || known.has(t)) continue;
+    seen.add(t);
+    rows.push(t);
+    libStrings++;
+  }
+  if (rows.length) libSections.push({ f, rows });
+}
+if (libSections.length) {
+  lines.push("---", "", `# Copy in lib/ that renders on screen (${libStrings})`, "",
+    "Not components, so not in the count above. The Home greeting, Brand Readiness and the",
+    "auth errors. Some readiness sentences are built from pieces in code: those need one",
+    "key per whole sentence, with placeholders, and the code will be reshaped to match.", "");
+  for (const { f, rows } of libSections) {
+    lines.push(`## ${f}`, "", ...rows.map((r) => `- ${r.replace(/\|/g, "\\|")}`), "");
+  }
 }
 
 writeFileSync("branditect-ui/spec/i18n-gap.md", lines.join("\n"));

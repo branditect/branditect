@@ -118,9 +118,23 @@ export function findLiterals(src: string): Literal[] {
       out.push({ line: lineAt(m.index), text: raw.trim(), where: "jsx" });
       continue;
     }
+    // A sentence with a value in it: `You're {onboarding.answered} of
+    // {questionTotal()} into your strategy.` The brace rule below threw these
+    // away whole, so they reached no work list while rendering English on
+    // Home. A brace group that is only a name, a property path or a call with
+    // no arguments becomes a `{name}` placeholder; anything more is code.
+    const SIMPLE = /\{\s*([A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*)(\(\))?\s*\}/g;
+    if (/[{}]/.test(raw)) {
+      const bare = raw.replace(SIMPLE, " ");
+      if (!/[{}();=]/.test(bare) && /[A-Za-z]{2,}\W*\s+\W*[A-Za-z]{2,}/.test(bare) && !isTechnical(bare.trim())) {
+        const withNames = raw.replace(SIMPLE, (_w, path: string) => `{${path.split(/\??\./).pop()}}`);
+        out.push({ line: lineAt(m.index), text: withNames.trim().replace(/\s+/g, " "), where: "jsx" });
+      }
+      continue;
+    }
     // Braces mean an expression — {t("x")} — and the punctuation below means
     // this is code between a generic and a comparison, not text in an element.
-    if (/[{}();=]/.test(raw)) continue;
+    if (/[();=]/.test(raw)) continue;
     if (!looksLikeCopy(raw)) continue;
     if (isTechnical(raw)) continue;
     out.push({ line: lineAt(m.index), text: raw.trim().replace(/\s+/g, " "), where: "jsx" });
@@ -165,6 +179,13 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
   [/^[\d.,:%\s+x-]+$/, "a number"],
   [/^[a-z][a-z0-9_]*$/, "a lowercase identifier"],
   [/^(true|false|null|undefined)$/, "a literal value"],
+  // Scanner catch named in batch A, 2026-09-14: not copy, and never keyed.
+  // A font stack, `'DM Sans', sans-serif`, ends in a generic family.
+  [/(^|,)\s*(sans-serif|serif|monospace|system-ui|cursive)\s*$/, "a font stack"],
+  // A CSS transition, `background 0.15s` or `opacity .2s ease`.
+  [/^[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)?(\s*,\s*[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)?)*$/, "a CSS transition"],
+  // An ISO currency code is data for Intl, not a word a translator changes.
+  [/^(EUR|USD|GBP|SEK|NOK|DKK)$/, "a currency code"],
   // `padding: "0 auto 34px"` in a style object: lengths and auto, nothing else.
   [/^(-?[\d.]+(px|rem|em|%|vh|vw)?|auto)(\s+(-?[\d.]+(px|rem|em|%|vh|vw)?|auto))+$/, "a CSS length list"],
 ];

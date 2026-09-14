@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SaveState } from "@/lib/onboarding-store";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /** Saved ✓ next to the counter. Silent saving is indistinguishable from broken. */
 export function SavePill({ save }: { save: SaveState }) {
+  const t = useT();
   if (save.kind === "idle") return null;
   const map = {
-    saving: ["Saving…", "bg-tile text-muted-2"],
-    saved: ["Saved ✓", "bg-green-wash text-green-ink"],
+    saving: [t("settings.saving"), "bg-tile text-muted-2"],
+    saved: [t("guardrails.saved"), "bg-green-wash text-green-ink"],
     error: ["Not saved — retrying", "bg-tint-1 text-accent-dark"],
   } as const;
   const [label, cls] = map[save.kind];
@@ -48,6 +50,7 @@ export function StartShell({
   flush?: () => Promise<void>;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
 
@@ -90,10 +93,10 @@ export function StartShell({
               disabled={leaving}
               className="text-sm font-semibold text-muted-2 transition-colors hover:text-ink-2 disabled:opacity-60"
             >
-              {leaving ? "Saving…" : "Finish later →"}
+              {leaving ? t("settings.saving") : "Finish later →"}
             </button>
             <span className="mt-1 text-2xs font-medium text-faint">
-              Your answers are saved. Pick up any time.
+              {t("start.answersSaved")}
             </span>
           </div>
         </header>

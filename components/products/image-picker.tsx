@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { IMAGE_SEARCH_COLUMNS, imageMatches } from "@/lib/product-attachments";
 import Icon from "@/components/icon";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 interface BrandImage {
   id: string;
@@ -68,6 +69,7 @@ export default function ImagePicker({
   /** Multi mode. Closing is the caller's to do, after the write succeeds. */
   onPickMany?: (ids: string[]) => void;
 }) {
+  const t = useT();
   const [images, setImages] = useState<BrandImage[] | null>(null);
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
@@ -134,19 +136,19 @@ export default function ImagePicker({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={multi ? "Tag images to this product" : "Choose a product image"}
+        aria-label={multi ? "Tag images to this product" : t("picker.chooseImage")}
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[80vh] w-full max-w-[720px] flex-col overflow-hidden rounded-panel border border-rule bg-card shadow-[0_24px_60px_-20px_rgba(20,20,26,.35)]"
       >
         <div className="flex items-center gap-3 border-b border-rule px-5 py-4">
           <div className="min-w-0">
             <h2 className="text-h3 font-bold">
-              {multi ? "Tag images to this product" : "Choose a product image"}
+              {multi ? "Tag images to this product" : t("picker.chooseImage")}
             </h2>
             <p className="mt-0.5 text-xs font-normal text-muted-2">
               {multi
                 ? "From your image library. They show under Images and video on this product."
-                : "From your image library. This is the shot the image creator reads as a reference."}
+                : t("picker.intro")}
             </p>
           </div>
           <label className="ml-auto flex h-9 w-[190px] items-center gap-2 rounded-tile border border-rule-2 px-3 focus-within:border-accent-line">
@@ -156,15 +158,15 @@ export default function ImagePicker({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search images…"
-              aria-label="Search images"
+              placeholder={t("picker.searchPlaceholder")}
+              aria-label={t("picker.search")}
               className="w-full border-0 bg-transparent p-0 text-sm text-ink placeholder:text-faint focus:outline-none"
             />
           </label>
           <button
             ref={closeRef}
             type="button"
-            aria-label="Close"
+            aria-label={t("common.close")}
             onClick={onClose}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-tile hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
@@ -173,11 +175,11 @@ export default function ImagePicker({
         </div>
 
         <div className="flex-1 overflow-auto p-5">
-          {images === null && <p className="text-sm text-muted">Loading your images…</p>}
+          {images === null && <p className="text-sm text-muted">{t("picker.loading")}</p>}
 
           {images !== null && images.length === 0 && (
             <div className="rounded-card border border-rule bg-tile p-6 text-center">
-              <p className="text-sm font-semibold text-ink">No images in your library yet</p>
+              <p className="text-sm font-semibold text-ink">{t("picker.empty")}</p>
               <p className="mx-auto mt-1.5 max-w-[46ch] text-xs font-medium leading-[1.6] text-muted">
                 Product shots live in Knowledge ▸ Images so the image creator can read them. Upload
                 some there and they&apos;ll appear here.
@@ -186,7 +188,7 @@ export default function ImagePicker({
                 href="/knowledge/images"
                 className="mt-4 inline-block rounded-tile bg-grad-mark px-4 py-2.5 text-sm font-bold text-white"
               >
-                Go to Images
+                {t("picker.goToImages")}
               </Link>
             </div>
           )}
@@ -195,7 +197,7 @@ export default function ImagePicker({
             <p className="text-sm text-muted">
               No images match “{query}”.{" "}
               <button type="button" onClick={() => setQuery("")} className="text-accent underline">
-                Clear
+                {t("picker.clear")}
               </button>
             </p>
           )}
@@ -284,14 +286,14 @@ export default function ImagePicker({
               }}
               className="rounded-tile border border-rule-2 px-3.5 py-2.5 text-sm font-semibold text-ink-2 hover:bg-tile"
             >
-              Remove image
+              {t("picker.removeImage")}
             </button>
           )}
           <Link
             href="/knowledge/images"
             className="ml-auto text-xs font-semibold text-accent underline underline-offset-2"
           >
-            Manage images in Knowledge →
+            {t("picker.manageInKnowledge")}
           </Link>
         </div>
       </div>

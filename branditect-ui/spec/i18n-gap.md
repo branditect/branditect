@@ -6,7 +6,7 @@ Inbox entry 3 says the dictionary was derived from the real strings in these
 files. Measured against them, most of the interface is not in it: the strings
 below appear on screen and match no value in `lib/i18n/en.ts`.
 
-**727 distinct strings across 59 files.** A further 668 already
+**530 distinct strings across 54 files.** A further 41 already
 match a key and were extracted or are ready to be.
 
 Nothing here is truncated. A list that stopped at the first hundred would read
@@ -25,9 +25,8 @@ decision.
 - Facebook
 - Pinterest
 - 20+ posts a week with one person almost always means quality decay within 4 weeks. We'd rather propose 10–12 with a stronger format mix. Keep 20+?
-- who we are
-- how we sound
-- what we post on Wednesday
+- Channels could not load: {loadError}
+- {brandName}'s social strategy
 - 3–5 reference accounts to benchmark
 
 ## app/(app)/brand/strategy/page.tsx
@@ -42,6 +41,7 @@ decision.
 - No strategy received. Please try again.
 - Failed to save. Please try again.
 - It is built from the questionnaire. Twenty questions, five of them needed to open your workspace, about four minutes. This page fills itself in as you answer.
+- Synthesizing {totalAnswered} answers into a comprehensive strategy...
 
 ## app/(app)/brand/tone-of-voice/page.tsx
 
@@ -86,7 +86,6 @@ decision.
 
 - Sphinx of black quartz, judge my vow
 - Every logo, colour and typeface, in the versions that are actually current.
-- Take what you need — you don’t have to ask anyone.
 - Files named “primary” and “symbol only” are a filing cabinet. This is the same set, sorted by the question people actually arrive with.
 - Each plate is fixed to its slot, so you can see whether a reversed file actually works before you use it. Download the one you need.
 - Upload the primary, a reversed version and the symbol on its own — those three cover almost every use.
@@ -104,17 +103,6 @@ decision.
 - The full-page conversation with your brand-trained assistant, reading your Brand, your Numbers and everything in Knowledge. The rail on Home is live; this larger view is still to come.
 - Back to Home
 
-## app/(app)/home/page.tsx
-
-- On brand, on strategy, on the facts.
-- New images based on your products and style.
-- Do the numbers
-- Profitability, pricing structure and offers.
-- Your logos, colors and typefaces.
-- What should I post about this week?
-- What's the deepest discount I can run?
-- What's missing from my brand?
-
 ## app/(app)/knowledge/documents/page.tsx
 
 - All
@@ -127,7 +115,6 @@ decision.
 - Please add some content.
 - Building…
 - Active
-- Empty
 - Branditect will only use information found in these documents. It will never invent product names, features, pricing, or company facts. If information is not in the vault, it will ask rather than guess.
 - Drop files here or
 - Save to vault →
@@ -143,7 +130,6 @@ decision.
 
 - Canva
 - Google Slides
-- -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
 - 1px solid #EDEBE8
 - 3px solid #E16C00
 - 64px 1fr auto
@@ -204,6 +190,7 @@ decision.
 
 - That did not save. The product is still here.
 - Could not put it back. Reload and try again.
+- {length} products in the catalogue, none with that name, SKU or category.
 - Product
 - Price
 - Margin
@@ -211,152 +198,26 @@ decision.
 
 ## app/(app)/numbers/cost/page.tsx
 
-- Production cost
-- Returns rate
-- Refund rate
-- Churn rate
-- Payment terms
-- Store commission %
-- Reseller commission
-- Know what every sale really costs.
 - These lines come from how you said you sell. Highlighted ones were added by your channels — change them in
-- on Numbers.
-- selling direct
-- added by {from}
-- Spread across
-- units in the batch, if these are batch costs
-- Cost per unit
-- Cost to serve one
-- Fill in the lines on the left. Rates are excluded from the total — they change what a sale costs, but they aren't a sum.
-- {filled} of {costable} cost lines entered. This is what to put in the product card's landed cost.
-- Landed cost — not factory cost — is what margin is computed from. Factory cost alone overstates the margin by about five points, and a discount rule built on the wrong figure eats the difference on every promotion.
 
 ## app/(app)/numbers/offers/page.tsx
 
-- Know what you can give away before it hurts.
-- Whatever ceiling you land on becomes the limit Studio writes inside — it will not promise a deeper discount than the product allows.
-- Retail price
-- Cost per unit
-- Tax rate
-- Minimum margin
-- the line you won't cross
-- Discount you want to run
 - That is below your {mm}% minimum — Studio would refuse to write this offer.
-- That clears your minimum.
-- Deepest discount you can run
-- Enter a price, a cost and a minimum margin.
-- At {currency} this product is already at its {mm}% floor. Any discount breaks it.
-- Guardrails are per product. A €6 clip cannot carry a €99 floor, so this ceiling belongs to this product alone — not to the brand.
 
 ## app/(app)/numbers/page.tsx
 
-- Know what every sale really costs.
-- Everything it takes to put one unit in a customer's hands, and what happens when a cost moves.
-- Production cost
-- Freight & duty
-- Packaging
-- Shipping
-- Returns rate
-- Payment fees
-- Ad cost per sale
-- Carton / pallet
-- Payment terms
-- Store commission %
-- Find the price that gives you the margin you want.
-- Set a target margin and get the price to hit it — or type a price and see what you'd actually keep after tax and fees.
-- Target margin
-- Tax rate
-- Cost per unit
-- Know what you can give away before it hurts.
-- Model the offers you actually run, and find where each one stops being worth it.
-- Discount ceiling
-- Free-ship threshold
-- Average basket
-- See what a customer is worth over time.
-- MRR, churn and lifetime value, and how long it takes to earn back what you spent acquiring someone.
-- Monthly price
-- Churn rate
-- Cost to acquire
-- No landed cost recorded yet
-- No price recorded yet
-- Uses the price you set in here
-- Shown because you charge a subscription
-- Work out what you really make on every sale, set prices that hit your target margin, and build offers that don't quietly cost you money — then
-- all costed
-- {missing} missing costs
-- no costed products
-- add running costs
-- at your best margin
-- Physical goods
-- Digital & access
-- Subscription
-- — all that apply
-- Own site
-- Wholesale
-- App store
-- Rent, salaries, software and marketing don't care how much you sell. Add them up once — shared across every product — and Branditect works out the volume that covers them, and what your real floor price is.
-- Add your running costs and this becomes a real number. Without them the floor price is only half a floor.
-- No product has both a price and a cost yet.
-- Every sale loses money at these prices, so no volume covers the overhead. Fix the price or the cost first.
-- Add running costs
-- cost of each sale
-- gross profit
-- running costs
-- operating profit
-- These are calculations from the figures you enter, not advice. Check them against your own accounts before you change a price — tax treatment and platform fees vary by market and can move a margin by several points.
-
-## app/(app)/numbers/pricing/page.tsx
-
-- Find the price that gives you the margin you want.
-- I have a price
-- I have a target margin
-- Cost per unit
-- landed, not factory
-- Tax rate
-- left blank, retail is treated as net
-- Retail price
-- gross, what the customer pays
-- Target margin
-- Margin at that price
-- Enter a cost and a price.
-- You lose money on every sale at this price.
-- Price for {tgt}% margin
-- Enter a cost and a target margin.
-- Minimum margin
-- Margin is always net of tax against landed cost. Comparing a gross price to a factory cost is the flattering version, and it is wrong by about five points.
+- {missing} of {total} still need costs.
+- At {volume} a month, operating profit is
 
 ## app/(app)/numbers/recurring/page.tsx
 
-- See what a customer is worth over time.
-- One-off pricing asks what a sale is worth. Recurring asks what a customer is worth, and how long it takes to earn back what you spent getting them.
-- Revenue per customer
-- per month, net of tax
-- Gross margin
-- on that revenue, after cost to serve
-- Monthly churn
-- share who leave each month
-- Cost to acquire
-- marketing and sales, per customer
-- Lifetime value
 - At zero churn nobody ever leaves, so lifetime is infinite — not a number worth showing.
-- Fill in all four fields.
-- Payback
-- There is no margin to pay back the acquisition cost.
-- How long before a customer has repaid what you spent acquiring them. LTV is {ltvToCac}× acquisition cost.
-- Each customer is worth less than they cost to acquire. Growing faster makes this worse, not better — the fix is churn, margin or acquisition cost, not volume.
 
 ## app/(app)/numbers/running-costs/page.tsx
 
-- Could not save
-- Monthly totals, not receipts. Shared across every product — rent is not a property of a hair dryer.
-- One figure per line. Leave a line blank if it doesn't apply — blank and zero mean different things here.
-- Save running costs
-- Saved on the business, not on a product. Nothing here changes what Studio is allowed to write — guardrails live on each product card.
-- No products yet, so there is no contribution to divide the overhead by. Your total above is still saved and will apply the moment you add one.
-- Each sale loses money, so no volume covers the overhead. Fix the price or the cost before worrying about break-even.
-- Set by your {minMarginPct}% minimum margin — that test binds above the overhead one at this volume.
-- Set by covering overhead at your expected volume, which binds above your minimum margin. Without running costs this would read lower and be only half a floor.
-- divided across units. A “fully loaded” unit cost makes every product's margin depend on how many of everything else sold. Contribution plus break-even says the same thing without moving whenever an unrelated product has a good month.
+- {name} has no price or no cost recorded, so its contribution can't be worked out. Add them on the product card.
+- At {vol} a month, operating profit is
+- {name} has no minimum margin set, so a floor price can't be worked out. Set one in the product card's Pricing tab.
 
 ## app/(app)/settings/plan/page.tsx
 
@@ -372,15 +233,16 @@ decision.
 - Business Pulse
 - Goals, upcoming launches, sensitivities, financial rules
 - Build Your Brand Foundation
+- Complete the following steps to set up {brandName}'s brand foundation. This powers all AI-assisted content creation tailored to {brandName}'s voice, strategy, and identity.
 - Progress
 - Continue Setup →
 
 ## app/(app)/studio/brand-book/BrandBookClient.tsx
 
 - Brand book
-- all 0.14s
 - Upload brand book
 - PNG, JPG, PDF, screenshots
+- No {toLowerCase} yet
 - Color codes
 - + Add
 - Auto-extracted when you ask AI about colors
@@ -436,7 +298,6 @@ decision.
 - {name} logo system
 - Upload each logo variant below. The AI detects whether each upload is a wordmark, logomark, combination mark or emblem.
 - ↑ Replace
-- flex 0.25s ease
 - Primary palette
 - AA
 - AAA
@@ -460,10 +321,8 @@ decision.
 - Post gallery
 - Brand guideline
 - 2px solid transparent
-- all 0.12s
 - ↑ Upload guideline
 - Edit section
-- transform 0.22s ease
 - Updating section…
 - What would you like to change?
 - e.g. 'Add a monochrome color variant' or 'Update the clearspace rule to x-height instead of cap-height'
@@ -531,26 +390,7 @@ decision.
 
 ## app/(app)/studio/notes/page.tsx
 
-- Could not load your notes.
-- Could not open that note.
-- Some images could not be loaded.
-- Not saved. Your changes are still on screen.
-- Could not make a note.
-- Download as PDF is built server-side, and is not wired up yet.
-- Nothing else lives here yet.
-- New note
 - Search notes
-- Nothing here yet. A note is a scratchpad — anything you write in one reaches AI Chat.
-- Nothing matches “{query}”.
-- Untitled
-- Empty
-- Pick a note, or start one.
-- Note
-- Note title
-- Image
-- Caption
-- Image caption
-- Heading
 
 ## app/(app)/studio/write/page.tsx
 
@@ -575,12 +415,14 @@ decision.
 - Writes from
 - 1 product record
 - {products} product records
+- Write {count} more
 - Pick a format and say what it’s about.
 - didn't finish
 - Copied
 - Checking every claim against your product records…
 - No tone of voice yet, using plain, neutral copy.
 - Set one →
+- Fact: {claim}, from {source}
 
 ## app/login/page.tsx
 
@@ -589,6 +431,7 @@ decision.
 ## app/onboarding/page.tsx
 
 - 38 strategic questions that build your complete brand foundation. Takes 15-30 minutes.
+- Branditect for {brandName} is ready.
 
 ## app/signup/page.tsx
 
@@ -596,32 +439,15 @@ decision.
 
 ## app/start/page.tsx
 
-- Getting started
 - Four sections, twenty questions.
 - Five of them open your workspace. The rest sharpen it whenever you come back.
 - Twenty questions, but only five are needed to open your workspace — about four minutes. The rest can wait, and they show up in Brand Readiness so you know what is still missing.
 - Pick up where you left off
 - Start
 
-## app/start/profile/[step]/page.tsx
-
-- What do you sell?
-- Physical products
-- Digital products or software
-- How do people pay?
-- One-off purchases
-- On subscription
-- Who is doing the work?
-- Two or three of us
-- What language should we write in?
-- English
-- Suomi
-- Getting started
-- Let’s get to know your business
-- Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs.
-
 ## app/start/q/[n]/page.tsx
 
+- Question {n} of {TOTAL}
 - Step {sectionId} of 4 · {sectionId}
 - One of the five answers that unlocks your workspace.
 - Skippable — it becomes a Brand Readiness item you can come back to.
@@ -634,7 +460,6 @@ decision.
 - Nothing was lost.
 - Finding your place…
 - {answered} of {total} answered. {state}
-- Saved to your account, not this browser. Sign in anywhere and it’s there.
 - You were on question {n} of {total}.
 - Everything you have written is saved. The questions you skipped are waiting in Brand Readiness, not lost.
 
@@ -650,34 +475,16 @@ decision.
 
 - Conversation
 - New conversation
-- 'DM Sans', sans-serif
 - + New
 - Branditect AI chat
 - Chat
 - — welcome to the {brandName} workspace
 - Save to notes
-- opacity 0.15s
-
-## components/auth/auth-form.tsx
-
-- Create your account
-- Welcome back 👋
-- Start building your brand workspace
-- Log in to your brand workspace
-- or continue with email
-- Password
-- Enter your password
-- At least {MIN_PASSWORD} characters
-- Creating account…
-- Signing in…
-- Create account
 
 ## components/auth/auth-layout.tsx
 
 - Write on brand
-- On brand, on strategy, on the facts.
 - New visuals based on your products and style.
-- Do the numbers
 - Profitability, pricing and offers that make sense.
 - Brand assets
 - Logos, colors, guidelines and everything in one place.
@@ -693,6 +500,7 @@ decision.
 - Google
 - Microsoft
 - Apple
+- Continue with {name}
 
 ## components/chat-rail.tsx
 
@@ -714,6 +522,7 @@ decision.
 
 ## components/file-library.tsx
 
+- {acceptLabel} · Max {maxSize}MB
 - No files match your search
 - SND
 - Copied
@@ -724,6 +533,7 @@ decision.
 - Upload {pendingUploads} image{s}
 - No images uploaded yet. Drop some files above to get started.
 - No images match your filters.
+- {length} of {length} images
 - Copied ✓
 - Remove {name} from {file_name}
 
@@ -733,24 +543,17 @@ decision.
 
 ## components/numbers/calc-shell.tsx
 
-- Nothing here is saved. These figures live on the product card — use
-- and press save there.
-- Pick a product above to apply this. Without one this is a quick calculation — useful for pricing something you haven't added yet, and nothing is lost by staying here.
-- Prefill from
+- Apply to {productName}
 - No products yet, so there is nothing to prefill from — this is a quick calculation. That is a normal way to use it: work out the numbers first, add the product after.
 
 ## components/numbers/guardrails-panel.tsx
 
-- That did not save.
-- EUR
-- Pick a product to set its limits. They are per product on purpose: a six pound clip cannot carry a ninety-nine pound floor.
-- Floor price
-- Min margin
-- Save limits
+- Copy and offers written about {name} stay inside these limits. This is what the pricing page means when it says offers are checked against your floor price before you see them.
 
 ## components/onboarding-strip.tsx
 
 - SIGNED_OUT
+- You’re {answered} of {questionTotal} into your strategy.
 - Five answers open Studio.
 
 ## components/products/image-picker.tsx
@@ -758,6 +561,7 @@ decision.
 - Tag images to this product
 - From your image library. They show under Images and video on this product.
 - Product shots live in Knowledge ▸ Images so the image creator can read them. Upload some there and they'll appear here.
+- No images match “{query}”.
 - Tagged
 - Tagging…
 - Tag image
@@ -780,12 +584,12 @@ decision.
 
 ## components/products/pricing-tab.tsx
 
-- Gross margin
 - Net of tax, against cost of goods.
 - Contribution
 - After cost to sell as well.
 - No tax rate recorded, so both figures assume zero. A missing rate treated as zero reads the gross price as net and flatters the margin.
 - + Add your own line
+- Studio reads this and follows it. {length} characters.
 - Floor price, maximum discount and minimum margin now live in
 
 ## components/products/product-drawer.tsx
@@ -795,7 +599,6 @@ decision.
 - Media
 - History
 - Discard unsaved changes to this product?
-- Could not save
 - Change product image
 - Change
 - Untitled product
@@ -815,7 +618,6 @@ decision.
 - This image will show on the product's card.
 - {imageIds} images will show on the product's card.
 - No products yet. Add one in Knowledge ▸ Products first.
-- Nothing matches “{query}”.
 - Tag to {name}
 - Tagging…
 
@@ -840,6 +642,7 @@ decision.
 ## components/start/rail.tsx
 
 - Branditect
+- — {exemplar}, not yours. Copy the shape, not the words.
 
 ## components/start/shell.tsx
 
@@ -848,6 +651,7 @@ decision.
 
 ## components/strategy/strategy-document.tsx
 
+- For example: {example}
 - Discovery
 - Consideration
 - Decision
@@ -903,18 +707,147 @@ decision.
 - The specimen on this page is set in the real typeface, so a name that is not on Google Fonts will show as a fallback rather than silently look right.
 - Add typeface
 
-## components/welcome-modal.tsx
+---
 
-- Step 1: Brand
-- Answer the strategy questionnaire and set your tone of voice.
-- Step 2: Knowledge
-- Upload the documents, images and links your brand should know.
-- Step 3: Studio
-- Write copy and create images from everything you just fed it.
-- Step 4: Numbers
-- Add costs and pricing so Studio never writes past your margins.
-- 'DM Sans', sans-serif
-- 'Space Grotesk', sans-serif
-- “They have a marketing team. You have Branditect.”
-- 4 steps
-- background 0.15s
+# Copy in lib/ that renders on screen (119)
+
+Not components, so not in the count above. The Home greeting, Brand Readiness and the
+auth errors. Some readiness sentences are built from pieces in code: those need one
+key per whole sentence, with placeholders, and the code will be reshaped to match.
+
+## lib/greeting.ts
+
+- Hello
+- Good morning
+- Good afternoon
+- Good evening
+
+## lib/readiness.ts
+
+- Starting
+- Building
+- Good
+- Complete
+- Not started
+- All {total} answered
+- {answered} of {total} answered
+- Strategy questionnaire
+- Start
+- Files in Knowledge
+- {knowledgeFileCount} of {knowledgeFiles} required
+- Upload
+- Product & brand images
+- {brandImageCount} of {brandImages} required
+- Brand guideline
+- Uploaded
+- Not uploaded yet
+- Every check is done. Your brand brain is fully trained.
+- One check left — {action} your {verb} to reach 100%.
+- {remaining} checks left — start with your {verb}.
+- All four checks are done. Everything Studio makes is grounded in your brand.
+- Zero
+- One
+- Two
+- Three
+- Four
+- {passedCount} of {totalCount} checks done. Your {label} is the gap — closing it is what teaches Branditect the rest.
+
+## lib/auth-errors.ts
+
+- Enter your email
+- Enter your brand name
+- That doesn't look like an email address
+- That email and password don't match
+- At least 10 characters
+- That email already has an account.
+- Too many attempts. Try again in 15 minutes.
+- Something went wrong at our end. Try again.
+- That took too long. Check your connection and try again.
+- If that email has an account, a reset link is on its way.
+- That link has expired. Request a new one.
+- Check your email to confirm your address, then sign in. Your questionnaire is waiting.
+- Sign in instead
+
+## lib/numbers.ts
+
+- Hosting & infra
+- Support time
+- True cost per unit
+- Cost to serve one customer
+- physical goods
+- digital products and access
+- on subscription
+- as one-off purchases
+- your own site
+- an app store
+- and $1
+- nowhere selected yet
+- You sell {what} {how} through {where}.
+- Rent & premises
+- Salaries
+- Software & tools
+- Marketing
+- Other overheads
+
+## lib/media-categories.ts
+
+- IMG
+- Photos, screenshots, brand imagery
+- Videos
+- VID
+- Brand videos, reels, ads
+- MP4, MOV, WEBM, AVI
+- No videos uploaded yet. Drop video files above to get started.
+- Sounds
+- SND
+- Audio logos, jingles, podcasts
+- MP3, WAV, AAC, OGG, M4A
+- No audio files yet. Upload audio logos, jingles, or podcast clips.
+- Graphics
+- GFX
+- Logos, icons, illustrations, vectors
+- SVG, PNG, AI, EPS, PDF, PSD
+- No graphics yet. Upload logos, icons, illustrations, and vectors.
+- Website / App
+- WEB
+- Screenshots, wireframes, UI components
+- PNG, JPG, WEBP, SVG, PDF, FIG
+- No website or app assets yet. Upload screenshots, wireframes, and UI references.
+
+## lib/studio-write.ts
+
+- Ad copy
+- an advertisement: a hook, the body, and one call to action
+- 15 to 25 words
+- 30 to 45 words
+- 60 to 90 words
+- The new SORBIFY OIL launch
+- Why we cost less than the category leader
+- an email: a subject line, then the body, then a sign-off
+- 120 to 180 words
+- 250 to 350 words
+- Warehouse closed for maintenance next week
+- Introducing a new size to existing customers
+- Instagram caption
+- an Instagram caption: a first line that survives the truncation, then the rest
+- 35 to 60 words
+- 80 to 120 words
+- Behind the absorbency test
+- LinkedIn post
+- 50 to 80 words
+- 110 to 170 words
+- 220 to 320 words
+- What we learned testing to 800 km
+- Why we publish the products we can't help
+- Product description
+- 30 to 50 words
+- 70 to 110 words
+- 150 to 220 words
+- Customer message
+- 140 to 200 words
+- An order delay, with the new date
+- Something else — tell us what
+- the format the user named
+- short, around 40 words
+- around 120 words
+- around 280 words

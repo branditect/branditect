@@ -8,6 +8,7 @@ import { useUser } from "@/lib/useUser";
 import Icon from "@/components/icon";
 import Logo from "@/components/logo";
 import AccountMenu from "@/components/account-menu";
+import LanguageSwitch from "@/components/language-switch";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import { NAV, sectionFor, type NavItem } from "@/lib/nav";
@@ -145,12 +146,18 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        <Link
-          href="/settings"
-          className="mt-[9px] block rounded-[9px] px-[9px] py-2 text-xs font-semibold text-muted-2 hover:bg-tile"
-        >
-          {t("settings.title")}
-        </Link>
+        {/* Settings and the interface language on one row. The language used
+            to be reachable only inside Settings; the public site shows its
+            toggle in the nav, so behind the login it is on screen too. */}
+        <div className="mt-[9px] flex flex-wrap items-center justify-between gap-x-2">
+          <Link
+            href="/settings"
+            className="block rounded-[9px] px-[9px] py-2 text-xs font-semibold text-muted-2 hover:bg-tile"
+          >
+            {t("settings.title")}
+          </Link>
+          <LanguageSwitch variant="toggle" />
+        </div>
 
         <AccountMenu
           /* Entry 6e. The brand name was the last fallback here, so before

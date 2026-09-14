@@ -279,3 +279,34 @@ describe("a write is only saved when a row comes back", () => {
     }
   });
 });
+
+// ──────────────────── inbox 7b: the toggle is on screen behind the login too ──
+
+describe("the interface language is one click away, not two cards deep", () => {
+  const sidebar = readFileSync("components/sidebar.tsx", "utf8");
+  const sw = stripComments(readFileSync("components/language-switch.tsx", "utf8"));
+
+  it("the sidebar renders the switch as a toggle", () => {
+    // "I can see the Finnish toggle on the website but not when logged in."
+    // The site's toggle is in its nav; the app has no top bar, so its nav is
+    // the sidebar.
+    assert.match(sidebar, /from "@\/components\/language-switch"/);
+    assert.match(sidebar, /<LanguageSwitch variant="toggle" \/>/);
+  });
+
+  it("as a look of the same component, not a second writer", () => {
+    // One update call still, asserted above; the toggle is a render branch.
+    assert.match(sw, /variant === "toggle"/);
+    assert.equal((sw.match(/\.from\("brands"\)\.update\(/g) ?? []).length, 1);
+    assert.match(sw, /aria-label=\{t\("settings\.language"\)\}/);
+    assert.match(sw, /LOCALE_NAME\[l\]/);
+  });
+
+  it("does nothing until the brand has loaded", () => {
+    // A click before useBrand resolves took the no-brand branch: cookie
+    // written, column not, and LocaleSync reverted it on the next load.
+    assert.match(sw, /loading: brandLoading/);
+    assert.match(sw, /if \(brandLoading\) return;/);
+    assert.equal((sw.match(/disabled=\{pending \|\| brandLoading\}/g) ?? []).length, 2);
+  });
+});

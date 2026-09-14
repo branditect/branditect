@@ -22,6 +22,7 @@
     "delete:probe": "node --experimental-strip-types scripts/account-delete-probe.mjs",
     "delete:ui": "node scripts/account-delete-ui.mjs",
     "settings:ui": "node scripts/settings-ui.mjs",
+    "language:ui": "node scripts/language-toggle-ui.mjs",
     "tag:ui": "node scripts/tag-images-ui.mjs",
     "placeholder:ui": "node scripts/brand-placeholder-ui.mjs"
   },

@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { readSitePath, sitePath, type SiteLocale } from "@/lib/site-locale";
+import { translate } from "@/lib/i18n/index.ts";
 import s from "./site.module.css";
 
 export default function SiteFooter() {
@@ -20,8 +21,8 @@ export default function SiteFooter() {
     <footer className={s.footer}>
       <div className={`${s.wrap} ${s.footIn}`}>
         <span>© 2026 Branditect</span>
-        <Link href={sitePath(locale, "about")}>About</Link>
-        <Link href={sitePath(locale, "pricing")}>Pricing</Link>
+        <Link href={sitePath(locale, "about")}>{translate(locale, "site.nav.about")}</Link>
+        <Link href={sitePath(locale, "pricing")}>{translate(locale, "site.nav.pricing")}</Link>
         <a href="mailto:hello@branditect.io">Contact</a>
         <span className={s.footSp}>Made in Finland</span>
       </div>

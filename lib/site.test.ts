@@ -133,7 +133,9 @@ describe("every public page carries metadata", () => {
     it(`${name} exports a title and a description`, () => {
       const src = read(page);
       assert.ok(/export const metadata/.test(src), `${name} exports no metadata`);
-      assert.ok(/title:\s*"[^"]{8,}"/.test(src), `${name} has no real title`);
+      // A literal, or a site.* key looked up in the page's own locale (inbox 7b).
+      assert.ok(/title:\s*(?:"[^"]{8,}"|translate\("(?:en|fi)", "site\.[\w.]+"\))/.test(src),
+        `${name} has no real title`);
       assert.ok(/description:\s*\n?\s*[`"][^`"]{30,}/.test(src), `${name} has no real description`);
       assert.ok(/openGraph/.test(src), `${name} has no Open Graph block`);
       // The card itself is a file in this segment or an ancestor: Next walks

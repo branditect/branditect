@@ -51,8 +51,9 @@ const SEGMENT: Record<SitePage, string> = { home: "", pricing: "pricing", about:
 /**
  * THE ONE SWITCH.
  *
- * `/fi` renders the English copy today: the ~70 marketing strings are the
- * design side's to translate and have not arrived. Until they do:
+ * `/fi` reads the 98 `site.*` keys, which landed 2026-09-14, but most of the
+ * body copy has no key yet and is still English. Inbox 7b lists what is still
+ * missing. Until it arrives:
  *
  *   - the fi routes are `noindex`, because a page indexed as Finnish that is
  *     written in English is worse than no Finnish page at all — it is the
@@ -102,20 +103,25 @@ export function otherLanguage(pathname: string): { locale: SiteLocale; href: str
 }
 
 /**
- * `alternates` for a page's metadata.
+ * `alternates` for a page's metadata, from the page's own locale.
  *
  * Both directions on every page, plus `x-default` on the English one —
  * hreflang has to be reciprocal or search engines discard it, which is the
  * commonest way this is got wrong.
+ *
+ * THE CANONICAL IS THE PAGE ITSELF, in its own language. It used to be the
+ * English path for both, on the reasoning that the Finnish page is a
+ * translation. Search engines read a cross-language canonical as "this page
+ * is a duplicate of that one" and drop the Finnish URL from the index, which
+ * throws away the hreflang with it and leaves `/fi` unfindable — the exact
+ * outcome the routes exist to prevent. A translation is not a duplicate.
  */
-export function alternatesFor(page: SitePage): {
+export function alternatesFor(page: SitePage, locale: SiteLocale = DEFAULT_SITE_LOCALE): {
   canonical: string;
   languages: Record<string, string>;
 } {
   return {
-    // The English path is canonical for both. The Finnish page is a
-    // translation of it, not a separate page with its own authority.
-    canonical: sitePath(DEFAULT_SITE_LOCALE, page),
+    canonical: sitePath(locale, page),
     languages: {
       en: sitePath("en", page),
       fi: sitePath("fi", page),

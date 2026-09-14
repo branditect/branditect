@@ -795,6 +795,140 @@ export const en = {
   // not survive a language whose word order differs.
   "channels.whatThisAnswers":
     "Brand Strategy answers who we are. BrandTone answers how we sound. This answers what we post on Wednesday. Branditect already knows most of it — we just need 5 things to fill the gaps.",
+
+  // ══ MARKETING SITE ══ app/(site) and components/site.
+  // Public pages. These are served from real locale routes (/fi, /fi/pricing,
+  // /fi/about), never from the bd_locale cookie — one URL must be one language
+  // or search indexes whichever it saw first.
+
+  // ── Nav and shared ────────────────────────────────────────────────────────
+  "site.nav.howItWorks": "How it works",
+  "site.nav.pricing": "Pricing",
+  "site.nav.about": "About",
+  "site.nav.logIn": "Log in",
+  "site.startFree": "Start free",
+  "site.mostPopular": "Most popular",
+  "site.threeTruths": "Brand truth · Product truth · Commercial truth",
+  "site.notAGenerator": "Not a copy generator. A commercial brain.",
+  "site.commercialBrain": "The commercial brain",
+  "site.checkEmail": "Check your email",
+  "site.goToSignIn": "Go to sign in",
+
+  // ── Landing ───────────────────────────────────────────────────────────────
+  "site.home.metaTitle": "Branditect · The commercial brain for your brand",
+  "site.home.h1a": "You run the business.",
+  "site.home.h1b": "We do the work.",
+  "site.home.sub": "Your whole business lives in your head. Branditect is where you put it instead.",
+  "site.home.cta": "Start building with Branditect for free, today.",
+  "site.home.noCard": "No card required. Your brand brain is yours to keep.",
+  "site.home.askIt": "Ask it",
+  "site.home.itAnswers": "It answers",
+  "site.home.secHome": "Home.",
+  "site.home.secProducts": "Products.",
+  "site.home.secStudio": "Studio.",
+  "site.home.yourStrategy": "Your strategy.",
+  "site.home.yourProductKnowledge": "Your product knowledge.",
+  "site.home.yourTrueNumbers": "Your true numbers.",
+  "site.home.q25": "You answer 25 questions. Not “what is your mission”. Why you started, who you are",
+  "site.home.step1": "Say what the brand is",
+  "site.home.step1Body":
+    "Twenty questions build your strategy and your tone of voice. Five of them open the workspace. The rest can wait.",
+  "site.home.step2": "Give it what you know",
+  "site.home.step2Body":
+    "Products, documents, images and links. Everything you upload is read and indexed, and that part never costs a credit.",
+  "site.home.step3": "Get work back",
+  "site.home.step3Body":
+    "Copy in your voice citing your own facts, images shot in your own light, and offers that respect your floor price.",
+  "site.home.gaps": "Big brands close those gaps with people.",
+  "site.home.gapsPunch": "They have a marketing team. You have Branditect.",
+  "site.home.readWhole": "Read the whole thing",
+  "site.home.getStartedFree": "Get started for free!",
+  "site.home.freeTerms": "A hundred credits, no card, no countdown. Pay when you want it working for you.",
+  "site.home.everyPlan": "Every plan side by side, and what a credit buys",
+
+  // ── Pricing ───────────────────────────────────────────────────────────────
+  "site.pricing.metaTitle": "Pricing · Branditect",
+  "site.pricing.freeToBuild": "Free to build.",
+  "site.pricing.monthly": "Monthly",
+  "site.pricing.yearly": "Yearly",
+  "site.pricing.whatIsCredit": "What is a credit?",
+  "site.pricing.action": "Action",
+  "site.pricing.cost": "Cost",
+  "site.pricing.topUp": "Run out before the month does and you can add",
+  "site.pricing.sideBySide": "Everything, side by side",
+  "site.pricing.buildFree": "Build the brain for nothing.",
+  "site.pricing.readWhatItDoes": "Read what it does",
+
+  // ── About ─────────────────────────────────────────────────────────────────
+  "site.about.metaTitle": "About · Branditect",
+  "site.about.whatThisIs": "What this is",
+  // One sentence, not two keys. See the note in fi.ts.
+  "site.about.threeQuestions": "Three questions every brand has to answer. Answer them once.",
+  "site.about.threeTruthsBody":
+    "Three kinds of truth, held in one place, each one usable by everything else.",
+
+  "site.about.brandTruth": "Brand truth",
+  "site.about.brandTruthBody":
+    "Your strategy, positioning, tone of voice and visual identity, written down once and used by everything you make afterwards.",
+  "site.about.productTruth": "Product truth",
+  "site.about.productTruthBody":
+    "Every product, its specifications and the claims you can actually prove. If a number is not in there, nothing will write it.",
+  "site.about.commercialTruth": "Commercial truth",
+  "site.about.commercialTruthBody":
+    "Landed cost, real margin, floor price and the most you will discount. The part that decides whether the work was worth doing.",
+
+  "site.about.howItWorks": "How it works",
+  "site.about.defineFeedMake": "Define, feed, make.",
+  "site.about.define": "Define",
+  "site.about.feed": "Feed",
+  "site.about.make": "Make",
+
+  "site.about.fourDecisions": "Four decisions we will not trade away.",
+  "site.about.fourDecisionsBody":
+    "These are the ones that would be easy to soften and expensive to lose.",
+  "site.about.closedBook": "Closed book",
+  "site.about.closedBookBody":
+    "It writes from what you gave it and nothing else. Ask for a product that is not in there and it says so rather than inventing one.",
+  "site.about.sourcedClaims": "Sourced claims",
+  "site.about.sourcedClaimsBody":
+    "Every hard fact in a draft carries the record it came from. An undeclared number is the failure this whole system exists to prevent.",
+  "site.about.marginAwareness": "Margin awareness",
+  "site.about.marginAwarenessBody":
+    "Offers and discounts are checked against your floor price before you see them, so nothing suggests a price that loses you money.",
+  "site.about.staysYours": "Your brand stays yours",
+  "site.about.staysYoursBody":
+    "Your files, your strategy and your numbers belong to you. There is one way anything leaves the system, and you send it deliberately.",
+
+  "site.about.whoItIsFor": "Who it is for.",
+  "site.about.forYouIf": "For you if",
+  "site.about.for1": "You sell something specific and you know what it costs you",
+  "site.about.for2": "Your brand decisions live in your head or in one old deck",
+  "site.about.for3": "You write your own copy and you are tired of explaining the brand each time",
+  "site.about.for4": "You have been burned by a tool that invented a product feature",
+  "site.about.for5": "You run one brand properly, or a few brands that must not bleed into each other",
+  "site.about.notForYouIf": "Not for you if",
+  "site.about.not1": "You want volume content and do not mind where the facts came from",
+  "site.about.not2": "You have no products yet and nothing to be truthful about",
+  "site.about.not3": "You need a design tool. This decides what to say, not how to lay it out",
+  "site.about.not4": "You want a chatbot with no setup. The five questions are the whole point",
+  "site.about.not5": "You need invoicing, VAT returns or accounting. Numbers is about margin, not books",
+
+  "site.about.theCompany": "The company",
+  "site.about.builtInFinland": "Built in Finland.",
+  "site.about.whereItRuns": "Where it runs",
+  "site.about.whereItRunsBody":
+    "Your data is held on EU infrastructure, and we handle it under GDPR as the processor of what you put in.",
+  "site.about.whoOwnsIt": "Who owns it",
+  "site.about.whoOwnsItBody":
+    "Your files, your strategy and everything you make stay yours. Close the account and you can take it with you.",
+  "site.about.reachUs": "Where to reach us",
+  "site.about.answerThree": "Answer the three questions.",
+  "site.about.seePlans": "See the plans",
+
+  "site.about.altStudio":
+    "The Studio row in Branditect: cards for writing copy, creating images, doing the numbers and reaching your brand assets.",
+  "site.about.altNumbers":
+    "The Numbers section of Branditect showing three calculators for working out landed cost, margin and a floor price.",
 } as const;
 
 export type StringKey = keyof typeof en;

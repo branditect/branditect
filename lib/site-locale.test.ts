@@ -65,11 +65,22 @@ describe("the site switches by URL, not by cookie", () => {
 describe("hreflang is reciprocal, or it is discarded", () => {
   it("every page names both languages and an x-default", () => {
     for (const p of SITE_PAGES) {
-      const a = alternatesFor(p);
-      assert.equal(a.languages.en, sitePath("en", p));
-      assert.equal(a.languages.fi, sitePath("fi", p));
-      assert.equal(a.languages["x-default"], sitePath("en", p));
-      assert.equal(a.canonical, sitePath("en", p));
+      for (const l of SITE_LOCALES) {
+        const a = alternatesFor(p, l);
+        assert.equal(a.languages.en, sitePath("en", p));
+        assert.equal(a.languages.fi, sitePath("fi", p));
+        assert.equal(a.languages["x-default"], sitePath("en", p));
+      }
+    }
+  });
+
+  it("each page is its own canonical, never its translation's", () => {
+    // A canonical from /fi to / tells a crawler /fi is a duplicate, so it is
+    // dropped from the index and its hreflang goes with it.
+    for (const p of SITE_PAGES) {
+      assert.equal(alternatesFor(p).canonical, sitePath("en", p));
+      assert.equal(alternatesFor(p, "en").canonical, sitePath("en", p));
+      assert.equal(alternatesFor(p, "fi").canonical, sitePath("fi", p));
     }
   });
 
@@ -93,9 +104,9 @@ describe("hreflang is reciprocal, or it is discarded", () => {
       const dir = p === "home" ? "" : `/${p}`;
       const en = read(`app/(site)${dir}/page.tsx`);
       const fi = read(`app/(site)/fi${dir}/page.tsx`);
-      const want = `alternatesFor("${p}")`;
-      assert.ok(en.includes(want), `the English ${p} page does not claim ${p}`);
-      assert.ok(fi.includes(want), `the Finnish ${p} page does not claim ${p}`);
+      assert.ok(en.includes(`alternatesFor("${p}")`), `the English ${p} page does not claim ${p}`);
+      assert.ok(fi.includes(`alternatesFor("${p}", "fi")`),
+        `the Finnish ${p} page does not claim ${p} in Finnish`);
     }
   });
 });
@@ -120,8 +131,10 @@ describe("nothing claims Finnish until the Finnish arrives", () => {
   });
 
   it("and one constant turns all of it on", () => {
-    // The value today. If this ever fails, the switch was flipped and the
-    // three assertions above are the ones to re-read.
+    // The value today. The 98 site.* keys landed and are wired, but most body
+    // copy has no key (inbox 7b lists it), so /fi is still half English. When
+    // the rest lands, invert this rather than deleting it, and re-read the
+    // three assertions above.
     assert.equal(FI_COPY_READY, false,
       "FI_COPY_READY is true — check the Finnish copy actually landed");
   });
@@ -180,14 +193,14 @@ describe("the language survives a navigation", () => {
     // The nav and footer were made locale-aware first and these were still
     // sending people from /fi back to /about and /?auth=signup.
     for (const f of ["app/(site)/landing-client.tsx", "app/(site)/pricing/pricing-client.tsx",
-                     "app/(site)/about/page.tsx"]) {
+                     "app/(site)/about/about-body.tsx"]) {
       const code = read(f).replace(/\/\*[\s\S]*?\*\//g, "");
       for (const dead of [/href="\/about"/, /href="\/pricing"/, /href="\/\?auth=/]) {
         assert.ok(!dead.test(code), `${f} still hard-codes ${dead}`);
       }
     }
     // /signup is an app route, not a public page, and stays absolute.
-    assert.match(read("app/(site)/about/page.tsx"), /href="\/signup"/);
+    assert.match(read("app/(site)/about/about-body.tsx"), /href="\/signup"/);
   });
 
   it("no hard-coded English path is left in either", () => {
@@ -197,6 +210,50 @@ describe("the language survives a navigation", () => {
         assert.ok(!dead.test(code), `${name} still hard-codes ${dead}`);
       }
     }
+  });
+});
+
+describe("both languages read one dictionary", () => {
+  // Inbox 7b, the copy half. The English pages used to carry their own
+  // literals and the Finnish routes rendered the same components with no way
+  // to be told otherwise. Now each route hands its locale down and every
+  // string with a site.* key is looked up, on both sides.
+  const bodies: [string, string, string][] = [
+    ["app/(site)/page.tsx", "app/(site)/fi/page.tsx", "LandingClient"],
+    ["app/(site)/pricing/page.tsx", "app/(site)/fi/pricing/page.tsx", "PricingClient"],
+    ["app/(site)/about/page.tsx", "app/(site)/fi/about/page.tsx", "AboutBody"],
+  ];
+
+  it("each route renders the shared body with its own locale", () => {
+    for (const [en, fi, body] of bodies) {
+      assert.match(read(en), new RegExp(`<${body} locale="en" />`), en);
+      assert.match(read(fi), new RegExp(`<${body} locale="fi" />`), fi);
+    }
+  });
+
+  it("and titles itself from the dictionary in that locale", () => {
+    for (const [en, fi] of bodies) {
+      assert.match(read(en), /title: translate\("en", "site\.\w+\.metaTitle"\)/, en);
+      assert.match(read(fi), /title: translate\("fi", "site\.\w+\.metaTitle"\)/, fi);
+    }
+  });
+
+  it("the nav and footer look their labels up in the locale of the path", () => {
+    const nav = read("components/site/site-nav.tsx");
+    for (const k of ["site.nav.howItWorks", "site.nav.pricing", "site.nav.about", "site.nav.logIn", "site.startFree"]) {
+      assert.ok(nav.includes(`"${k}"`), `the nav does not use ${k}`);
+    }
+    assert.match(nav, /translate\(locale, key\)/);
+    assert.match(read("components/site/site-footer.tsx"), /translate\(locale, "site\.nav\.about"\)/);
+  });
+
+  it("the three-questions headline is one string with no seam in it", () => {
+    // It was "Three questions every brand<br />answers forever. <em>Answer
+    // them once.</em>". Finnish word order does not put the break where
+    // English does, so the key is a whole sentence pair and renders whole.
+    const about = read("app/(site)/about/about-body.tsx");
+    assert.match(about, /<h1>\{t\("site\.about\.threeQuestions"\)\}<\/h1>/);
+    assert.ok(!/Answer them once/.test(about), "the English headline is still hard-coded");
   });
 });
 

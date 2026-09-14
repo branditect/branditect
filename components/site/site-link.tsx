@@ -8,7 +8,7 @@
  * `/fi`. One English link inside the copy undoes the route the page just
  * used, and it is the second click, which nobody checks.
  *
- * A client component so `app/(site)/about/page.tsx` can use it too: that page
+ * A client component so `app/(site)/about/about-body.tsx` can use it too: it
  * is a server component rendered from both `/about` and `/fi/about`, so it
  * cannot be told which it is except by asking the pathname here.
  */

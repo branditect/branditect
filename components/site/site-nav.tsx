@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/logo";
 import LanguageToggle from "./language-toggle";
 import { readSitePath, sitePath, type SiteLocale } from "@/lib/site-locale";
+import { translate, type StringKey } from "@/lib/i18n/index.ts";
 import s from "./site.module.css";
 
 /**
@@ -35,6 +36,7 @@ export default function SiteNav() {
   const locale: SiteLocale = here?.locale ?? "en";
   const home = sitePath(locale, "home");
   const onLanding = here?.page === "home";
+  const t = (key: StringKey) => translate(locale, key);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -59,14 +61,14 @@ export default function SiteNav() {
           Branditect
         </Link>
         <div className={s.links}>
-          <Link href={href("#how", `${home === "/" ? "" : home}/#how`.replace("//", "/"))}>How it works</Link>
-          <Link href={href("#pricing", sitePath(locale, "pricing"))}>Pricing</Link>
-          <Link href={href("#about", sitePath(locale, "about"))}>About</Link>
+          <Link href={href("#how", `${home === "/" ? "" : home}/#how`.replace("//", "/"))}>{t("site.nav.howItWorks")}</Link>
+          <Link href={href("#pricing", sitePath(locale, "pricing"))}>{t("site.nav.pricing")}</Link>
+          <Link href={href("#about", sitePath(locale, "about"))}>{t("site.nav.about")}</Link>
         </div>
         <div className={s.navRight}>
           <LanguageToggle />
-          <Link href={auth("login")} className={`${s.btn} ${s.ghost}`}>Log in</Link>
-          <Link href={auth("signup")} className={s.btn}>Start free</Link>
+          <Link href={auth("login")} className={`${s.btn} ${s.ghost}`}>{t("site.nav.logIn")}</Link>
+          <Link href={auth("signup")} className={s.btn}>{t("site.startFree")}</Link>
         </div>
       </div>
     </nav>

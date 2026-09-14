@@ -9,10 +9,11 @@ import HeroAuthCard, { type Tab } from "@/components/site/hero-auth-card";
 import SignedInGate from "@/components/site/signed-in-gate";
 import { PLANS } from "@/lib/pricing-plans";
 import s from "@/components/site/site.module.css";
+import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
 
 const STEPS = [
   {
-    n: "01", title: "Your strategy.", tone: "t1",
+    n: "01", title: "site.home.yourStrategy", tone: "t1",
     body:
       "You answer 25 questions. Not \u201cwhat is your mission\u201d. Why you started, who you are " +
       "actually for, what you will never claim even when it costs you a sale. Branditect turns the " +
@@ -24,7 +25,7 @@ const STEPS = [
       "this obeys it, which is what the next two cards are.",
   },
   {
-    n: "02", title: "Your product knowledge.", tone: "t2",
+    n: "02", title: "site.home.yourProductKnowledge", tone: "t2",
     ask: "Write a post and a catalogue entry for SKU 12 and SKU 14, and find every image linked to them.",
     answer:
       "Both formats, in your voice, written to the segment you defined in card one. Three verified " +
@@ -32,19 +33,19 @@ const STEPS = [
       "Eleven images across the two products, with the five cleared for retail use marked.",
   },
   {
-    n: "03", title: "Your true numbers.", tone: "t3",
+    n: "03", title: "site.home.yourTrueNumbers", tone: "t3",
     ask: "Can I run 25% off this product?",
     answer:
       "Not at your current cost. Your floor is 21%, which changed when packaging went up in March. " +
       "Want the campaign written to 21%?",
   },
-];
+] satisfies { n: string; title: StringKey; tone: string; body?: string; ask: string; answer: string }[];
 
 const FLOW = [
-  { v: "Define", title: "Say what the brand is", body: "Twenty questions build your strategy and your tone of voice. Five of them open the workspace. The rest can wait." },
-  { v: "Feed", title: "Give it what you know", body: "Products, documents, images and links. Everything you upload is read and indexed, and that part never costs a credit." },
-  { v: "Make", title: "Get work back", body: "Copy in your voice citing your own facts, images shot in your own light, and offers that respect your floor price." },
-];
+  { v: "site.about.define", title: "site.home.step1", body: "site.home.step1Body" },
+  { v: "site.about.feed", title: "site.home.step2", body: "site.home.step2Body" },
+  { v: "site.about.make", title: "site.home.step3", body: "site.home.step3Body" },
+] satisfies { v: StringKey; title: StringKey; body: StringKey }[];
 
 const ROLES = [
   "A strategist, who decides what the brand stands for and what it will never say",
@@ -71,8 +72,13 @@ function AuthTabSync({ onTab }: { onTab: (t: Tab) => void }) {
   return null;
 }
 
-export default function LandingClient() {
+/**
+ * `locale` comes from the route, not the pathname: `/` and `/fi` each render
+ * this with their own, so the server HTML is already in the right language.
+ */
+export default function LandingClient({ locale }: { locale: Locale }) {
   const [tab, setTab] = useState<Tab>("signup");
+  const t = (key: StringKey) => translate(locale, key);
 
   return (
     <main>
@@ -83,9 +89,9 @@ export default function LandingClient() {
       <div className={s.wrap}>
         <section className={s.landingHero}>
           <div>
-            <span className={s.heroKicker}>Brand truth · Product truth · Commercial truth</span>
+            <span className={s.heroKicker}>{t("site.threeTruths")}</span>
             <h1>
-              You run the business.<br /><em>We do the work.</em>
+              {t("site.home.h1a")}<br /><em>{t("site.home.h1b")}</em>
             </h1>
             <p className={s.heroLede}>
               The commercial brain for product and ecommerce brands. It holds your strategy, your
@@ -93,7 +99,7 @@ export default function LandingClient() {
               accurate and profitable. It writes your copy understanding each and every one of your
               products, your tone of voice and style. And makes your images, too. It&rsquo;s like
               having a superstar marketing team behind you.{" "}
-              <b>Start building with Branditect for free, today.</b>
+              <b>{t("site.home.cta")}</b>
             </p>
             <div className={s.trust}>
               {["Free forever", "No card to start", "100 credits to try everything", "Your data stays in the EU"].map((t) => (
@@ -101,7 +107,7 @@ export default function LandingClient() {
               ))}
             </div>
           </div>
-          <HeroAuthCard tab={tab} onTab={setTab} />
+          <HeroAuthCard tab={tab} onTab={setTab} locale={locale} />
         </section>
 
         <div style={{ marginTop: 14 }}>
@@ -112,7 +118,7 @@ export default function LandingClient() {
           <p className={s.cap}>
             <i className={s.capDot} />
             <span>
-              <b>Home.</b> Brand Readiness tells you what is still missing, and the Studio row is
+              <b>{t("site.home.secHome")}</b> Brand Readiness tells you what is still missing, and the Studio row is
               what you can make with what the brain already knows. Nothing on this screen is a guess.
             </span>
           </p>
@@ -120,24 +126,24 @@ export default function LandingClient() {
 
         <section className={`${s.sec} ${s.anchor}`} id="how">
           <div className={`${s.sechead}`} style={{ textAlign: "center", margin: "0 auto 34px" }}>
-            <div className={s.eyebrow}>How it works</div>
-            <h2>Your whole business lives in your head. Branditect is where you put it instead.</h2>
+            <div className={s.eyebrow}>{t("site.nav.howItWorks")}</div>
+            <h2>{t("site.home.sub")}</h2>
             <p>
               Each one is usable by everything else, which is the whole difference between a brand
               brain and a folder of documents.
             </p>
           </div>
           <div className={s.truths}>
-            {STEPS.map((t) => (
-              <div key={t.n} className={`${s.tr} ${s[t.tone]}`}>
-                <div className={s.tn}>{t.n}</div>
-                <h3>{t.title}</h3>
-                {t.body && <p className={s.tw}>{t.body}</p>}
+            {STEPS.map((step) => (
+              <div key={step.n} className={`${s.tr} ${s[step.tone]}`}>
+                <div className={s.tn}>{step.n}</div>
+                <h3>{t(step.title)}</h3>
+                {step.body && <p className={s.tw}>{step.body}</p>}
                 {/* The question and its answer are the argument. A claim about
                     what it can do is worth less than the exchange itself. */}
                 <div className={s.qa2}>
-                  <p className={s.askLine}><span>Ask it</span>{t.ask}</p>
-                  <p className={s.answerLine}><span>It answers</span>{t.answer}</p>
+                  <p className={s.askLine}><span>{t("site.home.askIt")}</span>{step.ask}</p>
+                  <p className={s.answerLine}><span>{t("site.home.itAnswers")}</span>{step.answer}</p>
                 </div>
               </div>
             ))}
@@ -151,7 +157,7 @@ export default function LandingClient() {
             <p className={s.cap}>
               <i className={s.capDot} />
               <span>
-                <b>Products.</b> Look at the asterisk in the margin column. That is the system
+                <b>{t("site.home.secProducts")}</b> Look at the asterisk in the margin column. That is the system
                 telling you a figure is estimated because a landed cost is missing. It would rather
                 admit that than quietly overstate your margin.
               </span>
@@ -161,9 +167,9 @@ export default function LandingClient() {
           <div style={{ marginTop: 34 }} className={s.flow}>
             {FLOW.map((f) => (
               <div key={f.v} className={s.fs}>
-                <div className={s.fsV}>{f.v}</div>
-                <h3>{f.title}</h3>
-                <p>{f.body}</p>
+                <div className={s.fsV}>{t(f.v)}</div>
+                <h3>{t(f.title)}</h3>
+                <p>{t(f.body)}</p>
               </div>
             ))}
           </div>
@@ -171,12 +177,12 @@ export default function LandingClient() {
           <div style={{ marginTop: 26 }}>
             <div className={s.frame}>
               <Image src="/login/create-tools.webp" width={1010} height={552}
-                alt="The Studio row in Branditect: cards for writing copy, creating images, doing the numbers and reaching your brand assets." />
+                alt={t("site.about.altStudio")} />
             </div>
             <p className={s.cap}>
               <i className={s.capDot} />
               <span>
-                <b>Studio.</b> Everything here reads the same brain. Nothing has its own separate
+                <b>{t("site.home.secStudio")}</b> Everything here reads the same brain. Nothing has its own separate
                 idea of what your brand is.
               </span>
             </p>
@@ -185,14 +191,14 @@ export default function LandingClient() {
 
         <section className={`${s.sec} ${s.anchor}`} id="pricing" style={{ paddingTop: 0 }}>
           <div className={s.sechead} style={{ textAlign: "center", margin: "0 auto 34px" }}>
-            <div className={s.eyebrow}>Pricing</div>
-            <h2>Get started for free!</h2>
-            <p>A hundred credits, no card, no countdown. Pay when you want it working for you.</p>
+            <div className={s.eyebrow}>{t("site.nav.pricing")}</div>
+            <h2>{t("site.home.getStartedFree")}</h2>
+            <p>{t("site.home.freeTerms")}</p>
           </div>
           <div className={`${s.plans} ${s.plansThree}`}>
             {LANDING_PLANS.map((plan) => (
               <div key={plan.id} className={`${s.plan} ${plan.featured ? s.featured : ""}`}>
-                {plan.featured && <span className={s.flag}>Most popular</span>}
+                {plan.featured && <span className={s.flag}>{t("site.mostPopular")}</span>}
                 <div className={s.pname}>{plan.name}</div>
                 <p className={s.who}>{plan.who}</p>
                 <div className={s.price}>
@@ -211,14 +217,14 @@ export default function LandingClient() {
             ))}
           </div>
           <p className={s.allplans}>
-            <SiteLink page="pricing">Every plan side by side, and what a credit buys</SiteLink>
+            <SiteLink page="pricing">{t("site.home.everyPlan")}</SiteLink>
           </p>
         </section>
 
         <section className={`${s.sec} ${s.anchor}`} id="about" style={{ paddingTop: 0 }}>
           <div className={s.aboutStrip}>
             <div>
-              <div className={s.aboutLead}>About</div>
+              <div className={s.aboutLead}>{t("site.nav.about")}</div>
               <h2>
                 Built by a team that has spent two decades building brands around the world.
                 Made in Finland.
@@ -229,7 +235,7 @@ export default function LandingClient() {
                 checked before it went to print. The retailer description written from memory at
                 eleven at night, because the spec sheet was somewhere in an inbox.
               </p>
-              <p><b>Big brands close those gaps with people.</b></p>
+              <p><b>{t("site.home.gaps")}</b></p>
             </div>
 
             <ul className={s.roles}>
@@ -249,9 +255,9 @@ export default function LandingClient() {
                 Branditect gives you both, at whatever stage you are at. First product or four
                 hundredth. You still make every decision. You stop making them from memory.
               </p>
-              <p className={s.aboutPunch}>They have a marketing team. You have Branditect.</p>
+              <p className={s.aboutPunch}>{t("site.home.gapsPunch")}</p>
               <div className={s.bandCta} style={{ justifyContent: "flex-start", marginTop: 22 }}>
-                <SiteLink page="about" className={`${s.btn} ${s.line}`}>Read the whole thing</SiteLink>
+                <SiteLink page="about" className={`${s.btn} ${s.line}`}>{t("site.home.readWhole")}</SiteLink>
               </div>
             </div>
           </div>
@@ -259,13 +265,13 @@ export default function LandingClient() {
 
         <section className={s.final}>
           <span className={s.rings} aria-hidden="true"><i /><i /><i /></span>
-          <h2>Answer the three questions.</h2>
+          <h2>{t("site.about.answerThree")}</h2>
           <p>
             About four minutes for the five that matter. A hundred credits, no card, and nothing
             expires.
           </p>
-          <SiteLink page="home" auth="signup" className={s.btn}>Start free</SiteLink>
-          <p className={s.finalFine}>No card required. Your brand brain is yours to keep.</p>
+          <SiteLink page="home" auth="signup" className={s.btn}>{t("site.startFree")}</SiteLink>
+          <p className={s.finalFine}>{t("site.home.noCard")}</p>
         </section>
       </div>
     </main>

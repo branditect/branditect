@@ -861,6 +861,90 @@ every link on `/` stays English, hreflang is absolute in the served HTML.
 
 See the report entry "Inbox 7b".
 
+**2026-09-14: the 98 `site.*` keys are wired. Still PART DONE, and the flag is
+still false.**
+
+Both sides now read one dictionary: each route passes its locale to the shared
+body (`LandingClient`, `PricingClient`, and `AboutBody`, which moved out of
+`about/page.tsx` so both About routes can hand it a locale), and the nav, footer,
+auth-card tabs and page titles look their strings up. `site.about.threeQuestions`
+renders as one whole string on both sides. The `<br />` and `<em>` seam is gone.
+
+**Why the flag was not flipped.** The 98 keys cover the headings, labels and
+short lines. Most of the body copy has no key, so `/fi` today is Finnish headings
+over English paragraphs. Turning the flag on would get that indexed as Finnish
+and offer "Suomi" over it, which is the thing the flag exists to prevent. The
+flip was checked locally and reverted: the toggle renders in the nav on all six
+routes, the noindex drops, and the sitemap gains the `fi` alternates. It works
+once the copy is there.
+
+**Also fixed: the canonical.** `/fi` said `canonical → /`. A cross-language
+canonical tells a crawler the Finnish page is a duplicate of the English one,
+so it drops `/fi` from the index and ignores the hreflang too. Each page is
+now its own canonical (`alternatesFor(page, "fi")`), and there is a test for it.
+
+**Owed before the flip: design side (copy)**
+
+1. **Three keys are cut off mid-sentence and cannot be used.** Rendering them
+   means joining a Finnish fragment to an English one:
+   - `site.home.q25` stops at "…who you are". The full card body continues
+     "actually for, what you will never claim even when it costs you a sale.
+     Branditect turns the answers into a strategy foundation: positioning,
+     audience, voice, anti-voice and your claim rules."
+   - `site.pricing.topUp` stops at "…you can add". The sentence carries the
+     top-up amount in bold and continues "with one click, or wait for the next
+     month. Nothing is deleted and nothing stops working. You keep reading your
+     brand brain either way." It needs one key with a `{topUp}` placeholder.
+   - `site.commercialBrain` ("The commercial brain") is the first half of the
+     pricing h1 "The commercial brain / for your brand.". Finnish reverses the
+     order ("Brändisi kaupalliset aivot"), so it needs to be one key.
+2. **Body copy with no key.** English source, by page:
+   - **Landing:** the hero lede ("The commercial brain for product and ecommerce
+     brands…"); the four trust chips (Free forever / No card to start / 100
+     credits to try everything / Your data stays in the EU); the three screenshot
+     captions after "Home." / "Products." / "Studio."; the #how sub-paragraph
+     ("Each one is usable by everything else…"); the three cards' "Ask it" and
+     "It answers" lines (6); the About strip h2 ("Built by a team that has spent
+     two decades…"), its paragraph ("A brand rarely fails on strategy alone…"),
+     the six roles, and the two closing paragraphs ("What a big brand has…",
+     "Branditect gives you both…"); the final band paragraph ("About four minutes
+     for the five that matter…"); "/month"; alt text for the dashboard and
+     products screenshots.
+   - **Pricing:** the lede ("Branditect turns your scattered files…"); "2 months
+     free"; "Let's talk"; "/month"; "Incl. VAT, billed {total} yearly"; the
+     "What is a credit?" paragraph; the "Not a copy generator" paragraph and the
+     dashboard caption; the band paragraph ("A hundred credits, no card, no
+     countdown. Your strategy…"); aria-label "Billing period"; dashboard alt.
+   - **About:** the lede ("What do we stand for…"); the four screenshot captions;
+     "Three verbs in order…"; the Define / Feed / Make card bodies (these differ
+     from `site.home.step*Body`: they add "and your visual identity" and "are
+     enough to"); "The second column is not modesty…"; "One inbox, read by the
+     people who build it."; the final band paragraph; alt text for the dashboard
+     and products screenshots.
+   - **Every page:** the meta and Open Graph descriptions (3 pages).
+   - **Footer:** "Contact", "Made in Finland".
+   - **Plan data in `lib/pricing-plans.ts`:** plan `who`, `vatLine`, `credits`,
+     `creditsLabel`, `cta`, every feature line, the comparison table's row labels
+     and word values (Contact us, Agreed, Unlimited, Yes, No, Docs, Email…),
+     and the four credit-cost rows. This is on both the landing page and pricing.
+   - **The auth card form** (`components/auth/auth-form.tsx`): "Create your
+     account", "Start building your brand workspace", "Email", "Password",
+     placeholders, button states, and `AUTH_COPY` errors. Some `auth.*` keys
+     already exist but this form does not read them.
+   - **The OG card** (`components/site/og-image.tsx`): "The commercial brain /
+     for your brand.", the same seam as the pricing h1.
+3. **One em dash in the new Finnish:** `site.about.brandTruthBody`
+   ("…visuaalinen ilmeesi — kirjattuna kerran…"). The public site has no em dashes
+   (criterion 10), and this line now renders on `/fi/about`.
+
+**Owed before the flip: build side**
+
+- `<html lang="en">` is still hard-coded in the root layout, which is shared
+  with the app. The existing test starts failing the moment the flag goes true.
+- The inverted `FI_COPY_READY` assertions (`site-locale.test.ts`, "and one
+  constant turns all of it on", plus the sitemap block) go in the same commit
+  as the flip.
+
 ---
 
 ### The two bugs in that report are worth naming

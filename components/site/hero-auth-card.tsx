@@ -8,6 +8,7 @@ import { mapAuthError, AUTH_COPY, type AuthError } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
 import { ensureBrand } from "@/lib/brand-bootstrap";
 import { routeAfterAuth } from "@/lib/post-auth";
+import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
 import s from "./site.module.css";
 
 export type Tab = "signup" | "login";
@@ -26,7 +27,8 @@ export type Tab = "signup" | "login";
  * the back button has to work, so this is an additional entrance rather than a
  * replacement.
  */
-export default function HeroAuthCard({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
+export default function HeroAuthCard({ tab, onTab, locale }: { tab: Tab; onTab: (t: Tab) => void; locale: Locale }) {
+  const t = (key: StringKey) => translate(locale, key);
   const router = useRouter();
   const [error, setError] = useState<AuthError | null>(null);
   const [pending, setPending] = useState(false);
@@ -63,23 +65,23 @@ export default function HeroAuthCard({ tab, onTab }: { tab: Tab; onTab: (t: Tab)
       <div className={s.tabs} role="tablist" aria-label="Sign up or log in">
         <button type="button" role="tab" aria-selected={tab === "signup"}
           className={tab === "signup" ? s.on : undefined} onClick={() => onTab("signup")}>
-          Start free
+          {t("site.startFree")}
         </button>
         <button type="button" role="tab" aria-selected={tab === "login"}
           className={tab === "login" ? s.on : undefined} onClick={() => onTab("login")}>
-          Log in
+          {t("site.nav.logIn")}
         </button>
       </div>
 
       {confirmSentTo ? (
         <div style={{ padding: "10px 2px 6px" }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5 }}>Check your email</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5 }}>{t("site.checkEmail")}</h2>
           <p style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: "#6f6f8a" }}>
             {AUTH_COPY.confirmSent}
           </p>
           <p style={{ marginTop: 12, fontSize: 13, fontWeight: 700 }}>{confirmSentTo}</p>
           <Link href="/login" className={s.btn} style={{ marginTop: 18, width: "100%" }}>
-            Go to sign in
+            {t("site.goToSignIn")}
           </Link>
         </div>
       ) : (

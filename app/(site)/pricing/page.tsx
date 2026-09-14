@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/site-locale";
+import { translate } from "@/lib/i18n/index.ts";
 import PricingClient from "./pricing-client";
 import { PLANS } from "@/lib/pricing-plans";
 
@@ -8,12 +9,12 @@ import { PLANS } from "@/lib/pricing-plans";
 const FROM = PLANS.find((p) => p.id === "pro")!.monthly;
 
 export const metadata: Metadata = {
-  title: "Pricing · Branditect",
+  title: translate("en", "site.pricing.metaTitle"),
   description:
     `Build your brand brain free, with 100 credits and no card. Plans from ${FROM} a month including VAT.`,
   alternates: alternatesFor("pricing"),
   openGraph: {
-    title: "Pricing · Branditect",
+    title: translate("en", "site.pricing.metaTitle"),
     description: `Build your brand brain free. Plans from ${FROM} a month including VAT.`,
     url: "/pricing",
     type: "website",
@@ -21,5 +22,5 @@ export const metadata: Metadata = {
 };
 
 export default function PricingPage() {
-  return <PricingClient />;
+  return <PricingClient locale="en" />;
 }

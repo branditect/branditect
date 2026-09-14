@@ -7,21 +7,23 @@ import Image from "next/image";
 import Icon from "@/components/icon";
 import { PLANS, COMPARISON, CREDIT_COSTS, TOP_UP, VAT_RATE } from "@/lib/pricing-plans";
 import s from "@/components/site/site.module.css";
+import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
 
 /**
  * Every number on this page comes from lib/pricing-plans.ts, so the cards and
  * the comparison table cannot drift apart.
  */
-export default function PricingClient() {
+export default function PricingClient({ locale }: { locale: Locale }) {
   const [yearly, setYearly] = useState(false);
+  const t = (key: StringKey) => translate(locale, key);
 
   return (
     <main>
       <div className={s.wrap}>
         <section className={s.hero}>
-          <span className={s.kicker}>Brand truth · Product truth · Commercial truth</span>
+          <span className={s.kicker}>{t("site.threeTruths")}</span>
           <h1>
-            The commercial brain<br />for your brand. <em>Free to build.</em>
+            The commercial brain<br />for your brand. <em>{t("site.pricing.freeToBuild")}</em>
           </h1>
           <p className={s.lede}>
             Branditect turns your scattered files, decisions and numbers into one knowledge layer
@@ -32,11 +34,11 @@ export default function PricingClient() {
           <div className={s.toggle} role="group" aria-label="Billing period">
             <button type="button" className={yearly ? undefined : s.on}
               aria-pressed={!yearly} onClick={() => setYearly(false)}>
-              Monthly
+              {t("site.pricing.monthly")}
             </button>
             <button type="button" className={yearly ? s.on : undefined}
               aria-pressed={yearly} onClick={() => setYearly(true)}>
-              Yearly<span className={s.save}>2 months free</span>
+              {t("site.pricing.yearly")}<span className={s.save}>2 months free</span>
             </button>
           </div>
         </section>
@@ -51,7 +53,7 @@ export default function PricingClient() {
               : yearly ? `Incl. VAT, billed ${plan.yearlyTotal} yearly` : `Incl. VAT ${VAT_RATE}`;
             return (
               <div key={plan.id} className={`${s.plan} ${plan.featured ? s.featured : ""}`}>
-                {plan.featured && <span className={s.flag}>Most popular</span>}
+                {plan.featured && <span className={s.flag}>{t("site.mostPopular")}</span>}
                 <div className={s.pname}>{plan.name}</div>
                 <p className={s.who}>{plan.who}</p>
                 <div className={s.price}>
@@ -82,7 +84,7 @@ export default function PricingClient() {
 
         <section className={s.sec}>
           <div className={s.sechead}>
-            <h2>What is a credit?</h2>
+            <h2>{t("site.pricing.whatIsCredit")}</h2>
             <p>
               One unit of work the brain does for you. Reading and indexing whatever you upload is
               always free, because a brain that charges you to learn is the wrong shape.
@@ -91,7 +93,7 @@ export default function PricingClient() {
           <div className={s.tableWrap}>
             <table>
               <thead>
-                <tr><th scope="col">Action</th><th scope="col">Cost</th></tr>
+                <tr><th scope="col">{t("site.pricing.action")}</th><th scope="col">{t("site.pricing.cost")}</th></tr>
               </thead>
               <tbody>
                 {CREDIT_COSTS.map((c) => (
@@ -108,7 +110,7 @@ export default function PricingClient() {
         </section>
 
         <section className={s.sec} style={{ paddingTop: 0 }}>
-          <div className={s.sechead}><h2>Everything, side by side</h2></div>
+          <div className={s.sechead}><h2>{t("site.pricing.sideBySide")}</h2></div>
           <div className={s.tableWrap}>
             <table>
               <thead>
@@ -131,7 +133,7 @@ export default function PricingClient() {
 
         <section className={s.sec} style={{ paddingTop: 0 }}>
           <div className={s.sechead}>
-            <h2>Not a copy generator. A commercial brain.</h2>
+            <h2>{t("site.notAGenerator")}</h2>
             <p>
               This is your Home screen on the free plan. Brand Readiness on the left, what the
               brain has read on the right, and what you can make with it underneath.
@@ -150,14 +152,14 @@ export default function PricingClient() {
 
         <section className={s.sec} style={{ paddingTop: 0 }}>
           <div className={s.band}>
-            <h2>Build the brain for nothing.</h2>
+            <h2>{t("site.pricing.buildFree")}</h2>
             <p>
               A hundred credits, no card, no countdown. Your strategy, your products and your
               guidelines stay yours to read for as long as you want them.
             </p>
             <div className={s.bandCta}>
-              <Link href="/signup" className={s.btn}>Start free</Link>
-              <SiteLink page="about" className={`${s.btn} ${s.line}`}>Read what it does</SiteLink>
+              <Link href="/signup" className={s.btn}>{t("site.startFree")}</Link>
+              <SiteLink page="about" className={`${s.btn} ${s.line}`}>{t("site.pricing.readWhatItDoes")}</SiteLink>
             </div>
           </div>
         </section>

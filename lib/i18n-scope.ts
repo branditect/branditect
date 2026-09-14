@@ -115,7 +115,6 @@ export const OUTSTANDING: [string, number][] = [
   ["app/(app)/studio/brand-bases/page.tsx", 8],
   ["app/(app)/studio/brand-book/BrandBookClient.tsx", 30],
   ["app/(app)/studio/brand-guideline/BrandGuidelineClient.tsx", 127],
-  ["app/(app)/studio/code/page.tsx", 33],
   ["app/(app)/studio/create-images/page.tsx", 56],
   ["app/(app)/studio/notes/page.tsx", 25],
   ["app/(app)/studio/write/page.tsx", 34],

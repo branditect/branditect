@@ -41,15 +41,16 @@ const nextConfig = {
       // linked to it, and it was in the nav for months, so it is in bookmarks.
       { source: '/dashboard/brand-assets', destination: '/brand/visual-identity', permanent: true },
       { source: '/studio/brand-assets', destination: '/brand/visual-identity', permanent: true },
-      // Code Architect keeps working behind Studio's "More" card rather than
-      // being folded into Brand assets, which would have lost the feature.
-      { source: '/dashboard/brand-code-architect', destination: '/studio/code', permanent: true },
       { source: '/dashboard/brand-book', destination: '/studio/brand-book', permanent: true },
       { source: '/dashboard/brand-guideline', destination: '/studio/brand-guideline', permanent: true },
       { source: '/dashboard/brand-bases', destination: '/studio/brand-bases', permanent: true },
 
       // Cut surfaces
       { source: '/dashboard/mission-board', destination: '/home', permanent: true },
+      // Brand Code Architect was removed on 2026-09-14 along with the Studio
+      // "More" card that was its only way in. Old links land on Home.
+      { source: '/studio/code', destination: '/home', permanent: true },
+      { source: '/dashboard/brand-code-architect', destination: '/home', permanent: true },
 
       // Numbers
       // /numbers is a real landing page now, not a redirect to a child.

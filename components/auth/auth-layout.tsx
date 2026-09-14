@@ -17,7 +17,6 @@ const FEATURES = [
   ["Create images", "New visuals based on your products and style."],
   ["Do the numbers", "Profitability, pricing and offers that make sense."],
   ["Brand assets", "Logos, colors, guidelines and everything in one place."],
-  ["More studio tools", "Explore all the tools to build and grow your brand."],
 ] as const;
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

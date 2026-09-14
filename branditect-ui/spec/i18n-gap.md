@@ -6,7 +6,7 @@ Inbox entry 3 says the dictionary was derived from the real strings in these
 files. Measured against them, most of the interface is not in it: the strings
 below appear on screen and match no value in `lib/i18n/en.ts`.
 
-**765 distinct strings across 60 files.** A further 668 already
+**727 distinct strings across 59 files.** A further 668 already
 match a key and were extracted or are ready to be.
 
 Nothing here is truncated. A list that stopped at the first hundred would read
@@ -111,8 +111,6 @@ decision.
 - Do the numbers
 - Profitability, pricing structure and offers.
 - Your logos, colors and typefaces.
-- More
-- Explore all studio tools.
 - What should I post about this week?
 - What's the deepest discount I can run?
 - What's missing from my brand?
@@ -218,7 +216,6 @@ decision.
 - Refund rate
 - Churn rate
 - Payment terms
-- Billing period
 - Store commission %
 - Reseller commission
 - Know what every sale really costs.
@@ -484,42 +481,6 @@ decision.
 - Brand AI
 - Ask the brand…
 
-## app/(app)/studio/code/page.tsx
-
-- Analysing screenshots...
-- Extracting design system...
-- Building component...
-- Finalising code...
-- Failed to read file
-- Please describe the feature you want to build.
-- Please upload at least one screenshot.
-- Server error: {responseText}
-- Unexpected error. Please try again.
-- ← Dashboard
-- Brand Code Architect
-- Upload screenshots, describe a feature — get production-ready, on-brand HTML code.
-- Brand → Code
-- Upload 1–3 screenshots
-- Describe the new feature
-- Get on-brand production code
-- App Screenshots
-- Drop screenshots here
-- or click to upload
-- Up to 3 images — PNG, JPG, WebP
-- Feature Description
-- e.g. A pricing page with three tier cards — Free, Pro, and Enterprise. Each card shows the price, features list, and a CTA button. Highlight the Pro plan.
-- Paste any existing component code, CSS variables, or Tailwind config...
-- Generate On-Brand Component
-- Generated Component
-- Start over
-- Extracted Design System
-- Colours
-- Typography
-- Style notes
-- Visual Preview
-- Component preview
-- HTML Code
-
 ## app/(app)/studio/create-images/page.tsx
 
 - Plain background
@@ -720,8 +681,6 @@ decision.
 - Profitability, pricing and offers that make sense.
 - Brand assets
 - Logos, colors, guidelines and everything in one place.
-- More studio tools
-- Explore all the tools to build and grow your brand.
 
 ## components/auth/password-field.tsx
 

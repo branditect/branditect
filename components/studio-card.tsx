@@ -3,14 +3,13 @@ import Image from "next/image";
 import Icon from "@/components/icon";
 import createImagesArt from "@/public/studio/create-images.png";
 
-export type StudioVariant = "write" | "images" | "numbers" | "assets" | "more";
+export type StudioVariant = "write" | "images" | "numbers" | "assets";
 
 const VARIANTS: Record<StudioVariant, { bg: string; title: string; body: string }> = {
   write: { bg: "bg-grad-write", title: "text-white", body: "text-white/[.84]" },
   images: { bg: "bg-grad-images", title: "text-[#2b2340]", body: "text-[#5b5175]" },
   numbers: { bg: "bg-grad-numbers", title: "text-[#22304d]", body: "text-[#4d5c7a]" },
   assets: { bg: "bg-grad-assets", title: "text-[#1d3b36]", body: "text-[#41615c]" },
-  more: { bg: "bg-grad-more", title: "text-[#7a3a26]", body: "text-[#a4685a]" },
 };
 
 /**
@@ -67,13 +66,6 @@ function Art({ variant }: { variant: StudioVariant }) {
           <span className="block h-[29px] w-[19px] rounded-[5px] bg-[#5b8fd0] shadow-[0_5px_10px_-6px_rgba(20,50,45,.45)]" />
           <span className="block h-[38px] w-[19px] rounded-[5px] bg-[#7b5ea7] shadow-[0_5px_10px_-6px_rgba(20,50,45,.45)]" />
         </span>
-      );
-    case "more":
-      return (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-4 left-[13px] h-[30px] w-[88px] rounded-b-[60%] border-b-2 border-accent/[.35]"
-        />
       );
   }
 }

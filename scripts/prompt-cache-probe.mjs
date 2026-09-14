@@ -36,7 +36,6 @@ import { readFileSync } from "node:fs";
 import {
   andyStable, copyStable, copyPerRequest, imagePromptStable,
   STRATEGY_STABLE, TONE_STABLE, CATALOG_PARSE_STABLE, VAULT_EXTRACT_STABLE,
-  CODE_ARCHITECT_STABLE,
 } from "../lib/prompts.ts";
 import { cachedSystem, cacheStats, CACHE_TTL } from "../lib/prompt-cache.ts";
 
@@ -105,7 +104,6 @@ const ROUTES = [
   { name: "brand-strategy", stable: () => STRATEGY_STABLE, varying: null },
   { name: "tone-generate", stable: () => TONE_STABLE, varying: null },
   { name: "catalog-parse", stable: () => CATALOG_PARSE_STABLE, varying: null },
-  { name: "brand-code-architect", stable: () => CODE_ARCHITECT_STABLE, varying: null },
   { name: "vault-extract", stable: () => VAULT_EXTRACT_STABLE, varying: null },
 ];
 

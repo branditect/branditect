@@ -7,7 +7,6 @@ import { cachedSystem, perRequest, cacheStats, cacheLogLine, CACHE_TTL } from ".
 import {
   andyStable, copyStable, copyPerRequest, imagePromptStable, productBlock,
   STRATEGY_STABLE, TONE_STABLE, CATALOG_PARSE_STABLE, VAULT_EXTRACT_STABLE,
-  CODE_ARCHITECT_STABLE,
 } from "./prompts.ts";
 
 /**
@@ -151,7 +150,7 @@ describe("nothing per-request enters the cached block", () => {
     for (const [n, p] of [
       ["andy", andyStable("x")], ["copy", copyStable({ brandName: "x", context: "y" })],
       ["image", imagePromptStable("x")], ["strategy", STRATEGY_STABLE], ["tone", TONE_STABLE],
-      ["catalog", CATALOG_PARSE_STABLE], ["code-architect", CODE_ARCHITECT_STABLE],
+      ["catalog", CATALOG_PARSE_STABLE],
     ] as [string, string][]) {
       assert.ok(p.endsWith(houseTail), `${n} does not end with HOUSE_STYLE`);
     }
@@ -223,8 +222,9 @@ describe("no route sends a system prompt as a plain string", () => {
     .filter((f) => /\bsystem:/.test(readFileSync(f, "utf8")));
 
   it("finds the routes at all, so this cannot pass vacuously", () => {
-    assert.equal(senders.length, 8,
-      `expected 8 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
+    // 7 since 2026-09-14: brand-code-architect was removed with its Studio card.
+    assert.equal(senders.length, 7,
+      `expected 7 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
   });
 
   for (const file of senders) {

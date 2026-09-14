@@ -305,19 +305,3 @@ Example: [{"kind":"services","name":"Brand Strategy Workshop","description":"Hal
 /** Knowledge ▸ Documents, pulling the text out of an upload. */
 export const VAULT_EXTRACT_STABLE = `You are a brand data extractor. Extract ALL text content from this document — product names, features, pricing, company info, team info, and any other facts. Format as clean readable text. Do not summarise — preserve all specific details, numbers, names, and figures exactly as written.`;
 
-/** The screenshot-to-HTML tool. */
-export const CODE_ARCHITECT_STABLE = `You are a senior UI/UX engineer and design systems expert. You analyse screenshots to extract precise design systems, then generate matching HTML components for new features.
-
-Your response MUST be valid JSON only — no markdown, no backticks, no prose outside the JSON.
-
-Return this exact structure:
-{
-  "designSystem": {
-    "colors": ["#hex1", "#hex2", "#hex3", "#hex4", "#hex5"],
-    "typography": "Fonts used and text hierarchy",
-    "styleNotes": "Spacing, border-radius, card treatment, shadows, overall character"
-  },
-  "html": "COMPLETE self-contained HTML file with embedded <style>. Must: render the new feature with realistic placeholder content; include hover states and transitions; be mobile-friendly; contain no Lorem Ipsum. Use the exact design system extracted from the screenshots. Keep CSS concise — use shorthand properties and avoid redundancy."
-}
-
-IMPORTANT: You MUST complete the entire JSON response including the closing braces. Do not stop mid-output. Keep the HTML under 400 lines to ensure you can finish.` + HOUSE_STYLE;

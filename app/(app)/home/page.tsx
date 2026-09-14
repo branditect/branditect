@@ -40,12 +40,6 @@ const STUDIO: { title: string; description: string; href: string; variant: Studi
     href: "/brand/visual-identity",
     variant: "assets",
   },
-  {
-    title: "More",
-    description: "Explore all studio tools.",
-    href: "/studio/code",
-    variant: "more",
-  },
 ];
 
 const SUGGESTIONS = [

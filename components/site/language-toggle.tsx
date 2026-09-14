@@ -18,24 +18,23 @@
  * `Accept-Language`: sending a Finn to `/fi` from `/` makes the same URL
  * serve different people different pages, which is the cookie problem again.
  *
- * It renders nothing while `FI_COPY_READY` is false. Offering "Suomi" over a
- * page written in English is a promise the page does not keep, and a dead
- * control is worse than a missing one.
+ * It renders on every public page. It used to wait for `FI_COPY_READY`; since
+ * 2026-09-14 that flag only holds back indexing (see lib/site-locale.ts), and
+ * the toggle is visible whether or not every string is translated yet.
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import s from "./site.module.css";
-import {
-  FI_COPY_READY, SITE_LOCALES, SITE_LOCALE_NAME, readSitePath, sitePath,
-} from "@/lib/site-locale";
+import { SITE_LOCALES, SITE_LOCALE_NAME, readSitePath, sitePath } from "@/lib/site-locale";
+import { translate } from "@/lib/i18n/index.ts";
 
 export default function LanguageToggle() {
   const pathname = usePathname();
   const here = readSitePath(pathname ?? "/");
-  if (!FI_COPY_READY || !here) return null;
+  if (!here) return null;
 
   return (
-    <div className={s.langToggle} role="group" aria-label="Language">
+    <div className={s.langToggle} role="group" aria-label={translate(here.locale, "settings.language")}>
       {SITE_LOCALES.map((l) => (
         <Link
           key={l}

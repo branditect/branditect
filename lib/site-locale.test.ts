@@ -8,6 +8,11 @@ import {
 } from "./site-locale.ts";
 import { LOCALE_NAME } from "./i18n/index.ts";
 import sitemap from "../app/sitemap.ts";
+import { siteGap } from "./i18n-site-gap.ts";
+import { en } from "./i18n/en.ts";
+import { fi } from "./i18n/fi.ts";
+import { PRICING_H1_BREAK_AFTER } from "./site-locale.ts";
+import { euro, plansIn, comparisonIn, creditCostsIn, topUpIn, PLANS, TOP_UP } from "./pricing-plans.ts";
 import { SITE_ORIGIN } from "./site-locale.ts";
 
 const read = (f: string) => readFileSync(f, "utf8");
@@ -111,7 +116,7 @@ describe("hreflang is reciprocal, or it is discarded", () => {
   });
 });
 
-describe("nothing claims Finnish until the Finnish arrives", () => {
+describe("nothing is indexed as Finnish until all of it is", () => {
   it("the fi routes are noindex while the copy is English", () => {
     for (const f of ["app/(site)/fi/page.tsx", "app/(site)/fi/pricing/page.tsx",
                      "app/(site)/fi/about/page.tsx"]) {
@@ -120,8 +125,14 @@ describe("nothing claims Finnish until the Finnish arrives", () => {
     }
   });
 
-  it("the toggle renders nothing, rather than offering Suomi over English", () => {
-    assert.match(read("components/site/language-toggle.tsx"), /if \(!FI_COPY_READY \|\| !here\) return null;/);
+  it("the toggle is visible on every public page, whatever the flag says", () => {
+    // It used to render nothing until FI_COPY_READY. Saara's call on
+    // 2026-09-14: show it now. The flag holds back indexing, not people.
+    const src = read("components/site/language-toggle.tsx");
+    assert.ok(!/FI_COPY_READY/.test(src.replace(/\/\*[\s\S]*?\*\//g, "")),
+      "the toggle is gated on FI_COPY_READY again");
+    assert.match(src, /if \(!here\) return null;/);
+    assert.match(read("components/site/site-nav.tsx"), /<LanguageToggle \/>/);
   });
 
   it("the sitemap lists no alternate it cannot honour", () => {
@@ -130,13 +141,21 @@ describe("nothing claims Finnish until the Finnish arrives", () => {
     assert.match(read("app/sitemap.ts"), /FI_COPY_READY\s*\?\s*\{ alternates/);
   });
 
-  it("and one constant turns all of it on", () => {
-    // The value today. The 98 site.* keys landed and are wired, but most body
-    // copy has no key (inbox 7b lists it), so /fi is still half English. When
-    // the rest lands, invert this rather than deleting it, and re-read the
-    // three assertions above.
-    assert.equal(FI_COPY_READY, false,
-      "FI_COPY_READY is true — check the Finnish copy actually landed");
+  it("and the flag cannot go true while the site gap has anything on it", () => {
+    // Not a pinned value any more: the flag is tied to the scan that writes
+    // branditect-ui/spec/i18n-gap-site.md. While strings are unkeyed or keys
+    // are unusable, it must be false. When the list empties, this fails the
+    // other way and says to flip it, and the noindex, sitemap and html lang
+    // assertions around it are the ones to re-read.
+    const { unkeyed, unwired, unread } = siteGap();
+    const left = unkeyed.reduce((n, sec) => n + sec.rows.length, 0) +
+      unwired.reduce((n, sec) => n + sec.rows.length, 0) + unread.length;
+    if (FI_COPY_READY) {
+      assert.equal(left, 0, `FI_COPY_READY is true but ${left} site strings are still English on /fi: ` +
+        "npm run i18n:gap:site");
+    } else {
+      assert.ok(left > 0, "the site gap is empty: FI_COPY_READY can be true now");
+    }
   });
 
   it("no Finnish was invented for the site", () => {
@@ -257,6 +276,54 @@ describe("both languages read one dictionary", () => {
   });
 });
 
+describe("round two: the copy that needed care", () => {
+  it("the pricing heading breaks after Brändisi in Finnish, not mid-phrase", () => {
+    const first = (l: "en" | "fi", d: Record<string, string>) =>
+      d["site.pricing.h1"].split(" ").slice(0, PRICING_H1_BREAK_AFTER[l]).join(" ");
+    assert.equal(first("en", en), "The commercial brain");
+    assert.equal(first("fi", fi), "Brändisi");
+    assert.match(read("app/(site)/pricing/pricing-client.tsx"), /PRICING_H1_BREAK_AFTER\[locale\]/);
+  });
+
+  it("prices are written the way each language writes them", () => {
+    assert.equal(euro(29.9, "en"), "€29.90");
+    assert.equal(euro(299, "en"), "€299");
+    assert.equal(euro(0, "en"), "€0");
+    // Symbol after the number, a (non-breaking) space, a decimal comma.
+    assert.equal(euro(29.9, "fi"), "29,90\u00a0€");
+    assert.equal(euro(24.92, "fi"), "24,92\u00a0€");
+    assert.equal(euro(299, "fi"), "299\u00a0€");
+    const pro = plansIn("fi").find((p) => p.id === "pro")!;
+    assert.equal(pro.monthly, "29,90\u00a0€");
+    assert.equal(comparisonIn("fi")[0].values.proplus, "45,90\u00a0€");
+  });
+
+  it("the top-up is the key whole, never a € prefix on a number", () => {
+    assert.equal(TOP_UP, en["credit.topUp"]);
+    assert.equal(topUpIn("fi"), fi["credit.topUp"]);
+    assert.ok(topUpIn("fi").startsWith("9 €"), topUpIn("fi"));
+    const client = read("app/(site)/pricing/pricing-client.tsx");
+    assert.match(client, /t\("site\.pricing\.topUpFull"\)\.split\("\{topUp\}"\)/);
+    assert.match(client, /<b>\{topUpIn\(locale\)\}<\/b>/);
+    assert.ok(!/€/.test(client), "the pricing client writes a euro sign of its own");
+  });
+
+  it("the English plan ladder is unchanged by being keyed", () => {
+    assert.deepEqual(PLANS, plansIn("en"));
+    assert.equal(PLANS.find((p) => p.id === "free")!.cta, "Start free");
+    assert.equal(creditCostsIn("en")[0].action, "One image");
+  });
+
+  it("the Finnish plans carry no English where a key exists", () => {
+    const enPlans = plansIn("en"), fiPlans = plansIn("fi");
+    for (const [i, p] of fiPlans.entries()) {
+      assert.notEqual(p.who, enPlans[i].who, `${p.id} who`);
+      assert.notEqual(p.credits, enPlans[i].credits, `${p.id} credits`);
+    }
+    for (const c of creditCostsIn("fi")) assert.ok(!/credit/i.test(c.cost), c.cost);
+  });
+});
+
 describe("no redirect decides for anyone", () => {
   it("nothing on the site reads Accept-Language", () => {
     // "Redirecting on a public page is how you end up with a Finn who
@@ -294,9 +361,10 @@ describe("the sitemap, called rather than pattern-matched", () => {
     // Flipping FI_COPY_READY has to add them; until then, listing a page a
     // crawler is told not to index is two contradictory instructions.
     for (const e of entries) {
-      assert.equal((e as { alternates?: unknown }).alternates, undefined, e.url);
+      const alt = (e as { alternates?: { languages?: Record<string, string> } }).alternates;
+      if (FI_COPY_READY) assert.ok(alt?.languages?.fi?.startsWith(SITE_ORIGIN + "/fi"), e.url);
+      else assert.equal(alt, undefined, e.url);
     }
-    assert.equal(FI_COPY_READY, false);
   });
 
   it("keeps everything behind a session out", () => {

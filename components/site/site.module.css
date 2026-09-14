@@ -43,6 +43,34 @@
 .langOff { color: theme('colors.muted.DEFAULT'); }
 .langOff:hover { color: theme('colors.ink.DEFAULT'); }
 
+/* A phone does not fit the wordmark, the toggle, Log in and Start free on one
+   line, and in Finnish it did not fit even before the toggle ("Kirjaudu
+   sisään", "Aloita ilmaiseksi"). The toggle has to stay visible, so below
+   620px the wordmark is kept for screen readers only, beside the mark, and
+   Log in leaves the nav: Start free opens the auth card, which has a Log in
+   tab of its own. Measured at 320, 360, 375 and 390px, in both languages. */
+@media (max-width: 620px) {
+  .brandName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .navIn { gap: 12px; }
+  .navRight { gap: 8px; }
+  .navRight .navLogIn { display: none; }
+  .navRight .btn { padding: 8px 14px; }
+  .langToggle { margin-right: 0; }
+  .langOn, .langOff { padding: 3px 8px; }
+}
+/* "Aloita ilmaiseksi, päivitä myöhemmin" is twice the length of "Start free,
+   upgrade later", and .btn does not wrap, so on a 320px phone the Finnish plan
+   card was wider than the screen. A plan button may take two lines. */
+.planCta .btn { white-space: normal; text-align: center; }
+
+@media (max-width: 340px) {
+  /* "Kuukausittain" and "Vuosittain" with the saving badge are 25px wider than
+     a 320px screen allows. */
+  .hero .toggle button { padding: 9px 12px; }
+  .nav .wrap { padding: 0 12px; }
+  .navRight .btn { padding: 8px 11px; }
+}
+
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   border-radius: theme('borderRadius.pill'); padding: 10px 18px; font-size: theme('fontSize.sm[0]');
   font-weight: 700; background: var(--s-grad-hero); color: #fff; white-space: nowrap; }

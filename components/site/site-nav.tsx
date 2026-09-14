@@ -58,16 +58,18 @@ export default function SiteNav() {
             their own before it existed, which is why it exists. */}
         <Link href={home} className={s.brand}>
           <Logo variant="mark" height={28} />
-          Branditect
+          <span className={s.brandName}>Branditect</span>
         </Link>
         <div className={s.links}>
           <Link href={href("#how", `${home === "/" ? "" : home}/#how`.replace("//", "/"))}>{t("site.nav.howItWorks")}</Link>
           <Link href={href("#pricing", sitePath(locale, "pricing"))}>{t("site.nav.pricing")}</Link>
           <Link href={href("#about", sitePath(locale, "about"))}>{t("site.nav.about")}</Link>
         </div>
+        {/* On a phone the language toggle takes the room the wordmark and the
+            Log in button had: see .navLogIn in site.module.css. */}
         <div className={s.navRight}>
           <LanguageToggle />
-          <Link href={auth("login")} className={`${s.btn} ${s.ghost}`}>{t("site.nav.logIn")}</Link>
+          <Link href={auth("login")} className={`${s.btn} ${s.ghost} ${s.navLogIn}`}>{t("site.nav.logIn")}</Link>
           <Link href={auth("signup")} className={s.btn}>{t("site.startFree")}</Link>
         </div>
       </div>

@@ -7,39 +7,28 @@ import Image from "next/image";
 import Icon from "@/components/icon";
 import HeroAuthCard, { type Tab } from "@/components/site/hero-auth-card";
 import SignedInGate from "@/components/site/signed-in-gate";
-import { PLANS } from "@/lib/pricing-plans";
+import { plansIn } from "@/lib/pricing-plans";
 import s from "@/components/site/site.module.css";
 import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
 
 const STEPS = [
   {
     n: "01", title: "site.home.yourStrategy", tone: "t1",
-    body:
-      "You answer 25 questions. Not \u201cwhat is your mission\u201d. Why you started, who you are " +
-      "actually for, what you will never claim even when it costs you a sale. Branditect turns the " +
-      "answers into a strategy foundation: positioning, audience, voice, anti-voice and your claim rules.",
-    ask: "Who is this actually for, and how should I talk to them?",
-    answer:
-      "Your customer segment in a paragraph you could hand to a freelancer, the trigger that makes " +
-      "them buy, the voice you chose, and the four claims your own rules block. Every output after " +
-      "this obeys it, which is what the next two cards are.",
+    body: "site.home.q25full",
+    ask: "site.home.card1Ask",
+    answer: "site.home.card1Answer",
   },
   {
     n: "02", title: "site.home.yourProductKnowledge", tone: "t2",
-    ask: "Write a post and a catalogue entry for SKU 12 and SKU 14, and find every image linked to them.",
-    answer:
-      "Both formats, in your voice, written to the segment you defined in card one. Three verified " +
-      "selling points with the document each one came from. Two claims blocked for lack of evidence. " +
-      "Eleven images across the two products, with the five cleared for retail use marked.",
+    ask: "site.home.card2Ask",
+    answer: "site.home.card2Answer",
   },
   {
     n: "03", title: "site.home.yourTrueNumbers", tone: "t3",
-    ask: "Can I run 25% off this product?",
-    answer:
-      "Not at your current cost. Your floor is 21%, which changed when packaging went up in March. " +
-      "Want the campaign written to 21%?",
+    ask: "site.home.card3Ask",
+    answer: "site.home.card3Answer",
   },
-] satisfies { n: string; title: StringKey; tone: string; body?: string; ask: string; answer: string }[];
+] satisfies { n: string; title: StringKey; tone: string; body?: StringKey; ask: StringKey; answer: StringKey }[];
 
 const FLOW = [
   { v: "site.about.define", title: "site.home.step1", body: "site.home.step1Body" },
@@ -47,16 +36,10 @@ const FLOW = [
   { v: "site.about.make", title: "site.home.step3", body: "site.home.step3Body" },
 ] satisfies { v: StringKey; title: StringKey; body: StringKey }[];
 
-const ROLES = [
-  "A strategist, who decides what the brand stands for and what it will never say",
-  "A product manager, on top of every product, every detail and every price",
-  "A copywriter, who can write it the same way twice",
-  "A designer and a photographer, producing the images before anyone asks for them",
-  "Someone who holds the library: every product image, video and logo, in every format and crop",
-  "A shared drive that one person is supposed to maintain full time, and usually does not",
-];
+const ROLES = ["site.home.role1", "site.home.role2", "site.home.role3", "site.home.role4",
+  "site.home.role5", "site.home.role6"] satisfies StringKey[];
 
-const LANDING_PLANS = PLANS.filter((p) => p.id !== "enterprise");
+const TRUST = ["site.home.trust1", "site.home.trust2", "site.home.trust3", "site.home.trust4"] satisfies StringKey[];
 
 /* The nav's Log in and Start free carry ?auth=, so either opens this card on
    the right tab from any page on the site. Read as a search param rather than
@@ -79,6 +62,7 @@ function AuthTabSync({ onTab }: { onTab: (t: Tab) => void }) {
 export default function LandingClient({ locale }: { locale: Locale }) {
   const [tab, setTab] = useState<Tab>("signup");
   const t = (key: StringKey) => translate(locale, key);
+  const landingPlans = plansIn(locale).filter((p) => p.id !== "enterprise");
 
   return (
     <main>
@@ -102,8 +86,8 @@ export default function LandingClient({ locale }: { locale: Locale }) {
               <b>{t("site.home.cta")}</b>
             </p>
             <div className={s.trust}>
-              {["Free forever", "No card to start", "100 credits to try everything", "Your data stays in the EU"].map((t) => (
-                <span key={t} className={s.tp}><Icon name="check" size={13} />{t}</span>
+              {TRUST.map((k) => (
+                <span key={k} className={s.tp}><Icon name="check" size={13} />{t(k)}</span>
               ))}
             </div>
           </div>
@@ -138,12 +122,12 @@ export default function LandingClient({ locale }: { locale: Locale }) {
               <div key={step.n} className={`${s.tr} ${s[step.tone]}`}>
                 <div className={s.tn}>{step.n}</div>
                 <h3>{t(step.title)}</h3>
-                {step.body && <p className={s.tw}>{step.body}</p>}
+                {step.body && <p className={s.tw}>{t(step.body)}</p>}
                 {/* The question and its answer are the argument. A claim about
                     what it can do is worth less than the exchange itself. */}
                 <div className={s.qa2}>
-                  <p className={s.askLine}><span>{t("site.home.askIt")}</span>{step.ask}</p>
-                  <p className={s.answerLine}><span>{t("site.home.itAnswers")}</span>{step.answer}</p>
+                  <p className={s.askLine}><span>{t("site.home.askIt")}</span>{t(step.ask)}</p>
+                  <p className={s.answerLine}><span>{t("site.home.itAnswers")}</span>{t(step.answer)}</p>
                 </div>
               </div>
             ))}
@@ -196,7 +180,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
             <p>{t("site.home.freeTerms")}</p>
           </div>
           <div className={`${s.plans} ${s.plansThree}`}>
-            {LANDING_PLANS.map((plan) => (
+            {landingPlans.map((plan) => (
               <div key={plan.id} className={`${s.plan} ${plan.featured ? s.featured : ""}`}>
                 {plan.featured && <span className={s.flag}>{t("site.mostPopular")}</span>}
                 <div className={s.pname}>{plan.name}</div>
@@ -240,7 +224,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
 
             <ul className={s.roles}>
               {ROLES.map((r) => (
-                <li key={r}><i />{r}</li>
+                <li key={r}><i />{t(r)}</li>
               ))}
             </ul>
           </div>

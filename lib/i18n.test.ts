@@ -594,3 +594,32 @@ describe("the brand placeholder never renders", () => {
     assert.match(src, /brandLoading\s*\?\s*"Access and manage all your brand assets in one place\."/);
   });
 });
+
+// ─────────────────────────────── the scanner holes found on the marketing site ──
+
+describe("the scanner sees what the site copy is made of", () => {
+  it("a paragraph ending in {\" \"} before an inline tag", () => {
+    const src = `<p>It holds your strategy together.{" "}<b>Start free.</b></p>`;
+    const found = findAllLiterals(src).map((l) => l.text);
+    assert.ok(found.includes("It holds your strategy together."), found.join(" | "));
+  });
+
+  it("entities arrive as the characters a translator reads", () => {
+    const found = findAllLiterals(`<p>It&rsquo;s like having a team.</p>`).map((l) => l.text);
+    assert.ok(found.includes("It\u2019s like having a team."), found.join(" | "));
+  });
+
+  it("a template literal, with its values as named placeholders", () => {
+    const found = findAllLiterals("const v = `Incl. VAT, billed ${plan.yearlyTotal} yearly`;").map((l) => l.text);
+    assert.deepEqual(found, ["Incl. VAT, billed {yearlyTotal} yearly"]);
+    assert.deepEqual(findAllLiterals("const v = `Incl. VAT ${VAT_RATE}`;").map((l) => l.text), ["Incl. VAT {VAT_RATE}"]);
+  });
+
+  it("but not a class list, a border or a padding", () => {
+    assert.deepEqual(findAllLiterals("<a className={`${s.btn} ${s.line}`} style={{ border: `1px solid ${bd}`, padding: \"0 auto 34px\" }}>x</a>"), []);
+  });
+
+  it("a unit suffix between tags", () => {
+    assert.deepEqual(findAllLiterals("<span className={s.per}>/month</span>").map((l) => l.text), ["/month"]);
+  });
+});

@@ -5,9 +5,10 @@ import SiteLink from "@/components/site/site-link";
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/icon";
-import { PLANS, COMPARISON, CREDIT_COSTS, TOP_UP, VAT_RATE } from "@/lib/pricing-plans";
+import { plansIn, comparisonIn, creditCostsIn, topUpIn, VAT_RATE } from "@/lib/pricing-plans";
 import s from "@/components/site/site.module.css";
 import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
+import { PRICING_H1_BREAK_AFTER } from "@/lib/site-locale";
 
 /**
  * Every number on this page comes from lib/pricing-plans.ts, so the cards and
@@ -16,6 +17,17 @@ import { translate, type Locale, type StringKey } from "@/lib/i18n/index.ts";
 export default function PricingClient({ locale }: { locale: Locale }) {
   const [yearly, setYearly] = useState(false);
   const t = (key: StringKey) => translate(locale, key);
+  const PLANS = plansIn(locale);
+  const COMPARISON = comparisonIn(locale);
+  const CREDIT_COSTS = creditCostsIn(locale);
+  /* The sentence is one key; the amount goes where the translator put
+     {topUp}, in bold. Split, never rebuilt from pieces. */
+  const [beforeTopUp, afterTopUp = ""] = t("site.pricing.topUpFull").split("{topUp}");
+  /* The heading breaks at a different word in each language: English after
+     "The commercial brain", Finnish after "Brändisi", because Finnish puts
+     the owner first. A word count per locale, so no Finnish lives in here. */
+  const h1Words = t("site.pricing.h1").split(" ");
+  const h1Break = PRICING_H1_BREAK_AFTER[locale];
 
   return (
     <main>
@@ -23,7 +35,8 @@ export default function PricingClient({ locale }: { locale: Locale }) {
         <section className={s.hero}>
           <span className={s.kicker}>{t("site.threeTruths")}</span>
           <h1>
-            The commercial brain<br />for your brand. <em>{t("site.pricing.freeToBuild")}</em>
+            {h1Words.slice(0, h1Break).join(" ")}<br />{h1Words.slice(h1Break).join(" ")}{" "}
+            <em>{t("site.pricing.freeToBuild")}</em>
           </h1>
           <p className={s.lede}>
             Branditect turns your scattered files, decisions and numbers into one knowledge layer
@@ -103,9 +116,7 @@ export default function PricingClient({ locale }: { locale: Locale }) {
             </table>
           </div>
           <p className={s.caption}>
-            Run out before the month does and you can add <b>{TOP_UP}</b> with one click, or wait
-            for the next month. Nothing is deleted and nothing stops working. You keep reading your
-            brand brain either way.
+            {beforeTopUp}<b>{topUpIn(locale)}</b>{afterTopUp}
           </p>
         </section>
 

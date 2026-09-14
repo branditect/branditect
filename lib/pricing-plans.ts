@@ -13,6 +13,8 @@
  * the current numbers. Adopting the recommendation is a one-line change here.
  */
 
+import { translate, type Locale, type StringKey } from "./i18n/index.ts";
+
 export interface Plan {
   id: "free" | "pro" | "proplus" | "enterprise";
   name: string;
@@ -34,110 +36,180 @@ export interface Plan {
 
 export const VAT_RATE = "25.5%";
 
-export const PLANS: Plan[] = [
+/**
+ * Copy is a dictionary key, or English that has no key yet.
+ *
+ * Inbox 7b. `{ en: "…" }` is the visible marker for a string still owed by the
+ * design side: it renders in English on both sites, and the site gap scan
+ * (`npm run i18n:gap:site`) lists it. When its key lands, the wrapper becomes
+ * the key and nothing else changes.
+ */
+type Copy = StringKey | { en: string };
+const text = (locale: Locale, c: Copy) => (typeof c === "string" ? translate(locale, c) : c.en);
+
+/**
+ * A euro amount the way each language writes it.
+ *
+ * English puts the symbol first with no space and a decimal point: €29.90.
+ * Finnish puts it after the number with a space and a decimal comma: 29,90 €.
+ * Whole amounts drop the decimals in both: €299, 299 €. Built here from the
+ * number rather than by swapping characters in a string, so a price can never
+ * come out as "€29,90" or "29.90€".
+ */
+export function euro(amount: number, locale: Locale): string {
+  const n = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  return locale === "fi" ? `${n.replace(".", ",")}\u00a0€` : `€${n}`;
+}
+
+interface PlanCopy {
+  id: Plan["id"];
+  name: Copy;
+  who: Copy;
+  monthly: number | null;
+  yearlyMonthly: number | null;
+  yearlyTotal: number | null;
+  vatLine: Copy;
+  credits: Copy;
+  creditsLabel: Copy;
+  cta: Copy;
+  href: string;
+  featured?: boolean;
+  features: Copy[];
+}
+
+const VAT_INCLUDED: Copy = { en: `Incl. VAT ${VAT_RATE}` };
+
+const PLAN_COPY: PlanCopy[] = [
   {
     id: "free",
-    name: "Free",
-    who: "Build the brain. Keep it as long as you like.",
-    monthly: "€0",
-    yearlyMonthly: "€0",
+    name: "plan.free.name",
+    who: "plan.free.who",
+    monthly: 0,
+    yearlyMonthly: 0,
     yearlyTotal: null,
-    vatLine: "No card required",
-    credits: "100 credits",
-    creditsLabel: "One time, no expiry",
-    cta: "Start free",
+    vatLine: "plan.free.vatLine",
+    credits: "plan.free.credits",
+    creditsLabel: "plan.free.creditsLabel",
+    cta: "site.startFree",
     href: "/signup",
-    features: [
-      "Brand truth. Strategy, positioning, tone of voice, visual identity",
-      "Product truth. Every product, its specs and the claims you can prove",
-      "Commercial truth. Landed cost, margin, floor price, discount limits",
-      "Every file you upload read and indexed, free",
-      "Brand Readiness, so you know what is still missing",
-      "1 brand, 200 MB. Yours to read, always",
-    ],
+    features: ["plan.free.f1", "plan.free.f2", "plan.free.f3", "plan.free.f4", "plan.free.f5", "plan.free.f6"],
   },
   {
     id: "pro",
-    name: "Pro",
-    who: "For a founder running one brand properly.",
-    monthly: "€29.90",
-    yearlyMonthly: "€24.92",
-    yearlyTotal: "€299",
-    vatLine: `Incl. VAT ${VAT_RATE}`,
-    credits: "350 credits",
-    creditsLabel: "Every month",
-    cta: "Start free, upgrade later",
+    // The badge in the app sidebar names the same plan.
+    name: "sidebar.pro",
+    who: "plan.pro.who",
+    monthly: 29.9,
+    yearlyMonthly: 24.92,
+    yearlyTotal: 299,
+    vatLine: VAT_INCLUDED,
+    credits: "plan.pro.credits",
+    creditsLabel: "plan.everyMonth",
+    cta: "plan.pro.cta",
     href: "/signup",
     featured: true,
-    features: [
-      "The whole brain, now working for you",
-      "Copy that cites your own product facts and shows where each number came from",
-      "Offers and discounts checked against your floor price before you see them",
-      "Images shot in your own light, from your own references",
-      "Ask your brain anything. It has read everything you gave it",
-      "Your brand kit link for freelancers and printers",
-      "1 brand, 1 seat, 5 GB",
-    ],
+    features: ["plan.pro.f1", "plan.pro.f2", "plan.pro.f3", "plan.pro.f4", "plan.pro.f5", "plan.pro.f6", "plan.pro.f7"],
   },
   {
     id: "proplus",
-    name: "Pro Plus",
-    who: "For agencies and anyone running more than one brand.",
-    monthly: "€45.90",
-    yearlyMonthly: "€38.25",
-    yearlyTotal: "€459",
-    vatLine: `Incl. VAT ${VAT_RATE}`,
-    credits: "600 credits",
-    creditsLabel: "Every month",
-    cta: "Start free, upgrade later",
+    name: { en: "Pro Plus" },
+    who: "plan.proplus.who",
+    monthly: 45.9,
+    yearlyMonthly: 38.25,
+    yearlyTotal: 459,
+    vatLine: VAT_INCLUDED,
+    credits: "plan.proplus.credits",
+    creditsLabel: "plan.everyMonth",
+    // The same words as Pro's button, so the same key.
+    cta: "plan.pro.cta",
     href: "/signup",
     features: [
-      "Everything in Pro, plus",
-      "3 brands, each with its own truth. They never bleed into each other",
-      "3 seats, so your team writes from the same brain",
-      "20 GB",
-      "Priority support",
+      { en: "Everything in Pro, plus" },
+      { en: "3 brands, each with its own truth. They never bleed into each other" },
+      { en: "3 seats, so your team writes from the same brain" },
+      { en: "20 GB" },
+      { en: "Priority support" },
     ],
   },
   {
     id: "enterprise",
-    name: "Enterprise",
-    who: "For brand portfolios and larger teams.",
+    name: { en: "Enterprise" },
+    who: "plan.ent.who",
     monthly: null,
     yearlyMonthly: null,
     yearlyTotal: null,
-    vatLine: "Priced on what you need",
-    credits: "Agreed",
-    creditsLabel: "Set with you",
-    cta: "Contact us",
+    vatLine: "plan.ent.vatLine",
+    credits: "plan.ent.credits",
+    creditsLabel: "plan.ent.creditsLabel",
+    cta: "plan.ent.cta",
     href: "mailto:hello@branditect.io",
-    features: [
-      "Unlimited brands and seats",
-      "Single sign-on",
-      "Custom data agreement",
-      "A named contact, not a queue",
-      "We set the brain up with you",
-    ],
+    features: ["plan.ent.f1", "plan.ent.f2", "plan.ent.f3", "plan.ent.f4", "plan.ent.f5"],
   },
 ];
 
-/** The comparison table, so it can never disagree with the cards above it. */
-export const COMPARISON: { label: string; values: Record<Plan["id"], string> }[] = [
-  { label: "Price, incl. VAT, monthly", values: { free: "€0", pro: "€29.90", proplus: "€45.90", enterprise: "Contact us" } },
-  { label: "Credits", values: { free: "100 once", pro: "350/mo", proplus: "600/mo", enterprise: "Agreed" } },
-  { label: "Brands", values: { free: "1", pro: "1", proplus: "3", enterprise: "Unlimited" } },
-  { label: "Seats", values: { free: "1", pro: "1", proplus: "3", enterprise: "Agreed" } },
-  { label: "Storage", values: { free: "200 MB", pro: "5 GB", proplus: "20 GB", enterprise: "Agreed" } },
-  { label: "Brand kit share link", values: { free: "No", pro: "Yes", proplus: "Yes", enterprise: "Yes" } },
-  { label: "Support", values: { free: "Docs", pro: "Email", proplus: "Email, priority", enterprise: "Named contact" } },
+const money = (amount: number | null, locale: Locale) => (amount === null ? null : euro(amount, locale));
+
+/** The plan ladder in one language. */
+export function plansIn(locale: Locale): Plan[] {
+  return PLAN_COPY.map((p) => ({
+    id: p.id,
+    name: text(locale, p.name),
+    who: text(locale, p.who),
+    monthly: money(p.monthly, locale),
+    yearlyMonthly: money(p.yearlyMonthly, locale),
+    yearlyTotal: money(p.yearlyTotal, locale),
+    vatLine: text(locale, p.vatLine),
+    credits: text(locale, p.credits),
+    creditsLabel: text(locale, p.creditsLabel),
+    cta: text(locale, p.cta),
+    href: p.href,
+    ...(p.featured ? { featured: true } : {}),
+    features: p.features.map((f) => text(locale, f)),
+  }));
+}
+
+/** The English ladder: what the tests and the metadata quote. */
+export const PLANS: Plan[] = plansIn("en");
+
+type Row = { label: Copy; values: Record<Plan["id"], Copy | ((l: Locale) => string)> };
+
+const price = (id: Plan["id"]) => (l: Locale) => money(PLAN_COPY.find((p) => p.id === id)!.monthly, l)!;
+
+const COMPARISON_COPY: Row[] = [
+  { label: "cmp.price", values: { free: price("free"), pro: price("pro"), proplus: price("proplus"), enterprise: "plan.ent.cta" } },
+  { label: "cmp.credits", values: { free: "cmp.onceOnly", pro: "cmp.perMonth350", proplus: "cmp.perMonth600", enterprise: "cmp.agreed" } },
+  { label: "cmp.brands", values: { free: { en: "1" }, pro: { en: "1" }, proplus: { en: "3" }, enterprise: "cmp.unlimited" } },
+  { label: "cmp.seats", values: { free: { en: "1" }, pro: { en: "1" }, proplus: { en: "3" }, enterprise: "cmp.agreed" } },
+  { label: "cmp.storage", values: { free: { en: "200 MB" }, pro: { en: "5 GB" }, proplus: { en: "20 GB" }, enterprise: "cmp.agreed" } },
+  { label: "cmp.kitLink", values: { free: "cmp.no", pro: "cmp.yes", proplus: "cmp.yes", enterprise: "cmp.yes" } },
+  { label: "cmp.support", values: { free: "cmp.docs", pro: "cmp.email", proplus: "cmp.emailPriority", enterprise: "cmp.namedContact" } },
 ];
+
+/** The comparison table, so it can never disagree with the cards above it. */
+export function comparisonIn(locale: Locale): { label: string; values: Record<Plan["id"], string> }[] {
+  const cell = (v: Row["values"][Plan["id"]]) => (typeof v === "function" ? v(locale) : text(locale, v));
+  return COMPARISON_COPY.map((r) => ({
+    label: text(locale, r.label),
+    values: { free: cell(r.values.free), pro: cell(r.values.pro), proplus: cell(r.values.proplus), enterprise: cell(r.values.enterprise) },
+  }));
+}
+export const COMPARISON = comparisonIn("en");
 
 /** What a credit buys. One number, quoted in two places on the page. */
-export const CREDIT_COSTS = [
-  { action: "One image", cost: "5 credits" },
-  { action: "One set of three copy drafts", cost: "2 credits" },
-  { action: "One question to your brand brain", cost: "1 credit" },
-  { action: "Reading and indexing any file you upload", cost: "Free" },
+const CREDIT_COPY: { action: StringKey; cost: StringKey }[] = [
+  { action: "credit.image", cost: "credit.image.cost" },
+  { action: "credit.copy", cost: "credit.copy.cost" },
+  { action: "credit.question", cost: "credit.question.cost" },
+  { action: "credit.indexing", cost: "credit.indexing.cost" },
 ];
+export function creditCostsIn(locale: Locale) {
+  return CREDIT_COPY.map((c) => ({ action: translate(locale, c.action), cost: translate(locale, c.cost) }));
+}
+export const CREDIT_COSTS = creditCostsIn("en");
 
-export const TOP_UP = "€9 for 200 extra credits";
+/**
+ * The top-up, whole. `credit.topUp` carries its own amount in each language's
+ * order ("€9 for…", "9 € …"), so nothing here prefixes a symbol onto it.
+ */
+export const topUpIn = (locale: Locale) => translate(locale, "credit.topUp");
+export const TOP_UP = topUpIn("en");

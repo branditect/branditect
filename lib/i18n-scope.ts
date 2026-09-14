@@ -28,6 +28,27 @@ export const OUT_OF_SCOPE = [
 ];
 
 /**
+ * The marketing site, scanned on its own: `npm run i18n:gap:site` writes
+ * branditect-ui/spec/i18n-gap-site.md, and `FI_COPY_READY` cannot go true
+ * while it finds anything (lib/site-locale.test.ts).
+ *
+ * lib/pricing-plans.ts is in it because the plan cards and the comparison
+ * table are built from it: its copy is on the page even though it is not a
+ * component.
+ */
+export const SITE_SCOPE = ["app/(site)", "components/site", "lib/pricing-plans.ts"];
+
+/**
+ * Strings on the site that are the same in every language, each with why.
+ * Kept short on purpose: anything a translator might want to change belongs
+ * on the list, not here.
+ */
+export const SITE_SAME_IN_EVERY_LANGUAGE = new Set([
+  "Branditect",          // the product name, in the nav and on the OG card
+  "© 2026 Branditect",   // the name and a year
+]);
+
+/**
  * Per-file exceptions, each with its reason.
  *
  * An entry that no longer matches anything is a failure, not a tidy-up: a

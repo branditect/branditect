@@ -929,6 +929,120 @@ export const en = {
     "The Studio row in Branditect: cards for writing copy, creating images, doing the numbers and reaching your brand assets.",
   "site.about.altNumbers":
     "The Numbers section of Branditect showing three calculators for working out landed cost, margin and a floor price.",
+
+  // ══ SITE, round two ══ The strings my first pass cut at inline tags, plus
+  // everything that was never between tags at all.
+
+  // ── The three that were truncated ─────────────────────────────────────────
+  // Whole sentences. The first pass stopped at the first `<`, so each of these
+  // lost its tail to an <em>, a <b> or a <br/>.
+  "site.home.q25full":
+    "You answer 25 questions. Not “what is your mission”. Why you started, who you are actually for, what you will never claim even when it costs you a sale. Branditect turns the answers into a strategy foundation: positioning, audience, voice, anti-voice and your claim rules.",
+  "site.pricing.topUpFull":
+    "Run out before the month does and you can add {topUp} with one click, or wait for the next month. Nothing is deleted and nothing stops working. You keep reading your brand brain either way.",
+  "site.pricing.h1": "The commercial brain for your brand.",
+
+  // ── Landing: hero and trust ───────────────────────────────────────────────
+  "site.home.lede":
+    "The commercial brain for product and ecommerce brands. It holds your strategy, your product truth and your margins together, so everything you publish is on brand, accurate and profitable. It writes your copy understanding each and every one of your products, your tone of voice and style. And makes your images, too. It’s like",
+  "site.home.trust1": "Free forever",
+  "site.home.trust2": "No card to start",
+  "site.home.trust3": "100 credits to try everything",
+  "site.home.trust4": "Your data stays in the EU",
+
+  // ── Landing: the roles ────────────────────────────────────────────────────
+  "site.home.role1": "A strategist, who decides what the brand stands for and what it will never say",
+  "site.home.role2": "A product manager, on top of every product, every detail and every price",
+  "site.home.role3": "A copywriter, who can write it the same way twice",
+  "site.home.role4": "A designer and a photographer, producing the images before anyone asks for them",
+  "site.home.role5": "Someone who holds the library: every product image, video and logo, in every format and crop",
+  "site.home.role6": "A shared drive that one person is supposed to maintain full time, and usually does not",
+
+  // ── Landing: the three cards ──────────────────────────────────────────────
+  "site.home.card1Ask": "Who is this actually for, and how should I talk to them?",
+  "site.home.card1Answer":
+    "Your customer segment in a paragraph you could hand to a freelancer, the trigger that makes them buy, the voice you chose, and the four claims your own rules block. Every output after this obeys it, which is what the next two cards are.",
+  "site.home.card2Ask":
+    "Write a post and a catalogue entry for SKU 12 and SKU 14, and find every image linked to them.",
+  "site.home.card2Answer":
+    "Both formats, in your voice, written to the segment you defined in card one. Three verified selling points with the document each one came from. Two claims blocked for lack of evidence. Eleven images across the two products, with the five cleared for retail use marked.",
+  "site.home.card3Ask": "Can I run 25% off this product?",
+  "site.home.card3Answer":
+    "Not at your current cost. Your floor is 21%, which changed when packaging went up in March. Want the campaign written to 21%?",
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  "site.footer.contact": "Contact",
+  "site.footer.madeIn": "Made in Finland",
+
+  // ── Plans ─────────────────────────────────────────────────────────────────
+  "plan.free.name": "Free",
+  "plan.free.who": "Build the brain. Keep it as long as you like.",
+  "plan.free.vatLine": "No card required",
+  "plan.free.credits": "100 credits",
+  "plan.free.creditsLabel": "One time, no expiry",
+  "plan.free.f1": "Brand truth. Strategy, positioning, tone of voice, visual identity",
+  "plan.free.f2": "Product truth. Every product, its specs and the claims you can prove",
+  "plan.free.f3": "Commercial truth. Landed cost, margin, floor price, discount limits",
+  "plan.free.f4": "Every file you upload read and indexed, free",
+  "plan.free.f5": "Brand Readiness, so you know what is still missing",
+  "plan.free.f6": "1 brand, 200 MB. Yours to read, always",
+
+  "plan.pro.who": "For a founder running one brand properly.",
+  "plan.pro.credits": "350 credits",
+  "plan.everyMonth": "Every month",
+  "plan.pro.cta": "Start free, upgrade later",
+  "plan.pro.f1": "The whole brain, now working for you",
+  "plan.pro.f2": "Copy that cites your own product facts and shows where each number came from",
+  "plan.pro.f3": "Offers and discounts checked against your floor price before you see them",
+  "plan.pro.f4": "Images shot in your own light, from your own references",
+  "plan.pro.f5": "Ask your brain anything. It has read everything you gave it",
+  "plan.pro.f6": "Your brand kit link for freelancers and printers",
+  "plan.pro.f7": "1 brand, 1 seat, 5 GB",
+
+  "plan.proplus.who": "For agencies and anyone running more than one brand.",
+  "plan.proplus.credits": "600 credits",
+
+  "plan.ent.who": "For brand portfolios and larger teams.",
+  "plan.ent.vatLine": "Priced on what you need",
+  "plan.ent.credits": "Agreed",
+  "plan.ent.creditsLabel": "Set with you",
+  "plan.ent.cta": "Contact us",
+  "plan.ent.f1": "Unlimited brands and seats",
+  "plan.ent.f2": "Single sign-on",
+  "plan.ent.f3": "Custom data agreement",
+  "plan.ent.f4": "A named contact, not a queue",
+  "plan.ent.f5": "We set the brain up with you",
+
+  // ── Compare table ─────────────────────────────────────────────────────────
+  "cmp.price": "Price, incl. VAT, monthly",
+  "cmp.credits": "Credits",
+  "cmp.brands": "Brands",
+  "cmp.seats": "Seats",
+  "cmp.storage": "Storage",
+  "cmp.kitLink": "Brand kit share link",
+  "cmp.support": "Support",
+  "cmp.onceOnly": "100 once",
+  "cmp.perMonth350": "350/mo",
+  "cmp.perMonth600": "600/mo",
+  "cmp.agreed": "Agreed",
+  "cmp.unlimited": "Unlimited",
+  "cmp.yes": "Yes",
+  "cmp.no": "No",
+  "cmp.docs": "Docs",
+  "cmp.email": "Email",
+  "cmp.emailPriority": "Email, priority",
+  "cmp.namedContact": "Named contact",
+
+  // ── What a credit buys ────────────────────────────────────────────────────
+  "credit.image": "One image",
+  "credit.image.cost": "5 credits",
+  "credit.copy": "One set of three copy drafts",
+  "credit.copy.cost": "2 credits",
+  "credit.question": "One question to your brand brain",
+  "credit.question.cost": "1 credit",
+  "credit.indexing": "Reading and indexing any file you upload",
+  "credit.indexing.cost": "Free",
+  "credit.topUp": "€9 for 200 extra credits",
 } as const;
 
 export type StringKey = keyof typeof en;

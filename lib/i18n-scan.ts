@@ -27,6 +27,19 @@ export interface Literal {
 /** Attributes a person reads. `alt` included: a screen reader is a person. */
 export const TRANSLATABLE_ATTRIBUTES = ["placeholder", "aria-label", "title", "alt"];
 
+/**
+ * HTML entities as a person reads them. The work list is translated from, so
+ * `It&rsquo;s` has to arrive as `It’s` or the entity gets copied into the
+ * Finnish.
+ */
+const ENTITIES: Record<string, string> = {
+  "&rsquo;": "\u2019", "&lsquo;": "\u2018", "&rdquo;": "\u201d", "&ldquo;": "\u201c",
+  "&nbsp;": " ", "&amp;": "&", "&apos;": "'", "&quot;": '"', "&hellip;": "\u2026",
+};
+export function decodeEntities(text: string): string {
+  return text.replace(/&[a-z]+;/g, (e) => ENTITIES[e] ?? e);
+}
+
 /** Strip comments and import lines so their prose is not mistaken for copy. */
 export function stripNonCopy(src: string): string {
   return src
@@ -84,13 +97,27 @@ export function findLiterals(src: string): Literal[] {
   // tags of an extracted file left the suite green. Rejecting captures that
   // contain a brace does the same job without eating the file, because
   // {t("x")} between tags contains braces and bare copy does not.
+  //
+  // `{" "}` is not an expression, it is a space. JSX needs it to keep the gap
+  // before an inline tag, so it sits at the end of a sentence that runs into
+  // <b> or <a>, and the brace rule below threw the whole paragraph away. That
+  // hid the landing hero lede, the longest paragraph on the site. Found by
+  // reading the page against the gap list, inbox 7b.
+  const text = stripped.replace(/\{\s*(["'])\s*\1\s*\}/g, (m) => " ".repeat(m.length));
   const re = />([^<>]+)</g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(stripped)) !== null) {
-    const raw = m[1];
+  while ((m = re.exec(text)) !== null) {
+    const raw = decodeEntities(m[1]);
     // A ">" preceded by "=" is an arrow, not a closing tag, and what follows
     // it is a return type: `onSignOut: () => Promise<void>`.
-    if (stripped[m.index - 1] === "=") continue;
+    if (text[m.index - 1] === "=") continue;
+    // A unit suffix between tags, `<span>/month</span>`, is copy even though
+    // it is one lowercase token: Finnish writes it "/kk". Between tags it is
+    // never a path, which is what the lowercase rule below exists to skip.
+    if (/^\s*\/[a-z]{2,}\s*$/.test(raw)) {
+      out.push({ line: lineAt(m.index), text: raw.trim(), where: "jsx" });
+      continue;
+    }
     // Braces mean an expression — {t("x")} — and the punctuation below means
     // this is code between a generic and a comparison, not text in an element.
     if (/[{}();=]/.test(raw)) continue;
@@ -138,6 +165,8 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
   [/^[\d.,:%\s+x-]+$/, "a number"],
   [/^[a-z][a-z0-9_]*$/, "a lowercase identifier"],
   [/^(true|false|null|undefined)$/, "a literal value"],
+  // `padding: "0 auto 34px"` in a style object: lengths and auto, nothing else.
+  [/^(-?[\d.]+(px|rem|em|%|vh|vw)?|auto)(\s+(-?[\d.]+(px|rem|em|%|vh|vw)?|auto))+$/, "a CSS length list"],
 ];
 
 /**
@@ -199,7 +228,9 @@ const COMPARISON = /[=!]==?\s*$|case\s+$/;
  * the marks of source code is rejected here.
  */
 export function isSourceFragment(text: string): boolean {
-  const t = text.trim();
+  // `{name}` is a placeholder, the shape the template pass reports a value in
+  // and the shape a dictionary string carries one in. Not a brace of code.
+  const t = text.trim().replace(/\{[A-Za-z_]\w*\}/g, "x");
   if (/[<>{}]/.test(t)) return true;                 // a tag, or a brace-stripped body
   if (/=>|===|!==|\?\?|&&|\|\|/.test(t)) return true;    // operators
   if (/\b(className|onClick|onChange|useState|const|return|import|export|function)\b/.test(t)) return true;
@@ -224,6 +255,19 @@ export function isTechnical(text: string): string | null {
  * strings inside ternaries, option lists, toast messages, and the arrays of
  * copy that several screens are built from.
  */
+/**
+ * A readable name for an interpolated value: the last identifier that is not
+ * a method or a helper. `${plan.yearlyTotal}` is {yearlyTotal},
+ * `${ltv.toFixed(1)}` is {ltv}, `${files.length}` is {files}. A translator
+ * reads these, so `{1}` or `{toFixed}` would be worse than useless.
+ */
+const NOT_A_NAME = new Set(["toFixed", "toString", "toLocaleString", "join", "trim", "map", "length",
+  "toUpperCase", "toLowerCase", "round", "floor", "ceil", "Math", "String", "Number", "slice"]);
+function placeholderName(expr: string): string {
+  const ids = (expr.match(/[A-Za-z_]\w*/g) ?? []).filter((w) => !NOT_A_NAME.has(w));
+  return ids.length ? ids[ids.length - 1] : "value";
+}
+
 export function findAllLiterals(src: string): Literal[] {
   const stripped = stripNonCopy(src);
 
@@ -258,6 +302,36 @@ export function findAllLiterals(src: string): Literal[] {
     if (seen.has(line + "|" + clean)) continue;
     seen.add(line + "|" + clean);
     out.push({ line, text: clean, where: "literal" });
+  }
+
+  /**
+   * Template literals. Neither pass above opens a backtick, so a sentence with
+   * a value in it was invisible: "Incl. VAT, billed ${plan.yearlyTotal} yearly"
+   * sat on the pricing page and on no list. Each `${…}` is reported as a named
+   * placeholder, `{yearlyTotal}`, which is the shape the key has to take.
+   */
+  const tpl = /`((?:\\.|[^`\\])*)`/g;
+  while ((m = tpl.exec(stripped)) !== null) {
+    const body = m[1];
+    const bare = body.replace(/\$\{[^}]*\}/g, " ").trim();
+    // Copy is words with spaces between them. A class list, a path or a URL
+    // with one interpolation in it is not.
+    if (!/[A-Za-z]{2,}[.,:;!?]?\s+[A-Za-z]{2,}/.test(bare)) continue;
+    if (isTechnical(bare) || /^[\s./:?#&=-]*$/.test(bare) || /https?:|\/\//.test(body)) continue;
+    // A font stack with a family interpolated: `"${g}", system-ui, sans-serif`.
+    if (/\b(sans-serif|serif|monospace|system-ui)\b/.test(bare)) continue;
+    // A CSS value with a colour interpolated: `1px solid ${bd}`.
+    if (/^[\d.]+(px|rem|em)\s+(solid|dashed|dotted|double)\s*$/.test(bare)) continue;
+    const before = stripped.slice(Math.max(0, m.index - 40), m.index);
+    if (NON_COPY_CONTEXT.test(before) || NON_COPY_CALL.test(before)) continue;
+    const clean = body
+      .replace(/\$\{([^}]*)\}/g, (_w, expr: string) => `{${placeholderName(expr)}}`)
+      .replace(/\\u([0-9a-fA-F]{4})/g, (_w, hex: string) => String.fromCharCode(parseInt(hex, 16)))
+      .trim().replace(/\s+/g, " ");
+    const line = stripped.slice(0, m.index).split("\n").length;
+    if (seen.has(line + "|" + clean)) continue;
+    seen.add(line + "|" + clean);
+    out.push({ line, text: clean, where: "template" });
   }
   return out.sort((a, b) => a.line - b.line);
 }

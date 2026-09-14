@@ -136,10 +136,7 @@ export default function AboutBody({ locale }: { locale: Locale }) {
             <div className={s.card}>
               <span className={`${s.cardIc} bg-grad-assets`}><Icon name="studio" size={18} /></span>
               <h3>{t("site.about.make")}</h3>
-              <p>
-                Copy in your voice citing your own facts, images shot in your own light, and offers
-                that respect your floor price.
-              </p>
+              <p>{t("site.home.step3Body")}</p>
             </div>
           </div>
 

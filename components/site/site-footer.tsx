@@ -23,8 +23,8 @@ export default function SiteFooter() {
         <span>© 2026 Branditect</span>
         <Link href={sitePath(locale, "about")}>{translate(locale, "site.nav.about")}</Link>
         <Link href={sitePath(locale, "pricing")}>{translate(locale, "site.nav.pricing")}</Link>
-        <a href="mailto:hello@branditect.io">Contact</a>
-        <span className={s.footSp}>Made in Finland</span>
+        <a href="mailto:hello@branditect.io">{translate(locale, "site.footer.contact")}</a>
+        <span className={s.footSp}>{translate(locale, "site.footer.madeIn")}</span>
       </div>
     </footer>
   );

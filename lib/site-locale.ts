@@ -49,21 +49,24 @@ export type SitePage = (typeof SITE_PAGES)[number];
 const SEGMENT: Record<SitePage, string> = { home: "", pricing: "pricing", about: "about" };
 
 /**
- * THE ONE SWITCH.
+ * THE INDEXING SWITCH.
  *
- * `/fi` reads the 98 `site.*` keys, which landed 2026-09-14, but most of the
- * body copy has no key yet and is still English. Inbox 7b lists what is still
- * missing. Until it arrives:
+ * `/fi` reads every `site.*`, `plan.*`, `cmp.*` and `credit.*` key, but some
+ * copy still has no key and renders in English: the generated list is
+ * branditect-ui/spec/i18n-gap-site.md (`npm run i18n:gap:site`). Until that
+ * list is empty:
  *
  *   - the fi routes are `noindex`, because a page indexed as Finnish that is
- *     written in English is worse than no Finnish page at all — it is the
+ *     partly English is worse than no Finnish page at all: it is the
  *     duplicate-content problem this entry is trying to avoid, inverted;
- *   - the toggle is not rendered, because offering "Suomi" and serving
- *     English is a promise the page does not keep.
+ *   - the sitemap lists no `fi` alternate, and `<html lang>` stays "en".
  *
- * Everything else — the routes, the `hreflang`, the sitemap entries, the
- * toggle itself — is built and tested. When the strings land, this becomes
- * `true` and all of it turns on at once. No Finnish has been invented here.
+ * THE TOGGLE IS NOT BEHIND THIS ANY MORE. It used to be, on the reasoning
+ * that offering "Suomi" over English copy is a promise the page does not keep.
+ * Saara's call on 2026-09-14 was to show it now: with the round-two copy most
+ * of every Finnish page is Finnish, and a visitor can use it before a crawler
+ * is told to. So a person can reach /fi, and search still cannot. No Finnish
+ * has been invented here.
  */
 export const FI_COPY_READY = false;
 
@@ -129,6 +132,15 @@ export function alternatesFor(page: SitePage, locale: SiteLocale = DEFAULT_SITE_
     },
   };
 }
+
+/**
+ * Where the pricing heading breaks: how many words of `site.pricing.h1` sit on
+ * the first line. English "The commercial brain / for your brand.", Finnish
+ * "Brändisi / kaupalliset aivot." The phrase runs in the opposite order, so
+ * the break cannot be at the same word, and a count keeps the Finnish words
+ * in the dictionary where they belong. The test checks where it lands.
+ */
+export const PRICING_H1_BREAK_AFTER: Record<SiteLocale, number> = { en: 3, fi: 1 };
 
 /** What a locale is called, in its own language. Matches the Settings switch. */
 export const SITE_LOCALE_NAME: Record<SiteLocale, string> = { en: "English", fi: "Suomi" };

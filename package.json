@@ -15,6 +15,7 @@
     "cache:probe": "node --experimental-strip-types scripts/prompt-cache-probe.mjs",
     "i18n:scan": "node --experimental-strip-types scripts/i18n-scan.mjs",
     "i18n:gap": "node --experimental-strip-types scripts/i18n-gap.mjs",
+    "i18n:gap:site": "node --experimental-strip-types scripts/i18n-gap-site.mjs",
     "storage:audit": "node --experimental-strip-types scripts/storage-audit.mjs",
     "storage:remediate": "node --experimental-strip-types scripts/storage-remediate.mjs",
     "lang:probe": "node --experimental-strip-types scripts/output-language-probe.mjs",

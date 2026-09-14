@@ -6,7 +6,7 @@ Inbox entry 3 says the dictionary was derived from the real strings in these
 files. Measured against them, most of the interface is not in it: the strings
 below appear on screen and match no value in `lib/i18n/en.ts`.
 
-**744 distinct strings across 58 files.** A further 639 already
+**765 distinct strings across 60 files.** A further 668 already
 match a key and were extracted or are ready to be.
 
 Nothing here is truncated. A list that stopped at the first hundred would read
@@ -85,11 +85,15 @@ decision.
 ## app/(app)/brand/visual-identity/page.tsx
 
 - Sphinx of black quartz, judge my vow
+- Every logo, colour and typeface, in the versions that are actually current.
+- Take what you need — you don’t have to ask anyone.
+- Files named “primary” and “symbol only” are a filing cabinet. This is the same set, sorted by the question people actually arrive with.
 - Each plate is fixed to its slot, so you can see whether a reversed file actually works before you use it. Download the one you need.
 - Upload the primary, a reversed version and the symbol on its own — those three cover almost every use.
 - Every swatch copies. The contrast badge is measured against white at render, so it cannot go stale — it is the difference between a colour you can set text in and one you can only fill a shape with.
 - Add the ones you actually use — a primary, an ink and a background will carry most of what Studio makes. Or pull them straight out of a screenshot.
 - Ag
+- Opens in {platform}
 - The four things that go wrong most often. They live here rather than on page 34 of a PDF, because a rule nobody reads is not a rule.
 - 120px / 32mm
 - 24px / 8mm
@@ -118,36 +122,37 @@ decision.
 - All
 - Product info
 - Company info
-- Pricing
+- {name} exceeds the 50 MB limit.
 - Upload failed
+- Failed to upload {name}: {msg}
 - Please add a title.
 - Please add some content.
 - Building…
 - Active
 - Empty
-- Saving…
+- Branditect will only use information found in these documents. It will never invent product names, features, pricing, or company facts. If information is not in the vault, it will ask rather than guess.
+- Drop files here or
 - Save to vault →
 - No documents yet. Upload brand files to start building your vault.
 - No documents in this category.
+
+## app/(app)/knowledge/images/page.tsx
+
+- Access and manage all your brand assets in one place.
+- Access and manage all of {brandName}’s brand assets in one place.
 
 ## app/(app)/knowledge/links/page.tsx
 
 - Canva
 - Google Slides
-- 28px 32px
 - -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
-- 8px 14px
 - 1px solid #EDEBE8
-- 10px 13px
 - 3px solid #E16C00
-- 13px 15px
 - 64px 1fr auto
 - 1.5px dashed #D9D6D0
 - 2px solid #D9D6D0
 - spin 0.75s linear infinite
-- 9px 12px
 - 1px solid #D9D6D0
-- 8px 16px
 - Adding…
 
 ## app/(app)/knowledge/presentations/page.tsx
@@ -220,11 +225,13 @@ decision.
 - These lines come from how you said you sell. Highlighted ones were added by your channels — change them in
 - on Numbers.
 - selling direct
+- added by {from}
 - Spread across
 - units in the batch, if these are batch costs
 - Cost per unit
 - Cost to serve one
 - Fill in the lines on the left. Rates are excluded from the total — they change what a sale costs, but they aren't a sum.
+- {filled} of {costable} cost lines entered. This is what to put in the product card's landed cost.
 - Landed cost — not factory cost — is what margin is computed from. Factory cost alone overstates the margin by about five points, and a discount rule built on the wrong figure eats the difference on every promotion.
 
 ## app/(app)/numbers/offers/page.tsx
@@ -237,9 +244,11 @@ decision.
 - Minimum margin
 - the line you won't cross
 - Discount you want to run
+- That is below your {mm}% minimum — Studio would refuse to write this offer.
 - That clears your minimum.
 - Deepest discount you can run
 - Enter a price, a cost and a minimum margin.
+- At {currency} this product is already at its {mm}% floor. Any discount breaks it.
 - Guardrails are per product. A €6 clip cannot carry a €99 floor, so this ceiling belongs to this product alone — not to the brand.
 
 ## app/(app)/numbers/page.tsx
@@ -275,7 +284,9 @@ decision.
 - No price recorded yet
 - Uses the price you set in here
 - Shown because you charge a subscription
+- Work out what you really make on every sale, set prices that hit your target margin, and build offers that don't quietly cost you money — then
 - all costed
+- {missing} missing costs
 - no costed products
 - add running costs
 - at your best margin
@@ -286,6 +297,7 @@ decision.
 - Own site
 - Wholesale
 - App store
+- Rent, salaries, software and marketing don't care how much you sell. Add them up once — shared across every product — and Branditect works out the volume that covers them, and what your real floor price is.
 - Add your running costs and this becomes a real number. Without them the floor price is only half a floor.
 - No product has both a price and a cost yet.
 - Every sale loses money at these prices, so no volume covers the overhead. Fix the price or the cost first.
@@ -311,6 +323,7 @@ decision.
 - Margin at that price
 - Enter a cost and a price.
 - You lose money on every sale at this price.
+- Price for {tgt}% margin
 - Enter a cost and a target margin.
 - Minimum margin
 - Margin is always net of tax against landed cost. Comparing a gross price to a factory cost is the flattering version, and it is wrong by about five points.
@@ -332,18 +345,21 @@ decision.
 - Fill in all four fields.
 - Payback
 - There is no margin to pay back the acquisition cost.
+- How long before a customer has repaid what you spent acquiring them. LTV is {ltvToCac}× acquisition cost.
 - Each customer is worth less than they cost to acquire. Growing faster makes this worse, not better — the fix is churn, margin or acquisition cost, not volume.
 
 ## app/(app)/numbers/running-costs/page.tsx
 
 - Could not save
 - Monthly totals, not receipts. Shared across every product — rent is not a property of a hair dryer.
-- Saving…
+- One figure per line. Leave a line blank if it doesn't apply — blank and zero mean different things here.
 - Save running costs
 - Saved on the business, not on a product. Nothing here changes what Studio is allowed to write — guardrails live on each product card.
 - No products yet, so there is no contribution to divide the overhead by. Your total above is still saved and will apply the moment you add one.
 - Each sale loses money, so no volume covers the overhead. Fix the price or the cost before worrying about break-even.
+- Set by your {minMarginPct}% minimum margin — that test binds above the overhead one at this volume.
 - Set by covering overhead at your expected volume, which binds above your minimum margin. Without running costs this would read lower and be only half a floor.
+- divided across units. A “fully loaded” unit cost makes every product's margin depend on how many of everything else sold. Contribution plus break-even says the same thing without moving whenever an unrelated product has a good month.
 
 ## app/(app)/settings/plan/page.tsx
 
@@ -352,7 +368,10 @@ decision.
 
 ## app/(app)/studio/brand-bases/page.tsx
 
+- Define {name}'s purpose, positioning, values, and competitive landscape
+- Establish how {name} communicates — the BrandTone™ Architect output
 - Visual Identity
+- Upload {name}'s brand assets and visual guidelines
 - Business Pulse
 - Goals, upcoming launches, sensitivities, financial rules
 - Build Your Brand Foundation
@@ -363,7 +382,6 @@ decision.
 
 - Brand book
 - all 0.14s
-- 0 auto 8px
 - Upload brand book
 - PNG, JPG, PDF, screenshots
 - Color codes
@@ -374,14 +392,9 @@ decision.
 - Upload your brand book
 - PNG, JPG, screenshots — drag & drop or click
 - Choose files
-- 10px 16px
-- 7px 10px
-- 8px 8px 8px 2px
-- 8px 8px 2px 8px
 - Reading the brand materials...
 - Ask about the brand — colors, fonts, logo rules...
 - Upload brand book first, then ask questions...
-- 7px 16px
 - Ask
 
 ## app/(app)/studio/brand-guideline/BrandGuidelineClient.tsx
@@ -411,23 +424,27 @@ decision.
 - Social media
 - spin 0.75s linear infinite
 - Upload image
+- The {brandName} logo is the primary visual expression of the brand. Built from deliberate, structured decisions, it communicates the values that define {brandName} — precision, authority and reliability. The mark and wordmark work together as a cohesive system, and each element is protected by clear rules that ensure consistency across every application.
+- The {brandName} type system is built on clarity, hierarchy and restraint. Every weight and size decision serves a functional purpose. The system performs across digital and print with equal authority.
+- Use {fontName} as the single primary typeface across all materials
+- Color is one of the most immediate expressions of the {brandName} identity. The palette is carefully considered — each color earns its place by serving a specific communicative role. Used consistently, the system builds immediate recognition.
+- {name} on {white}. Default for all marketing and digital surfaces.
+- Light with {accent} on {name}. Use for hero sections.
+- {brandName} imagery is defined by restraint, honesty and controlled composition. Every image should feel like it was taken, not produced — real moments in real environments, captured with professional precision.
+- Primary color is {hex} — use on light backgrounds only.
+- Typography: Display at {wt} weight. Never use 700/900 on headlines.
+- Button corner radius is {cornerRadius}px. Never fully rounded.
 - Loading brand guidelines…
+- Brand identity — Logos
+- {name} logo system
 - Upload each logo variant below. The AI detects whether each upload is a wordmark, logomark, combination mark or emblem.
 - ↑ Replace
-- 12px 14px
 - flex 0.25s ease
 - Primary palette
-- 0 56px
-- 12px 13px
 - AA
 - AAA
-- 2px 5px
 - Secondary palette
-- 0 56px 8px
-- 10px 12px
 - Usage rules
-- 0 56px 48px
-- 14px 16px
 - Photography
 - Brand identity — Image style
 - Imagery focuses on real environments and authentic performance — not lifestyle, not aspiration. Every image should feel like it was taken, not produced.
@@ -436,31 +453,20 @@ decision.
 - Approved style
 - Design system — Button styles
 - Variants
-- 0 56px 28px
 - Disabled
-- 10px 24px
 - Corner radius
+- Design system — {title}
 - Channels — Social media
 - Canva template
-- 0 56px 24px
 - Paste Canva template link…
-- 9px 13px
 - Open in Canva ↗
-- 9px 18px
 - Post gallery
-- 20px 18px 16px
 - Brand guideline
-- 14px 18px 4px
-- 8px 18px
 - 2px solid transparent
 - all 0.12s
-- 12px 18px
-- 11px 28px
-- 6px 14px
 - ↑ Upload guideline
 - Edit section
 - transform 0.22s ease
-- 14px 18px
 - Updating section…
 - What would you like to change?
 - e.g. 'Add a monochrome color variant' or 'Update the clearspace rule to x-height instead of cap-height'
@@ -471,23 +477,12 @@ decision.
 - Upload brand guideline screenshots
 - PNG or JPG — upload multiple pages.
 - Claude reads all pages in depth and extracts colors, fonts, logo rules, photography guidelines and all section text.
-- 11px 14px
 - What gets extracted:
-- 14px 22px
 - Extracting…
-- 8px 16px
-- 8px 22px
 - Extracting...
 - Extract brand data
-- 10px 13px
 - Brand AI
-- 8px 10px
-- 10px 10px 10px 2px
-- 10px 10px 2px 10px
 - Ask the brand…
-- 6px 9px
-- 6px 10px
-- 7px 18px
 
 ## app/(app)/studio/code/page.tsx
 
@@ -498,6 +493,7 @@ decision.
 - Failed to read file
 - Please describe the feature you want to build.
 - Please upload at least one screenshot.
+- Server error: {responseText}
 - Unexpected error. Please try again.
 - ← Dashboard
 - Brand Code Architect
@@ -531,9 +527,11 @@ decision.
 - Outdoors
 - Outside, daylight
 - That didn't work.
+- Not saved — {message}
 - Saved to Knowledge ▸ Images
 - Not saved
 - This product on a silver background
+- {name} on a silver background
 - The bottle on a kitchen counter in morning light
 - Pick something that already looks right, say what you want to see, and get a new image shot in the same light.
 - What are you making?
@@ -544,6 +542,7 @@ decision.
 - Which product?
 - 1 product photo added as reference below.
 - No product photo on file, so nothing was added below.
+- The label, shape and colour are kept exact, and “this product” in your description means this one.
 - Pick your reference pictures
 - Choose pictures that show what you are after. Up to three, and all of them are read.
 - From
@@ -578,10 +577,10 @@ decision.
 - Could not make a note.
 - Download as PDF is built server-side, and is not wired up yet.
 - Nothing else lives here yet.
-- Saving…
 - New note
 - Search notes
 - Nothing here yet. A note is a scratchpad — anything you write in one reaches AI Chat.
+- Nothing matches “{query}”.
 - Untitled
 - Empty
 - Pick a note, or start one.
@@ -601,6 +600,7 @@ decision.
 - Two answers and you have a draft. Everything it writes obeys your strategy, your tone of voice and your real product facts.
 - What are we writing?
 - What are we writing? A press note, a video script…
+- What’s it about?
 - One or two lines is enough. Say what happened and who it's for.
 - What's it about?
 - Tap an example to fill it in, then edit. These change with the format you picked.
@@ -611,10 +611,14 @@ decision.
 - How many drafts
 - Writing…
 - Write it
+- Writes from
 - 1 product record
+- {products} product records
+- Pick a format and say what it’s about.
 - didn't finish
 - Copied
 - Checking every claim against your product records…
+- No tone of voice yet, using plain, neutral copy.
 - Set one →
 
 ## app/login/page.tsx
@@ -648,12 +652,16 @@ decision.
 - On subscription
 - Who is doing the work?
 - Two or three of us
+- What language should we write in?
+- English
+- Suomi
 - Getting started
 - Let’s get to know your business
-- Three quick taps, no typing. This sets the examples you’ll see, and it’s the same profile your Numbers section needs.
+- Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs.
 
 ## app/start/q/[n]/page.tsx
 
+- Step {sectionId} of 4 · {sectionId}
 - One of the five answers that unlocks your workspace.
 - Skippable — it becomes a Brand Readiness item you can come back to.
 - Finish
@@ -664,39 +672,30 @@ decision.
 - Welcome back
 - Nothing was lost.
 - Finding your place…
+- {answered} of {total} answered. {state}
+- Saved to your account, not this browser. Sign in anywhere and it’s there.
+- You were on question {n} of {total}.
 - Everything you have written is saved. The questions you skipped are waiting in Brand Readiness, not lost.
 
 ## components/activity-list.tsx
 
 - Just now
 - Yesterday
+- {days} days ago
 - Last week
+- {weeks} weeks ago
 
 ## components/andy-panel.tsx
 
 - Conversation
 - New conversation
 - 'DM Sans', sans-serif
-- 10px 16px
-- 4px 6px
 - + New
-- 4px 10px
-- 2px 6px
-- 16px 14px
-- 10px 14px
-- 14px 18px
 - Branditect AI chat
-- 5px 14px
 - Chat
-- 22px 18px 12px
-- 14px 14px 3px 14px
+- — welcome to the {brandName} workspace
 - Save to notes
-- 12px 18px 18px
-- 11px 13px
 - opacity 0.15s
-- 50px 10px
-- 0 auto 12px
-- 13px 14px
 
 ## components/auth/auth-form.tsx
 
@@ -707,6 +706,7 @@ decision.
 - or continue with email
 - Password
 - Enter your password
+- At least {MIN_PASSWORD} characters
 - Creating account…
 - Signing in…
 - Create account
@@ -738,6 +738,7 @@ decision.
 ## components/chat-rail.tsx
 
 - TRAINED
+- Reads your Brand, your Numbers and everything in Knowledge.
 - files indexed.
 - BRANDITECT
 
@@ -745,9 +746,11 @@ decision.
 
 - Still uploading — you can answer now, it saves when they land.
 - All uploaded.
-- Saving…
 - Hide the files
+- Type for {name}
 - Same as above
+- Description for {name}
+- Skip keeps the type above and no description. Files without one wait under
 - until you add it.
 
 ## components/file-library.tsx
@@ -759,9 +762,11 @@ decision.
 ## components/image-library.tsx
 
 - Could not remove that link.
+- Upload {pendingUploads} image{s}
 - No images uploaded yet. Drop some files above to get started.
 - No images match your filters.
 - Copied ✓
+- Remove {name} from {file_name}
 
 ## components/logo.tsx
 
@@ -769,7 +774,9 @@ decision.
 
 ## components/numbers/calc-shell.tsx
 
+- Nothing here is saved. These figures live on the product card — use
 - and press save there.
+- Pick a product above to apply this. Without one this is a quick calculation — useful for pricing something you haven't added yet, and nothing is lost by staying here.
 - Prefill from
 - No products yet, so there is nothing to prefill from — this is a quick calculation. That is a normal way to use it: work out the numbers first, add the product after.
 
@@ -780,18 +787,37 @@ decision.
 - Pick a product to set its limits. They are per product on purpose: a six pound clip cannot carry a ninety-nine pound floor.
 - Floor price
 - Min margin
-- Saving…
 - Save limits
 
 ## components/onboarding-strip.tsx
 
 - SIGNED_OUT
+- Five answers open Studio.
+
+## components/products/image-picker.tsx
+
+- Tag images to this product
+- From your image library. They show under Images and video on this product.
+- Product shots live in Knowledge ▸ Images so the image creator can read them. Upload some there and they'll appear here.
+- Tagged
+- Tagging…
+- Tag image
+- Tag {picked} images
+- Tag images
+- Pick one or more
 
 ## components/products/media-tab.tsx
 
 - Not available.
 - Could not load.
 - Could not untag. It is still on this product.
+- Could not tag. Nothing was added.
+- Tag images
+- Tag images from your library, or generate some in Studio.
+- Create images in Studio
+- Tag {file_name} to another product
+- Documents live in
+- Knowledge ▸ Documents
 
 ## components/products/pricing-tab.tsx
 
@@ -801,11 +827,11 @@ decision.
 - After cost to sell as well.
 - No tax rate recorded, so both figures assume zero. A missing rate treated as zero reads the gross price as net and flatters the margin.
 - + Add your own line
+- Floor price, maximum discount and minimum margin now live in
 
 ## components/products/product-drawer.tsx
 
 - Details
-- Pricing
 - Inventory
 - Media
 - History
@@ -820,14 +846,18 @@ decision.
 - Barcode
 - Units
 - Source
+- Stock is here for one reason: so Studio won't promote something you can't ship. Reorder points, suppliers and lead times belong in your inventory system, not your brand brain.
+- The shot on the product list. Tagged images below do not change it.
 - No changes recorded yet. Price and cost edits will appear here with who made them — someone will eventually need to know when a price changed and why.
-- Saving…
 - Save changes
 
 ## components/products/product-picker.tsx
 
 - This image will show on the product's card.
+- {imageIds} images will show on the product's card.
 - No products yet. Add one in Knowledge ▸ Products first.
+- Nothing matches “{query}”.
+- Tag to {name}
 - Tagging…
 
 ## components/products/remove-product.tsx
@@ -836,6 +866,8 @@ decision.
 
 ## components/products/specs-editor.tsx
 
+- Specification {i} name
+- Specification {i} value
 - 8.4 L/kg
 - + Add specification
 - Structured facts Studio can quote verbatim — spec tables, comparison blocks, ad claims. A row with no name is discarded.
@@ -852,7 +884,6 @@ decision.
 
 ## components/start/shell.tsx
 
-- Saving…
 - Not saved — retrying
 - Finish later →
 
@@ -911,7 +942,6 @@ decision.
 - Name the typeface first
 - DM Sans
 - The specimen on this page is set in the real typeface, so a name that is not on Google Fonts will show as a fallback rather than silently look right.
-- Saving…
 - Add typeface
 
 ## components/welcome-modal.tsx
@@ -926,9 +956,6 @@ decision.
 - Add costs and pricing so Studio never writes past your margins.
 - 'DM Sans', sans-serif
 - 'Space Grotesk', sans-serif
+- “They have a marketing team. You have Branditect.”
 - 4 steps
-- 18px 20px
 - background 0.15s
-- 14px 32px
-- 14px 24px
-- 4px 0

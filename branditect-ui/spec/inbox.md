@@ -945,6 +945,33 @@ now its own canonical (`alternatesFor(page, "fi")`), and there is a test for it.
   constant turns all of it on", plus the sitemap block) go in the same commit
   as the flip.
 
+**2026-09-14, round two: wired. The toggle is visible. Still PART DONE.**
+
+- Round-two keys are read on both sides. `lib/pricing-plans.ts` builds the plan
+  cards, the comparison table and the credit table per locale with `plansIn`,
+  `comparisonIn` and `creditCostsIn`. Prices are built from numbers by `euro()`:
+  €29.90 in English, 29,90 € in Finnish. `credit.topUp` renders whole, bold,
+  where `{topUp}` sits in `site.pricing.topUpFull`.
+- `site.pricing.h1` breaks after "Brändisi" in Finnish (`PRICING_H1_BREAK_AFTER`).
+  The OG card heading reads the same key, so `/fi` now has Finnish cards.
+- **The toggle shows on every public page** (Saara's call). `FI_COPY_READY` now
+  holds back only indexing: noindex, the sitemap alternates and `html lang`. It
+  cannot go true while the site gap scan finds anything; a test ties the two together.
+- On a phone the toggle did not fit: it covered the wordmark and pushed Start
+  free off screen, and in Finnish the nav overflowed even before the toggle.
+  Below 620px the wordmark is screen-reader only and Log in leaves the nav.
+  Measured at 320, 360, 390, 700 and 1440px on all six routes.
+- **What is left is generated, not listed here:** `npm run i18n:gap:site` writes
+  `branditect-ui/spec/i18n-gap-site.md`. Today it has 67 strings with no key, and 4
+  keys nothing can read. `site.home.lede` is cut off again at "It's like" / "Se on
+  kuin", so the hero lede is still English. The other three are the round-one
+  fragments the whole-sentence keys replaced; delete them.
+- The scanner had holes, fixed in `lib/i18n-scan.ts` for the app list too. It
+  skipped text followed by `{" "}` (the whole hero lede), never opened a template
+  literal ("Incl. VAT, billed {yearlyTotal} yearly"), and ignored `/month`. The
+  app list reports 74 real strings it had missed and 58 CSS paddings it no longer
+  mistakes for copy.
+
 ---
 
 ### The two bugs in that report are worth naming

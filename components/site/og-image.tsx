@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { translate, type Locale } from "@/lib/i18n/index.ts";
+import { PRICING_H1_BREAK_AFTER } from "@/lib/site-locale";
 
 /**
  * The card every link to the public site renders in a Slack channel or a
@@ -13,7 +15,11 @@ import { ImageResponse } from "next/og";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_ALT = "Branditect, the commercial brain for your brand";
 
-export function ogImage(subtitle: string) {
+export function ogImage(subtitle: string, locale: Locale = "en") {
+  /* The same sentence as the pricing heading, broken at the same word for the
+     same reason: Finnish puts "Brändisi" first. See PRICING_H1_BREAK_AFTER. */
+  const words = translate(locale, "site.pricing.h1").split(" ");
+  const cut = PRICING_H1_BREAK_AFTER[locale];
   return new ImageResponse(
     (
       <div
@@ -27,10 +33,10 @@ export function ogImage(subtitle: string) {
           <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -1 }}>Branditect</div>
         </div>
         <div style={{ fontSize: 74, fontWeight: 800, letterSpacing: -3, lineHeight: 1.05, marginTop: 34 }}>
-          The commercial brain
+          {words.slice(0, cut).join(" ")}
         </div>
         <div style={{ fontSize: 74, fontWeight: 800, letterSpacing: -3, lineHeight: 1.05, color: "#F0562A" }}>
-          for your brand.
+          {words.slice(cut).join(" ")}
         </div>
         <div style={{ fontSize: 30, color: "#6F6F8A", marginTop: 30, maxWidth: 900, lineHeight: 1.4 }}>
           {subtitle}

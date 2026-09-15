@@ -7,6 +7,7 @@ import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { andyStable } from "@/lib/prompts";
 import { outputLanguageFor, type BrandReader } from "@/lib/output-language";
 import { sanitiseOutput } from "@/lib/sanitise-output";
+import { findFormat } from "@/lib/studio-write";
 
 export const maxDuration = 30
 
@@ -293,7 +294,19 @@ export async function POST(req: NextRequest) {
         .trim()
     )
 
-    return NextResponse.json({ reply })
+    // Andy hands long-form writing to Studio > Write rather than truncating at
+    // max_tokens. The marker is stripped so it never reaches the UI as text;
+    // `handoff` is what a button should be built on.
+    const HANDOFF = /\[\[HANDOFF:([a-z]+)\|([^\]]+)\]\]/i
+    const m = reply.match(HANDOFF)
+    const handoff = m
+      ? { format: findFormat(m[1])?.id ?? 'other', brief: m[2].trim() }
+      : null
+
+    return NextResponse.json({
+      reply: reply.replace(HANDOFF, '').trim(),
+      handoff,
+    })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI error'
     return NextResponse.json({ error: message }, { status: 500 })

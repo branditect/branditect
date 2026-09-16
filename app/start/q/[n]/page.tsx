@@ -1,5 +1,6 @@
 "use client";
 
+import { authedJson } from "@/lib/authed-fetch";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useOnboarding } from "@/lib/use-onboarding";
@@ -39,6 +40,8 @@ export default function QuestionScreen() {
   // falling back to English per field (lib/onboarding-locale.ts).
   const lq = forLocale(n, track, locale)!;
   const [text, setText] = useState("");
+  const [building, setBuilding] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
 
   // Seed from saved state once it arrives, without clobbering live typing.
   useEffect(() => { if (!loading) setText(state.answers[n] ?? ""); }, [loading, n, state.answers]);
@@ -47,9 +50,28 @@ export default function QuestionScreen() {
   const wasSkipped = state.skipped.includes(n);
   const blocked = Boolean(q.required) && !text.trim();
 
+  /**
+   * Finishing has to produce something. The last question used to route to
+   * /home, and nothing anywhere turned the answers into a strategy: twenty
+   * answers stored, no strategy, and Brand ▸ Strategy still offering to start
+   * the questionnaire.
+   */
   async function go(to: number) {
     await flush();
-    router.push(to < 1 ? "/start/profile/3" : to > TOTAL ? "/home" : `/start/q/${to}`);
+    if (to < 1) { router.push("/start/profile/3"); return; }
+    if (to <= TOTAL) { router.push(`/start/q/${to}`); return; }
+
+    setBuilding(true);
+    setBuildError(null);
+    const res = await authedJson("/api/strategy-generate", "POST", {});
+    const body = await res.json().catch(() => ({}));
+    setBuilding(false);
+    if (!res.ok) {
+      // The answers are safe either way; say so rather than stranding anyone.
+      setBuildError(t("strategy.buildFailed", { message: body?.error ?? String(res.status) }));
+      return;
+    }
+    router.push("/brand/strategy");
   }
 
   return (
@@ -105,13 +127,19 @@ export default function QuestionScreen() {
       />
       <span className="mt-2.5 block text-2xs font-medium text-faint">{t("start.savesAsYouType")}</span>
 
+      {buildError && (
+        <p className="mt-3 rounded-tile bg-red-50 px-3 py-2 text-xs font-semibold text-red-600" role="alert">
+          {buildError}
+        </p>
+      )}
+
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => void go(n - 1)}
           className="text-sm font-semibold text-muted-2 hover:text-ink-2">{t("onboarding.back")}</button>
 
-        <button type="button" disabled={blocked} onClick={() => void go(n + 1)}
+        <button type="button" disabled={blocked || building} onClick={() => void go(n + 1)}
           className="ml-auto rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn disabled:opacity-50">
-          {n === TOTAL ? t("start.finish") : t("start.nextQuestion")}
+          {building ? t("strategy.building") : n === TOTAL ? t("start.finish") : t("start.nextQuestion")}
         </button>
 
         {/* Absent on the four required questions, never greyed out — a disabled

@@ -1,5 +1,6 @@
 "use client";
 
+import { authedJson } from "@/lib/authed-fetch";
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -192,6 +193,10 @@ export default function BrandStrategyPage() {
   const locale = useLocale();
   const { brandId, loading: brandLoading } = useBrand();
   const [screen, setScreen] = useState<Screen>("entry");
+  /* Answers with nothing built from them. The empty state used to send people
+     back to a questionnaire they had already finished. */
+  const [savedAnswerCount, setSavedAnswerCount] = useState(0);
+  const [building, setBuilding] = useState(false);
   const [category, setCategory] = useState<Category | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -214,6 +219,27 @@ export default function BrandStrategyPage() {
   // Draft storage key — answers persist locally so a refresh / failed generation
   // doesn't wipe the user's work.
   const draftKey = `branditect:strategy-draft:${brandId}`;
+
+  /** Build the strategy the questionnaire never produced, and show it. */
+  const buildFromAnswers = useCallback(async () => {
+    setBuilding(true);
+    setError("");
+    try {
+      const res = await authedJson("/api/strategy-generate", "POST", {});
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(t("strategy.buildFailed", { message: body?.error ?? String(res.status) }));
+        return;
+      }
+      // Reload rather than patch state: the saved row is what every section on
+      // this screen reads.
+      window.location.reload();
+    } catch (e) {
+      setError(t("strategy.buildFailed", { message: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setBuilding(false);
+    }
+  }, [t]);
 
   // Load existing strategy (or restore in-progress draft) once brandId resolves
   useEffect(() => {
@@ -265,6 +291,16 @@ export default function BrandStrategyPage() {
 
           setScreen("view");
         } else {
+          // No strategy — but the questionnaire may already be answered. The
+          // two live in different tables and nothing joined them, which is how
+          // twenty answers ended up behind a "start the questionnaire" button.
+          const { data: onb } = await supabase
+            .from("onboarding").select("answers").eq("brand_id", brandId).maybeSingle();
+          setSavedAnswerCount(
+            Object.values((onb?.answers ?? {}) as Record<string, string>)
+              .filter((a) => typeof a === "string" && a.trim()).length,
+          );
+
           // No saved strategy yet — try to restore an in-progress draft
           try {
             const draftRaw = localStorage.getItem(draftKey);
@@ -707,13 +743,38 @@ export default function BrandStrategyPage() {
                 </div>
               )}
 
+              {savedAnswerCount > 0 && (
+                <p className="mt-4 text-sm font-semibold text-ink-2">
+                  {t("strategy.answersWaiting", { count: savedAnswerCount })}
+                </p>
+              )}
+
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/start"
-                  className="rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn"
-                >
-                  {t("strategy.startQuestionnaire")}
-                </Link>
+                {savedAnswerCount > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={building}
+                      onClick={() => void buildFromAnswers()}
+                      className="rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn disabled:opacity-60"
+                    >
+                      {building ? t("strategy.building") : t("strategy.buildFromAnswers")}
+                    </button>
+                    <Link
+                      href="/start"
+                      className="rounded-tile border border-rule-2 bg-white px-6 py-3 text-sm font-semibold text-ink-2 hover:bg-tile"
+                    >
+                      {t("strategy.keepAnswering")}
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    href="/start"
+                    className="rounded-tile bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn"
+                  >
+                    {t("strategy.startQuestionnaire")}
+                  </Link>
+                )}
               </div>
             </div>
           </div>

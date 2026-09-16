@@ -2803,6 +2803,16 @@ export const en = {
     "Not saved: {message}. Your products are still on screen; try again.",
   "import.noBrandYet":
     "Not saved: your workspace is still loading. Wait a moment and try again.",
+
+  // ── The questionnaire has to produce a strategy ── 2026-09-16, Finnish mine.
+  "strategy.building": "Building your strategy from your answers…",
+  "strategy.buildFailed":
+    "Your answers are saved, but the strategy could not be built: {message}. Try again from Brand ▸ Strategy.",
+  "strategy.nothingToBuild": "There are no answers to build from yet.",
+  "strategy.answersWaiting":
+    "You have answered {count} of the questions. Nothing has been built from them yet.",
+  "strategy.buildFromAnswers": "Build my strategy from my answers",
+  "strategy.keepAnswering": "Answer the rest first",
 } as const;
 
 export type StringKey = keyof typeof en;

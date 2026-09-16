@@ -222,10 +222,12 @@ describe("no route sends a system prompt as a plain string", () => {
     .filter((f) => /\bsystem:/.test(readFileSync(f, "utf8")));
 
   it("finds the routes at all, so this cannot pass vacuously", () => {
-    // 7 since 2026-09-14: brand-code-architect was removed with its Studio card.
+    // 7 since 2026-09-14 (brand-code-architect removed), 8 with strategy-extract,
+    // 9 since 2026-09-16: strategy-generate, which is what builds a strategy
+    // from the questionnaire.
     // 8 since 2026-09-16: strategy-extract reads a strategy the founder brought.
-    assert.equal(senders.length, 8,
-      `expected 8 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
+    assert.equal(senders.length, 9,
+      `expected 9 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
   });
 
   for (const file of senders) {

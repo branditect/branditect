@@ -2856,4 +2856,14 @@ export const fi: Record<StringKey, string> = {
     "Ei tallennettu: {message}. Tuotteesi ovat yhä näkyvissä, yritä uudelleen.",
   "import.noBrandYet":
     "Ei tallennettu: työtilasi latautuu vielä. Odota hetki ja yritä uudelleen.",
+
+  // ── The questionnaire has to produce a strategy ── 2026-09-16, Finnish mine.
+  "strategy.building": "Rakennetaan strategiaasi vastauksistasi…",
+  "strategy.buildFailed":
+    "Vastauksesi on tallennettu, mutta strategiaa ei voitu rakentaa: {message}. Yritä uudelleen kohdasta Brändi ▸ Strategia.",
+  "strategy.nothingToBuild": "Vastauksia ei ole vielä, joten rakennettavaa ei ole.",
+  "strategy.answersWaiting":
+    "Olet vastannut {count} kysymykseen. Niistä ei ole vielä rakennettu mitään.",
+  "strategy.buildFromAnswers": "Rakenna strategiani vastauksistani",
+  "strategy.keepAnswering": "Vastaa ensin loppuihin",
 };

@@ -198,7 +198,7 @@ describe("a redo archives on finish, never on start", () => {
     // not a preference: insert-then-archive cannot work at all.
     const { store, calls } = fakeStore({ current: row() });
     return archiveAndInsert(store, {
-      brandId: "b1", userId: "u1", answers: { 1: "a" }, provenance: {}, source: "document",
+      brandId: "b1", userId: "u1", answers: { 1: "a" }, provenance: {}, source: "paste",
     }).then((res) => {
       assert.deepEqual(calls, ["head", "markReplaced", "insert"]);
       assert.ok(res.ok && res.version === 3, "the new version follows the highest ever used");
@@ -208,7 +208,7 @@ describe("a redo archives on finish, never on start", () => {
   it("writes nothing to the old row when there is no old row", async () => {
     const { store, calls } = fakeStore({ current: null });
     const res = await archiveAndInsert(store, {
-      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "document",
+      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "paste",
     });
     assert.deepEqual(calls, ["head", "insert"]);
     assert.ok(res.ok && res.version === 1);
@@ -220,7 +220,7 @@ describe("a redo archives on finish, never on start", () => {
       insert: async () => ({ error: { message: "insert exploded" } }),
     });
     const res = await archiveAndInsert(store, {
-      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "document",
+      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "paste",
     });
     assert.deepEqual(calls, ["head", "markReplaced", "insert", "restoreCurrent"]);
     assert.ok(!res.ok);
@@ -233,10 +233,10 @@ describe("a redo archives on finish, never on start", () => {
     });
     await archiveAndInsert(store, {
       brandId: "b1", userId: null, answers: { 3: "granules" }, provenance: { 3: { quote: "q", page: 1 } },
-      source: "document", sourceDocumentId: "doc-1",
+      source: "pdf", sourceDocumentId: "doc-1",
     });
     assert.deepEqual((written as unknown as StrategyRow).answers, { "3": "granules" });
-    assert.equal((written as unknown as StrategyRow).source, "document");
+    assert.equal((written as unknown as StrategyRow).source, "pdf");
     assert.equal((written as unknown as StrategyRow).source_document_id, "doc-1");
     assert.equal((written as unknown as StrategyRow).is_current, true);
   });
@@ -262,7 +262,7 @@ describe("the migration that has not been run says so", () => {
       head: async () => ({ current: null, maxVersion: 0, error: { message: "x", code: "42703" } as StoreError }),
     });
     const res = await archiveAndInsert(store, {
-      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "document",
+      brandId: "b1", userId: null, answers: { 1: "a" }, provenance: {}, source: "paste",
     });
     assert.ok(!res.ok && res.status === 503 && res.migration);
     assert.match(res.message, /Supabase SQL editor/);
@@ -302,7 +302,7 @@ describe("the document mode does not write a strategy", () => {
 
   it("the route picks the mode from the source, not from a guess", () => {
     const src = read("app/api/brand-strategy/route.ts");
-    assert.match(src, /const fromDocument = source === "document"/);
+    assert.match(src, /const fromDocument = source === "paste" || source === "pdf"/);
     assert.match(src, /cachedSystem\(fromDocument \? STRATEGY_FROM_DOCUMENT_STABLE : STRATEGY_STABLE\)/);
     assert.match(src, /Leave every field the input does not support empty/);
   });

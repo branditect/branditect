@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
 
   // The document is the caller's, or it is not referenced. An id from the body
   // is otherwise a way to point your strategy at somebody else's file.
+  /**
+   * The table's own vocabulary: questionnaire | paste | pdf, enforced by
+   * brand_strategies_source_check. "document" was rejected outright, so a
+   * pasted strategy is "paste" and an uploaded file is "pdf". Anything else
+   * the client sends is refused here rather than by a 500 from Postgres.
+   */
+  const docSource: "paste" | "pdf" = body.source === "pdf" || body.sourceDocumentId ? "pdf" : "paste";
+
   let sourceDocumentId: string | null = null;
   if (body.sourceDocumentId) {
     const { data: doc } = await supabase
@@ -86,7 +94,7 @@ export async function POST(req: NextRequest) {
     userId: auth.userId,
     answers,
     provenance,
-    source: "document",
+    source: docSource,
     sourceDocumentId,
     generatedStrategy: null,
   });

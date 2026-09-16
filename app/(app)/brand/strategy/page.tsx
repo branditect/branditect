@@ -8,7 +8,7 @@ import { QUESTIONS, type QuestionDef } from "@/lib/strategy-questions";
 import StrategyDocument from "@/components/strategy/strategy-document";
 import StartFresh from "@/components/strategy/start-fresh";
 import { loadOnboarding } from "@/lib/onboarding-db";
-import type { Provenance, StrategySource } from "@/lib/strategy-intake";
+import { isFromDocument, type Provenance, type StrategySource } from "@/lib/strategy-intake";
 import type { StrategyOrigin } from "@/lib/strategy";
 import type { Track } from "@/lib/onboarding-questions";
 import { readStrategy, completeness, EMPTY_STRATEGY, type BrandStrategy } from "@/lib/strategy";
@@ -640,7 +640,7 @@ export default function BrandStrategyPage() {
       setOrigin({
         // Undefined before the migration, which is the pre-feature behaviour:
         // a questionnaire strategy, rendered exactly as it always has been.
-        source: strategyRecord.source === "document" ? "document" : "questionnaire",
+        source: isFromDocument(strategyRecord.source) ? (strategyRecord.source as "paste" | "pdf") : "questionnaire",
         provenance: (strategyRecord.provenance ?? {}) as Provenance,
         answered: Array.from(answered),
       });

@@ -402,7 +402,7 @@ describe("every section says which questions would fill it", () => {
   });
 
   it("a question with no answer is still open, whichever row answered it", () => {
-    const origin = { source: "document" as const, provenance: {}, answered: [1, 4] };
+    const origin = { source: "paste" as const, provenance: {}, answered: [1, 4] };
     // core asks 1, 4, 6 and 13; two are answered, so two remain.
     assert.deepEqual(missingQuestionsFor("core", origin), [6, 13]);
     // Nothing is claimed when there is no strategy row to read.
@@ -411,7 +411,7 @@ describe("every section says which questions would fill it", () => {
 
   it("the quotes shown on a section are the ones it was read from", () => {
     const origin = {
-      source: "document" as const,
+      source: "paste" as const,
       answered: [1, 6],
       provenance: { 1: { quote: "We started after a spill.", page: 2 }, 6: { quote: "Absorbent granules.", page: null } },
     };
@@ -439,7 +439,9 @@ describe("a document-sourced section is never filled with an example", () => {
 
   it("the document suppresses the example prompts when the section is empty", () => {
     const src = code(DOC);
-    assert.match(src, /origin\?\.source === "document" && !def\.hasAny\(strategy\)/,
+    // The table's own vocabulary is questionnaire | paste | pdf, so the check
+    // is the helper rather than one literal.
+    assert.match(src, /isFromDocument\(origin\?\.source\) && !def\.hasAny\(strategy\)/,
       "the section does not decide emptiness from the strategy and its source");
     assert.match(src, /\{!empty && children\}/,
       "an empty document-sourced section still renders its example prompt");
@@ -450,7 +452,7 @@ describe("a document-sourced section is never filled with an example", () => {
     // The feature must not redesign the questionnaire screen underneath anyone:
     // no "still open" block, no quotes, and its own example prompts intact.
     const src = code(DOC);
-    assert.match(src, /origin\?\.source !== "document" \|\| !missing\.length/,
+    assert.match(src, /!isFromDocument\(origin\?\.source\) \|\| !missing\.length/,
       "the not-answered block is not gated to document-sourced strategies");
   });
 

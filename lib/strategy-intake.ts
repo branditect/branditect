@@ -17,8 +17,20 @@
  */
 import { QUESTIONS, type Question } from "./onboarding-questions.ts";
 
-/** How a strategy row came to exist. Stored in brand_strategies.source. */
-export type StrategySource = "questionnaire" | "document";
+/**
+ * How a strategy row came to exist. Stored in brand_strategies.source, which
+ * already existed with a CHECK constraint allowing exactly these three — an
+ * `ADD COLUMN IF NOT EXISTS source` did nothing, and the first save failed on
+ * `brand_strategies_source_check`. The vocabulary is the table's, not ours.
+ */
+export type StrategySource = "questionnaire" | "paste" | "pdf";
+
+/** The two that mean "read out of something the founder already had". */
+export const DOCUMENT_SOURCES: StrategySource[] = ["paste", "pdf"];
+
+export function isFromDocument(source: string | null | undefined): boolean {
+  return source === "paste" || source === "pdf";
+}
 
 /** One answer the document actually contains. */
 export interface ExtractedAnswer {

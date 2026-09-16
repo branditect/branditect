@@ -20,15 +20,15 @@ export async function POST(req: NextRequest) {
       category: string;
       existingText?: string;
       /**
-       * "document" when these answers were read out of a strategy the founder
+       * "paste" or "pdf" when these answers were read out of a strategy the founder
        * already had. It changes which rules the model gets, and that is the
        * whole difference between showing them their strategy and showing them
        * a strategy: see STRATEGY_FROM_DOCUMENT_STABLE.
        */
-      source?: "questionnaire" | "document";
+      source?: "questionnaire" | "paste" | "pdf";
     } = body;
 
-    const fromDocument = source === "document";
+    const fromDocument = source === "paste" || source === "pdf";
 
     const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
 

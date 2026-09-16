@@ -6,7 +6,7 @@
  * Studio ▸ Write, Create images and AI Chat all read these fields.
  */
 import { translate, type StringKey, type Vars } from "./i18n/index.ts";
-import type { Provenance, StrategySource } from "./strategy-intake.ts";
+import { isFromDocument, type Provenance, type StrategySource } from "./strategy-intake.ts";
 
 type Tr = (key: StringKey, vars?: Vars) => string;
 const EN: Tr = (key, vars) => translate("en", key, vars);
@@ -208,7 +208,7 @@ export function missingQuestionsFor(id: SectionDef["id"], origin: StrategyOrigin
 
 /** The sentences this section's content was read out of, in document order. */
 export function quotesFor(id: SectionDef["id"], origin: StrategyOrigin | null): { n: number; quote: string; page: number | null }[] {
-  if (!origin || origin.source !== "document") return [];
+  if (!origin || !isFromDocument(origin.source)) return [];
   return (SECTION_QUESTIONS[id as DocSectionId] ?? [])
     .map((n) => ({ n, entry: origin.provenance[n] }))
     .filter((x): x is { n: number; entry: { quote: string; page?: number | null } } => Boolean(x.entry?.quote))

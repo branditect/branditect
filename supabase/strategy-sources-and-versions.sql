@@ -14,8 +14,13 @@
 --   2. "Start fresh" — a redo must not destroy the strategy that is live.
 --      Versions, archived on finish, never on start.
 
+-- `source` ALREADY EXISTED, with a CHECK constraint. This ADD COLUMN is a
+-- no-op on any database that has it, and the constraint allows exactly
+-- 'questionnaire', 'paste' and 'pdf'. Saving with 'document' was rejected at
+-- runtime with brand_strategies_source_check, which is why the code writes
+-- 'paste' for pasted text and 'pdf' for an uploaded file. Do not add a fourth
+-- value here without widening the constraint in the same breath.
 ALTER TABLE brand_strategies ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'questionnaire';
-COMMENT ON COLUMN brand_strategies.source IS '''questionnaire'' or ''document''';
 
 -- Per answer: { "<question key>": { "quote": "...", "page": 3 } }. Empty for
 -- an answer somebody typed.

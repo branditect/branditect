@@ -78,7 +78,9 @@ export default function ReviewExtraction() {
     try {
       await flush();
       const res = await authedJson("/api/strategy-intake", "POST", {
-        source: "document",
+        // The table stores how it arrived: a file is "pdf", pasted text is
+        // "paste". See brand_strategies_source_check.
+        source: handoff.documentId ? "pdf" : "paste",
         answers: answersOf(confirmed),
         provenance: provenanceOf(confirmed),
         sourceDocumentId: handoff.documentId,

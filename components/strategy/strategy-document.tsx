@@ -1,5 +1,6 @@
 "use client";
 
+import { isFromDocument } from "@/lib/strategy-intake";
 import { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import {
@@ -101,7 +102,7 @@ function NotAnswered({ def, empty }: { def: SectionDef; empty: boolean }) {
   // Only for a strategy read from a document. A questionnaire strategy renders
   // exactly as it always has: its gaps already have the example prompts, and
   // this feature is not an excuse to redesign that screen underneath anyone.
-  if (origin?.source !== "document" || !missing.length) return null;
+  if (!isFromDocument(origin?.source) || !missing.length) return null;
 
   return (
     <div className={s.notAnswered}>
@@ -123,7 +124,7 @@ function Section({ def, onEdit, children }: { def: SectionDef; onEdit: (id: stri
   // A strategy read from a document shows what the document said and nothing
   // else: where there is no content, the example prompts inside `children`
   // are suppressed and the questions take their place.
-  const empty = origin?.source === "document" && !def.hasAny(strategy);
+  const empty = isFromDocument(origin?.source) && !def.hasAny(strategy);
   return (
     <section className={s.sec}>
       <SecHead def={def} onEdit={onEdit} />
@@ -174,7 +175,7 @@ export default function StrategyDocument({
     <div className={s.wrap}>
       {/* Said once at the top, so the whole page is read in the right light:
           this is the founder's own document, not something generated. */}
-      {origin?.source === "document" && (
+      {isFromDocument(origin?.source) && (
         <p className={s.readFrom}>{t("strategyDoc.readFromDocument")}</p>
       )}
       {/* ============ HERO ============ */}

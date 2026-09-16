@@ -628,6 +628,23 @@ describe("the width toggle", () => {
     assert.match(block, /overflow:\s*hidden/);
   });
 
+  it("the text runs the width of the page, like a note in a notes app", () => {
+    // "It still aligns very thin on the left side. Make it match the notes app
+    // layout more." The body was capped at 760px, so a third of a wide pane
+    // stayed empty and the writing read as a column pinned to the left.
+    const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
+    const body = css.slice(css.indexOf(".body {"), css.indexOf("}", css.indexOf(".body {")));
+    assert.match(body, /max-width:\s*none/, "the note text is capped inside its pane again");
+  });
+
+  it("a one-line paragraph is one line tall", () => {
+    // rows={3} was the size, not the floor, so every short block reserved
+    // three lines and put a hole between paragraphs once the box grew to fit.
+    const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
+    assert.match(page, /rows=\{1\}/);
+    assert.ok(!/rows=\{b\.kind === "heading" \? 1 : 3\}/.test(page), "blocks reserve three rows again");
+  });
+
   it("half is a fixed column, not a percentage", () => {
     const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
     const half = css.slice(css.indexOf(".half {"), css.indexOf("}", css.indexOf(".half {")));

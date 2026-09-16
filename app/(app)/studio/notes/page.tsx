@@ -449,7 +449,11 @@ export default function NotesPage() {
                       onChange={(e) => editBlock(i, e.target.value)}
                       placeholder={b.kind === "heading" ? t("notes.heading") : b.kind === "list" ? t("tone.oneItemPerLine") : t("nav.studio.write")}
                       aria-label={t(BLOCK_ARIA[b.kind])}
-                      rows={b.kind === "heading" ? 1 : 3}
+                      /* One row is the floor, not the size: AutoTextarea grows
+                         the box to its text, so rows={3} reserved three lines
+                         for a one-line paragraph and put a hole between every
+                         block. */
+                      rows={1}
                       onKeyDown={(e) => onBlockKeyDown(e, i)}
                       onFocus={() => setFocused(i)}
                     />

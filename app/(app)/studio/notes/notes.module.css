@@ -39,9 +39,11 @@
   color: theme('colors.muted.2'); line-height: 1.45; white-space: pre-wrap; flex: 1; }
 .cardDate { font-size: 10px; font-weight: 700; color: theme('colors.faint.DEFAULT'); }
 
+/* Room to breathe on both sides, and room under the last line: a notes app
+ * lets you click below the text and keep writing. */
 .right { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto;
   background: theme('colors.card'); border: 1px solid theme('colors.rule.DEFAULT');
-  border-radius: 18px; box-shadow: theme('dropShadow.panel'); padding: 20px 24px; }
+  border-radius: 18px; box-shadow: theme('dropShadow.panel'); padding: 20px 30px 44px; }
 
 .toolbar { display: flex; align-items: center; gap: 6px; padding-bottom: 10px;
   border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
@@ -64,7 +66,11 @@
 /* display: block, not flex. Floats do not apply to flex items, so a
  * half-width image could never have text beside it however the figure was
  * styled. Spacing is margin now, because gap needs a flex or grid container. */
-.body { display: block; max-width: 760px; }
+/* The text runs the width of the page, the way a note in a notes app does.
+ * It was capped at 760px, which left a third of a wide pane empty and made
+ * the writing look like a column pinned to the left edge. Readability comes
+ * from the pane's own padding now, not from a cap inside it. */
+.body { display: block; max-width: none; }
 .body::after { content: ""; display: block; clear: both; }
 /* THE WRAPPER IS THE BLOCK BOX. It establishes its own formatting context, so
  * it sits BESIDE a floated image rather than under it: a block box that starts
@@ -75,10 +81,10 @@
  * textarea is a replaced element, so width:auto is its own intrinsic width,
  * about twenty characters — which is exactly what "the text aligns very thin
  * on the left side" was. */
-.blockWrap { display: flow-root; margin: 0 0 14px; }
+.blockWrap { display: flow-root; margin: 0 0 13px; }
 .block { box-sizing: border-box; display: block; width: 100%; overflow: hidden;
   margin: 0; resize: none; border: none; padding: 0;
-  font-size: 15px; font-weight: 400; line-height: 1.7;
+  font-size: 15px; font-weight: 400; line-height: 1.62;
   color: theme('colors.ink.DEFAULT'); background: transparent; font-family: inherit; }
 .block:focus { outline: none; }
 .heading { font-size: 17px; font-weight: 800; letter-spacing: -.3px;

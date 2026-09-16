@@ -288,9 +288,19 @@ describe("the document mode does not write a strategy", () => {
       "the questionnaire rule that fills every field has leaked into the document mode");
   });
 
-  it("while the questionnaire mode is untouched", () => {
-    assert.match(STRATEGY_STABLE, /Fill every field with specific content/);
-    assert.match(STRATEGY_STABLE, /Generate exactly: 2 personas/);
+  it("while the questionnaire mode still builds a whole strategy", () => {
+    // The old assertions pinned two literal sentences: "Fill every field with
+    // specific content" and "Generate exactly: 2 personas". Both are gone on
+    // purpose. "Fill every field" is what made a thin questionnaire produce an
+    // invented strategy, and a hard count is what padded a two-competitor
+    // market to three. The distinction this suite exists to protect is not
+    // those sentences — it is that questionnaire mode SYNTHESISES where
+    // document mode may only restructure, so that is what is asserted.
+    assert.notEqual(STRATEGY_STABLE, STRATEGY_FROM_DOCUMENT_STABLE);
+    assert.ok(!/LEAVE IT EMPTY/.test(STRATEGY_STABLE),
+      "the questionnaire prompt has been given the document mode's rules");
+    assert.ok(!/There are NO required counts/.test(STRATEGY_STABLE));
+    assert.match(STRATEGY_STABLE, /strateg/i, "the questionnaire prompt no longer asks for a strategy");
   });
 
   it("both describe the same JSON, from one copy", () => {

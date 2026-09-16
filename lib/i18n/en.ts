@@ -2784,6 +2784,15 @@ export const en = {
   "docs.downloadFailed": "Could not open the file: {message}",
   "docs.close": "Close",
   "docs.openInNewTab": "Open in a new tab",
+
+  // ── Andy introduces himself in the rail ── 2026-09-16, Finnish mine.
+  "chatRail.andyIntro1":
+    "Hi, I’m Andy. Ask me anything about your brand, your products or your numbers.",
+  "chatRail.andyIntro2":
+    "Writing content, or anything longer? Studio ▸ Write does that. I am here for the questions.",
+  "chatRail.andyIntro3":
+    "I answer from your own knowledge and nothing else: {count} files indexed so far.",
+  "chatRail.andyIntro4": "Like an answer? Save it straight to your notes.",
 } as const;
 
 export type StringKey = keyof typeof en;

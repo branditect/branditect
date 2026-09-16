@@ -85,7 +85,9 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
 
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center gap-[7px]">
-          <h3 className="text-[18px] font-bold tracking-[-.4px]">{t("chat.title")}</h3>
+          {/* His name, where a name belongs. The landmark above is still
+              "AI Chat", which is what the nav calls this surface. */}
+          <h3 className="text-[18px] font-bold tracking-[-.4px]">{t("andy.name")}</h3>
           <span aria-hidden="true" className="text-sm text-[#8b6bd8]">✦</span>
           <Link
             href="/chat"
@@ -100,14 +102,23 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
           <span className="text-micro font-bold tracking-[1px] text-ink-3">{t("chatRail.trained")}</span>
         </div>
 
-        <p className="mt-[7px] text-xs font-normal leading-[1.45] text-muted-2">
-          {t("chatRail.readsEverything")}{" "}
-          {(() => {
-            // The count keeps its tabular figures, wherever the sentence puts it.
-            const [before, after = ""] = t("chatRail.filesIndexed").split("{count}");
-            return <>{before}<span className="tabular-nums">{indexedFileCount}</span>{after}</>;
-          })()}
-        </p>
+        {/* Who he is, what he is for, where he gets his answers, and what you
+            can do with one. Before the first question only: once someone is
+            talking to him, an introduction is in the way. */}
+        {!started && (
+          <div className="mt-[9px] flex flex-col gap-[7px] text-xs font-normal leading-[1.45] text-muted-2">
+            <p className="font-semibold text-ink-2">{t("chatRail.andyIntro1")}</p>
+            <p>{t("chatRail.andyIntro2")}</p>
+            <p>
+              {(() => {
+                // The count keeps its tabular figures, wherever the sentence puts it.
+                const [before, after = ""] = t("chatRail.andyIntro3").split("{count}");
+                return <>{before}<span className="tabular-nums">{indexedFileCount}</span>{after}</>;
+              })()}
+            </p>
+            <p>{t("chatRail.andyIntro4")}</p>
+          </div>
+        )}
 
         {/* Suggestions seed the input rather than navigating away. */}
         {!started && (

@@ -88,3 +88,36 @@ describe("an answer from AI Chat can be copied or kept", () => {
     assert.equal(fi["notes.untitled"], "Nimetön");
   });
 });
+
+describe("Andy says who he is before the first question", () => {
+  const rail = readFileSync("components/chat-rail.tsx", "utf8");
+
+  it("the rail carries his name and his introduction", () => {
+    assert.match(rail, /t\("andy\.name"\)/);
+    for (const k of ["chatRail.andyIntro1", "chatRail.andyIntro2", "chatRail.andyIntro3", "chatRail.andyIntro4"]) {
+      assert.ok(rail.includes(`"${k}"`), `the rail does not render ${k}`);
+    }
+  });
+
+  it("the introduction says all four things it is for", () => {
+    const all = ["chatRail.andyIntro1", "chatRail.andyIntro2", "chatRail.andyIntro3", "chatRail.andyIntro4"]
+      .map((k) => en[k as keyof typeof en]).join(" ");
+    assert.match(all, /Andy/, "he does not introduce himself by name");
+    assert.match(all, /Studio/, "long-form writing is not sent to Studio");
+    assert.match(all, /\{count\} files indexed/, "it does not say what it reads from");
+    assert.match(all, /notes/i, "it does not say an answer can be kept");
+  });
+
+  it("and it is out of the way once the conversation starts", () => {
+    assert.match(rail, /\{!started && \(\s*<div className="mt-\[9px\]/);
+  });
+
+  it("in Finnish too, with the placeholder intact", () => {
+    for (const k of ["chatRail.andyIntro1", "chatRail.andyIntro2", "chatRail.andyIntro3", "chatRail.andyIntro4"] as const) {
+      assert.ok(fi[k]?.trim(), `${k} has no Finnish`);
+      assert.notEqual(en[k], fi[k]);
+      assert.equal(/\{count\}/.test(en[k]), /\{count\}/.test(fi[k]), `${k} placeholders differ`);
+    }
+    assert.match(fi["chatRail.andyIntro1"], /Andy/);
+  });
+});

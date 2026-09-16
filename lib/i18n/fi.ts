@@ -2838,4 +2838,12 @@ export const fi: Record<StringKey, string> = {
   "docs.downloadFailed": "Tiedoston avaaminen epäonnistui: {message}",
   "docs.close": "Sulje",
   "docs.openInNewTab": "Avaa uuteen välilehteen",
+
+  // ── Andy introduces himself in the rail ── 2026-09-16, Finnish mine.
+  "chatRail.andyIntro1":
+    "Hei, olen Andy. Kysy minulta mitä vain brändistäsi, tuotteistasi tai luvuistasi.",
+  "chatRail.andyIntro2":
+    "Haluatko kirjoittaa sisältöä tai jotain pidempää? Studio ▸ Kirjoita hoitaa sen. Minä olen kysymyksiä varten.",
+  "chatRail.andyIntro3": "Vastaan vain sinun omasta tiedostasi: {count} tiedostoa indeksoitu.",
+  "chatRail.andyIntro4": "Jos vastaus on hyvä, tallenna se suoraan muistiinpanoihisi.",
 };

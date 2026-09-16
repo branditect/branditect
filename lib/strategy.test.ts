@@ -7,8 +7,11 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { QUESTIONS } from "./onboarding-questions.ts";
 import {
-  EMPTY_STRATEGY, SECTIONS, completeness, firstIncompleteSection,
+  EMPTY_STRATEGY, SECTIONS, SECTION_QUESTIONS, missingQuestionsFor, quotesFor,
+  completeness, firstIncompleteSection,
   pillarsMissingProof, derivePyramid, generateSummary, summaryText,
   parseStrategy, strategyPromptContext, primarySegment,
   isLegacyStrategy, migrateLegacyStrategy, readStrategy,
@@ -371,5 +374,129 @@ describe("the strategy document renders from keys", () => {
     const fiText = generateSummary(filled(), fiT).map((p) => p.text).join("");
     assert.ok(!/What makes it different|deliberately not for|The promise is|Proof:|It behaves by/.test(fiText), fiText);
     assert.ok(generateSummary(filled(), fiT).some((p) => p.strong && p.text.includes("Science-based")));
+  });
+});
+
+/* ── A strategy the founder brought themselves ─────────────────────────────
+ *
+ * branditect-ui/spec/strategy-in-and-again.md. The rule: a strategy read from
+ * a document shows what the document said and nothing else. A section it does
+ * not answer stays a question, never an example of someone else's answer.
+ */
+
+const read = (f: string) => readFileSync(f, "utf8");
+const DOC = "components/strategy/strategy-document.tsx";
+const FRESH = "components/strategy/start-fresh.tsx";
+const code = (f: string) =>
+  read(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+describe("every section says which questions would fill it", () => {
+  it("names real questions, for every section on the page", () => {
+    for (const sec of SECTIONS) {
+      const asked = SECTION_QUESTIONS[sec.id as keyof typeof SECTION_QUESTIONS];
+      assert.ok(asked?.length, `${sec.id} has no questions behind it`);
+      for (const n of asked) {
+        assert.ok(QUESTIONS.some((q) => q.n === n), `${sec.id} names question ${n}, which does not exist`);
+      }
+    }
+  });
+
+  it("a question with no answer is still open, whichever row answered it", () => {
+    const origin = { source: "document" as const, provenance: {}, answered: [1, 4] };
+    // core asks 1, 4, 6 and 13; two are answered, so two remain.
+    assert.deepEqual(missingQuestionsFor("core", origin), [6, 13]);
+    // Nothing is claimed when there is no strategy row to read.
+    assert.deepEqual(missingQuestionsFor("core", null), []);
+  });
+
+  it("the quotes shown on a section are the ones it was read from", () => {
+    const origin = {
+      source: "document" as const,
+      answered: [1, 6],
+      provenance: { 1: { quote: "We started after a spill.", page: 2 }, 6: { quote: "Absorbent granules.", page: null } },
+    };
+    assert.deepEqual(quotesFor("core", origin), [
+      { n: 1, quote: "We started after a spill.", page: 2 },
+      { n: 6, quote: "Absorbent granules.", page: null },
+    ]);
+    // A questionnaire strategy has no document to quote.
+    assert.deepEqual(quotesFor("core", { ...origin, source: "questionnaire" }), []);
+  });
+});
+
+describe("a document-sourced section is never filled with an example", () => {
+  it("hasAny separates empty from incomplete, for every section", () => {
+    // isFilled means complete; a half-answered section must still show what it
+    // has. Nothing in EMPTY_STRATEGY has content, so nothing claims any.
+    for (const sec of SECTIONS) {
+      assert.equal(sec.hasAny(EMPTY_STRATEGY), false, `${sec.id} claims content when empty`);
+    }
+    const f = filled();
+    for (const sec of SECTIONS) {
+      assert.equal(sec.hasAny(f), true, `${sec.id} finds no content in a filled strategy`);
+    }
+  });
+
+  it("the document suppresses the example prompts when the section is empty", () => {
+    const src = code(DOC);
+    assert.match(src, /origin\?\.source === "document" && !def\.hasAny\(strategy\)/,
+      "the section does not decide emptiness from the strategy and its source");
+    assert.match(src, /\{!empty && children\}/,
+      "an empty document-sourced section still renders its example prompt");
+    assert.match(src, /<NotAnswered def=\{def\} empty=\{empty\}/);
+  });
+
+  it("a questionnaire strategy renders exactly as it did before", () => {
+    // The feature must not redesign the questionnaire screen underneath anyone:
+    // no "still open" block, no quotes, and its own example prompts intact.
+    const src = code(DOC);
+    assert.match(src, /origin\?\.source !== "document" \|\| !missing\.length/,
+      "the not-answered block is not gated to document-sourced strategies");
+  });
+
+  it("and shows the sentence each answer was read from", () => {
+    const src = code(DOC);
+    assert.match(src, /quotesFor\(def\.id, origin\)/);
+    assert.match(src, /t\("strategyDoc\.fromYourDocument"\)/);
+  });
+});
+
+describe("start fresh says what it touches, and does nothing until it is finished", () => {
+  it("carries all three lines", () => {
+    const src = read(FRESH);
+    for (const key of ["freshStart.replaces", "freshStart.doesNotTouch", "freshStart.staysLive"]) {
+      assert.ok(src.includes(`t("${key}")`), `${key} is not on the screen`);
+    }
+  });
+
+  it("the 'does not touch' line cannot quietly go", () => {
+    // Criterion 14. This is the line that makes the difference between "redo my
+    // strategy" and "delete my account" legible, and it is the one that would
+    // be dropped first in a tidy-up.
+    const src = read(FRESH);
+    assert.ok(src.includes('t("freshStart.doesNotTouch")'),
+      "the line saying what starting fresh does NOT touch has been removed");
+  });
+
+  it("offers both ways back in", () => {
+    const src = read(FRESH);
+    assert.match(src, /href="\/start"/, "no way back to the questionnaire");
+    assert.match(src, /href="\/start\/strategy"/, "no way to bring a new document");
+  });
+
+  it("writes nothing: starting a redo must change nothing", () => {
+    // Criterion 8, a merge blocker. A redo that takes effect on the first click
+    // destroys a working strategy for anyone who is interrupted. Both controls
+    // are links; the new strategy replaces the old one only when it is finished.
+    const src = code(FRESH);
+    for (const write of ["supabase", "authedFetch", "authedJson", "fetch(", ".update(", ".insert(", ".delete("]) {
+      assert.ok(!src.includes(write), `start fresh calls ${write} — it must only navigate`);
+    }
+  });
+
+  it("sits under the strategy, not beside Save", () => {
+    const page = code("app/(app)/brand/strategy/page.tsx");
+    assert.match(page, /footer=\{<StartFresh \/>\}/,
+      "start fresh is not rendered at the foot of the document");
   });
 });

@@ -301,3 +301,39 @@
 .emptyNote { margin-top: 12px; font-size: theme('fontSize.xs[0]'); font-weight: 500;
   color: theme('colors.muted.2'); line-height: 1.5; background: theme('colors.tile.DEFAULT');
   border-radius: theme('borderRadius.tile'); padding: 10px 12px; }
+
+/* ── A strategy read from the founder's own document ─────────────────────── */
+
+/* Said once, at the top. Quiet: it frames the page, it is not a banner. */
+.readFrom { margin: 0 0 14px; font-size: theme('fontSize.xs[0]'); font-weight: 600;
+  color: theme('colors.muted.DEFAULT'); }
+
+/* The sentences a section was read out of, on the section rather than in a
+ * footnote: an extracted answer the founder cannot tell from one they wrote
+ * becomes a positioning they never chose. */
+.sourced { margin-top: 12px; border-left: 2px solid theme('colors.rule.2'); padding: 2px 0 2px 12px; }
+.sourced .lab { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: .6px;
+  text-transform: uppercase; color: theme('colors.faint.DEFAULT'); }
+.sourced ul { margin: 6px 0 0; padding: 0; list-style: none; display: flex;
+  flex-direction: column; gap: 6px; }
+.sourced li { font-size: theme('fontSize.xs[0]'); font-weight: 500; line-height: 1.55;
+  color: theme('colors.ink.2'); }
+.sourced .pg { margin-left: 8px; font-size: theme('fontSize.2xs[0]'); font-weight: 700;
+  color: theme('colors.faint.DEFAULT'); }
+
+/* What the document did not answer, as questions. Never an example of what
+ * someone else's answer might look like. */
+.notAnswered { margin-top: 12px; border: 1px dashed theme('colors.rule.2');
+  border-radius: theme('borderRadius.card'); background: theme('colors.tile.DEFAULT');
+  padding: 14px 16px; }
+.notAnswered .lab { font-size: theme('fontSize.2xs[0]'); font-weight: 800; letter-spacing: .6px;
+  text-transform: uppercase; color: theme('colors.muted.2'); }
+.notAnswered .int { margin: 6px 0 0; font-size: theme('fontSize.xs[0]'); font-weight: 600;
+  color: theme('colors.ink.2'); }
+.notAnswered ul { margin: 8px 0 0; padding: 0 0 0 18px; display: flex;
+  flex-direction: column; gap: 5px; }
+.notAnswered li { font-size: theme('fontSize.xs[0]'); font-weight: 500; line-height: 1.5;
+  color: theme('colors.muted.DEFAULT'); }
+.notAnswered .go { display: inline-block; margin-top: 10px; font-size: theme('fontSize.xs[0]');
+  font-weight: 700; color: theme('colors.accent.dark'); }
+.notAnswered .go:hover { text-decoration: underline; }

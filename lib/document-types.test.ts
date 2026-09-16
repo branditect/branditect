@@ -19,6 +19,7 @@ describe("every type maps to a category", () => {
     contract: "company-info",
     presentation: "presentations",
     brand_guideline: "company-info",
+    strategy: "company-info",
     other: "other",
   };
 

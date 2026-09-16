@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
-import { STRATEGY_STABLE } from "@/lib/prompts";
+import { STRATEGY_STABLE, STRATEGY_FROM_DOCUMENT_STABLE } from "@/lib/prompts";
 
 export const maxDuration = 60;
 
@@ -14,11 +14,21 @@ export async function POST(req: NextRequest) {
       answers,
       category,
       existingText,
+      source,
     }: {
       answers: Record<string, string>;
       category: string;
       existingText?: string;
+      /**
+       * "document" when these answers were read out of a strategy the founder
+       * already had. It changes which rules the model gets, and that is the
+       * whole difference between showing them their strategy and showing them
+       * a strategy: see STRATEGY_FROM_DOCUMENT_STABLE.
+       */
+      source?: "questionnaire" | "document";
     } = body;
+
+    const fromDocument = source === "document";
 
     const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
 
@@ -50,7 +60,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    userText += "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
+    userText += fromDocument
+      // No "complete", and no "create". Asking for a complete strategy is
+      // asking for the missing two thirds to be written, which is exactly what
+      // this mode exists to prevent.
+      ? "\nRestructure ONLY what is above into the JSON object. Leave every field the input does not support empty: \"\" for a string, [] for a list. Do not add personas, competitors, pillars or taglines that are not in the input. Return ONLY the JSON object."
+      : "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
 
     contentBlocks.push({ type: "text", text: userText });
 
@@ -62,7 +77,7 @@ export async function POST(req: NextRequest) {
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
       max_tokens: 6000,
-      system: cachedSystem(STRATEGY_STABLE),
+      system: cachedSystem(fromDocument ? STRATEGY_FROM_DOCUMENT_STABLE : STRATEGY_STABLE),
       messages: [{ role: "user", content: contentBlocks }],
     });
 
@@ -75,7 +90,9 @@ export async function POST(req: NextRequest) {
 
           for await (const event of stream) {
             // message_start is where a streamed call reports its cache numbers.
-            if (event.type === "message_start") logCacheUsage("brand-strategy", event.message.usage);
+            if (event.type === "message_start") {
+              logCacheUsage(fromDocument ? "brand-strategy-document" : "brand-strategy", event.message.usage);
+            }
             if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
               fullText += event.delta.text;
               // Send each chunk as a SSE-style message

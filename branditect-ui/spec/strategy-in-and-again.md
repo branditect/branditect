@@ -210,3 +210,53 @@ Diffing two strategy versions side by side, merging an uploaded document into an
 rather than starting one, extracting from a URL or a Google Doc, scheduled strategy reviews, or
 letting Studio rewrite the strategy itself. The strategy is the thing the founder decides; everything
 else in the app is downstream of it, and an app that edits it on its own has inverted the product.
+
+---
+
+## BUILT 2026-09-16 — parts 1 and 2, minus the budget and the voice inference
+
+Asked for directly: "an option saying I already have a strategy, upload it as a
+PDF or copy paste it as text; the strategy shown must be a 100% match to that
+content, so only fill the sections the client has provided information on", and
+a control at the bottom of Brand ▸ Strategy to start fresh or upload a new one.
+
+**Part 1.** The three doors are on `/start`. `/start/strategy` takes a PDF or
+pasted text; a PDF goes through the existing Knowledge ▸ Documents upload and
+`/api/vault/extract`, so the file lands in Documents with the new
+`doc_type: 'strategy'` rather than in a store of its own.
+`/api/strategy-extract` asks only for what the document answers, with a verbatim
+quote per answer, and the route then checks every quote against the source text
+and drops what it cannot find: a paraphrase costs the answer. `/start/strategy/review`
+shows every extracted answer with its sentence and page, editable, and every
+unanswered question as a question. Nothing is written until it is confirmed;
+`/api/strategy-intake` then writes the strategy row and mirrors the answers into
+`onboarding`, filling blanks only, so `/start` asks just what is missing.
+
+Criteria 1, 2, 3, 4 and 7 hold. **Criterion 5 (voice proposed from the prose)
+and criterion 6 (budget reserved before page one) are NOT built.** Extraction
+spends model tokens with no estimate and no reservation.
+
+**Part 2.** `supabase/strategy-sources-and-versions.sql` adds source,
+provenance, source_document_id, version, is_current, replaced_at, backfills
+existing rows and creates the partial unique index. Start fresh sits at the foot
+of Brand ▸ Strategy with the three lines, and offers both the questionnaire and
+a new document. Both controls are links: starting a redo writes nothing, which
+is criterion 8 by construction rather than by care, and a test fails if the
+component ever gains a write. `archiveAndInsert` stands the old row down and
+inserts the new one in that order, restoring the old if the insert fails.
+
+Criteria 8, 9, 10, 11, 13 and 14 hold. **Criterion 12 (a previous version is
+readable and restorable from the screen) is only half built**: `restoreVersion`
+exists in `lib/strategy-versions.ts`, and the "Version 2 · replaced 4 March ·
+see version 1" line is not on the screen.
+
+**THE MIGRATION HAS NOT BEEN RUN.** Until it is, every new query returns 503
+naming the file, and the strategy screen degrades to exactly today's behaviour.
+The document-sourced rendering could therefore be verified by test and by source
+only, not in a browser.
+
+**Not "delete".** Saara's wording was "delete your strategy and start fresh".
+Nothing is deleted: the old version is kept and restorable, and the line above
+the buttons says the current strategy stays live until the new one is finished.
+A button reading "delete" over that behaviour would promise the opposite of what
+it does. Both routes she asked for are there.

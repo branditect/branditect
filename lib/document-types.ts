@@ -69,6 +69,11 @@ export const DOC_TYPES: DocType[] = [
     hints: /contract|agreement|quotation|quote|nda|terms|sopimus|tarjous/i },
   { id: "presentation", label: "Presentation", labelKey: "documents.type.presentation", category: "presentations", useInOutput: true,
     hints: /present|deck|slide|pitch|pptx|esitys/i },
+  // Before brand_guideline: "brand strategy.pdf" matches both, and order is
+  // the match order. A strategy uploaded through /start lands here too, so it
+  // is a document in the library like any other rather than a private store.
+  { id: "strategy", label: "Brand strategy", labelKey: "documents.type.strategy", category: "company-info", useInOutput: true,
+    hints: /strateg/i },
   { id: "brand_guideline", label: "Brand guideline", labelKey: "documents.type.brandGuideline", category: "company-info", useInOutput: true,
     hints: /brand|guideline|identity|style guide|logo|brandi/i },
   { id: "catalogue", label: "Catalogue", labelKey: "documents.type.catalogue", category: "product-info", useInOutput: true,

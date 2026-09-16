@@ -6,6 +6,7 @@
  * Studio ▸ Write, Create images and AI Chat all read these fields.
  */
 import { translate, type StringKey, type Vars } from "./i18n/index.ts";
+import type { Provenance, StrategySource } from "./strategy-intake.ts";
 
 type Tr = (key: StringKey, vars?: Vars) => string;
 const EN: Tr = (key, vars) => translate("en", key, vars);
@@ -98,7 +99,18 @@ export interface SectionDef {
   /** What renders. `title` and `why` stay the English. */
   titleKey: StringKey;
   whyKey: StringKey;
+  /** Complete: everything this section needs is there. */
   isFilled: (s: BrandStrategy) => boolean;
+  /**
+   * Anything at all, which is a different question from complete.
+   *
+   * A strategy read out of a founder's own document fills some sections and
+   * not others. A half-filled section must still show what it has — hiding
+   * content because it is incomplete would be its own kind of lie — and an
+   * empty one must show the questions instead of an example. `isFilled`
+   * cannot tell those two apart; this can.
+   */
+  hasAny: (s: BrandStrategy) => boolean;
 }
 
 const has = (v: string | undefined | null) => Boolean(v && v.trim());
@@ -106,32 +118,102 @@ const has = (v: string | undefined | null) => Boolean(v && v.trim());
 export const SECTIONS: SectionDef[] = [
   { id: "core", no: "01", title: "Brand core", why: "The four answers everything else is built on",
     titleKey: "strategyDoc.sec.core", whyKey: "strategyDoc.why.core",
-    isFilled: (s) => has(s.core.whoWeAre) && has(s.core.whatWeDo) && has(s.core.whyWeExist) && has(s.core.promise) },
+    isFilled: (s) => has(s.core.whoWeAre) && has(s.core.whatWeDo) && has(s.core.whyWeExist) && has(s.core.promise),
+    hasAny: (s) => has(s.core.whoWeAre) || has(s.core.whatWeDo) || has(s.core.whyWeExist) || has(s.core.promise) },
   { id: "positioning", no: "02", title: "Positioning", why: "Where you sit, and who you are not for",
     titleKey: "strategyDoc.sec.positioning", whyKey: "strategyDoc.why.positioning",
-    isFilled: (s) => has(s.positioning.difference) && has(s.positioning.notFor) },
+    isFilled: (s) => has(s.positioning.difference) && has(s.positioning.notFor),
+    hasAny: (s) => Object.values(s.positioning).some(has) },
   { id: "audience", no: "03", title: "Audience", why: "Who decides, and where they decide it",
     titleKey: "strategyDoc.sec.audience", whyKey: "strategyDoc.why.audience",
-    isFilled: (s) => s.audience.length > 0 && s.audience.some((a) => a.isPrimary) },
+    isFilled: (s) => s.audience.length > 0 && s.audience.some((a) => a.isPrimary),
+    hasAny: (s) => s.audience.length > 0 },
   { id: "competitors", no: "04", title: "Competitive landscape", why: "The gap you are standing in",
     titleKey: "strategyDoc.sec.competitors", whyKey: "strategyDoc.why.competitors",
-    isFilled: (s) => s.competitors.length > 0 },
+    isFilled: (s) => s.competitors.length > 0,
+    hasAny: (s) => s.competitors.length > 0 },
   { id: "pillars", no: "05", title: "What makes us different", why: "Three claims, each with a fact behind it",
     titleKey: "sdoc.different", whyKey: "strategyDoc.why.pillars",
-    isFilled: (s) => s.pillars.length > 0 && s.pillars.every((p) => has(p.proof)) },
+    isFilled: (s) => s.pillars.length > 0 && s.pillars.every((p) => has(p.proof)),
+    hasAny: (s) => s.pillars.length > 0 },
   { id: "messages", no: "06", title: "Key messages", why: "What to say, matched to when they hear it",
     titleKey: "strategyDoc.sec.messages", whyKey: "strategyDoc.why.messages",
-    isFilled: (s) => has(s.messages.tagline) && s.messages.supporting.length > 0 },
+    isFilled: (s) => has(s.messages.tagline) && s.messages.supporting.length > 0,
+    hasAny: (s) => has(s.messages.tagline) || s.messages.supporting.length > 0 },
   { id: "principles", no: "07", title: "Brand principles", why: "How the brand behaves",
     titleKey: "strategyDoc.sec.principles", whyKey: "strategyDoc.why.principles",
-    isFilled: (s) => s.principles.length > 0 },
+    isFilled: (s) => s.principles.length > 0,
+    hasAny: (s) => s.principles.length > 0 },
   { id: "boundaries", no: "08", title: "Boundaries", why: "The section that stops the AI writing the wrong thing",
     titleKey: "strategyDoc.sec.boundaries", whyKey: "strategyDoc.why.boundaries",
-    isFilled: (s) => s.boundaries.never.length > 0 && s.boundaries.always.length > 0 },
+    isFilled: (s) => s.boundaries.never.length > 0 && s.boundaries.always.length > 0,
+    hasAny: (s) => Object.values(s.boundaries).some((v) => v.length > 0) },
   { id: "focus", no: "09", title: "Strategic focus", why: "What this year is actually for",
     titleKey: "strategyDoc.sec.focus", whyKey: "strategyDoc.why.focus",
-    isFilled: (s) => has(s.focus.goal) && s.focus.priorities.length > 0 },
+    isFilled: (s) => has(s.focus.goal) && s.focus.priorities.length > 0,
+    hasAny: (s) => has(s.focus.goal) || s.focus.priorities.length > 0 },
 ];
+
+/* ── Where a section's content comes from ───────────────────────────────── */
+
+/**
+ * The questions behind each section of the document.
+ *
+ * This exists so an empty section can say WHICH questions would fill it
+ * instead of showing an example of what someone else's answer might look
+ * like. Numbers are the stable `n` from lib/onboarding-questions.ts and are
+ * never renumbered.
+ *
+ * A question appears under more than one section on purpose: Q7 "what do you
+ * do differently" feeds both the positioning line and the pillars, and asking
+ * it once fills both.
+ */
+export type DocSectionId =
+  | "core" | "positioning" | "audience" | "competitors" | "pillars"
+  | "messages" | "principles" | "boundaries" | "focus";
+
+export const SECTION_QUESTIONS: Record<DocSectionId, number[]> = {
+  core: [1, 4, 6, 13],
+  positioning: [2, 7, 9, 15],
+  audience: [11, 12, 14],
+  competitors: [9, 10],
+  pillars: [7, 8],
+  messages: [6, 16],
+  principles: [4, 17],
+  boundaries: [5, 18, 19],
+  focus: [3],
+};
+
+/** How this strategy came to exist, and the receipts for each answer. */
+export interface StrategyOrigin {
+  source: StrategySource;
+  provenance: Provenance;
+  /** Question numbers that have an answer, however it arrived. */
+  answered: number[];
+}
+
+/**
+ * The questions a section still has no answer to.
+ *
+ * Read from the answers rather than from the rendered content: a section can
+ * look full and still rest on two answers out of four, and the founder is
+ * owed the difference.
+ */
+export function missingQuestionsFor(id: SectionDef["id"], origin: StrategyOrigin | null): number[] {
+  const asked = SECTION_QUESTIONS[id as DocSectionId] ?? [];
+  if (!origin) return [];
+  const answered = new Set(origin.answered);
+  return asked.filter((n) => !answered.has(n));
+}
+
+/** The sentences this section's content was read out of, in document order. */
+export function quotesFor(id: SectionDef["id"], origin: StrategyOrigin | null): { n: number; quote: string; page: number | null }[] {
+  if (!origin || origin.source !== "document") return [];
+  return (SECTION_QUESTIONS[id as DocSectionId] ?? [])
+    .map((n) => ({ n, entry: origin.provenance[n] }))
+    .filter((x): x is { n: number; entry: { quote: string; page?: number | null } } => Boolean(x.entry?.quote))
+    .map((x) => ({ n: x.n, quote: x.entry.quote, page: x.entry.page ?? null }));
+}
 
 /** Counts sections, never a percentage, and deliberately unrelated to Brand
  *  Readiness — that is four checks in lib/readiness.ts and stays the only score. */

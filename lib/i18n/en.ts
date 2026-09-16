@@ -17,6 +17,7 @@
 //   act of putting a panel away; if the English label changes to "Hide", the
 //   key does not move.
 
+
 export const en = {
   // ── Navigation ────────────────────────────────────────────────────────────
   "nav.home": "Home",
@@ -2661,6 +2662,111 @@ export const en = {
   "chatRail.noteFromChat": "From AI Chat",
   "chat.replyFailed": "Something went wrong.",
   "chat.connectionIssue": "Connection issue — please try again.",
+
+  // ══ BRING YOUR OWN STRATEGY, AND START FRESH ══ 2026-09-16.
+  // Finnish by Claude, for review, like the block above.
+
+  // ── Strategy intake: the server side ──
+  "intake.documentNotReadYet": "That document has not been read yet. Give it a moment and try again.",
+  "intake.tooShort": "There is not enough text here to read.",
+  "intake.unreadable": "Your strategy could not be read this time. Try again.",
+  "intake.readFailed": "Your strategy could not be read.",
+  "intake.nothingToSave": "There is nothing to save.",
+  "intake.migrationMissing":
+    "The strategy tables are missing their version columns. Run supabase/strategy-sources-and-versions.sql in the Supabase SQL editor.",
+  "intake.questionnaireNotUpdated":
+    "Your strategy was saved, but the questionnaire was not updated. Those questions may be asked again.",
+
+  // ── Strategy intake: the doors, the upload and the review ──
+  // ── The three doors ───────────────────────────────────────────────────────
+  "intake.door.answer": "Answer the questions",
+  "intake.door.answerNote": "About 15 minutes. Every question.",
+  "intake.door.have": "I already have a strategy",
+  "intake.door.haveNote": "Upload it. We read it and ask only what is missing.",
+  "intake.door.skip": "Skip for now",
+  "intake.door.skipNote": "Straight to the dashboard. Come back whenever.",
+  "intake.door.resume": "Pick up where you left off",
+
+  // ── Upload or paste ───────────────────────────────────────────────────────
+  "intake.bring.eyebrow": "Bring your own",
+  "intake.bring.heading": "We read it, then ask only what is missing.",
+  "intake.bring.lede":
+    "A strategy deck answers some of the questions and not others. We take what is in it, show you every answer with the sentence it came from, and leave the rest as questions.",
+  "intake.bring.foot":
+    "Nothing is saved until you have read what we found. A field your document does not answer stays a question.",
+  "intake.bring.title": "Bring the strategy you already have",
+  "intake.bring.uploadTab": "Upload a PDF",
+  "intake.bring.pasteTab": "Paste the text",
+  "intake.bring.chooseFile": "Choose a file",
+  "intake.bring.fileTypes": "PDF, up to 50 MB. It goes to Knowledge ▸ Documents as well.",
+  "intake.bring.pastePlaceholder": "Paste your strategy here. Positioning, audience, what you sell, what you will never claim…",
+  "intake.bring.pasteHelp": "Anything you have written down. The more of it, the fewer questions are left.",
+  "intake.bring.read": "Read my strategy",
+  "intake.bring.reading": "Reading your strategy…",
+  "intake.bring.readingSlow": "A long deck takes a couple of minutes. This page can stay open.",
+  "intake.bring.uploadingFile": "Uploading {name}…",
+  "intake.bring.extracting": "Reading the pages…",
+  "intake.bring.matching": "Matching it against the questions…",
+  "intake.bring.needText": "Add a file or paste some text first.",
+  "intake.bring.tooBig": "{name} is over 50 MB. Paste the text instead.",
+  "intake.bring.pdfOnly": "Upload a PDF, or paste the text instead.",
+  "intake.bring.failed": "Could not read that: {msg}",
+  "intake.bring.noText": "Nothing readable came out of that file. Paste the text instead.",
+
+  // ── Review ────────────────────────────────────────────────────────────────
+  "intake.review.eyebrow": "What we found",
+  "intake.review.heading": "Read this before it is saved.",
+  "intake.review.lede":
+    "Every answer below came out of your document, with the sentence it came from. Edit anything that is not right. An answer you never read becomes a positioning you never chose.",
+  "intake.review.foot": "Nothing here is saved until you press the button at the bottom.",
+  "intake.review.counter": "Review",
+  "intake.review.weRead": "We read your strategy. {answered} of {total} answered.",
+  "intake.review.foundNone": "We could not match anything in that document to the questions.",
+  "intake.review.foundNoneHelp":
+    "It happens with a deck that is mostly pictures. Answer the questions instead, or paste the text and try again.",
+  "intake.review.fromYourDocument": "From your document",
+  "intake.review.sourcePage": "page {page}",
+  "intake.review.sourceQuote": "Your document says",
+  "intake.review.stillToAnswer": "Still to answer",
+  "intake.review.stillToAnswerCount": "{count} questions the document does not answer",
+  "intake.review.stillToAnswerOne": "1 question the document does not answer",
+  "intake.review.notInDocument": "not in the document",
+  "intake.review.saveAndContinue": "Save these and answer the rest",
+  "intake.review.saveAndFinish": "Save these and open my workspace",
+  "intake.review.saving": "Saving…",
+  "intake.review.saveFailed": "Could not save: {msg}",
+  "intake.review.tryAgain": "Read a different document",
+  "intake.review.answerAll": "Answer the questions instead",
+  "intake.review.nothingToReview": "There is nothing to review yet.",
+  "intake.review.startOver": "Bring a strategy",
+  "intake.review.editAria": "Answer to question {n}",
+  "intake.review.timeLeft": "about {minutes} minutes",
+
+  // ── The document type ─────────────────────────────────────────────────────
+  "documents.type.strategy": "Brand strategy",
+
+  // ── Brand ▸ Strategy: what was read, and starting fresh ──
+  // ── A strategy read out of the founder's own document ──────────────────
+  "strategyDoc.fromYourDocument": "From your document",
+  "strategyDoc.readFromDocument": "Read from the strategy you uploaded. Nothing here was written for you.",
+  "strategyDoc.page": "page {page}",
+  "strategyDoc.notInDocument": "Not in your document",
+  "strategyDoc.answerToFill": "Answer these and this section fills in:",
+  "strategyDoc.answerThese": "Answer these questions",
+  "strategyDoc.stillOpen": "Still open:",
+
+  // ── Start fresh ────────────────────────────────────────────────────────
+  "freshStart.title": "Start fresh",
+  "freshStart.replaces":
+    "Starting fresh replaces your strategy answers, your generated strategy, your tone of voice and your anti-voice.",
+  "freshStart.doesNotTouch":
+    "It does not touch your products, your documents, your images, your numbers, or anything Studio has already written for you.",
+  "freshStart.staysLive":
+    "Your current strategy stays live until the new one is finished. Stop halfway and nothing has changed.",
+  "freshStart.questionnaire": "Start again with the questionnaire",
+  "freshStart.upload": "Replace it with a strategy document",
+  "freshStart.version": "Version {version}",
+  "freshStart.replacedOn": "replaced {date}",
 } as const;
 
 export type StringKey = keyof typeof en;

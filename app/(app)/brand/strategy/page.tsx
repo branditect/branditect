@@ -6,6 +6,11 @@ import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 import { QUESTIONS, type QuestionDef } from "@/lib/strategy-questions";
 import StrategyDocument from "@/components/strategy/strategy-document";
+import StartFresh from "@/components/strategy/start-fresh";
+import { loadOnboarding } from "@/lib/onboarding-db";
+import type { Provenance, StrategySource } from "@/lib/strategy-intake";
+import type { StrategyOrigin } from "@/lib/strategy";
+import type { Track } from "@/lib/onboarding-questions";
 import { readStrategy, completeness, EMPTY_STRATEGY, type BrandStrategy } from "@/lib/strategy";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import { useLocale } from "@/lib/i18n/use-t.tsx";
@@ -34,6 +39,13 @@ interface StrategyRecord {
   answers: Record<string, string>;
   generated_strategy: string;
   created_at: string;
+  /* Added by supabase/strategy-sources-and-versions.sql. Optional on purpose:
+     the migration is run by hand, and until it has been, `select("*")` simply
+     does not return these and the page renders exactly as it did before. */
+  source?: StrategySource | null;
+  provenance?: Provenance | null;
+  version?: number | null;
+  is_current?: boolean | null;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -220,12 +232,16 @@ export default function BrandStrategyPage() {
 
     const loadStrategy = async () => {
       try {
+        // Newest first, then the CURRENT one out of what came back. Ordering
+        // alone is not enough once versions exist: a restored older version is
+        // current without being newest. `is_current` is undefined until the
+        // migration has been run, and then newest is the right answer.
         const { data, error: dbError } = await supabase
           .from("brand_strategies")
           .select("*")
           .eq("brand_id", brandId)
           .order("created_at", { ascending: false })
-          .limit(1);
+          .limit(10);
 
         if (dbError) {
           console.error("Failed to load strategy:", dbError);
@@ -234,7 +250,8 @@ export default function BrandStrategyPage() {
         }
 
         if (data && data.length > 0) {
-          const record = data[0] as StrategyRecord;
+          const rows = data as StrategyRecord[];
+          const record = rows.find((r) => r.is_current === true) ?? rows[0];
           setStrategyRecord(record);
           setGeneratedStrategy(record.generated_strategy);
 
@@ -587,6 +604,49 @@ export default function BrandStrategyPage() {
       setStrategyDoc(readStrategy(strategyRecord.generated_strategy, strategyRecord.created_at));
     }
   }, [strategyRecord]);
+
+  /**
+   * Where this strategy came from, and which questions still have no answer.
+   *
+   * Answered numbers are the union of the questionnaire row and the strategy
+   * row: extraction writes the answers it found to brand_strategies, the
+   * remaining questions are answered in /start, and a section is only "still
+   * open" when neither has it.
+   */
+  const [origin, setOrigin] = useState<StrategyOrigin | null>(null);
+  const [track, setTrack] = useState<Track>("physical");
+
+  useEffect(() => {
+    if (!strategyRecord || !brandId || brandId === "default") return;
+    let alive = true;
+    (async () => {
+      const numeric = (o: Record<string, unknown> | null | undefined) =>
+        Object.entries(o ?? {})
+          .filter(([k, v]) => /^\d+$/.test(k) && typeof v === "string" && v.trim())
+          .map(([k]) => Number(k));
+
+      const { state } = await loadOnboarding(brandId);
+      if (!alive) return;
+      if (state.profile?.track) setTrack(state.profile.track);
+
+      const answered = new Set<number>([
+        ...numeric(strategyRecord.answers as Record<string, unknown>),
+        ...Object.entries(state.answers ?? {})
+          .filter(([, v]) => typeof v === "string" && v.trim())
+          .map(([k]) => Number(k))
+          .filter((n) => Number.isFinite(n)),
+      ]);
+
+      setOrigin({
+        // Undefined before the migration, which is the pre-feature behaviour:
+        // a questionnaire strategy, rendered exactly as it always has been.
+        source: strategyRecord.source === "document" ? "document" : "questionnaire",
+        provenance: (strategyRecord.provenance ?? {}) as Provenance,
+        answered: Array.from(answered),
+      });
+    })();
+    return () => { alive = false; };
+  }, [strategyRecord, brandId]);
 
 
   // Loading state
@@ -1059,6 +1119,12 @@ export default function BrandStrategyPage() {
             onEdit={openQuestionnaire}
             onExport={() => window.print()}
             onRegenerate={() => setStrategyDoc((v) => ({ ...v }))}
+            origin={origin}
+            track={track}
+            /* Under the strategy, not next to Save. It writes nothing: both
+               controls are links, so starting a redo changes nothing until
+               the new strategy is finished. */
+            footer={<StartFresh />}
           />
         </div>
       )}

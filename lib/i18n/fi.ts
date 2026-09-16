@@ -35,6 +35,7 @@
 
 import type { StringKey } from "./en";
 
+
 export const fi: Record<StringKey, string> = {
   // ── Navigointi ────────────────────────────────────────────────────────────
   "nav.home": "Etusivu",
@@ -2720,4 +2721,103 @@ export const fi: Record<StringKey, string> = {
   "chatRail.noteFromChat": "AI-chatista",
   "chat.replyFailed": "Jotain meni pieleen.",
   "chat.connectionIssue": "Yhteysongelma. Yritä uudelleen.",
+
+  // ══ BRING YOUR OWN STRATEGY, AND START FRESH ══ 2026-09-16.
+  // Finnish by Claude, for review, like the block above.
+
+  // ── Strategy intake: the server side ──
+  "intake.documentNotReadYet": "Tätä dokumenttia ei ole vielä luettu. Odota hetki ja yritä uudelleen.",
+  "intake.tooShort": "Tekstiä on liian vähän luettavaksi.",
+  "intake.unreadable": "Strategiaasi ei saatu luettua tällä kertaa. Yritä uudelleen.",
+  "intake.readFailed": "Strategiaasi ei voitu lukea.",
+  "intake.nothingToSave": "Tallennettavaa ei ole.",
+  "intake.migrationMissing":
+    "Strategiataulusta puuttuvat versiosarakkeet. Aja supabase/strategy-sources-and-versions.sql Supabasen SQL-editorissa.",
+  "intake.questionnaireNotUpdated":
+    "Strategiasi tallennettiin, mutta kyselyä ei päivitetty. Nämä kysymykset voidaan kysyä uudelleen.",
+
+  // ── Strategy intake: the doors, the upload and the review ──
+  "intake.door.answer": "Vastaa kysymyksiin",
+  "intake.door.answerNote": "Noin 15 minuuttia. Kaikki kysymykset.",
+  "intake.door.have": "Minulla on jo strategia",
+  "intake.door.haveNote": "Lataa se. Luemme sen ja kysymme vain sen, mikä puuttuu.",
+  "intake.door.skip": "Ohita toistaiseksi",
+  "intake.door.skipNote": "Suoraan työpöydälle. Palaa milloin haluat.",
+  "intake.door.resume": "Jatka siitä mihin jäit",
+
+  "intake.bring.eyebrow": "Tuo omasi",
+  "intake.bring.heading": "Luemme sen ja kysymme vain sen, mikä puuttuu.",
+  "intake.bring.lede":
+    "Strategiaesitys vastaa osaan kysymyksistä, ei kaikkiin. Otamme sen, mikä siinä on, näytämme jokaisen vastauksen ja lauseen josta se tuli, ja jätämme loput kysymyksiksi.",
+  "intake.bring.foot":
+    "Mitään ei tallenneta ennen kuin olet lukenut löydöksemme. Kohta, johon dokumenttisi ei vastaa, jää kysymykseksi.",
+  "intake.bring.title": "Tuo strategia, joka sinulla jo on",
+  "intake.bring.uploadTab": "Lataa PDF",
+  "intake.bring.pasteTab": "Liitä teksti",
+  "intake.bring.chooseFile": "Valitse tiedosto",
+  "intake.bring.fileTypes": "PDF, enintään 50 Mt. Se menee myös kohtaan Tieto ▸ Dokumentit.",
+  "intake.bring.pastePlaceholder": "Liitä strategiasi tähän. Asemointi, kohderyhmä, mitä myyt, mitä et koskaan väitä…",
+  "intake.bring.pasteHelp": "Mitä tahansa olet kirjoittanut ylös. Mitä enemmän, sitä vähemmän kysymyksiä jää.",
+  "intake.bring.read": "Lue strategiani",
+  "intake.bring.reading": "Luetaan strategiaasi…",
+  "intake.bring.readingSlow": "Pitkä esitys vie pari minuuttia. Tämä sivu voi olla auki.",
+  "intake.bring.uploadingFile": "Ladataan tiedostoa {name}…",
+  "intake.bring.extracting": "Luetaan sivuja…",
+  "intake.bring.matching": "Verrataan sitä kysymyksiin…",
+  "intake.bring.needText": "Lisää ensin tiedosto tai liitä tekstiä.",
+  "intake.bring.tooBig": "{name} on yli 50 Mt. Liitä teksti sen sijaan.",
+  "intake.bring.pdfOnly": "Lataa PDF tai liitä teksti sen sijaan.",
+  "intake.bring.failed": "Tätä ei voitu lukea: {msg}",
+  "intake.bring.noText": "Tuosta tiedostosta ei saatu luettavaa tekstiä. Liitä teksti sen sijaan.",
+
+  "intake.review.eyebrow": "Mitä löysimme",
+  "intake.review.heading": "Lue tämä ennen tallennusta.",
+  "intake.review.lede":
+    "Jokainen alla oleva vastaus tuli dokumentistasi, ja lause josta se tuli on sen vieressä. Muokkaa mitä tahansa, mikä ei pidä paikkaansa. Vastaus jota et lue, on asemointi jota et valinnut.",
+  "intake.review.foot": "Mitään ei tallenneta ennen kuin painat alla olevaa painiketta.",
+  "intake.review.counter": "Tarkista",
+  "intake.review.weRead": "Luimme strategiasi. {answered}/{total} vastattu.",
+  "intake.review.foundNone": "Emme löytäneet dokumentista mitään, joka vastaisi kysymyksiin.",
+  "intake.review.foundNoneHelp":
+    "Näin käy esityksellä, joka on enimmäkseen kuvia. Vastaa kysymyksiin sen sijaan, tai liitä teksti ja yritä uudelleen.",
+  "intake.review.fromYourDocument": "Dokumentistasi",
+  "intake.review.sourcePage": "sivu {page}",
+  "intake.review.sourceQuote": "Dokumentissasi lukee",
+  "intake.review.stillToAnswer": "Vielä vastaamatta",
+  "intake.review.stillToAnswerCount": "{count} kysymystä, joihin dokumentti ei vastaa",
+  "intake.review.stillToAnswerOne": "1 kysymys, johon dokumentti ei vastaa",
+  "intake.review.notInDocument": "ei dokumentissa",
+  "intake.review.saveAndContinue": "Tallenna nämä ja vastaa loppuihin",
+  "intake.review.saveAndFinish": "Tallenna nämä ja avaa työtila",
+  "intake.review.saving": "Tallennetaan…",
+  "intake.review.saveFailed": "Tallennus epäonnistui: {msg}",
+  "intake.review.tryAgain": "Lue toinen dokumentti",
+  "intake.review.answerAll": "Vastaa mieluummin kysymyksiin",
+  "intake.review.nothingToReview": "Tarkistettavaa ei vielä ole.",
+  "intake.review.startOver": "Tuo strategia",
+  "intake.review.editAria": "Vastaus kysymykseen {n}",
+  "intake.review.timeLeft": "noin {minutes} minuuttia",
+
+  "documents.type.strategy": "Brändistrategia",
+
+  // ── Brand ▸ Strategy: what was read, and starting fresh ──
+  "strategyDoc.fromYourDocument": "Dokumentistasi",
+  "strategyDoc.readFromDocument": "Luettu lataamastasi strategiasta. Mitään tässä ei ole kirjoitettu puolestasi.",
+  "strategyDoc.page": "sivu {page}",
+  "strategyDoc.notInDocument": "Ei dokumentissasi",
+  "strategyDoc.answerToFill": "Vastaa näihin, niin tämä osio täyttyy:",
+  "strategyDoc.answerThese": "Vastaa näihin kysymyksiin",
+  "strategyDoc.stillOpen": "Vielä auki:",
+
+  "freshStart.title": "Aloita alusta",
+  "freshStart.replaces":
+    "Alusta aloittaminen korvaa strategiavastauksesi, luodun strategiasi, äänensävysi ja antiäänesi.",
+  "freshStart.doesNotTouch":
+    "Se ei koske tuotteisiisi, dokumentteihisi, kuviisi, lukuihisi eikä mihinkään, mitä Studio on jo kirjoittanut puolestasi.",
+  "freshStart.staysLive":
+    "Nykyinen strategiasi pysyy voimassa kunnes uusi on valmis. Lopeta kesken, eikä mikään ole muuttunut.",
+  "freshStart.questionnaire": "Aloita alusta kyselyllä",
+  "freshStart.upload": "Korvaa se strategiadokumentilla",
+  "freshStart.version": "Versio {version}",
+  "freshStart.replacedOn": "korvattu {date}",
 };

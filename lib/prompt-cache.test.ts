@@ -223,8 +223,9 @@ describe("no route sends a system prompt as a plain string", () => {
 
   it("finds the routes at all, so this cannot pass vacuously", () => {
     // 7 since 2026-09-14: brand-code-architect was removed with its Studio card.
-    assert.equal(senders.length, 7,
-      `expected 7 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
+    // 8 since 2026-09-16: strategy-extract reads a strategy the founder brought.
+    assert.equal(senders.length, 8,
+      `expected 8 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
   });
 
   for (const file of senders) {

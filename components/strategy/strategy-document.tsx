@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import {
-  SECTIONS, completeness, derivePyramid, firstIncompleteSection,
+  SECTIONS, EMPTY_STRATEGY, completeness, derivePyramid, firstIncompleteSection,
   generateSummary, primarySegment, oneLine, splitHeadline, hasUsableMap,
-  anyPrices, ladder, type BrandStrategy, type SectionDef,
+  anyPrices, ladder, missingQuestionsFor, quotesFor,
+  type BrandStrategy, type SectionDef, type StrategyOrigin,
 } from "@/lib/strategy";
+import { forLocale } from "@/lib/onboarding-locale.ts";
+import type { Track } from "@/lib/onboarding-questions.ts";
 import { I, Ico } from "./icons";
 import s from "./strategy.module.css";
-import { useT } from "@/lib/i18n/use-t.tsx";
+import { useT, useLocale } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
 /**
@@ -42,11 +45,91 @@ function Empty({ what, example }: { what: StringKey; example: StringKey }) {
   );
 }
 
+/**
+ * Where this strategy came from, for the whole document.
+ *
+ * A context rather than a prop threaded through nine call sites: every section
+ * needs the same answer, and a prop that has to be passed nine times is a prop
+ * that will be forgotten on the tenth.
+ */
+const OriginContext = createContext<{
+  origin: StrategyOrigin | null;
+  track: Track;
+  strategy: BrandStrategy;
+}>({ origin: null, track: "physical", strategy: EMPTY_STRATEGY });
+
+/**
+ * The sentences a section was read out of.
+ *
+ * Shown on the section, not in a footnote. An extracted answer the founder
+ * cannot tell from one they wrote becomes a positioning they never chose.
+ */
+function FromDocument({ def }: { def: SectionDef }) {
+  const t = useT();
+  const { origin } = useContext(OriginContext);
+  const quotes = quotesFor(def.id, origin);
+  if (!quotes.length) return null;
+
+  return (
+    <div className={s.sourced}>
+      <div className="lab">{t("strategyDoc.fromYourDocument")}</div>
+      <ul>
+        {quotes.map((q) => (
+          <li key={q.n}>
+            <q>{q.quote}</q>
+            {q.page !== null && <span className="pg">{t("strategyDoc.page", { page: q.page })}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * What this section does not have, as questions.
+ *
+ * NOT an example of what an answer might look like. On a strategy read from a
+ * founder's own document, an example beside an empty section is a sentence
+ * they did not write sitting where their own words belong, and the whole
+ * promise of bringing your own strategy is that nothing was written for you.
+ */
+function NotAnswered({ def, empty }: { def: SectionDef; empty: boolean }) {
+  const t = useT();
+  const locale = useLocale();
+  const { origin, track } = useContext(OriginContext);
+  const missing = missingQuestionsFor(def.id, origin);
+  // Only for a strategy read from a document. A questionnaire strategy renders
+  // exactly as it always has: its gaps already have the example prompts, and
+  // this feature is not an excuse to redesign that screen underneath anyone.
+  if (origin?.source !== "document" || !missing.length) return null;
+
+  return (
+    <div className={s.notAnswered}>
+      <div className="lab">{empty ? t("strategyDoc.notInDocument") : t("strategyDoc.stillOpen")}</div>
+      <p className="int">{t("strategyDoc.answerToFill")}</p>
+      <ul>
+        {missing.map((n) => {
+          const q = forLocale(n, track, locale);
+          return q ? <li key={n}>{q.q}</li> : null;
+        })}
+      </ul>
+      <Link href={`/start/q/${missing[0]}`} className="go">{t("strategyDoc.answerThese")} →</Link>
+    </div>
+  );
+}
+
 function Section({ def, onEdit, children }: { def: SectionDef; onEdit: (id: string) => void; children: React.ReactNode }) {
+  const { origin, strategy } = useContext(OriginContext);
+  // A strategy read from a document shows what the document said and nothing
+  // else: where there is no content, the example prompts inside `children`
+  // are suppressed and the questions take their place.
+  const empty = origin?.source === "document" && !def.hasAny(strategy);
   return (
     <section className={s.sec}>
       <SecHead def={def} onEdit={onEdit} />
-      {children}
+      {!empty && children}
+      <FromDocument def={def} />
+      <NotAnswered def={def} empty={empty} />
     </section>
   );
 }
@@ -57,12 +140,17 @@ const STAGE_LABEL: Record<string, StringKey> = {
 };
 
 export default function StrategyDocument({
-  strategy, onEdit, onExport, onRegenerate,
+  strategy, onEdit, onExport, onRegenerate, origin = null, track = "physical", footer,
 }: {
   strategy: BrandStrategy;
   onEdit: (sectionId: string) => void;
   onExport: () => void;
   onRegenerate: () => void;
+  /** Where this strategy came from. Null renders exactly as it always has. */
+  origin?: StrategyOrigin | null;
+  track?: Track;
+  /** Rendered under the document: Start fresh lives at the foot of the page. */
+  footer?: React.ReactNode;
 }) {
   const t = useT();
   const [activeSeg, setActiveSeg] = useState(0);
@@ -82,7 +170,13 @@ export default function StrategyDocument({
     : t("strategyDoc.notSavedYet");
 
   return (
+    <OriginContext.Provider value={{ origin, track, strategy }}>
     <div className={s.wrap}>
+      {/* Said once at the top, so the whole page is read in the right light:
+          this is the founder's own document, not something generated. */}
+      {origin?.source === "document" && (
+        <p className={s.readFrom}>{t("strategyDoc.readFromDocument")}</p>
+      )}
       {/* ============ HERO ============ */}
       <section className={s.hero}>
         <span className={s.arc} aria-hidden="true" />
@@ -462,6 +556,8 @@ export default function StrategyDocument({
           </div>
         </div>
       </section>
+      {footer}
     </div>
+    </OriginContext.Provider>
   );
 }

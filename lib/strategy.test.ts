@@ -13,6 +13,7 @@ import {
   EMPTY_STRATEGY, SECTIONS, SECTION_QUESTIONS, missingQuestionsFor, quotesFor,
   completeness, firstIncompleteSection,
   pillarsMissingProof, derivePyramid, generateSummary, summaryText,
+  midSentence,
   parseStrategy, strategyPromptContext, primarySegment,
   isLegacyStrategy, migrateLegacyStrategy, readStrategy,
   oneLine, splitHeadline, hasUsableMap, anyPrices, ladder,
@@ -44,6 +45,7 @@ function filled(): BrandStrategy {
       wordsAvoided: ["luxury", "revolutionary"],
       neverCompromise: ["safety"],
     },
+    voice: { description: "plain and direct", doSay: ["what it costs"], dontSay: ["revolutionary"] },
     focus: { goal: "grow", priorities: [{ label: "EU", when: "Q1" }] },
   };
 }
@@ -51,14 +53,16 @@ function filled(): BrandStrategy {
 describe("completeness", () => {
   it("counts sections and never returns a percentage", () => {
     const c = completeness(EMPTY_STRATEGY);
-    assert.equal(c.total, 9);
+    // Ten since voice became a section of its own on 2026-09-16.
+    assert.equal(c.total, SECTIONS.length);
+    assert.equal(c.total, 10);
     assert.equal(c.filled, 0);
-    assert.equal(c.label, "0 of 9 sections complete");
+    assert.equal(c.label, "0 of 10 sections complete");
     assert.ok(!c.label.includes("%"));
   });
 
-  it("reaches 9 of 9 when every section is filled", () => {
-    assert.equal(completeness(filled()).label, "9 of 9 sections complete");
+  it("reaches the full count when every section is filled", () => {
+    assert.equal(completeness(filled()).label, `${SECTIONS.length} of ${SECTIONS.length} sections complete`);
   });
 
   it("does not count a pillars section where any pillar lacks proof", () => {
@@ -73,7 +77,7 @@ describe("firstIncompleteSection", () => {
     assert.equal(firstIncompleteSection(EMPTY_STRATEGY)?.no, "01");
     const s = filled();
     s.focus = { goal: "", priorities: [] };
-    assert.equal(firstIncompleteSection(s)?.no, "09");
+    assert.equal(firstIncompleteSection(s)?.id, "focus");
     assert.equal(firstIncompleteSection(filled()), null);
   });
 });
@@ -243,10 +247,17 @@ describe("migrateLegacyStrategy", () => {
     assert.deepEqual(b.always, []);
   });
 
-  it("does not carry tone of voice, which has its own route", () => {
-    const m = migrateLegacyStrategy(legacy) as unknown as Record<string, unknown>;
-    assert.equal(m.voiceDescription, undefined);
-    assert.ok(!JSON.stringify(m).includes("Never gush"));
+  it("carries tone of voice now that the model has a home for it", () => {
+    // This used to assert the opposite, and the reason it gave was "which has
+    // its own route" — voice was dropped because BrandStrategy had nowhere to
+    // put it. It does now: `voice`, fed by "How would you describe the way you
+    // write?". Dropping it here would throw away the founder's own words for
+    // no reason, and leave Tone of Voice filling an empty expression.
+    const m = migrateLegacyStrategy(legacy);
+    assert.equal(m.voice.description, legacy.voiceDescription);
+    assert.ok(m.voice.dontSay.includes("Never gush"));
+    // The legacy key itself is still not carried through as a stray field.
+    assert.equal((m as unknown as Record<string, unknown>).voiceDescription, undefined);
   });
 
   it("takes only the first tagline", () => {
@@ -497,8 +508,121 @@ describe("start fresh says what it touches, and does nothing until it is finishe
   });
 
   it("sits under the strategy, not beside Save", () => {
+    // What matters is that it is in the document's footer, not that the footer
+    // holds nothing else: the manual regenerate moved in beside it when
+    // generation started firing itself. So this reads the footer prop and
+    // checks StartFresh is in it, rather than matching the prop exactly.
     const page = code("app/(app)/brand/strategy/page.tsx");
-    assert.match(page, /footer=\{<StartFresh \/>\}/,
+    const footer = page.slice(page.indexOf("footer={"), page.indexOf("footer={") + 1500);
+    assert.ok(footer.includes("<StartFresh />"),
       "start fresh is not rendered at the foot of the document");
+  });
+});
+
+const PAGE = "app/(app)/brand/strategy/page.tsx";
+
+describe("the questionnaire generates when it is finished", () => {
+  it("fires on its own, and cannot fire twice", () => {
+    const page = code(PAGE);
+    assert.ok(/autoFired\s*=\s*useRef\(false\)/.test(page),
+      "nothing guards the automatic run — a re-render would start a second one");
+    assert.ok(/if \(autoFired\.current \|\| isGenerating\) return;/.test(page),
+      "the automatic run is not guarded against firing while one is already running");
+    assert.ok(/setTimeout\(/.test(page.slice(page.indexOf("if (!allAnswered) return;"))),
+      "the last answer fires generation on the keystroke, with no pause to finish typing");
+  });
+
+  it("keeps a way to run it again on purpose", () => {
+    const page = code(PAGE);
+    assert.ok(page.includes('t("strategy.regenerate")'),
+      "the automatic run replaced the manual one instead of joining it");
+  });
+
+  it("does not run for a brand that already has a strategy", () => {
+    const page = code(PAGE);
+    assert.ok(/if \(loadingStrategy \|\| strategyRecord\) return;/.test(page),
+      "opening a finished strategy would regenerate it");
+  });
+});
+
+describe("generation shows its work", () => {
+  it("renders the stream as it arrives", () => {
+    const page = code(PAGE);
+    // The whole fault, in one line: the old loop only concatenated.
+    const loop = page.slice(page.indexOf("const reader = res.body.getReader()"));
+    assert.ok(loop.includes("setStreamed("),
+      "the client reads the stream and renders nothing until it has all of it");
+  });
+
+  it("ticks sections that actually arrived, not a timer", () => {
+    const page = code(PAGE);
+    assert.ok(!page.includes("setInterval("),
+      "the generating overlay is still driven by a fake timer");
+    assert.ok(page.includes("function generationProgress("),
+      "nothing derives progress from the stream");
+  });
+
+  it("names the document's own sections while they are written", () => {
+    // The checklist is the section list, so it cannot drift from the document.
+    const page = code(PAGE);
+    assert.ok(/DOC_SECTIONS\.map\(/.test(page.slice(page.indexOf("GENERATION_STAGES"))),
+      "the overlay lists invented stage names rather than the real sections");
+  });
+});
+
+describe("the paragraph reads like a sentence", () => {
+  it("does not say 'not for Not for'", () => {
+    // Seen on screen: the model writes notFor as its own sentence, and the
+    // sentence around it already says "not for".
+    const s = { ...EMPTY_STRATEGY, positioning: { ...EMPTY_STRATEGY.positioning,
+      notFor: "Not for consumers, or buyers choosing on price alone." } };
+    assert.ok(!/not for Not for/i.test(summaryText(s)), summaryText(s));
+  });
+});
+
+describe("a strategy written by an older version still renders", () => {
+  it("fills missing fields inside an object, not just missing objects", () => {
+    // What actually happened: a row whose `boundaries` used the old field
+    // names merged to an object with no `never` array, and the document threw
+    // "Cannot read properties of undefined (reading 'length')" — the whole
+    // page became "Something went wrong", for one renamed key.
+    const s = parseStrategy(JSON.stringify({
+      core: { whoWeAre: "Alpha" },
+      boundaries: { alwaysDo: ["old name"], neverDo: ["old name"] },
+      focus: { next90Days: ["old name"] },
+      messages: { primary: "old name" },
+      voice: { description: "Plain and direct" },
+      audience: "not an array",
+    }));
+    for (const arr of [s.boundaries.never, s.boundaries.always, s.boundaries.wordsUsed,
+      s.boundaries.wordsAvoided, s.boundaries.neverCompromise, s.focus.priorities,
+      s.messages.supporting, s.audience, s.competitors, s.pillars, s.principles,
+      s.voice.doSay, s.voice.dontSay, s.pyramid.personality, s.analysis.unresolved]) {
+      assert.ok(Array.isArray(arr), "a list came back as something that is not a list");
+    }
+    assert.equal(s.core.whoWeAre, "Alpha", "what it did have was dropped");
+    assert.equal(s.voice.description, "Plain and direct");
+    assert.equal(s.focus.goal, "");
+  });
+});
+
+describe("a persona keeps what it has", () => {
+  it("fills the fields it is missing without dropping the optional ones", () => {
+    const s = parseStrategy(JSON.stringify({
+      audience: [{ name: "Jari", age: 44, role: "Garage owner", detail: "Two bays", isPrimary: true, wants: "A floor that is not slippery" }],
+      competitors: [{ name: "Sawdust" }],
+    }));
+    assert.equal(s.audience[0].age, 44, "age was dropped");
+    assert.equal(s.audience[0].detail, "Two bays", "detail was dropped");
+    assert.deepEqual(s.audience[0].channels, [], "a missing list did not become a list");
+    assert.equal(s.competitors[0].map.x, 50, "a competitor with no map point has none to plot");
+  });
+});
+
+describe("a reason reads as part of the sentence around it", () => {
+  it("lowercases a sentence opener, and leaves a name alone", () => {
+    assert.equal(midSentence("It is not certified."), "it is not certified");
+    assert.equal(midSentence("Finnish law forbids it"), "Finnish law forbids it");
+    assert.equal(midSentence("EU rules say so"), "EU rules say so");
   });
 });

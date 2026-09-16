@@ -39,9 +39,10 @@ async function getBrandContextSummary(brandId: string): Promise<BrandContextSumm
     try {
       const raw = stratRes.data.generated_strategy
       const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-      archetype = parsed?.archetype ?? null
+      archetype = parsed?.pyramid?.essence ?? parsed?.archetype ?? null
       voiceDescription = parsed?.voiceDescription ?? null
-      personasCount = Array.isArray(parsed?.personas) ? parsed.personas.length : 0
+      personasCount = Array.isArray(parsed?.audience) ? parsed.audience.length
+        : Array.isArray(parsed?.personas) ? parsed.personas.length : 0
       competitorsCount = Array.isArray(parsed?.competitors) ? parsed.competitors.length : 0
     } catch {
       // Legacy markdown format — leave fields null

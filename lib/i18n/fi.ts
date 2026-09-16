@@ -2874,4 +2874,24 @@ export const fi: Record<StringKey, string> = {
   "productPricing.costsExVat": "Mitä tuote maksaa sinulle ennen myyntiä. Kustannukset ilman alvia.",
   "productPricing.sellExVat": "Mitä yhden myynnin saaminen maksaa. Ilman alvia.",
   "product.colPriceVat": "Hinta (sis. alv)",
+
+  // ── The document gained a voice section ── 2026-09-16, Finnish mine.
+  "strategyDoc.sec.voice": "Äänensävy",
+  "strategyDoc.why.voice": "Miltä brändi kuulostaa, ja mitä sanoja se ei käytä",
+  "strategyDoc.voice.doSay": "Sanomme",
+  "strategyDoc.voice.dontSay": "Emme sano",
+  "strategyDoc.voice.empty": "Miten kuvailisit tapaa, jolla brändisi puhuu?",
+  "strategyDoc.voice.example":
+    "Esimerkiksi: selkeä, suora, ei koskaan myyntipuhetta. Kerromme mitä asia maksaa.",
+  "strategyDoc.unresolved": "Vielä ratkaisematta",
+  "strategyDoc.unresolvedWhy":
+    "Analyysi löysi nämä eikä voinut ratkaista niitä vastaustesi perusteella. Ne ovat sinun päätettäviäsi.",
+
+  // ── Generation runs itself, and shows its work ── 2026-09-16, Finnish mine.
+  "strategy.writingSection": "Kirjoitetaan: {section}…",
+  "strategy.analysing": "Luetaan vastauksiasi",
+  "strategy.autoStarted": "Kaikki kaksikymmentä vastattu. Rakennetaan strategiaasi.",
+  "strategy.regenerate": "Kirjoita strategia uudelleen",
+  "strategy.regenerateWhy":
+    "Kirjoittaa koko dokumentin uudelleen nykyisistä vastauksistasi. Näytöllä oleva korvataan.",
 };

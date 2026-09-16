@@ -304,10 +304,27 @@ describe("the document mode does not write a strategy", () => {
   });
 
   it("both describe the same JSON, from one copy", () => {
-    const shape = '"messagingPillars": [{"title":"string","text":"1-2 sentences"}]';
+    // The shape is the document model now, not the old bespoke one: the reader
+    // picks keys by name, so "messagingPillars" was a section that rendered
+    // empty. Pin a key that exists, and keep the real assertion, which is that
+    // the shape is written ONCE and both prompts interpolate it.
+    const shape = '"principles": [{"title":"short","body":"1 sentence on how the brand behaves"}]';
     assert.ok(STRATEGY_STABLE.includes(shape) && STRATEGY_FROM_DOCUMENT_STABLE.includes(shape));
-    assert.equal((read("lib/prompts.ts").match(/"messagingPillars"/g) ?? []).length, 1,
+    assert.equal((read("lib/prompts.ts").match(/"principles":/g) ?? []).length, 1,
       "the JSON shape is written twice and the two will drift");
+  });
+
+  it("every key the generator writes is a key the reader keeps", () => {
+    // THE BUG THIS EXISTS FOR. parseStrategy picks keys explicitly and drops
+    // the rest. The generator used to emit passport/personas/messagingPillars,
+    // none of which it keeps, so three sections rendered empty no matter how
+    // well the model wrote. Any future rename of one side alone fails here.
+    const reader = read("lib/strategy.ts");
+    for (const key of ["core", "positioning", "pyramid", "audience", "competitors",
+                       "pillars", "messages", "principles", "boundaries", "focus", "analysis"]) {
+      assert.ok(STRATEGY_STABLE.includes(`"${key}"`), `the generator stopped writing ${key}`);
+      assert.ok(reader.includes(`${key}:`), `the reader stopped keeping ${key}`);
+    }
   });
 
   it("the route picks the mode from the source, not from a guess", () => {

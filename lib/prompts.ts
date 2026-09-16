@@ -218,63 +218,98 @@ Return ONLY valid JSON with exactly these keys:
  * The JSON both strategy modes return. One copy, so the two cannot drift into
  * describing different shapes to the same parser.
  */
-const STRATEGY_JSON_SHAPE = `Return this JSON structure:
+const STRATEGY_JSON_SHAPE = `Return this JSON structure, and these keys exactly. The reader picks keys by name and silently drops anything else, so a renamed key is a deleted section.
 
 {
   "analysis": {
     "themes": [{"theme":"the pattern, 2-4 words","evidence":["short quote from their answers","another"]}],
-    "tensions": [{"tension":"X without Y","why":"why this is the white space, 1 sentence"}],
-    "problemLadder": {"functional":"what is hard or missing","emotional":"how that feels","human":"what they ultimately want to be or feel"},
-    "valueLadder": [{"feature":"","functional":"","emotional":"","identity":""}],
+    "tensions": [{"tension":"X without Y","why":"why this is the gap, 1 sentence"}],
+    "problemLadder": {"functional":"what is hard or missing","emotional":"how that feels","human":"what they ultimately want to feel or become"},
     "differentiation": [{"claim":"what they say is different","verdict":"table-stakes|strength|differentiator|opportunity","why":"1 sentence"}],
-    "marketMap": [{"territory":"e.g. mass market, specialist, premium, local","occupant":"who holds it","strength":"","weakness":""}],
-    "whiteSpace":"the space between X and Y this brand can credibly hold, 1-2 sentences",
-    "opportunityStatement":"current situation, unmet need, opportunity, role of the brand. One paragraph.",
-    "coreIdea":"the single organising thought. Not a tagline.",
-    "notList":[{"not":"Not corporate.","because":"1 sentence, from the evidence"}],
-    "unresolved":["a conflict between what the founder wants and what the business or market can support, or [] if none"]
+    "whiteSpace": "the space between X and Y this brand can credibly hold, 1-2 sentences",
+    "coreIdea": "the single organising thought. NOT a tagline.",
+    "unresolved": ["a conflict between what the founder wants and what the business can support, or [] if none"]
   },
-  "brandName": "string",
-  "category": "string",
-  "stage": "string",
-  "target": "string",
-  "archetype": "string",
-  "passport": {
-    "signature": "7 words max",
-    "purpose": "1-2 sentences",
-    "promise": "1 sentence",
-    "philosophy": "1 sentence",
-    "values": "comma-separated values",
-    "insight": "1 sentence",
-    "targetGroup": "1-2 sentences",
-    "onlyWeClaim": "1 sentence starting with Only..."
+
+  "core": {
+    "whoWeAre": "1-2 sentences. What kind of company this is.",
+    "whatWeDo": "1-2 sentences. Plain, no category jargon.",
+    "whyWeExist": "1-2 sentences. The reason beyond money, earned from their origin story.",
+    "promise": "1 sentence. What every customer gets, every time."
   },
+
+  "positioning": {
+    "weAre": "the category, 2-5 words",
+    "forWhom": "the customer, one phrase",
+    "unlike": "the main alternative, named",
+    "because": "the reason to believe, 1 sentence with a fact in it",
+    "difference": "the hero headline. One sentence a stranger understands.",
+    "notFor": "who this is deliberately not for, 1 sentence"
+  },
+
   "pyramid": {
     "essence": "3-5 words",
-    "behavior": "2 sentences on personality and relationship",
-    "whyChooseUs": "2-3 sentences with rational and emotional reasons",
-    "audience": "2 sentences on target, segment, insight",
-    "market": "1-2 sentences",
-    "context": "2 sentences"
+    "personality": ["Trait — what it means in behaviour, one clause", "5 to 7 of these"],
+    "benefits": "2 sentences. Rational reason and emotional reason.",
+    "attributes": ["adjective", "adjective", "adjective"]
   },
-  "problems": [{"title":"short","text":"1-2 sentences"}],
-  "solution": "2-3 sentences",
-  "firstTo": {"claim":"We are the first to...","explanation":"1 sentence"},
-  "onlyOnesWho": {"claim":"We are the only ones who...","explanation":"1 sentence"},
-  "differentiators": [{"label":"D1","title":"short","text":"1 sentence"}],
-  "personas": [{"name":"Name","role":"Title","type":"primary","emoji":"emoji","who":"2 sentences","wants":"1-2 sentences","frustrations":"1-2 sentences","channels":["channel1","channel2"],"activeChannels":["top1","top2"],"brandGives":"1 sentence"}],
-  "exclusions": "1-2 sentences",
-  "competitiveIntro": "2 sentences",
-  "competitors": [{"name":"string","type":"string","doWell":"1 sentence","fail":"1 sentence","vsUs":"1 sentence","isUs":false}],
-  "messagingPillars": [{"title":"string","text":"1-2 sentences"}],
-  "voiceDescription": "2-3 sentences",
-  "voiceDoDont": [{"do":"example phrase","dont":"example phrase"}],
-  "alwaysUse": ["word1","word2","word3"],
-  "neverUse": ["word1","word2","word3"],
-  "risks": [{"title":"short","text":"1-2 sentences with mitigation"}],
-  "opportunities": [{"title":"short","text":"1-2 sentences"}],
-  "taglines": [{"text":"The tagline","rationale":"1 sentence"}]
-}`;
+
+  "voice": {
+    "description": "2-3 sentences on how this brand writes, built from how they described their own writing. Not aspirational.",
+    "doSay": ["a real phrase this brand would write", "another", "a third"],
+    "dontSay": ["a phrase this brand would never write", "another", "a third"]
+  },
+
+  "audience": [{
+    "name": "a real-sounding name",
+    "age": 38,
+    "role": "their job or situation",
+    "detail": "1 sentence of context",
+    "isPrimary": true,
+    "wants": "1-2 sentences",
+    "frustratedBy": "1-2 sentences",
+    "caresAbout": ["value", "value", "value"],
+    "channels": [{"label":"where they are","stage":"discovery|consideration|decision|retention"}]
+  }],
+
+  "competitors": [{
+    "name": "named, or the honest alternative such as \"doing it themselves\"",
+    "description": "1 sentence: what they represent to the customer, and what it costs them",
+    "price": "cheaper | similar | more expensive",
+    "isUs": false,
+    "map": {"x": 50, "y": 50}
+  }],
+
+  "pillars": [{
+    "title": "short",
+    "body": "1-2 sentences",
+    "proof": "a fact with a number, a certificate, a test or a year in it. An adjective is not proof.",
+    "icon": "one lowercase word"
+  }],
+
+  "messages": {
+    "tagline": "their existing tagline verbatim if they have one, otherwise your best line",
+    "supporting": [{"text":"a message","stage":"discovery|consideration|decision|retention"}]
+  },
+
+  "principles": [{"title":"short","body":"1 sentence on how the brand behaves"}],
+
+  "boundaries": {
+    "never": [{"rule":"Not corporate.","reason":"1 sentence, from their answers"}],
+    "always": ["what the brand always does"],
+    "wordsUsed": ["word","word","word"],
+    "wordsAvoided": ["word","word","word"],
+    "neverCompromise": ["the line they will not cross"]
+  },
+
+  "focus": {
+    "goal": "the one thing the next 12 months are for, 1 sentence",
+    "priorities": [{"label":"what has to happen","when":"e.g. Q1, by spring, first"}]
+  }
+}
+
+ONE ENTRY IN "competitors" MUST BE THE BRAND ITSELF with "isUs": true, so the map has a centre.
+"map" places each one 0-100: x is accessible to premium, y is consumer to professional.`;
 
 /** Brand ▸ Strategy, from the questionnaire or a pasted document. */
 export const STRATEGY_STABLE = `You are a brand strategist. You are not a copywriter and not a summariser. Your job is to find the strategy hiding in a founder's answers, not to restate those answers in a more confident voice.

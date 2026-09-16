@@ -1,138 +1,105 @@
 /**
  * The strategy questionnaire, in Finnish.
  *
- * AN OVERLAY, NOT A REPLACEMENT. `strategy-questions.ts` stays canonical and
- * stays English, because `questionKey` builds the storage key out of the
- * English section and question text:
+ * AN OVERLAY, NOT A REPLACEMENT. strategy-questions.ts stays canonical and
+ * stays English. Keyed by the question `id`, which is also the storage key, so
+ * a reworded question cannot drift the two files out of alignment.
  *
- *     `${q.section}|${q.question}`
- *
- * Every answer already saved in `brand_strategies.answers` is filed under that
- * English string. Translating the canonical array in place would orphan all of
- * them silently — the questionnaire would read as unanswered and the strategy
- * would regenerate from nothing. So the words are translated here, by index,
- * and the keys never move.
- *
- * Same shape as onboarding-questions.fi.ts, for the same reason: the English
- * file owns the structure, this file owns nothing but words, and neither
- * imports the other.
- *
- * Indexed by position in QUESTIONS. A missing index, or a missing field within
- * an index, falls back to English per field rather than per question.
+ * A missing id, or a missing field within one, falls back to English per field
+ * rather than per question.
  */
 
-export interface StrategyQuestionFi {
-  question?: string;
-  placeholder?: string;
-}
+export interface StrategyQuestionFi { question?: string; placeholder?: string }
 
 /** Section headings, keyed by the English heading. */
 export const SECTIONS_FI: Record<string, string> = {
-  "Founding Vision": "Perustamisen visio",
-  "Your Offering": "Mitä tarjoat",
-  "Competitive Landscape": "Kilpailukenttä",
-  "Your Audience": "Kohderyhmäsi",
-  "Brand Identity": "Brändi-identiteetti",
-  "Brand Voice": "Brändin ääni",
-  "Validation & Risks": "Näyttö ja riskit",
+  "Your business": "Yrityksesi",
+  "Your customers": "Asiakkaasi",
+  "Your competition": "Kilpailijasi",
+  "What makes you different": "Mikä erottaa sinut",
+  "How you sound": "Miltä kuulostat",
+  "Where you are going": "Minne olet menossa",
 };
 
-export const QUESTIONS_FI: Record<number, StrategyQuestionFi> = {
-  // Perustamisen visio
-  0: {
-    question: "Minkä ongelman ratkaisemiseksi brändisi on olemassa, ja mikä oma kokemuksesi sai sinut tarttumaan siihen?",
-    placeholder: "Ongelma + oma tarinasi...",
+export const QUESTIONS_FI: Record<string, StrategyQuestionFi> = {
+  "biz-what": {
+    question: "Mitä myyt?",
+    placeholder: "Yksi lause, niin kuin sanoisit sen naapurille.",
   },
-  1: {
-    question: "Jos brändisi onnistuu täysin, miltä maailma näyttää kymmenen vuoden päästä?",
-    placeholder: "Maalaa visio...",
+  "biz-why": {
+    question: "Miksi aloitit tämän?",
+    placeholder: "Mitä oikeasti tapahtui. Ei missiolausetta.",
   },
-  2: {
-    question: "Mikä on voiton lisäksi se syvempi motivaatio joka ajaa tätä brändiä?",
-    placeholder: "Mikä pitää sinut liikkeellä huonoina päivinä...",
+  "biz-promise": {
+    question: "Mitä asiakas saa sinulta joka ikinen kerta?",
+    placeholder: "Se mitä toimitat aina, huonollakin viikolla.",
   },
-  3: {
-    question: "Onko olemassa brändielementtejä jotka haluat SÄILYTTÄÄ ja rakentaa strategian niiden ympärille: iskulauseita, missiolause, arvoja, manifestin rivejä, nimeämiskäytäntöjä?",
-    placeholder: "Iskulause: ...\nMissio: ...\nArvot: ...\n(Jätä tyhjäksi jos aloitat puhtaalta pöydältä)",
+  "cust-who": {
+    question: "Kuvaile paras asiakkaasi. Kuka hän on?",
+    placeholder: "Yksi oikea ihminen jolle olet myynyt. Ikä, työ, tilanne.",
   },
-
-  // Mitä tarjoat
-  4: {
-    question: "Kuvaile yhdellä selkeällä lauseella mitä tarjoat, ja täydennä sitten: \"Olemme ainoita jotka...\"",
-    placeholder: "Ensimmäinen lause: ...\nOlemme ainoita jotka...",
+  "cust-want": {
+    question: "Mitä hän yrittää saada aikaan, ja mikä on tiellä?",
+    placeholder: "Ensin mitä hän haluaa, sitten mikä tekee siitä vaikeaa.",
   },
-  5: {
-    question: "Mikä on vahvin kilpailuetusi, se yksi asia jota kukaan ei pysty kopioimaan?",
-    placeholder: "Se yksi asia...",
+  "cust-not": {
+    question: "Kenelle tämä ei ole?",
+    placeholder: "Ole tarkka. Se terävöittää kaiken muun.",
   },
-  6: {
-    question: "Miten toimituksesi, tuotteesi tai kokemuksesi tuntuu erilaiselta kuin kilpailijoilla?",
-    placeholder: "Kuvaile mikä tuntuu erilaiselta...",
+  "comp-who": {
+    question: "Jos joku ei osta sinulta, minne hän menee?",
+    placeholder: "Nimeä kaksi tai kolme. Myös ”tekee itse” jos se on totuus.",
   },
-  7: {
-    question: "Mitkä ovat asiat joista et tingi, koskaan?",
-    placeholder: "Rajat joita et ylitä...",
+  "comp-weak": {
+    question: "Mitä nuo vaihtoehdot tekevät väärin?",
+    placeholder: "Mistä asiakkaat oikeasti valittavat, heidän sanoillaan.",
   },
-
-  // Kilpailukenttä
-  8: {
-    question: "Ketkä ovat kolme tärkeintä kilpailijaasi, ja mikä on kunkin suurin heikkous?",
-    placeholder: "Kilpailija 1: ...\nKilpailija 2: ...\nKilpailija 3: ...",
+  "comp-price": {
+    question: "Oletko heitä halvempi, samaa luokkaa vai kalliimpi?",
+    placeholder: "Ja yhdellä rivillä miksi se on sinulle oikein.",
   },
-  9: {
-    question: "Mistä asiakkaat useimmin valittavat tällä toimialalla?",
-    placeholder: "Turhautumiset joita ihmisillä on nykyisiin vaihtoehtoihin...",
+  "diff-what": {
+    question: "Mitä teet niin, ettei sitä voi helposti kopioida?",
+    placeholder: "Yksi asia, selkeästi. Jos kilpailija voisi sanoa saman, se ei kelpaa.",
   },
-  10: {
-    question: "Miten brändisi haastaa toimialasi normit ja vakiintuneet tavat?",
-    placeholder: "Missä rikot sääntöjä...",
+  "diff-proof": {
+    question: "Mitä todisteita sinulla on?",
+    placeholder: "Lukuja, testejä, vuosia, sertifikaatteja, takuita. Ei adjektiiveja.",
   },
-
-  // Kohderyhmäsi
-  11: {
-    question: "Kuvaile ihanneasiakkaasi elävästi: kuka hän on, mihin hän uskoo, mistä hän välittää.",
-    placeholder: "Rooli, arvot, elämäntapa, uskomukset, kipupisteet...",
+  "diff-never": {
+    question: "Mitä et tekisi koskaan, vaikka kauppa jäisi saamatta?",
+    placeholder: "Sinun oikea rajasi.",
   },
-  12: {
-    question: "Kuvaile muutos jonka asiakkaasi kokee, ennen ja jälkeen, myös tunnetasolla.",
-    placeholder: "Ennen: ...\nJälkeen: ...\nTunnemuutos: ...",
+  "tone-words": {
+    question: "Valitse kolme sanaa brändillesi.",
+    placeholder: "Ei mitä toivoisit. Mitä se on tänään.",
   },
-  13: {
-    question: "Kuka EI ole kohdeasiakkaasi? Kenet rajaat ulos?",
-    placeholder: "Emme ole niitä varten jotka...",
+  "tone-feel": {
+    question: "Miltä ihmisestä pitäisi tuntua asioinnin jälkeen?",
+    placeholder: "Yksi tai kaksi tunnetta, rehellisesti.",
   },
-
-  // Brändi-identiteetti
-  14: {
-    question: "Valitse kolme adjektiivia jotka kuvaavat miltä brändisi pitäisi tuntua, ja se tunnereaktio jonka sen pitäisi herättää.",
-    placeholder: "Kolme adjektiivia + tunne jonka ne herättävät...",
+  "tone-lang": {
+    question: "Mitä sanoja käytät aina, ja mitä vältät?",
+    placeholder: "Käytämme: ...\nVältämme: ...",
   },
-  15: {
-    question: "Miten visuaalisen ilmeesi pitäisi erota muista toimialallasi, ja mitkä 2–3 brändiä inspiroivat estetiikkaasi?",
-    placeholder: "Siinä missä muut näyttävät ..., me näytämme ...\nInspiraatiot: Brändi 1, Brändi 2...",
+  "tone-style": {
+    question: "Miten kuvailisit tapaanne kirjoittaa?",
+    placeholder: "Lyhyesti ja suoraan? Lämpimästi ja jutellen? Huolellisesti ja muodollisesti? Hauskasti?\nJa onko joku jonka kirjoitustyyliin vertaaminen olisi mieluista?",
   },
-  16: {
-    question: "Jos brändisi olisi ihminen juhlissa, miten hän käyttäytyisi ja pukeutuisi?",
-    placeholder: "Hän olisi se joka... pukeutuneena...",
+  "tone-always": {
+    question: "Mitä teet asiakkaalle aina, tapahtui mitä tahansa?",
+    placeholder: "Tavat jotka ihmiset huomaisivat.",
   },
-
-  // Brändin ääni
-  17: {
-    question: "Miten brändisi viestii (muodollisesti, rennosti, kärkevästi, arvovaltaisesti), ja mitä kieltä tai viittauksia yhteisösi käyttää?",
-    placeholder: "Viestintätyyli + yhteisön kieli...",
+  "next-goal": {
+    question: "Mitä varten seuraavat kaksitoista kuukautta ovat?",
+    placeholder: "Yksi tavoite, ei viittä.",
   },
-  18: {
-    question: "Kirjoita esimerkkijulkaisu ihanneäänelläsi, ja listaa sanat tai ilmaukset joita brändisi ei saa KOSKAAN käyttää.",
-    placeholder: "Esimerkkijulkaisu: ...\nEi koskaan: ...",
+  "next-steps": {
+    question: "Mitä pitää tapahtua että pääset sinne?",
+    placeholder: "Kaksi tai kolme asiaa, ja suunnilleen milloin.",
   },
-
-  // Näyttö ja riskit
-  19: {
-    question: "Mitä näyttöä sinulla on siitä että brändisi toimii (suosittelut, data, vetovoima), ja mitkä mittarit liikevaihdon lisäksi kertovat onnistumisesta?",
-    placeholder: "Todisteet + onnistumisen mittarit...",
-  },
-  20: {
-    question: "Mitkä ovat brändisi suurimmat haasteet tai riskit seuraavan 12 kuukauden aikana?",
-    placeholder: "Suurimmat uhat...",
+  "next-tagline": {
+    question: "Onko sinulla jo iskulause jonka haluat säilyttää?",
+    placeholder: "Jätä tyhjäksi jos ei. Jos on, rakennamme sen ympärille.",
   },
 };

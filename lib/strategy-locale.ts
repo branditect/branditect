@@ -25,8 +25,10 @@ import { DEFAULT_LOCALE, type Locale } from "./i18n/index.ts";
 
 /** One question, resolved for a language. Every field is a string. */
 export interface LocalisedStrategyQuestion {
-  /** Position in QUESTIONS, which is what the overlay is keyed by. */
+  /** Position in QUESTIONS. The overlay is keyed by `id`, not by this. */
   index: number;
+  /** The permanent storage key. */
+  id: string;
   /** English, always: this is what `questionKey` is built from. */
   section: string;
   /** The section heading as shown. */
@@ -52,10 +54,11 @@ export function strategyForLocale(
   const base: QuestionDef | undefined = QUESTIONS[index];
   if (!base) return null;
 
-  const over = OVERLAY[locale]?.[index];
+  const over = OVERLAY[locale]?.[base.id];
 
   return {
     index,
+    id: base.id,
     section: base.section,
     sectionLabel: sectionLabelFor(base.section, locale),
     question: over?.question ?? base.question,

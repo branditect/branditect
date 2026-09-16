@@ -5,14 +5,14 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
-import { QUESTIONS, type QuestionDef } from "@/lib/strategy-questions";
+import { QUESTIONS, questionKey, isQuestionnaireComplete } from "@/lib/strategy-questions";
 import StrategyDocument from "@/components/strategy/strategy-document";
 import StartFresh from "@/components/strategy/start-fresh";
 import { loadOnboarding } from "@/lib/onboarding-db";
 import { isFromDocument, type Provenance, type StrategySource } from "@/lib/strategy-intake";
 import type { StrategyOrigin } from "@/lib/strategy";
 import type { Track } from "@/lib/onboarding-questions";
-import { readStrategy, completeness, EMPTY_STRATEGY, type BrandStrategy } from "@/lib/strategy";
+import { readStrategy, completeness, EMPTY_STRATEGY, SECTIONS as DOC_SECTIONS, type BrandStrategy } from "@/lib/strategy";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import { useLocale } from "@/lib/i18n/use-t.tsx";
 import { strategyForLocale, sectionLabelFor } from "@/lib/strategy-locale";
@@ -59,13 +59,41 @@ interface StrategyRecord {
 
 const SECTIONS = Array.from(new Set(QUESTIONS.map((q) => q.section)));
 
-const GENERATION_STAGES = [
-  "strategy.stage.positioning",
-  "strategy.stage.personas",
-  "strategy.stage.messaging",
-  "strategy.stage.voice",
-  "strategy.stage.risks",
-] as const;
+/**
+ * The checklist the overlay shows while the strategy is being written.
+ *
+ * It was five invented labels ticked by a setInterval on a three-second timer:
+ * the bar reached the end and sat there, and nothing it said had any relation
+ * to what the model was doing. This is the document's own section list, ticked
+ * by its key actually arriving in the stream, so what is watched being written
+ * is what is about to be read. `analysis` leads because the model writes it
+ * first — it is the thinking the sections are built on, not a section.
+ */
+const GENERATION_STAGES: { key: string; labelKey: string }[] = [
+  { key: "analysis", labelKey: "strategy.analysing" },
+  ...DOC_SECTIONS.map((sec) => ({ key: sec.id, labelKey: sec.titleKey })),
+];
+
+/**
+ * How far the model has got, read off the half-written JSON.
+ *
+ * A key is printed before the text under it, so the key that appeared LAST is
+ * the one being written now and everything before it is finished. The model
+ * writes in the prompt's order, not the document's, so "last" is measured by
+ * position in the text rather than by position in the list.
+ */
+function generationProgress(streamed: string): { done: Set<string>; writingIndex: number } {
+  const at = GENERATION_STAGES.map((stage) => streamed.indexOf(`"${stage.key}"`));
+  let writingIndex = -1;
+  at.forEach((pos, idx) => {
+    if (pos >= 0 && (writingIndex === -1 || pos > at[writingIndex])) writingIndex = idx;
+  });
+  const done = new Set<string>();
+  at.forEach((pos, idx) => {
+    if (pos >= 0 && idx !== writingIndex) done.add(GENERATION_STAGES[idx].key);
+  });
+  return { done, writingIndex };
+}
 
 
 /* ------------------------------------------------------------------ */
@@ -203,7 +231,12 @@ export default function BrandStrategyPage() {
   const [images, setImages] = useState<AttachedImage[]>([]);
   const [generatedStrategy, setGeneratedStrategy] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationStage, setGenerationStage] = useState(0);
+  /** What the model has written so far. Drives the progress, honestly. */
+  const [streamed, setStreamed] = useState("");
+  /** Fired once per completed questionnaire, never on a keystroke. */
+  const autoFired = useRef(false);
+  /** True when the run now on screen started itself rather than being asked for. */
+  const [autoStarted, setAutoStarted] = useState(false);
   const [existingText, setExistingText] = useState("");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -280,6 +313,11 @@ export default function BrandStrategyPage() {
           const record = rows.find((r) => r.is_current === true) ?? rows[0];
           setStrategyRecord(record);
           setGeneratedStrategy(record.generated_strategy);
+          // The answers the strategy was built from. Without this, Edit opens
+          // the questionnaire blank and a regenerate would post nothing.
+          if (record.answers && typeof record.answers === "object") {
+            setAnswers(record.answers);
+          }
 
           // Try parsing as JSON first (new format), fallback to markdown sections
           try {
@@ -383,7 +421,10 @@ export default function BrandStrategyPage() {
 
   /* ---- helpers ---- */
 
-  const questionKey = (q: QuestionDef) => `${q.section}|${q.question}`;
+  // The shared definition, not a second copy. This used to be built from
+  // `${q.section}|${q.question}` here AND in lib/strategy-questions.ts, so the
+  // two could drift and answers would save under one key and read under another.
+  // It is now the question id, which never changes when wording does.
 
   const answeredCountForSection = (section: string) =>
     QUESTIONS.filter(
@@ -394,6 +435,9 @@ export default function BrandStrategyPage() {
     QUESTIONS.filter((q) => q.section === section).length;
 
   const totalAnswered = Object.values(answers).filter((a) => a?.trim()).length;
+
+  // Recomputed on every chunk, which is a handful of indexOf over a few KB.
+  const { done, writingIndex } = generationProgress(streamed);
 
   const currentQuestion = QUESTIONS[currentIndex];
   // The words in the interface language. `currentQuestion` stays English
@@ -442,16 +486,9 @@ export default function BrandStrategyPage() {
 
   const generate = async (fromExisting?: boolean) => {
     setIsGenerating(true);
-    setGenerationStage(0);
+    setStreamed("");
     setError("");
     setScreen("questions"); // show generating overlay on the questions screen
-
-    const interval = setInterval(() => {
-      setGenerationStage((prev) => {
-        if (prev < GENERATION_STAGES.length - 1) return prev + 1;
-        return prev;
-      });
-    }, 3000);
 
     try {
       const payload: Record<string, unknown> = {
@@ -486,16 +523,53 @@ export default function BrandStrategyPage() {
         throw new Error(t("strategy.noResponse"));
       }
 
-      // Read the full stream
+      /**
+       * Read the stream AS a stream.
+       *
+       * This used to accumulate the whole response in `fullResponse` and
+       * render nothing until it was finished, which is 30 to 90 seconds of a
+       * page that looks stuck. The server was streaming correctly the whole
+       * time; the client threw it away. Each `data:` line is handled as it
+       * lands, so the screen can say which section is being written.
+       */
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = "";
+      let pending = "";
+      let written = "";
+      // Tokens land maybe twenty times a second. The overlay does not need to
+      // re-render that often, so state is updated on a tick, not on a token.
+      let lastPaint = 0;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        fullResponse += decoder.decode(value, { stream: true });
+        const text = decoder.decode(value, { stream: true });
+        fullResponse += text;
+        pending += text;
+
+        // A chunk can split a line, so the last partial line waits for the next.
+        const lines = pending.split("\n");
+        pending = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (typeof parsed.chunk === "string") {
+              written += parsed.chunk;
+              const now = Date.now();
+              if (now - lastPaint > 120) {
+                lastPaint = now;
+                setStreamed(written);
+              }
+            }
+          } catch {
+            /* A malformed line is the final "done" payload's problem, below. */
+          }
+        }
       }
+
+      setStreamed(written); // whatever the last tick missed
 
       // Find the final "done" message with the strategy
       let strategyJson = "";
@@ -560,10 +634,44 @@ export default function BrandStrategyPage() {
       setError(message);
       setScreen("entry");
     } finally {
-      clearInterval(interval);
       setIsGenerating(false);
     }
   };
+
+  /**
+   * The questionnaire generates when it is finished.
+   *
+   * It used to be a button, which meant twenty answers and then a screen that
+   * still had to be told to do the one thing left to do. Three guards, because
+   * firing this twice costs a minute of the model's time and writes a second
+   * strategy row:
+   *
+   *   - `autoFired`, a ref, so a re-render cannot fire it again;
+   *   - a 1.5 second pause, so typing the last answer does not fire it on the
+   *     keystroke that happens to complete it;
+   *   - nothing to do if a strategy already exists, or one is being written.
+   *
+   * The manual regenerate below is what runs it again on purpose.
+   */
+  // The shared definition of "finished", not a second copy of it here.
+  const allAnswered = isQuestionnaireComplete(answers);
+  const generateRef = useRef(generate);
+  generateRef.current = generate;
+
+  useEffect(() => {
+    if (!allAnswered) return;
+    if (autoFired.current || isGenerating) return;
+    if (loadingStrategy || strategyRecord) return;
+    if (screen !== "questions") return;
+
+    const timer = setTimeout(() => {
+      if (autoFired.current) return;
+      autoFired.current = true;
+      setAutoStarted(true);
+      generateRef.current(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [allAnswered, answers, isGenerating, loadingStrategy, strategyRecord, screen]);
 
   /* ---- save ---- */
 
@@ -891,7 +999,11 @@ export default function BrandStrategyPage() {
                 {t("strategy.answeredCount", { answered: totalAnswered, total: QUESTIONS.length })}
               </div>
               <button
-                onClick={() => generate(false)}
+                onClick={() => {
+                  setAutoStarted(false);
+                  autoFired.current = true; // asked for by hand; do not also fire on its own
+                  generate(false);
+                }}
                 disabled={totalAnswered < 1}
                 className="w-full rounded-xl bg-primary text-white font-headline font-bold py-3 shadow-lg shadow-primary/20 text-sm hover:brightness-110 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-sans"
               >
@@ -1013,6 +1125,8 @@ export default function BrandStrategyPage() {
                       if (currentIndex < QUESTIONS.length - 1) {
                         setCurrentIndex((p) => p + 1);
                       } else {
+                        setAutoStarted(false);
+                        autoFired.current = true; // pressed, so the timer must not fire behind it
                         generate(false);
                       }
                     }}
@@ -1037,24 +1151,32 @@ export default function BrandStrategyPage() {
               <h2 className="text-2xl font-semibold text-ink mb-2">
                 {t("strategy.crafting")}
               </h2>
+              {/* One line: what is being written now, or — before the first
+                  section arrives — why this started with nobody pressing anything. */}
               <p className="text-muted font-sans">
-                {t("strategy.synthesizing", { count: totalAnswered })}
+                {writingIndex >= 0
+                  ? t("strategy.writingSection", {
+                      section: t(GENERATION_STAGES[writingIndex].labelKey as Parameters<typeof t>[0]),
+                    })
+                  : autoStarted
+                    ? t("strategy.autoStarted")
+                    : t("strategy.synthesizing", { count: totalAnswered })}
               </p>
             </div>
 
             <div className="space-y-3 text-left">
               {GENERATION_STAGES.map((stage, idx) => (
-                <div key={stage} className="flex items-center gap-3">
+                <div key={stage.key} className="flex items-center gap-3">
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-mono transition-colors ${
-                      idx < generationStage
-                        ? "bg-[#EBF5FC]0 text-white"
-                        : idx === generationStage
+                      done.has(stage.key)
+                        ? "bg-brand-orange text-white"
+                        : idx === writingIndex
                           ? "bg-brand-orange text-white animate-pulse"
                           : "bg-light text-muted"
                     }`}
                   >
-                    {idx < generationStage ? (
+                    {done.has(stage.key) ? (
                       <svg
                         className="w-3 h-3"
                         fill="none"
@@ -1069,15 +1191,15 @@ export default function BrandStrategyPage() {
                         />
                       </svg>
                     ) : (
-                      idx + 1
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
                     )}
                   </div>
                   <span
                     className={`text-sm font-sans ${
-                      idx <= generationStage ? "text-ink" : "text-muted"
+                      done.has(stage.key) || idx === writingIndex ? "text-ink" : "text-muted"
                     }`}
                   >
-                    {t(stage)}
+                    {t(stage.labelKey as Parameters<typeof t>[0])}
                   </span>
                 </div>
               ))}
@@ -1087,7 +1209,8 @@ export default function BrandStrategyPage() {
               <div
                 className="h-full rounded-full bg-brand-orange transition-all duration-1000 ease-out"
                 style={{
-                  width: `${((generationStage + 1) / GENERATION_STAGES.length) * 100}%`,
+                  // The real fraction: sections written over sections to write.
+                  width: `${(done.size / GENERATION_STAGES.length) * 100}%`,
                 }}
               />
             </div>
@@ -1125,7 +1248,11 @@ export default function BrandStrategyPage() {
                 {t("strategy.editAnswers")}
               </button>
               <button
-                onClick={() => generate(false)}
+                onClick={() => {
+                  setAutoStarted(false);
+                  autoFired.current = true; // asked for by hand; do not also fire on its own
+                  generate(false);
+                }}
                 className="px-4 py-2 rounded-lg border border-outline-variant/15 text-sm font-semibold text-dark hover:bg-surface-container-low transition-colors font-sans"
               >
                 {t("common.regenerate")}
@@ -1185,7 +1312,31 @@ export default function BrandStrategyPage() {
             /* Under the strategy, not next to Save. It writes nothing: both
                controls are links, so starting a redo changes nothing until
                the new strategy is finished. */
-            footer={<StartFresh />}
+            footer={
+              <>
+                {/* Generation runs itself when the questionnaire is finished.
+                    This is the way to run it again on purpose. */}
+                <section className="mx-auto mt-10 w-full max-w-[860px] rounded-panel border border-rule bg-card px-6 py-5 drop-shadow-panel">
+                  <h2 className="text-h3 font-bold">{t("strategy.regenerate")}</h2>
+                  <p className="mt-2 max-w-[70ch] text-sm font-medium leading-[1.6] text-ink-2">
+                    {t("strategy.regenerateWhy")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAutoStarted(false);
+                      autoFired.current = true;
+                      generate(false);
+                    }}
+                    disabled={totalAnswered < 1 || isGenerating}
+                    className="mt-4 rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed font-sans"
+                  >
+                    {t("strategy.regenerate")}
+                  </button>
+                </section>
+                <StartFresh />
+              </>
+            }
           />
         </div>
       )}

@@ -208,7 +208,11 @@
 .prin .t { font-size: theme('fontSize.base[0]'); font-weight: 700; }
 .prin .v { font-size: theme('fontSize.sm[0]'); font-weight: 400; color: theme('colors.muted.DEFAULT'); margin-top: 2px; }
 
-/* 08 boundaries — a named mistake is enforceable, taste is not */
+/* 07 voice — how everything above is said. Borrows the boundaries columns. */
+.voiceDesc { font-size: theme('fontSize.sm[0]'); font-weight: 500; line-height: 1.6;
+  color: theme('colors.ink.2'); margin: 0 0 12px; }
+
+/* 09 boundaries — a named mistake is enforceable, taste is not */
 .bnd { background: var(--st-bnd-bg); border-color: theme('colors.rule.2'); }
 .bcol .k { display: flex; align-items: center; gap: 7px; font-size: theme('fontSize.xs[0]');
   font-weight: 800; letter-spacing: .3px; text-transform: uppercase; }

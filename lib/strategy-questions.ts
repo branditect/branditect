@@ -5,55 +5,133 @@
  * questionnaire is complete. Importing the array rather than hardcoding a
  * number means adding a question can never silently make a 90%-done
  * questionnaire read as finished.
+ *
+ * EVERY QUESTION FEEDS A FIELD THE DOCUMENT RENDERS. `feeds` names it. The old
+ * set had no source at all for principles, boundaries, focus, personality,
+ * attributes or pillar proof, which is why sections 07, 08 and 09 came out
+ * empty however well the model wrote. A question that feeds nothing is a
+ * question that wastes the founder's time; a field with no question behind it
+ * is a section the model has to invent or leave blank.
+ *
+ * THE STORAGE KEY IS `id`, NOT THE TEXT. It used to be `${section}|${question}`,
+ * so editing a typo in a question orphaned every answer already saved under the
+ * old wording. Ids are short, permanent and never shown. Reword freely.
  */
 
 export interface QuestionDef {
+  /** Permanent. The storage key. Never change one, never reuse one. */
+  id: string;
   section: string;
   question: string;
   placeholder: string;
+  /** Which part of BrandStrategy this answer builds. Documentation, and the
+   *  test that proves no section is left without a source. */
+  feeds: string;
 }
 
 export const QUESTIONS: QuestionDef[] = [
-  // Founding Vision (4)
-  { section: "Founding Vision", question: "What core problem does your brand exist to solve, and what personal experience sparked you to take it on?", placeholder: "The problem + your origin story..." },
-  { section: "Founding Vision", question: "If your brand fully succeeds, what does the world look like in 10 years?", placeholder: "Paint the vision..." },
-  { section: "Founding Vision", question: "Beyond profit, what is the deeper motivation driving this brand?", placeholder: "What keeps you going on hard days..." },
-  { section: "Founding Vision", question: "Are there any existing brand elements you want to KEEP and build the strategy around — taglines, mission statement, values, manifesto lines, naming conventions?", placeholder: "Tagline: ...\nMission: ...\nValues: ...\n(Leave blank if starting fresh)" },
+  // ── Your business ────────────────────────────────────────────────────────
+  { id: "biz-what", section: "Your business",
+    question: "What do you sell?",
+    placeholder: "One sentence, the way you would say it to a neighbour.",
+    feeds: "core.whatWeDo, positioning.weAre" },
+  { id: "biz-why", section: "Your business",
+    question: "Why did you start it?",
+    placeholder: "What actually happened. Not a mission statement.",
+    feeds: "core.whyWeExist" },
+  { id: "biz-promise", section: "Your business",
+    question: "What do customers get from you every single time?",
+    placeholder: "The thing you always deliver, even on a bad week.",
+    feeds: "core.promise" },
 
-  // Your Offering (4)
-  { section: "Your Offering", question: "Describe what you offer in one clear sentence, then complete: 'We are the only ones who...'", placeholder: "Sentence one: ...\nWe are the only ones who..." },
-  { section: "Your Offering", question: "What is your single strongest competitive advantage — the one thing nobody can match?", placeholder: "The one thing..." },
-  { section: "Your Offering", question: "How does your delivery, product, or experience feel different from competitors?", placeholder: "Describe what feels different..." },
-  { section: "Your Offering", question: "What are your non-negotiables — things you will never compromise on?", placeholder: "The lines you will not cross..." },
+  // ── Your customers ───────────────────────────────────────────────────────
+  { id: "cust-who", section: "Your customers",
+    question: "Describe your best customer. Who are they?",
+    placeholder: "One real person you have sold to. Age, job, situation.",
+    feeds: "audience[].name/age/role/detail, positioning.forWhom" },
+  { id: "cust-want", section: "Your customers",
+    question: "What are they trying to get done, and what gets in the way?",
+    placeholder: "What they want, then what makes it hard.",
+    feeds: "audience[].wants/frustratedBy, analysis.problemLadder" },
+  { id: "cust-not", section: "Your customers",
+    question: "Who is this not for?",
+    placeholder: "Be specific. It sharpens everything else.",
+    feeds: "positioning.notFor" },
 
-  // Competitive Landscape (3)
-  { section: "Competitive Landscape", question: "Who are your top 3 competitors and what is each one's biggest weakness?", placeholder: "Competitor 1: ...\nCompetitor 2: ...\nCompetitor 3: ..." },
-  { section: "Competitive Landscape", question: "What are the most common complaints customers have about your category?", placeholder: "The frustrations people have with existing options..." },
-  { section: "Competitive Landscape", question: "How does your brand challenge the norms or conventions of your industry?", placeholder: "Where you break the rules..." },
+  // ── Your competition ─────────────────────────────────────────────────────
+  { id: "comp-who", section: "Your competition",
+    question: "If someone does not buy from you, where do they go instead?",
+    placeholder: "Name two or three. Include \"does it themselves\" if that is the truth.",
+    feeds: "competitors[].name, positioning.unlike" },
+  { id: "comp-weak", section: "Your competition",
+    question: "What do those alternatives get wrong?",
+    placeholder: "What customers actually complain about, in their words.",
+    feeds: "competitors[].description, analysis.marketMap" },
+  { id: "comp-price", section: "Your competition",
+    question: "Compared to them, are you cheaper, about the same, or more expensive?",
+    placeholder: "And in one line, why that is right for you.",
+    feeds: "competitors[].price/map" },
 
-  // Your Audience (3)
-  { section: "Your Audience", question: "Describe your ideal customer in vivid detail — who they are, what they believe, what they care about.", placeholder: "Role, values, lifestyle, beliefs, pain points..." },
-  { section: "Your Audience", question: "Describe the before-and-after transformation your customer experiences, including the emotional shift.", placeholder: "Before: ...\nAfter: ...\nEmotional shift: ..." },
-  { section: "Your Audience", question: "Who is explicitly NOT your target customer? Who do you exclude?", placeholder: "We are not for people who..." },
+  // ── What makes you different ─────────────────────────────────────────────
+  { id: "diff-what", section: "What makes you different",
+    question: "What do you do that they cannot easily copy?",
+    placeholder: "One thing, plainly. If a competitor could say it too, it does not count.",
+    feeds: "positioning.difference, pillars[].title/body" },
+  { id: "diff-proof", section: "What makes you different",
+    question: "What proof do you have?",
+    placeholder: "Numbers, tests, years, certificates, guarantees. Not adjectives.",
+    feeds: "pillars[].proof, positioning.because" },
+  { id: "diff-never", section: "What makes you different",
+    question: "What would you never do, even if it cost you the sale?",
+    placeholder: "Your actual line.",
+    feeds: "boundaries.neverCompromise" },
 
-  // Brand Identity (3)
-  { section: "Brand Identity", question: "Pick three adjectives that describe how your brand should feel, and the emotional response someone should have when they see it.", placeholder: "Three adjectives + the feeling they evoke..." },
-  { section: "Brand Identity", question: "How should your visual approach differ from others in your industry, and which 2-3 brands inspire your aesthetic?", placeholder: "While others look ..., we look ...\nInspirations: Brand 1, Brand 2..." },
-  { section: "Brand Identity", question: "If your brand were a person at a party, how would they behave and dress?", placeholder: "They would be the one who... wearing..." },
+  // ── How you sound and behave ─────────────────────────────────────────────
+  { id: "tone-words", section: "How you sound",
+    question: "Pick three words for your brand.",
+    placeholder: "Not what you wish it were. What it is today.",
+    feeds: "pyramid.attributes" },
+  { id: "tone-feel", section: "How you sound",
+    question: "How should someone feel after dealing with you?",
+    placeholder: "One or two feelings, honestly.",
+    feeds: "pyramid.essence/benefits" },
+  { id: "tone-lang", section: "How you sound",
+    question: "Which words do you always use, and which do you avoid?",
+    placeholder: "Use: ...\nAvoid: ...",
+    feeds: "boundaries.wordsUsed/wordsAvoided" },
+  { id: "tone-always", section: "How you sound",
+    question: "What do you always do for a customer, no matter what?",
+    placeholder: "The habits people would notice.",
+    feeds: "boundaries.always, principles[]" },
+  { id: "tone-style", section: "How you sound",
+    question: "How would you describe the way you write?",
+    placeholder: "Short and direct? Warm and chatty? Careful and formal? Funny?\nAnd is there anyone whose writing you would happily be compared to?",
+    feeds: "voice.description, pyramid.personality" },
 
-  // Brand Voice (2)
-  { section: "Brand Voice", question: "How does your brand communicate (formal, casual, irreverent, authoritative), and what language or references does your community use?", placeholder: "Communication style + community language..." },
-  { section: "Brand Voice", question: "Write a sample post in your ideal voice, and list any words or phrases your brand should NEVER use.", placeholder: "Sample post: ...\nNever use: ..." },
-
-  // Validation & Risks (2)
-  { section: "Validation & Risks", question: "What evidence do you have that your brand works (testimonials, data, traction), and what metrics beyond revenue define success?", placeholder: "Proof points + success metrics..." },
-  { section: "Validation & Risks", question: "What are the primary challenges or risks your brand faces in the next 12 months?", placeholder: "The biggest threats..." },
+  // ── Where you are going ──────────────────────────────────────────────────
+  { id: "next-goal", section: "Where you are going",
+    question: "What is the one thing the next twelve months are for?",
+    placeholder: "One goal, not five.",
+    feeds: "focus.goal" },
+  { id: "next-steps", section: "Where you are going",
+    question: "What has to happen to get there?",
+    placeholder: "Two or three things, and roughly when.",
+    feeds: "focus.priorities" },
+  { id: "next-tagline", section: "Where you are going",
+    question: "Do you already have a tagline or slogan you want to keep?",
+    placeholder: "Leave blank if not. If you have one, we build around it.",
+    feeds: "messages.tagline" },
 ];
 
 export const SECTIONS = Array.from(new Set(QUESTIONS.map((q) => q.section)));
 
-/** The key an answer is stored under in `brand_strategies.answers`. */
-export const questionKey = (q: QuestionDef) => `${q.section}|${q.question}`;
+/**
+ * The key an answer is stored under in `brand_strategies.answers`.
+ *
+ * The id, not the text. Rewording a question used to orphan every answer
+ * already saved under the old wording, silently, with no error anywhere.
+ */
+export const questionKey = (q: QuestionDef) => q.id;
 
 /** True only when every question has a non-empty answer. */
 export function isQuestionnaireComplete(answers: Record<string, string> | null | undefined): boolean {

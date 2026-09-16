@@ -2821,6 +2821,25 @@ export const en = {
   "productPricing.costsExVat": "What the thing costs you before you sell it. Costs are excluding VAT.",
   "productPricing.sellExVat": "What it costs to get that sale, per sale. Excluding VAT.",
   "product.colPriceVat": "Price (incl. VAT)",
+
+  // ── The document gained a voice section ── 2026-09-16, Finnish mine.
+  "strategyDoc.sec.voice": "Voice",
+  "strategyDoc.why.voice": "How the brand sounds, and the words it will not use",
+  "strategyDoc.voice.doSay": "We say",
+  "strategyDoc.voice.dontSay": "We do not say",
+  "strategyDoc.voice.empty": "How would you describe the way your brand talks?",
+  "strategyDoc.voice.example": "For example: plain, direct, never salesy. We say what a thing costs.",
+  "strategyDoc.unresolved": "Still unresolved",
+  "strategyDoc.unresolvedWhy":
+    "The analysis found these and could not settle them from your answers. They are yours to decide.",
+
+  // ── Generation runs itself, and shows its work ── 2026-09-16, Finnish mine.
+  "strategy.writingSection": "Writing {section}…",
+  "strategy.analysing": "Reading your answers",
+  "strategy.autoStarted": "All twenty answered. Building your strategy now.",
+  "strategy.regenerate": "Rewrite the strategy",
+  "strategy.regenerateWhy":
+    "Rewrites the whole document from your current answers. The one on screen is replaced.",
 } as const;
 
 export type StringKey = keyof typeof en;

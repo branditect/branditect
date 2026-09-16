@@ -175,7 +175,7 @@ export default function SocialStrategyPage() {
             typeof stratRow.generated_strategy === 'string'
               ? JSON.parse(stratRow.generated_strategy)
               : stratRow.generated_strategy
-          archetype = parsed?.archetype ?? null
+          archetype = parsed?.pyramid?.essence ?? parsed?.archetype ?? null
           voiceDescription = parsed?.voiceDescription ?? null
         } catch {
           // legacy markdown — leave null but still treat as set up

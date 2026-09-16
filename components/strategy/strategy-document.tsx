@@ -5,7 +5,7 @@ import { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import {
   SECTIONS, EMPTY_STRATEGY, completeness, derivePyramid, firstIncompleteSection,
-  generateSummary, primarySegment, oneLine, splitHeadline, hasUsableMap,
+  generateSummary, primarySegment, oneLine, midSentence, splitHeadline, hasUsableMap,
   anyPrices, ladder, missingQuestionsFor, quotesFor,
   type BrandStrategy, type SectionDef, type StrategyOrigin,
 } from "@/lib/strategy";
@@ -164,11 +164,323 @@ export default function StrategyDocument({
   const rows = ladder(strategy.competitors);
   const showPrices = anyPrices(strategy.competitors);
   const showMap = hasUsableMap(strategy.competitors);
-  const sec = (id: string) => SECTIONS.find((x) => x.id === id)!;
-
   const updated = strategy.updatedAt
     ? new Date(strategy.updatedAt).toLocaleDateString(t("strategyDoc.dateLocale"), { day: "numeric", month: "short", year: "numeric" })
     : t("strategyDoc.notSavedYet");
+
+  /**
+   * One body per section, looked up by id.
+   *
+   * The page renders SECTIONS in order rather than nine hand-placed blocks:
+   * the number, the title and the why line all come from the list, so a
+   * section added there cannot be forgotten here — which is exactly what
+   * happened to `voice`, a field of BrandStrategy that rendered nowhere.
+   */
+  const bodies: Partial<Record<string, React.ReactNode>> = {
+    core: (
+      <>
+        <div className={`${s.panel} ${s.core}`}>
+          <div className={s.grid2}>
+            {([["strategyDoc.whoWeAre", strategy.core.whoWeAre, I.user],
+               ["strategyDoc.whatWeDo", strategy.core.whatWeDo, I.bolt],
+               ["strategyDoc.whyWeExist", strategy.core.whyWeExist, I.heart],
+               ["strategyDoc.ourPromise", strategy.core.promise, I.shield]] as const).map(([k, v, icon]) => (
+              <div key={k} className={s.quad}>
+                <span className={s.qico}><Ico d={icon} size={21} /></span>
+                <div>
+                  <div className="t">{t(k)}</div>
+                  <div className="v">{v || t("strategyDoc.notAnsweredYet")}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    ),
+    positioning: (
+      <>
+        <div className={`${s.panel} ${s.pos}`}>
+          <div className={s.grid4}>
+            {([["strategyDoc.weAre", strategy.positioning.weAre], ["strategyDoc.for", strategy.positioning.forWhom],
+               ["strategyDoc.unlike", strategy.positioning.unlike], ["strategyDoc.because", strategy.positioning.because]] as const).map(([k, v]) => (
+              <div key={k} className={s.pcol}>
+                <div className="k">{t(k)}</div>
+                <div className="v">{v || "—"}</div>
+              </div>
+            ))}
+          </div>
+          <div className={s.diff}>
+            <div>
+              <div className="k">{t("sdoc.different")}</div>
+              <div className="v">{strategy.positioning.difference || t("strategyDoc.notDefinedYet")}</div>
+            </div>
+          </div>
+          {/* Without an exclusion this is a description, not a position. */}
+          <div className={s.notfor}>
+            <Ico d={I.ban} size={16} />
+            <div>
+              <div className="k">{t("sdoc.notFor")}</div>
+              <div className="v">
+                {strategy.positioning.notFor ||
+                  t("strategyDoc.nobodyExcluded")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    ),
+    audience: (
+      <>
+        <div className={s.panel}>
+          {strategy.audience.length === 0 ? (
+            <Empty what="strategyDoc.noSegments" example="strategyDoc.exSegment" />
+          ) : (
+            <>
+              <div className={s.segrow}>
+                {strategy.audience.map((a, i) => (
+                  <button key={a.name + i} type="button"
+                    className={`${s.seg} ${i === activeSeg ? s.segOn : ""}`}
+                    onClick={() => setActiveSeg(i)}>
+                    {a.name}{a.isPrimary ? " ★" : ""}
+                  </button>
+                ))}
+                <button type="button" className={`${s.seg} ${s.segAdd}`} onClick={() => onEdit("audience")}>
+                  {t("strategyDoc.addSegment")}
+                </button>
+              </div>
+              {seg && (
+                <>
+                  <div className={s.aud}>
+                    <span className={s.avat}><Ico d={I.user} size={26} /></span>
+                    <div>
+                      <div className={s.audNm}>{seg.name}</div>
+                      <div className={s.audRo}>
+                        {[seg.role, seg.detail].filter(Boolean).join(" · ")}
+                        {seg.isPrimary && ` · ${t("strategyDoc.primary")}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={s.wf}>
+                    <div>
+                      <div className="k">{t("sdoc.theyWant")}</div>
+                      <div className="v">{seg.wants || "—"}</div>
+                    </div>
+                    <div>
+                      <div className={`k ${s.kb}`}>{t("sdoc.frustratedBy")}</div>
+                      <div className="v">{seg.frustratedBy || "—"}</div>
+                    </div>
+                  </div>
+                  {seg.channels.length > 0 && (
+                    <div className={s.tags}>
+                      {seg.channels.map((ch, i) => (
+                        <span key={ch.label + i} className={`${s.tag} ${ch.stage ? "" : s.tagO}`}>
+                          {ch.label}{ch.stage ? ` · ${t(STAGE_LABEL[ch.stage])}` : ` · ${t("strategyDoc.unassigned")}`}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </>
+    ),
+    competitors: (
+      <>
+        <div className={s.panel}>
+          {strategy.competitors.length === 0 ? (
+            <Empty what="strategyDoc.noCompetitors" example="strategyDoc.exCompetitor" />
+          ) : (
+            <>
+              <div className={s.comp}>
+                {rows.map((k, i) => (
+                  <div key={k.name + i} className={`${s.crow} ${k.isUs ? s.crowUs : ""}`}>
+                    <div className={s.crowNm}>{k.name}</div>
+                    <div className={s.crowD}>{k.description}</div>
+                    {/* A column of em dashes says nothing. Hidden until a price exists. */}
+                    {showPrices && <div className={s.crowPr}>{k.price || "—"}</div>}
+                  </div>
+                ))}
+              </div>
+              {!showPrices && (
+                <div className={s.emptyNote}>
+                  {t("strategyDoc.noPrices")}
+                </div>
+              )}
+              {showMap && <div className={s.map}>
+                <span className={`${s.ax} ${s.axv}`} /><span className={`${s.ax} ${s.axh}`} />
+                <span className={`${s.lb} ${s.lt}`}>{t("sdoc.professional")}</span>
+                <span className={`${s.lb} ${s.lbm}`}>{t("sdoc.consumer")}</span>
+                <span className={`${s.lb} ${s.ll}`}>{t("sdoc.accessible")}</span>
+                <span className={`${s.lb} ${s.lr}`}>{t("sdoc.premium")}</span>
+                {strategy.competitors.map((k, i) => (
+                  <span key={k.name + i}
+                    className={`${s.dot} ${k.isUs ? s.dotUs : ""}`}
+                    style={{ left: `${k.map.x}%`, top: `${100 - k.map.y}%` }}>
+                    {!k.isUs && <i style={{ background: "currentColor" }} />}{k.name}
+                  </span>
+                ))}
+              </div>}
+              {!showMap && (
+                <div className={s.emptyNote}>
+                  {t("strategyDoc.mapNeedsPositions")}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </>
+    ),
+    pillars: (
+      <>
+        {strategy.pillars.length === 0 ? (
+          <div className={s.panel}>
+            <Empty what="strategyDoc.noPillars" example="strategyDoc.exPillar" />
+          </div>
+        ) : (
+          <div className={s.grid3}>
+            {strategy.pillars.map((p, i) => (
+              <div key={p.title + i} className={`${s.panel} ${s.pil}`}>
+                <span className={s.pico}><Ico d={I.spark} size={19} /></span>
+                <div className="t">{p.title}</div>
+                <div className="v">{p.body}</div>
+                <div className={s.proof}>
+                  <div className={s.proofk}>{t("sdoc.proof")}</div>
+                  {p.proof ? (
+                    <div className={s.proofv}><Ico d={I.check} size={13} />{p.proof}</div>
+                  ) : (
+                    /* Surfaced, not hidden — copy from adjectives reads like everyone else's. */
+                    <div className={`${s.proofv} ${s.proofMissing}`}>
+                      <Ico d={I.ban} size={13} />{t("sdoc.noProof")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    ),
+    messages: (
+      <>
+        <div className={s.panel}>
+          {strategy.messages.tagline
+            ? <div className={s.tagline}>{strategy.messages.tagline}</div>
+            : <Empty what="strategyDoc.noTagline" example="strategyDoc.exTagline" />}
+          {strategy.messages.supporting.map((m, i) => (
+            <div key={i} className={s.msg}>
+              {m.text}
+              <span className={`${s.msgWho} ${m.stage ? "" : s.msgUnstaged}`}>
+                {m.stage ? t(STAGE_LABEL[m.stage]) : t("strategyDoc.noStage")}
+              </span>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
+    voice: (
+      <>
+        <div className={`${s.panel} ${s.bnd}`}>
+          {strategy.voice.description
+            ? <p className={s.voiceDesc}>{strategy.voice.description}</p>
+            : <Empty what="strategyDoc.voice.empty" example="strategyDoc.voice.example" />}
+          {(strategy.voice.doSay.length > 0 || strategy.voice.dontSay.length > 0) && (
+            <div className={s.grid2}>
+              <div className={`${s.bcol} ${s.bcolYes}`}>
+                <div className="k"><Ico d={I.check} size={14} /> {t("strategyDoc.voice.doSay")}</div>
+                <ul>{strategy.voice.doSay.map((v, i) => (
+                  <li key={i}><span>✓</span><span style={{ fontWeight: 500 }}>{v}</span></li>
+                ))}</ul>
+              </div>
+              <div className={`${s.bcol} ${s.bcolNo}`}>
+                <div className="k"><Ico d={I.x} size={14} /> {t("strategyDoc.voice.dontSay")}</div>
+                <ul>{strategy.voice.dontSay.map((v, i) => (
+                  <li key={i}><span>✕</span><span style={{ fontWeight: 500 }}>{v}</span></li>
+                ))}</ul>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    ),
+    principles: (
+      <>
+        <div className={s.panel}>
+          {strategy.principles.length === 0 ? (
+            <Empty what="strategyDoc.noPrinciples" example="strategyDoc.exPrinciple" />
+          ) : strategy.principles.map((p, i) => (
+            <div key={p.title + i} className={s.prin}>
+              <span className="n">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <div className="t">{p.title}</div>
+                <div className="v">{p.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
+    boundaries: (
+      <>
+        <div className={`${s.panel} ${s.bnd}`}>
+          <div className={s.grid2}>
+            <div className={`${s.bcol} ${s.bcolNo}`}>
+              <div className="k"><Ico d={I.x} size={14} /> {t("sdoc.weNever")}</div>
+              {strategy.boundaries.never.length === 0 ? (
+                <ul><li><span>—</span>{t("sdoc.nothingNamedHelp")}</li></ul>
+              ) : (
+                <ul>{strategy.boundaries.never.map((n, i) => (
+                  <li key={i}><span>✕</span><span style={{ fontWeight: 500 }}>{n.rule}
+                    {n.reason && <span className={s.reason}> {t("strategyDoc.becauseReason", { reason: midSentence(n.reason) })}</span>}</span></li>
+                ))}</ul>
+              )}
+            </div>
+            <div className={`${s.bcol} ${s.bcolYes}`}>
+              <div className="k"><Ico d={I.check} size={14} /> {t("sdoc.weAlways")}</div>
+              {strategy.boundaries.always.length === 0 ? (
+                <ul><li><span>—</span>{t("sdoc.nothingNamed")}</li></ul>
+              ) : (
+                <ul>{strategy.boundaries.always.map((a, i) => (
+                  <li key={i}><span>✓</span><span style={{ fontWeight: 500 }}>{a}</span></li>
+                ))}</ul>
+              )}
+            </div>
+          </div>
+          {(strategy.boundaries.wordsUsed.length > 0 || strategy.boundaries.wordsAvoided.length > 0) && (
+            <div className={s.words}>
+              {strategy.boundaries.wordsUsed.map((w) => <span key={w} className={`${s.w} ${s.wOk}`}>{w}</span>)}
+              {strategy.boundaries.wordsAvoided.map((w) => <span key={w} className={`${s.w} ${s.wNo}`}>{w}</span>)}
+            </div>
+          )}
+        </div>
+      </>
+    ),
+    focus: (
+      <>
+        <div className={s.panel}>
+          {strategy.focus.goal ? (
+            <div className={s.goal}>
+              <span className={s.gico}><Ico d={I.flag} size={22} /></span>
+              <div>
+                <div className="k">{t("sdoc.brandGoal")}</div>
+                <div className="v">{strategy.focus.goal}</div>
+              </div>
+            </div>
+          ) : (
+            <Empty what="strategyDoc.noGoal" example="strategyDoc.exGoal" />
+          )}
+          {strategy.focus.priorities.map((p, i) => (
+            <div key={p.label + i} className={s.pri}>
+              <span className={s.ck}><Ico d={I.check} size={11} /></span>
+              {p.label}
+              <span className={s.priM}>{p.when}</span>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
+  };
 
   return (
     <OriginContext.Provider value={{ origin, track, strategy }}>
@@ -250,283 +562,34 @@ export default function StrategyDocument({
         </section>
       )}
 
-      {/* ============ 01 CORE ============ */}
-      <Section def={sec("core")} onEdit={onEdit}>
-        <div className={`${s.panel} ${s.core}`}>
-          <div className={s.grid2}>
-            {([["strategyDoc.whoWeAre", strategy.core.whoWeAre, I.user],
-               ["strategyDoc.whatWeDo", strategy.core.whatWeDo, I.bolt],
-               ["strategyDoc.whyWeExist", strategy.core.whyWeExist, I.heart],
-               ["strategyDoc.ourPromise", strategy.core.promise, I.shield]] as const).map(([k, v, icon]) => (
-              <div key={k} className={s.quad}>
-                <span className={s.qico}><Ico d={icon} size={21} /></span>
-                <div>
-                  <div className="t">{t(k)}</div>
-                  <div className="v">{v || t("strategyDoc.notAnsweredYet")}</div>
-                </div>
+      {/* Every section, in the list's order and numbering. */}
+      {SECTIONS.map((def) => (
+        <Section key={def.id} def={def} onEdit={onEdit}>
+          {bodies[def.id]}
+        </Section>
+      ))}
+
+
+      {/* The analysis is input for Andy and Studio, not a section of the
+          document — except this. A conflict the analysis could not settle from
+          the answers is the founder's to decide, and hiding it decides it by
+          silence. */}
+      {strategy.analysis.unresolved.length > 0 && (
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <h2>{t("strategyDoc.unresolved")}</h2>
+            <span className={s.why}>{t("strategyDoc.unresolvedWhy")}</span>
+          </div>
+          <div className={`${s.panel} ${s.bnd}`}>
+            {strategy.analysis.unresolved.map((u, i) => (
+              <div key={i} className={s.prin}>
+                <span className="n">?</span>
+                <div><div className="v">{u}</div></div>
               </div>
             ))}
           </div>
-        </div>
-      </Section>
-
-      {/* ============ 02 POSITIONING ============ */}
-      <Section def={sec("positioning")} onEdit={onEdit}>
-        <div className={`${s.panel} ${s.pos}`}>
-          <div className={s.grid4}>
-            {([["strategyDoc.weAre", strategy.positioning.weAre], ["strategyDoc.for", strategy.positioning.forWhom],
-               ["strategyDoc.unlike", strategy.positioning.unlike], ["strategyDoc.because", strategy.positioning.because]] as const).map(([k, v]) => (
-              <div key={k} className={s.pcol}>
-                <div className="k">{t(k)}</div>
-                <div className="v">{v || "—"}</div>
-              </div>
-            ))}
-          </div>
-          <div className={s.diff}>
-            <div>
-              <div className="k">{t("sdoc.different")}</div>
-              <div className="v">{strategy.positioning.difference || t("strategyDoc.notDefinedYet")}</div>
-            </div>
-          </div>
-          {/* Without an exclusion this is a description, not a position. */}
-          <div className={s.notfor}>
-            <Ico d={I.ban} size={16} />
-            <div>
-              <div className="k">{t("sdoc.notFor")}</div>
-              <div className="v">
-                {strategy.positioning.notFor ||
-                  t("strategyDoc.nobodyExcluded")}
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* ============ 03 AUDIENCE ============ */}
-      <Section def={sec("audience")} onEdit={onEdit}>
-        <div className={s.panel}>
-          {strategy.audience.length === 0 ? (
-            <Empty what="strategyDoc.noSegments" example="strategyDoc.exSegment" />
-          ) : (
-            <>
-              <div className={s.segrow}>
-                {strategy.audience.map((a, i) => (
-                  <button key={a.name + i} type="button"
-                    className={`${s.seg} ${i === activeSeg ? s.segOn : ""}`}
-                    onClick={() => setActiveSeg(i)}>
-                    {a.name}{a.isPrimary ? " ★" : ""}
-                  </button>
-                ))}
-                <button type="button" className={`${s.seg} ${s.segAdd}`} onClick={() => onEdit("audience")}>
-                  {t("strategyDoc.addSegment")}
-                </button>
-              </div>
-              {seg && (
-                <>
-                  <div className={s.aud}>
-                    <span className={s.avat}><Ico d={I.user} size={26} /></span>
-                    <div>
-                      <div className={s.audNm}>{seg.name}</div>
-                      <div className={s.audRo}>
-                        {[seg.role, seg.detail].filter(Boolean).join(" · ")}
-                        {seg.isPrimary && ` · ${t("strategyDoc.primary")}`}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={s.wf}>
-                    <div>
-                      <div className="k">{t("sdoc.theyWant")}</div>
-                      <div className="v">{seg.wants || "—"}</div>
-                    </div>
-                    <div>
-                      <div className={`k ${s.kb}`}>{t("sdoc.frustratedBy")}</div>
-                      <div className="v">{seg.frustratedBy || "—"}</div>
-                    </div>
-                  </div>
-                  {seg.channels.length > 0 && (
-                    <div className={s.tags}>
-                      {seg.channels.map((ch, i) => (
-                        <span key={ch.label + i} className={`${s.tag} ${ch.stage ? "" : s.tagO}`}>
-                          {ch.label}{ch.stage ? ` · ${t(STAGE_LABEL[ch.stage])}` : ` · ${t("strategyDoc.unassigned")}`}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </Section>
-
-      {/* ============ 04 COMPETITORS ============ */}
-      <Section def={sec("competitors")} onEdit={onEdit}>
-        <div className={s.panel}>
-          {strategy.competitors.length === 0 ? (
-            <Empty what="strategyDoc.noCompetitors" example="strategyDoc.exCompetitor" />
-          ) : (
-            <>
-              <div className={s.comp}>
-                {rows.map((k, i) => (
-                  <div key={k.name + i} className={`${s.crow} ${k.isUs ? s.crowUs : ""}`}>
-                    <div className={s.crowNm}>{k.name}</div>
-                    <div className={s.crowD}>{k.description}</div>
-                    {/* A column of em dashes says nothing. Hidden until a price exists. */}
-                    {showPrices && <div className={s.crowPr}>{k.price || "—"}</div>}
-                  </div>
-                ))}
-              </div>
-              {!showPrices && (
-                <div className={s.emptyNote}>
-                  {t("strategyDoc.noPrices")}
-                </div>
-              )}
-              {showMap && <div className={s.map}>
-                <span className={`${s.ax} ${s.axv}`} /><span className={`${s.ax} ${s.axh}`} />
-                <span className={`${s.lb} ${s.lt}`}>{t("sdoc.professional")}</span>
-                <span className={`${s.lb} ${s.lbm}`}>{t("sdoc.consumer")}</span>
-                <span className={`${s.lb} ${s.ll}`}>{t("sdoc.accessible")}</span>
-                <span className={`${s.lb} ${s.lr}`}>{t("sdoc.premium")}</span>
-                {strategy.competitors.map((k, i) => (
-                  <span key={k.name + i}
-                    className={`${s.dot} ${k.isUs ? s.dotUs : ""}`}
-                    style={{ left: `${k.map.x}%`, top: `${100 - k.map.y}%` }}>
-                    {!k.isUs && <i style={{ background: "currentColor" }} />}{k.name}
-                  </span>
-                ))}
-              </div>}
-              {!showMap && (
-                <div className={s.emptyNote}>
-                  {t("strategyDoc.mapNeedsPositions")}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </Section>
-
-      {/* ============ 05 PILLARS ============ */}
-      <Section def={sec("pillars")} onEdit={onEdit}>
-        {strategy.pillars.length === 0 ? (
-          <div className={s.panel}>
-            <Empty what="strategyDoc.noPillars" example="strategyDoc.exPillar" />
-          </div>
-        ) : (
-          <div className={s.grid3}>
-            {strategy.pillars.map((p, i) => (
-              <div key={p.title + i} className={`${s.panel} ${s.pil}`}>
-                <span className={s.pico}><Ico d={I.spark} size={19} /></span>
-                <div className="t">{p.title}</div>
-                <div className="v">{p.body}</div>
-                <div className={s.proof}>
-                  <div className={s.proofk}>{t("sdoc.proof")}</div>
-                  {p.proof ? (
-                    <div className={s.proofv}><Ico d={I.check} size={13} />{p.proof}</div>
-                  ) : (
-                    /* Surfaced, not hidden — copy from adjectives reads like everyone else's. */
-                    <div className={`${s.proofv} ${s.proofMissing}`}>
-                      <Ico d={I.ban} size={13} />{t("sdoc.noProof")}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {/* ============ 06 MESSAGES ============ */}
-      <Section def={sec("messages")} onEdit={onEdit}>
-        <div className={s.panel}>
-          {strategy.messages.tagline
-            ? <div className={s.tagline}>{strategy.messages.tagline}</div>
-            : <Empty what="strategyDoc.noTagline" example="strategyDoc.exTagline" />}
-          {strategy.messages.supporting.map((m, i) => (
-            <div key={i} className={s.msg}>
-              {m.text}
-              <span className={`${s.msgWho} ${m.stage ? "" : s.msgUnstaged}`}>
-                {m.stage ? t(STAGE_LABEL[m.stage]) : t("strategyDoc.noStage")}
-              </span>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ============ 07 PRINCIPLES ============ */}
-      <Section def={sec("principles")} onEdit={onEdit}>
-        <div className={s.panel}>
-          {strategy.principles.length === 0 ? (
-            <Empty what="strategyDoc.noPrinciples" example="strategyDoc.exPrinciple" />
-          ) : strategy.principles.map((p, i) => (
-            <div key={p.title + i} className={s.prin}>
-              <span className="n">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <div className="t">{p.title}</div>
-                <div className="v">{p.body}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ============ 08 BOUNDARIES ============ */}
-      <Section def={sec("boundaries")} onEdit={onEdit}>
-        <div className={`${s.panel} ${s.bnd}`}>
-          <div className={s.grid2}>
-            <div className={`${s.bcol} ${s.bcolNo}`}>
-              <div className="k"><Ico d={I.x} size={14} /> {t("sdoc.weNever")}</div>
-              {strategy.boundaries.never.length === 0 ? (
-                <ul><li><span>—</span>{t("sdoc.nothingNamedHelp")}</li></ul>
-              ) : (
-                <ul>{strategy.boundaries.never.map((n, i) => (
-                  <li key={i}><span>✕</span><span style={{ fontWeight: 500 }}>{n.rule}
-                    {n.reason && <span className={s.reason}> {t("strategyDoc.becauseReason", { reason: n.reason })}</span>}</span></li>
-                ))}</ul>
-              )}
-            </div>
-            <div className={`${s.bcol} ${s.bcolYes}`}>
-              <div className="k"><Ico d={I.check} size={14} /> {t("sdoc.weAlways")}</div>
-              {strategy.boundaries.always.length === 0 ? (
-                <ul><li><span>—</span>{t("sdoc.nothingNamed")}</li></ul>
-              ) : (
-                <ul>{strategy.boundaries.always.map((a, i) => (
-                  <li key={i}><span>✓</span><span style={{ fontWeight: 500 }}>{a}</span></li>
-                ))}</ul>
-              )}
-            </div>
-          </div>
-          {(strategy.boundaries.wordsUsed.length > 0 || strategy.boundaries.wordsAvoided.length > 0) && (
-            <div className={s.words}>
-              {strategy.boundaries.wordsUsed.map((w) => <span key={w} className={`${s.w} ${s.wOk}`}>{w}</span>)}
-              {strategy.boundaries.wordsAvoided.map((w) => <span key={w} className={`${s.w} ${s.wNo}`}>{w}</span>)}
-            </div>
-          )}
-        </div>
-      </Section>
-
-      {/* ============ 09 FOCUS ============ */}
-      <Section def={sec("focus")} onEdit={onEdit}>
-        <div className={s.panel}>
-          {strategy.focus.goal ? (
-            <div className={s.goal}>
-              <span className={s.gico}><Ico d={I.flag} size={22} /></span>
-              <div>
-                <div className="k">{t("sdoc.brandGoal")}</div>
-                <div className="v">{strategy.focus.goal}</div>
-              </div>
-            </div>
-          ) : (
-            <Empty what="strategyDoc.noGoal" example="strategyDoc.exGoal" />
-          )}
-          {strategy.focus.priorities.map((p, i) => (
-            <div key={p.label + i} className={s.pri}>
-              <span className={s.ck}><Ico d={I.check} size={11} /></span>
-              {p.label}
-              <span className={s.priM}>{p.when}</span>
-            </div>
-          ))}
-        </div>
-      </Section>
+        </section>
+      )}
 
       {/* ============ WHERE THIS GOES NEXT ============ */}
       <section className={s.sec}>

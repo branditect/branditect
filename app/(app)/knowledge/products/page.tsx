@@ -283,7 +283,7 @@ export default function ProductsPage() {
                     <th scope="col" className="whitespace-nowrap border-b border-rule px-2.5 pb-2.5 text-right text-2xs font-bold tracking-[0.3px] text-muted-2">
                       {t("common.cost")}
                     </th>
-                    <SortHeader label={t("product.colPrice")} numeric active={sort === "price"} dir={dir} onClick={() => toggleSort("price")} />
+                    <SortHeader label={t("product.colPriceVat")} numeric active={sort === "price"} dir={dir} onClick={() => toggleSort("price")} />
                     <SortHeader label={t("product.colMargin")} numeric active={sort === "margin"} dir={dir} onClick={() => toggleSort("margin")} />
                     <th scope="col" className="border-b border-rule pb-2.5">
                       <span className="sr-only">{t("products.openDetail")}</span>

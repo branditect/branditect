@@ -1261,7 +1261,7 @@ export const en = {
   "num.price.haveATarget": "I have a target margin",
   "num.price.landedHint": "landed, not factory",
   "num.price.taxHint": "left blank, retail is treated as net",
-  "num.price.grossHint": "gross, what the customer pays",
+  "num.price.grossHint": "incl. VAT, what the customer pays",
   "num.price.marginAtPrice": "Margin at that price",
   "num.price.enterCostPrice": "Enter a cost and a price.",
   "num.price.losesMoney": "You lose money on every sale at this price.",
@@ -2430,7 +2430,7 @@ export const en = {
   "num.run.noMinMargin": "{name} has no minimum margin set, so a floor price can't be worked out. Set one in the product card's Pricing tab.",
   "num.run.overheadNotDivided": "Overhead is deliberately {not} divided across units. A “fully loaded” unit cost makes every product's margin depend on how many of everything else sold. Contribution plus break-even says the same thing without moving whenever an unrelated product has a good month.",
   "num.run.not": "not",
-  "num.hintGross": "gross",
+  "num.hintGross": "incl. VAT",
   "num.hintLanded": "landed",
   "num.offers.tryResult": "{pct}% off takes it to {price} and leaves {margin}% margin.",
   "num.offers.takesPriceTo": "Takes the price to {price} — the lowest that still leaves {mm}% margin. Net of tax that is {net}.",
@@ -2813,6 +2813,14 @@ export const en = {
     "You have answered {count} of the questions. Nothing has been built from them yet.",
   "strategy.buildFromAnswers": "Build my strategy from my answers",
   "strategy.keepAnswering": "Answer the rest first",
+
+  // ── Say which prices carry VAT and which do not ── 2026-09-16, Finnish mine.
+  "productPricing.lineRetailVat": "Retail price (incl. VAT)",
+  "productPricing.lineRrpVat": "RRP (incl. VAT)",
+  "productPricing.netPriceExVat": "Net price (excl. VAT)",
+  "productPricing.costsExVat": "What the thing costs you before you sell it. Costs are excluding VAT.",
+  "productPricing.sellExVat": "What it costs to get that sale, per sale. Excluding VAT.",
+  "product.colPriceVat": "Price (incl. VAT)",
 } as const;
 
 export type StringKey = keyof typeof en;

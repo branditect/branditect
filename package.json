@@ -29,6 +29,7 @@
     "documents:ui": "node scripts/documents-ui.mjs",
     "intake:e2e": "node scripts/strategy-intake-e2e.mjs",
     "strategy:e2e": "node scripts/strategy-from-questionnaire-e2e.mjs",
+    "money:ui": "node scripts/money-input-ui.mjs",
     "tag:ui": "node scripts/tag-images-ui.mjs",
     "placeholder:ui": "node scripts/brand-placeholder-ui.mjs"
   },

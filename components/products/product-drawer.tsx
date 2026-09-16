@@ -20,6 +20,7 @@ import {
   type StockStatus,
 } from "@/lib/products";
 import { authedFetch } from "@/lib/authed-fetch";
+import { parseMoney } from "@/lib/money-input";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
@@ -109,12 +110,7 @@ function toDraft(p: Product): Draft {
  * renders and validates against the browser's locale: on a comma-decimal
  * locale it shows 22,1 and can refuse "22.5" as you type it.
  */
-const toNum = (s: string): number | null => {
-  const t = s.trim().replace(",", ".");
-  if (t === "") return null;
-  const n = Number(t);
-  return Number.isNaN(n) ? null : n;
-};
+const toNum = (s: string): number | null => parseMoney(s);
 
 const splitTags = (s: string) => s.split(",").map((t) => t.trim()).filter(Boolean);
 
@@ -516,6 +512,7 @@ export default function ProductDrawer({
                 visible={draft.priceLinesVisible}
                 custom={draft.priceLinesCustom}
                 notes={draft.pricingNotes}
+                raw={draft.priceValues}
                 onValue={(column, raw) => setPriceValue(column, raw)}
                 onVisible={(next) => setDraft((d) => ({ ...d, priceLinesVisible: next }))}
                 onCustom={(next) => setDraft((d) => ({ ...d, priceLinesCustom: next }))}

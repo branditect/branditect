@@ -1332,7 +1332,7 @@ export const fi: Record<StringKey, string> = {
   "num.price.haveATarget": "Minulla on tavoitekate",
   "num.price.landedHint": "kokonaishankintahinta, ei tehdashinta",
   "num.price.taxHint": "jos tyhjä, myyntihinta tulkitaan verottomaksi",
-  "num.price.grossHint": "brutto, se minkä asiakas maksaa",
+  "num.price.grossHint": "sis. alv, se minkä asiakas maksaa",
   "num.price.marginAtPrice": "Kate tällä hinnalla",
   "num.price.enterCostPrice": "Syötä kustannus ja hinta.",
   "num.price.losesMoney": "Tällä hinnalla häviät rahaa jokaisessa kaupassa.",
@@ -2489,7 +2489,7 @@ export const fi: Record<StringKey, string> = {
   "num.run.noMinMargin": "Tuotteelle {name} ei ole asetettu vähimmäiskatetta, joten alarajahintaa ei voi laskea. Aseta se tuotekortin Hinnoittelu-välilehdellä.",
   "num.run.overheadNotDivided": "Yleiskuluja {not} tarkoituksella jaeta yksiköille. ”Täysin kuormitettu” yksikkökustannus tekee jokaisen tuotteen katteesta riippuvaisen siitä, paljonko kaikkea muuta myytiin. Myyntikate ja kriittinen piste kertovat saman asian liikkumatta aina kun jollain toisella tuotteella on hyvä kuukausi.",
   "num.run.not": "ei",
-  "num.hintGross": "brutto",
+  "num.hintGross": "sis. alv",
   "num.hintLanded": "kokonaishankinta",
   "num.offers.tryResult": "Alennus {pct} %: hinta {price}, katetta jää {margin} %.",
   "num.offers.takesPriceTo": "Hinta laskee tasoon {price}, alimpaan joka jättää vielä {mm} % katetta. Verottomana se on {net}.",
@@ -2866,4 +2866,12 @@ export const fi: Record<StringKey, string> = {
     "Olet vastannut {count} kysymykseen. Niistä ei ole vielä rakennettu mitään.",
   "strategy.buildFromAnswers": "Rakenna strategiani vastauksistani",
   "strategy.keepAnswering": "Vastaa ensin loppuihin",
+
+  // ── Say which prices carry VAT and which do not ── 2026-09-16, Finnish mine.
+  "productPricing.lineRetailVat": "Myyntihinta (sis. alv)",
+  "productPricing.lineRrpVat": "Ovh. (sis. alv)",
+  "productPricing.netPriceExVat": "Veroton hinta (alv 0 %)",
+  "productPricing.costsExVat": "Mitä tuote maksaa sinulle ennen myyntiä. Kustannukset ilman alvia.",
+  "productPricing.sellExVat": "Mitä yhden myynnin saaminen maksaa. Ilman alvia.",
+  "product.colPriceVat": "Hinta (sis. alv)",
 };

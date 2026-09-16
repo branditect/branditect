@@ -3,7 +3,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { STRATEGY_STABLE, STRATEGY_FROM_DOCUMENT_STABLE } from "@/lib/prompts";
 
-export const maxDuration = 60;
+// Analysis plus a full strategy is a real amount of generation, and this is
+// the worst place in the product to time out: the founder has answered
+// twenty questions to get here. copy-architect already takes 120 for less.
+export const maxDuration = 120;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -76,7 +79,10 @@ export async function POST(req: NextRequest) {
       // max_tokens caps thinking + text together — these calls would
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
-      max_tokens: 6000,
+      // The analysis block is new output, not free. 6000 truncated the JSON
+      // once the method was added, and a truncated object fails to parse and
+      // is thrown away whole.
+      max_tokens: 12000,
       system: cachedSystem(fromDocument ? STRATEGY_FROM_DOCUMENT_STABLE : STRATEGY_STABLE),
       messages: [{ role: "user", content: contentBlocks }],
     });

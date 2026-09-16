@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/lib/useBrand";
 import { authedFetch } from "@/lib/authed-fetch";
+import { cleanMoneyText, parseMoney } from "@/lib/money-input";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey, Vars } from "@/lib/i18n/index.ts";
 
@@ -94,10 +95,10 @@ function productToDb(p: Product, brandId: string, i: number) {
   const base = { brand_id: brandId, name: p.name, sort_order: i, is_active: true, is_hero: false, is_flagship: false, flag_margin: true };
   const csv = (s: string) => s.split(",").map(x => x.trim()).filter(Boolean);
   switch (p.kind) {
-    case "physical": return { ...base, type: "physical", category: p.category || null, description: p.description || null, price_rrp: p.rrp ? parseFloat(p.rrp) : null, price_wholesale: p.wholesalePrice ? parseFloat(p.wholesalePrice) : null, price_cogs: p.cogs ? parseFloat(p.cogs) : null, sku: p.sku || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null };
-    case "services": return { ...base, type: "service", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseFloat(p.price) : null, price_model: p.priceModel || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null, ideal_client: csv(p.idealClient), inclusions: csv(p.inclusions) };
-    case "saas": return { ...base, type: "saas_tier", description: p.description || null, price_monthly: p.monthlyPrice ? parseFloat(p.monthlyPrice) : null, inclusions: csv(p.inclusions), is_hero: p.hero, is_flagship: p.flagship };
-    case "digital": return { ...base, type: "digital", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseFloat(p.price) : null, delivery_time: p.deliveryFormat || null };
+    case "physical": return { ...base, type: "physical", category: p.category || null, description: p.description || null, price_rrp: p.rrp ? parseMoney(p.rrp) : null, price_wholesale: p.wholesalePrice ? parseMoney(p.wholesalePrice) : null, price_cogs: p.cogs ? parseMoney(p.cogs) : null, sku: p.sku || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null };
+    case "services": return { ...base, type: "service", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseMoney(p.price) : null, price_model: p.priceModel || null, delivery_time: p.deliveryTime || null, capacity_per_month: p.capacityPerMonth || null, ideal_client: csv(p.idealClient), inclusions: csv(p.inclusions) };
+    case "saas": return { ...base, type: "saas_tier", description: p.description || null, price_monthly: p.monthlyPrice ? parseMoney(p.monthlyPrice) : null, inclusions: csv(p.inclusions), is_hero: p.hero, is_flagship: p.flagship };
+    case "digital": return { ...base, type: "digital", category: p.category || null, description: p.description || null, price_rrp: p.price ? parseMoney(p.price) : null, delivery_time: p.deliveryFormat || null };
   }
 }
 
@@ -120,10 +121,26 @@ const inp = "w-full rounded-lg border border-light bg-white px-3 py-2 text-sm te
 const lbl = "block text-xs font-medium text-mid mb-1";
 
 function Field({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+  /**
+   * A money field is text with a decimal keypad, never type="number".
+   *
+   * A number input is parsed against the BROWSER's locale, so "0,2" is
+   * rejected outright on an English profile and "0.2" on a Finnish one, and
+   * either way the box goes empty as you type. Text plus cleanMoneyText takes
+   * both separators and keeps what was typed on screen.
+   */
+  const money = type === "number";
   return (
     <div>
       <label className={lbl}>{label}</label>
-      <input className={inp} type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+      <input
+        className={inp}
+        type={money ? "text" : type}
+        inputMode={money ? "decimal" : undefined}
+        value={value}
+        onChange={e => onChange(money ? cleanMoneyText(e.target.value) : e.target.value)}
+        placeholder={placeholder}
+      />
     </div>
   );
 }

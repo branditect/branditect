@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/icon";
 import { formatMoney } from "@/lib/products";
@@ -9,6 +9,7 @@ import {
   grossMargin, groupTotal, toggleLine, visibleLines,
   type CustomLine, type LineGroup, type LineId, type Preset, type Values,
 } from "@/lib/pricing-lines";
+import { cleanMoneyText, moneyText, parseMoney } from "@/lib/money-input";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
@@ -31,12 +32,14 @@ const GROUP_TONE: Record<LineGroup, string> = {
  * formulas from lib/numbers.ts rather than restating them.
  */
 export default function PricingTab({
-  currency, track, values, visible, custom, notes,
+  currency, track, values, raw, visible, custom, notes,
   onValue, onVisible, onCustom, onNotes,
 }: {
   currency: string;
   track: string | null;
   values: Values;
+  /** What is in the boxes, as typed. Parsed `values` drive the maths only. */
+  raw: Record<string, string>;
   visible: string[] | null;
   custom: CustomLine[];
   notes: string;
@@ -59,9 +62,7 @@ export default function PricingTab({
   const addCustom = useCallback((group: LineGroup) => {
     const label = newLabel.trim();
     if (!label) return;
-    const raw = newValue.replace(",", ".");
-    const num = raw === "" ? null : Number(raw);
-    onCustom([...custom, { label, value: Number.isFinite(num as number) ? (num as number) : null, group }]);
+    onCustom([...custom, { label, value: parseMoney(newValue), group }]);
     setNewLabel(""); setNewValue(""); setAdding(null);
   }, [newLabel, newValue, custom, onCustom]);
 
@@ -156,7 +157,10 @@ export default function PricingTab({
               {lines.map((l) => (
                 <PriceField
                   key={l.id} id={`pl-${l.id}`} label={t(l.labelKey)}
-                  value={String(values[l.column] ?? "")}
+                  // What was typed, not the parsed number: rendering the parse
+                  // deleted the decimal separator under the cursor, so 0,2
+                  // became 2 and only whole euros could be entered.
+                  value={raw[l.column] ?? ""}
                   suffix={l.hint === "%" ? "%" : currency}
                   hint={l.hintKey ? t(l.hintKey) : undefined}
                   onChange={(v) => onValue(l.column, v)}
@@ -171,7 +175,7 @@ export default function PricingTab({
               ))}
               {g.id === "in" && (
                 <>
-                  <dt className="pt-1.5 text-xs font-medium text-muted">{t("pricing.netPrice")}</dt>
+                  <dt className="pt-1.5 text-xs font-medium text-muted">{t("productPricing.netPriceExVat")}</dt>
                   <dd className="m-0 pt-1.5 text-xs font-semibold tabular-nums text-ink-2">
                     {gross ? money(gross.cash + (cogs ?? 0)) : "—"}
                   </dd>
@@ -275,7 +279,7 @@ function PriceField({
       </label>
       <div className="flex items-center gap-1.5">
         <input id={id} inputMode="decimal" value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^0-9.,-]/g, ""))}
+          onChange={(e) => onChange(cleanMoneyText(e.target.value))}
           className={`${fieldClass} tabular-nums`} />
         <span className="shrink-0 text-2xs font-semibold text-muted">{suffix}</span>
       </div>
@@ -287,15 +291,23 @@ function CustomField({
   line, suffix, onChange, onRemove,
 }: { line: CustomLine; suffix: string; onChange: (v: number | null) => void; onRemove: () => void }) {
   const t = useT();
+  /* Held as text while it is being typed. Parsing on every keystroke and
+     rendering the result back is what ate the decimal separator. */
+  const [text, setText] = useState(moneyText(line.value));
+  const [typing, setTyping] = useState(false);
+  useEffect(() => { if (!typing) setText(moneyText(line.value)); }, [line.value, typing]);
   return (
     <>
       <span className="pt-1.5 text-xs font-medium text-muted">{line.label}</span>
       <div className="flex items-center gap-1.5">
-        <input inputMode="decimal" value={line.value == null ? "" : String(line.value)}
+        <input inputMode="decimal" value={text}
           aria-label={line.label}
+          onFocus={() => setTyping(true)}
+          onBlur={() => setTyping(false)}
           onChange={(e) => {
-            const raw = e.target.value.replace(/[^0-9.,-]/g, "").replace(",", ".");
-            onChange(raw === "" ? null : Number(raw));
+            const next = cleanMoneyText(e.target.value);
+            setText(next);
+            onChange(parseMoney(next));
           }}
           className={`${fieldClass} tabular-nums`} />
         <span className="shrink-0 text-2xs font-semibold text-muted">{suffix}</span>

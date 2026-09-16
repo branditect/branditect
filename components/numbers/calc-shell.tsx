@@ -1,5 +1,6 @@
 "use client";
 
+import { cleanMoneyText, parseMoney } from "@/lib/money-input";
 import Link from "next/link";
 import Icon, { type IconName } from "@/components/icon";
 import { useT } from "@/lib/i18n/use-t.tsx";
@@ -34,14 +35,9 @@ export const fieldClass =
   "w-full rounded-lg border border-rule-2 bg-white px-2.5 py-2 text-sm font-semibold tabular-nums text-ink-2 focus:border-accent-line focus:outline-none focus:ring-2 focus:ring-tint-1";
 
 /** Blank means "not recorded" and stays null. Accepts either decimal separator. */
-export const toNum = (s: string): number | null => {
-  const t = s.trim().replace(",", ".");
-  if (t === "") return null;
-  const n = Number(t);
-  return Number.isNaN(n) ? null : n;
-};
+export const toNum = (s: string): number | null => parseMoney(s);
 export const numStr = (n: number | null | undefined) => (n == null ? "" : String(n));
-export const clean = (v: string) => v.replace(/[^0-9.,-]/g, "");
+export const clean = (v: string) => cleanMoneyText(v);
 
 export function Field({
   label, value, onChange, suffix, hint, placeholder,

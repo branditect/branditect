@@ -36,14 +36,17 @@ export const GROUPS: { id: LineGroup; label: string; note: string; labelKey: Str
   { id: "in", label: "What comes in", note: "What the customer pays, and the tax inside it.",
     labelKey: "productPricing.groupIn", noteKey: "productPricing.groupInNote" },
   { id: "goods", label: "Cost of goods", note: "What the thing costs you before you sell it.",
-    labelKey: "productPricing.groupGoods", noteKey: "productPricing.groupGoodsNote" },
+    labelKey: "productPricing.groupGoods", noteKey: "productPricing.costsExVat" },
   { id: "sell", label: "Cost to sell", note: "What it costs to get that sale, per sale.",
-    labelKey: "productPricing.groupSell", noteKey: "productPricing.groupSellNote" },
+    labelKey: "productPricing.groupSell", noteKey: "productPricing.sellExVat" },
 ];
 
 export const LINES: LineDef[] = [
-  { id: "retail", label: "Retail price", labelKey: "num.retailPrice", group: "in", column: "price_retail", isCost: false },
-  { id: "rrp", label: "RRP", labelKey: "productPricing.lineRrp", group: "in", column: "price_rrp", isCost: false },
+  // The labels carry the VAT basis because the maths depends on it: these two
+  // are what the customer pays, tax included, and every cost below is net of
+  // it. "Retail price" and "RRP" alone left people guessing which was which.
+  { id: "retail", label: "Retail price", labelKey: "productPricing.lineRetailVat", group: "in", column: "price_retail", isCost: false },
+  { id: "rrp", label: "RRP", labelKey: "productPricing.lineRrpVat", group: "in", column: "price_rrp", isCost: false },
   { id: "tax", label: "Tax rate", labelKey: "num.taxRate", group: "in", column: "tax_rate_pct", isCost: false, hint: "%" },
 
   // "Unit cost" is the old "factory cost". The column keeps its name.

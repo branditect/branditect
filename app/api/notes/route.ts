@@ -38,7 +38,11 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("notes")
-    .insert({ brand_id: auth.brandId, title: "Untitled" })
+    // Empty, not the English word "Untitled": the list renders notes.untitled
+    // for a note with no title, so the column default put "Untitled" on every
+    // new note in a Finnish workspace. The column is NOT NULL, so "" it is,
+    // and PATCH skips blank titles, so it stays empty until the note is named.
+    .insert({ brand_id: auth.brandId, title: "" })
     .select("id, title, flat_text, pinned, collecting, updated_at, created_at")
     .single();
 

@@ -332,3 +332,20 @@ export function settle(q: SaveQueue): SaveQueue {
 export function isBusy(q: SaveQueue): boolean {
   return q.inFlight || Object.keys(q.pending).length > 0;
 }
+
+/** The longest a derived title gets before it is cut on a word boundary. */
+const TITLE_MAX = 60;
+
+/**
+ * The question makes the better title: it is what the person typed, and it is
+ * what they will scan the notes list for. Falls back to the caller's wording
+ * (translated) when the answer was not a reply to anything.
+ */
+export function noteTitleFrom(question: string | null | undefined, fallback: string): string {
+  const q = (question ?? "").replace(/\s+/g, " ").trim();
+  if (!q) return fallback;
+  if (q.length <= TITLE_MAX) return q;
+  const cut = q.slice(0, TITLE_MAX);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 20 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}

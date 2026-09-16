@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useBrand } from "@/lib/useBrand";
 import { authedFetch } from "@/lib/authed-fetch";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 export interface ChatMsg {
   role: "user" | "assistant";
@@ -16,6 +17,7 @@ export interface ChatMsg {
  * endpoint drift, and the one nobody is looking at is the one that breaks.
  */
 export function useBrandChat(onReply?: (all: ChatMsg[]) => void) {
+  const t = useT();
   const { brandId } = useBrand();
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,20 +40,20 @@ export function useBrandChat(onReply?: (all: ChatMsg[]) => void) {
         const data = await res.json();
         const all: ChatMsg[] = [
           ...next,
-          { role: "assistant", content: data.reply || "Something went wrong." },
+          { role: "assistant", content: data.reply || t("chat.replyFailed") },
         ];
         setMessages(all);
         onReply?.(all);
       } catch {
         setMessages([
           ...next,
-          { role: "assistant", content: "Connection issue — please try again." },
+          { role: "assistant", content: t("chat.connectionIssue") },
         ]);
       } finally {
         setLoading(false);
       }
     },
-    [messages, loading, brandId, onReply],
+    [messages, loading, brandId, onReply, t],
   );
 
   const reset = useCallback(() => setMessages([]), []);

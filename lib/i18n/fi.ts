@@ -2710,4 +2710,14 @@ export const fi: Record<StringKey, string> = {
   "visual.prompt1": "Mitä logoa käytän tumman kuvan päällä?",
   "visual.prompt2": "Mikä on päävärimme?",
   "visual.prompt3": "Mitä kirjasintyyppiä otsikot käyttävät?",
+
+  // ══ AI Chat: copy an answer, keep it as a note ══ 2026-09-16. Finnish mine.
+  "chatRail.copyAnswer": "Kopioi vastaus",
+  "chatRail.saveAsNote": "Tallenna muistiinpanoksi",
+  "chatRail.savedToNotes": "Tallennettu muistiinpanoihin",
+  "chatRail.saving": "Tallennetaan…",
+  "chatRail.saveFailed": "Tallennus epäonnistui",
+  "chatRail.noteFromChat": "AI-chatista",
+  "chat.replyFailed": "Jotain meni pieleen.",
+  "chat.connectionIssue": "Yhteysongelma. Yritä uudelleen.",
 };

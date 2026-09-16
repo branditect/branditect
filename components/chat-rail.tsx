@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { saveAnswerAsNote, noteTitleFrom } from "@/lib/note-from-chat";
 import Link from "next/link";
 import Icon from "@/components/icon";
 import { useBrandChat } from "@/lib/useBrandChat";
@@ -30,6 +31,31 @@ interface ChatRailProps {
 export default function ChatRail({ indexedFileCount, suggestions, source }: ChatRailProps) {
   const t = useT();
   const { messages, loading, send } = useBrandChat();
+  /* Per answer, because a rail can hold several and "Copied" belongs to the
+     one that was copied. Keyed by index, which is stable: the list only ever
+     grows. */
+  const [copied, setCopied] = useState<number | null>(null);
+  const [noteState, setNoteState] = useState<Record<number, "saving" | "saved" | "failed">>({});
+
+  async function copyAnswer(text: string, i: number) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(i);
+      setTimeout(() => setCopied((c) => (c === i ? null : c)), 2000);
+    } catch {
+      /* A denied clipboard is the browser's call, and the answer is on screen
+         to select by hand. Saying nothing is better than a scare. */
+    }
+  }
+
+  async function keepAsNote(text: string, i: number) {
+    if (noteState[i] === "saving" || noteState[i] === "saved") return;
+    setNoteState((prev) => ({ ...prev, [i]: "saving" }));
+    // The question above it makes the better title; the fallback is translated.
+    const question = [...messages.slice(0, i)].reverse().find((m) => m.role === "user")?.content;
+    const res = await saveAnswerAsNote(text, noteTitleFrom(question, t("chatRail.noteFromChat")));
+    setNoteState((prev) => ({ ...prev, [i]: res.ok ? "saved" : "failed" }));
+  }
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +142,38 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
                 <p className="mt-[7px] whitespace-pre-wrap text-xs font-normal leading-[1.6] text-ink-2">
                   {m.content}
                 </p>
+                {/* An answer worth reading is worth keeping: copy it, or keep
+                    it as a real note in Studio ▸ Notes. */}
+                <div className="mt-2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => copyAnswer(m.content, i)}
+                    className="inline-flex items-center gap-1 rounded-nav px-1.5 py-1 text-2xs font-bold text-muted-2 hover:bg-white/60 hover:text-ink-2"
+                  >
+                    <Icon name="copy" size={12} />
+                    {copied === i ? t("wr.copied") : t("chatRail.copyAnswer")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => keepAsNote(m.content, i)}
+                    disabled={noteState[i] === "saving" || noteState[i] === "saved"}
+                    className="inline-flex items-center gap-1 rounded-nav px-1.5 py-1 text-2xs font-bold text-muted-2 hover:bg-white/60 hover:text-ink-2 disabled:hover:bg-transparent"
+                  >
+                    <Icon name="pin" size={12} />
+                    {noteState[i] === "saved"
+                      ? t("chatRail.savedToNotes")
+                      : noteState[i] === "saving"
+                        ? t("chatRail.saving")
+                        : noteState[i] === "failed"
+                          ? t("chatRail.saveFailed")
+                          : t("chatRail.saveAsNote")}
+                  </button>
+                  {noteState[i] === "saved" && (
+                    <Link href="/studio/notes" className="rounded-nav px-1.5 py-1 text-2xs font-bold text-accent hover:underline">
+                      {t("nav.studio.notes")}
+                    </Link>
+                  )}
+                </div>
                 {source && i === messages.length - 1 && (
                   <Link
                     href={source.href}

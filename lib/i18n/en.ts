@@ -2651,6 +2651,16 @@ export const en = {
   "visual.prompt1": "Which logo should I use on a dark photo?",
   "visual.prompt2": "What is our primary colour?",
   "visual.prompt3": "Which typeface do headings use?",
+
+  // ══ AI Chat: copy an answer, keep it as a note ══ 2026-09-16. Finnish mine.
+  "chatRail.copyAnswer": "Copy answer",
+  "chatRail.saveAsNote": "Save as note",
+  "chatRail.savedToNotes": "Saved to Notes",
+  "chatRail.saving": "Saving…",
+  "chatRail.saveFailed": "Could not save",
+  "chatRail.noteFromChat": "From AI Chat",
+  "chat.replyFailed": "Something went wrong.",
+  "chat.connectionIssue": "Connection issue — please try again.",
 } as const;
 
 export type StringKey = keyof typeof en;

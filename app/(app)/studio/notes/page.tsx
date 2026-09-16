@@ -22,6 +22,7 @@ import { supabase } from "@/lib/supabase";
 import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import Icon from "@/components/icon";
 import ImagePicker from "@/components/products/image-picker";
+import AutoTextarea from "@/components/studio/auto-textarea";
 import { uploadBrandImage, isImageFile } from "@/lib/brand-image-upload";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
@@ -433,7 +434,7 @@ export default function NotesPage() {
                       />
                     </figure>
                   ) : (
-                    <textarea
+                    <AutoTextarea
                       key={b.id ?? i}
                       className={`${s.block} ${b.kind === "heading" ? s.heading : ""} ${b.kind === "list" ? s.list : ""}`}
                       value={b.body ?? ""}

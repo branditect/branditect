@@ -2732,7 +2732,7 @@ export const fi: Record<StringKey, string> = {
   "intake.readFailed": "Strategiaasi ei voitu lukea.",
   "intake.nothingToSave": "Tallennettavaa ei ole.",
   "intake.migrationMissing":
-    "Strategiataulusta puuttuvat versiosarakkeet. Aja supabase/strategy-sources-and-versions.sql Supabasen SQL-editorissa.",
+    "Strategiataulusta puuttuvat uudet sarakkeet. Avaa projektista tiedosto supabase/strategy-sources-and-versions.sql, kopioi koko sisältö, liitä se Supabasen SQL-editoriin ja aja kerran. Pelkkä tiedostonimi ei riitä: editori tarvitsee itse SQL:n.",
   "intake.questionnaireNotUpdated":
     "Strategiasi tallennettiin, mutta kyselyä ei päivitetty. Nämä kysymykset voidaan kysyä uudelleen.",
 

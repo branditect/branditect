@@ -2673,7 +2673,7 @@ export const en = {
   "intake.readFailed": "Your strategy could not be read.",
   "intake.nothingToSave": "There is nothing to save.",
   "intake.migrationMissing":
-    "The strategy tables are missing their version columns. Run supabase/strategy-sources-and-versions.sql in the Supabase SQL editor.",
+    "The strategy table is missing its new columns. Open the file supabase/strategy-sources-and-versions.sql in the project, copy everything in it, paste that into the Supabase SQL editor and run it once. Pasting the file name will not work: the editor needs the SQL itself.",
   "intake.questionnaireNotUpdated":
     "Your strategy was saved, but the questionnaire was not updated. Those questions may be asked again.",
 

@@ -26,6 +26,7 @@
     "i18n:ui": "node --experimental-strip-types scripts/i18n-pages-ui.mjs",
     "notes:ui": "node scripts/notes-chat-ui.mjs",
     "intake:ui": "node scripts/strategy-intake-ui.mjs",
+    "documents:ui": "node scripts/documents-ui.mjs",
     "tag:ui": "node scripts/tag-images-ui.mjs",
     "placeholder:ui": "node scripts/brand-placeholder-ui.mjs"
   },

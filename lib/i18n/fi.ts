@@ -2820,4 +2820,22 @@ export const fi: Record<StringKey, string> = {
   "freshStart.upload": "Korvaa se strategiadokumentilla",
   "freshStart.version": "Versio {version}",
   "freshStart.replacedOn": "korvattu {date}",
+
+  // ── Knowledge ▸ Documents: preview, download, delete ── 2026-09-16, Finnish mine.
+  "docs.deleteTitle": "Poistetaanko {name}?",
+  "docs.deleteBody":
+    "Tiedosto poistuu, ja samalla se mitä aivot siitä lukivat: Studio ja AI-chat eivät voi enää viitata siihen. Tuotteesi, muistiinpanosi ja kuvasi säilyvät ennallaan.",
+  "docs.deleteConfirm": "Poista dokumentti",
+  "docs.deleteFailed": "Poisto epäonnistui: {message}",
+  "docs.deleteBlocked":
+    "Mitään ei poistettu. Dokumentti on yhä tallessa, joten kyse on käyttöoikeudesta eikä puuttuvasta tiedostosta.",
+  "docs.preview": "Esikatsele",
+  "docs.previewOf": "Esikatselu: {name}",
+  "docs.previewText": "Mitä aivot lukivat",
+  "docs.previewNothing": "Ei vielä näytettävää. Tätä tiedostoa ei ole luettu.",
+  "docs.previewUnavailable":
+    "Selain ei osaa näyttää tätä tiedostotyyppiä. Lataa se laitteellesi lukeaksesi sen.",
+  "docs.downloadFailed": "Tiedoston avaaminen epäonnistui: {message}",
+  "docs.close": "Sulje",
+  "docs.openInNewTab": "Avaa uuteen välilehteen",
 };

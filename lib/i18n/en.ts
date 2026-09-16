@@ -2767,6 +2767,23 @@ export const en = {
   "freshStart.upload": "Replace it with a strategy document",
   "freshStart.version": "Version {version}",
   "freshStart.replacedOn": "replaced {date}",
+
+  // ── Knowledge ▸ Documents: preview, download, delete ── 2026-09-16, Finnish mine.
+  "docs.deleteTitle": "Delete {name}?",
+  "docs.deleteBody":
+    "The file goes, and so does what the brain read from it: Studio and AI Chat stop being able to cite it. Your products, notes and images are untouched.",
+  "docs.deleteConfirm": "Delete document",
+  "docs.deleteFailed": "Could not delete: {message}",
+  "docs.deleteBlocked":
+    "Nothing was deleted. The document is still there, so this is a permission problem rather than a missing file.",
+  "docs.preview": "Preview",
+  "docs.previewOf": "Preview of {name}",
+  "docs.previewText": "What the brain read",
+  "docs.previewNothing": "Nothing to show yet. This file has not been read.",
+  "docs.previewUnavailable": "A browser cannot show this file type. Download it to read it.",
+  "docs.downloadFailed": "Could not open the file: {message}",
+  "docs.close": "Close",
+  "docs.openInNewTab": "Open in a new tab",
 } as const;
 
 export type StringKey = keyof typeof en;

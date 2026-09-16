@@ -28,7 +28,9 @@ export type IconName =
   | "megaphone" | "mail" | "instagram" | "linkedin" | "help"
   | "spark" | "copy" | "redo" | "book"
   // Onboarding rail
-  | "key" | "pin" | "more";
+  | "key" | "pin" | "more"
+  // Knowledge ▸ Documents — look at one, or take it away with you
+  | "eye" | "download";
 
 interface IconSpec {
   d: React.ReactNode;
@@ -202,6 +204,24 @@ const PATHS: Record<IconName, IconSpec> = {
   },
   trash: {
     d: <path d="M9.4 2.6h5.2a1.4 1.4 0 0 1 1.4 1.4v.9h4a1.1 1.1 0 1 1 0 2.2h-.55l-.83 12.1A2.6 2.6 0 0 1 16.03 21.6H7.97a2.6 2.6 0 0 1-2.59-2.4L4.55 7.1H4a1.1 1.1 0 0 1 0-2.2h4v-.9a1.4 1.4 0 0 1 1.4-1.4" />,
+  },
+  // Filled stand-ins, like their neighbours here: the real stroked set does
+  // not have these two yet.
+  eye: {
+    d: (
+      <>
+        <path d="M12 5c-5 0-8.7 3.6-10 6.4a1.4 1.4 0 0 0 0 1.2C3.3 15.4 7 19 12 19s8.7-3.6 10-6.4a1.4 1.4 0 0 0 0-1.2C20.7 8.6 17 5 12 5m0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4" />
+        <circle cx="12" cy="12" r="2.1" fill="#fff" />
+      </>
+    ),
+  },
+  download: {
+    d: (
+      <>
+        <path d="M11 3.2a1.1 1.1 0 0 1 2.2 0v8.3l2.5-2.5a1.1 1.1 0 0 1 1.6 1.6l-4.4 4.4a1.1 1.1 0 0 1-1.6 0L6.9 10.6a1.1 1.1 0 1 1 1.6-1.6l2.5 2.5z" />
+        <path d="M4.2 15.4a1.1 1.1 0 0 1 1.1 1.1v2.1c0 .4.3.7.7.7h12c.4 0 .7-.3.7-.7v-2.1a1.1 1.1 0 0 1 2.2 0v2.1a2.9 2.9 0 0 1-2.9 2.9H6a2.9 2.9 0 0 1-2.9-2.9v-2.1a1.1 1.1 0 0 1 1.1-1.1" />
+      </>
+    ),
   },
   pen: {
     d: <path d="M16.4 2.9a2.9 2.9 0 0 1 4.1 4.1l-1.3 1.3-4.1-4.1zM13.7 5.6l4.1 4.1-8.4 8.4a2 2 0 0 1-.9.5l-4.6 1.3a.8.8 0 0 1-1-1l1.3-4.6a2 2 0 0 1 .5-.9z" />,

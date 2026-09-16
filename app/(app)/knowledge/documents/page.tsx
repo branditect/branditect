@@ -11,6 +11,11 @@ import {
 import AskPanel from "@/components/documents/ask-panel";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import Icon from "@/components/icon";
+import DeleteDocumentDialog from "@/components/documents/delete-document";
+import DocumentPreview from "@/components/documents/document-preview";
+import { canDownload, canPreview, previewKindOf } from "@/lib/document-actions";
+import { signedUrl } from "@/lib/signed-url";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
@@ -32,6 +37,9 @@ interface BrandDocument {
   description?: string | null;
   doc_type?: string | null;
   use_in_output?: boolean | null;
+  // A pasted entry has no stored object; its text is the document.
+  file_url?: string | null;
+  extracted_text?: string | null;
 }
 
 interface UploadingFile {
@@ -119,10 +127,16 @@ function SkeletonRow({ name }: { name: string }) {
 
 function DocumentRow({
   doc,
+  onPreview,
+  onDownload,
   onDelete,
+  busy,
 }: {
   doc: BrandDocument;
-  onDelete: (id: string, storagePath: string) => void;
+  onPreview: (doc: BrandDocument) => void;
+  onDownload: (doc: BrandDocument) => void;
+  onDelete: (doc: BrandDocument) => void;
+  busy: boolean;
 }) {
   const t = useT();
   const ext = doc.file_type || fileExtension(doc.file_name);
@@ -165,13 +179,40 @@ function DocumentRow({
         </span>
       )}
 
-      <button
-        onClick={() => onDelete(doc.id, doc.storage_path)}
-        className="shrink-0 w-6 h-6 flex items-center justify-center text-muted hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 text-lg leading-none"
-        title={t("docs.deleteDocument")}
-      >
-        ×
-      </button>
+      {/* Look at it, take it away, or delete it. All three are always here:
+          an action that cannot be undone should not be easier to find by
+          accident than the two that can. */}
+      <div className="shrink-0 flex items-center gap-0.5">
+        {canPreview(doc) && (
+          <button
+            onClick={() => onPreview(doc)}
+            className="w-7 h-7 flex items-center justify-center rounded-nav text-muted hover:bg-pale hover:text-ink-2 transition-colors"
+            title={t("docs.preview")}
+            aria-label={t("docs.previewOf", { name: doc.file_name })}
+          >
+            <Icon name="eye" size={15} />
+          </button>
+        )}
+        {canDownload(doc) && (
+          <button
+            onClick={() => onDownload(doc)}
+            disabled={busy}
+            className="w-7 h-7 flex items-center justify-center rounded-nav text-muted hover:bg-pale hover:text-ink-2 transition-colors disabled:opacity-50"
+            title={t("common.download")}
+            aria-label={`${t("common.download")} ${doc.file_name}`}
+          >
+            <Icon name="download" size={15} />
+          </button>
+        )}
+        <button
+          onClick={() => onDelete(doc)}
+          className="w-7 h-7 flex items-center justify-center rounded-nav text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
+          title={t("docs.deleteDocument")}
+          aria-label={t("docs.deleteTitle", { name: doc.file_name })}
+        >
+          <Icon name="trash" size={14} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -197,6 +238,19 @@ export default function KnowledgeVaultPage() {
   // The answers panel. It never gates the upload — see onFilesChosen.
   const [batch, setBatch] = useState<Batch | null>(null);
   const [askSaving, setAskSaving] = useState(false);
+
+  // Preview, download and delete, each with its own state: a failed download
+  // must not look like a failed delete.
+  const [previewDoc, setPreviewDoc] = useState<BrandDocument | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewText, setPreviewText] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BrandDocument | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [textOpen, setTextOpen] = useState(false);
   const [textTitle, setTextTitle] = useState("");
@@ -380,14 +434,101 @@ export default function KnowledgeVaultPage() {
     setTextSaving(false);
   }
 
-  // Delete document
-  async function deleteDocument(id: string, storagePath: string) {
-    // Skip storage removal for text entries (no file stored)
-    if (storagePath) {
-      await supabase.storage.from("brand-documents").remove([storagePath]);
+  /**
+   * Delete, and know whether it happened.
+   *
+   * The row goes first and is read back: a DELETE that RLS filters out
+   * resolves `{ error: null }` and removes nothing, so the absence of an error
+   * is not evidence — the same trap as the settings writes. Only once a row
+   * has actually come back is the object removed, because a row pointing at a
+   * missing file is worse than a file with no row.
+   */
+  async function confirmDelete() {
+    const doc = deleteTarget;
+    if (!doc) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+
+    const { data: removed, error: rowErr } = await supabase
+      .from("brand_documents").delete().eq("id", doc.id).select("id");
+    if (rowErr) {
+      setDeleteError(t("docs.deleteFailed", { message: rowErr.message }));
+      setDeleteBusy(false);
+      return;
     }
-    await supabase.from("brand_documents").delete().eq("id", id);
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
+    if (!removed || removed.length === 0) {
+      setDeleteError(t("docs.deleteBlocked"));
+      setDeleteBusy(false);
+      return;
+    }
+
+    if (doc.storage_path) {
+      // An orphaned object is untidy; a row that outlives its file is a broken
+      // document in the list. So this is reported, not rolled back.
+      const { error: fileErr } = await supabase.storage.from("brand-documents").remove([doc.storage_path]);
+      if (fileErr) console.error("[documents] file left behind:", fileErr.message);
+    }
+
+    setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    setDeleteBusy(false);
+    setDeleteTarget(null);
+  }
+
+  /** The bucket is private, so every file needs a signed, expiring URL. */
+  async function urlFor(doc: BrandDocument): Promise<string | null> {
+    return signedUrl(supabase, "brand-documents", {
+      storagePath: doc.storage_path || null,
+      fileUrl: doc.file_url ?? null,
+    });
+  }
+
+  async function openPreview(doc: BrandDocument) {
+    setPreviewDoc(doc);
+    setPreviewUrl(null);
+    setPreviewText(null);
+    setPreviewError(null);
+    setPreviewLoading(true);
+    const kind = previewKindOf(doc);
+    try {
+      if (kind === "pdf" || kind === "image") {
+        const url = await urlFor(doc);
+        if (!url) throw new Error(t("docs.previewNothing"));
+        setPreviewUrl(url);
+      } else {
+        // extracted_text is not in the list query: it is large, and this is
+        // the only screen that reads it.
+        const { data, error: textErr } = await supabase
+          .from("brand_documents").select("extracted_text").eq("id", doc.id).maybeSingle();
+        if (textErr) throw new Error(textErr.message);
+        setPreviewText(data?.extracted_text ?? null);
+        if (doc.storage_path) setPreviewUrl(await urlFor(doc));
+      }
+    } catch (e) {
+      setPreviewError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  async function downloadDocument(doc: BrandDocument) {
+    setDownloadingId(doc.id);
+    try {
+      const url = await urlFor(doc);
+      if (!url) throw new Error(doc.file_name);
+      // The signed URL is what the browser fetches; `download` names the file
+      // so it does not land as a storage key.
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.file_name;
+      a.rel = "noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      setActionError(t("docs.downloadFailed", { message: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setDownloadingId(null);
+    }
   }
 
   // Drag & drop handlers
@@ -729,9 +870,43 @@ export default function KnowledgeVaultPage() {
           {/* CRITERION 4: files with no description wait at the top — a queue,
               not a scolding. */}
           {undescribedFirst(filter === "all" ? documents : filteredDocs).map((doc) => (
-            <DocumentRow key={doc.id} doc={doc} onDelete={deleteDocument} />
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              busy={downloadingId === doc.id}
+              onPreview={openPreview}
+              onDownload={downloadDocument}
+              onDelete={(d) => { setDeleteError(null); setDeleteTarget(d); }}
+            />
           ))}
         </div>
+      )}
+
+      {actionError && (
+        <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-600" role="alert">
+          {actionError}
+        </p>
+      )}
+
+      {previewDoc && (
+        <DocumentPreview
+          doc={previewDoc}
+          url={previewUrl}
+          text={previewText}
+          loading={previewLoading}
+          error={previewError}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteDocumentDialog
+          fileName={deleteTarget.file_name}
+          busy={deleteBusy}
+          error={deleteError}
+          onCancel={() => { setDeleteTarget(null); setDeleteError(null); }}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );

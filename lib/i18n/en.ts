@@ -1166,9 +1166,9 @@ export const en = {
   "home.numbersTitle": "Do the numbers",
   "home.numbersDesc": "Profitability, pricing structure and offers.",
   "home.visualDesc": "Your logos, colors and typefaces.",
-  "home.prompt1": "What should I post about this week?",
-  "home.prompt2": "What's the deepest discount I can run?",
-  "home.prompt3": "What's missing from my brand?",
+  "home.prompt1": "What does packaging cost on our top product?",
+  "home.prompt2": "What is the exact hex of our main brand colour?",
+  "home.prompt3": "Give me three Instagram ideas for this week",
 
   // ── Numbers: shared field labels ──────────────────────────────────────────
   "num.productionCost": "Production cost",
@@ -2115,9 +2115,9 @@ export const en = {
   "createImages.inKnowledgeImages": "In Knowledge ▸ Images",
   "createImages.refOneWhere": "1 reference · {where}",
   "createImages.refsWhere": "{count} references · {where}",
-  "createImages.prompt1": "What does our photography look like?",
-  "createImages.prompt2": "Which product should I photograph next?",
-  "createImages.prompt3": "What colours should a new image use?",
+  "createImages.prompt1": "Which product has no photos yet?",
+  "createImages.prompt2": "What background do our product shots use?",
+  "createImages.prompt3": "Which colours am I allowed to use in a new image?",
 
   // ── Notes ─────────────────────────────────────────────────────────────────
   "notes.countOne": "{count} note",
@@ -2649,9 +2649,9 @@ export const en = {
   "visual.guideBody": "Everything above, plus photography direction, tone of voice, iconography and the print specifications. Read it once; come back to this page for the day-to-day.",
   "visual.pages": "{count} pages",
   "visual.updatedOn": "Updated {date}",
-  "visual.prompt1": "Which logo should I use on a dark photo?",
-  "visual.prompt2": "What is our primary colour?",
-  "visual.prompt3": "Which typeface do headings use?",
+  "visual.prompt1": "What is the hex code for our orange?",
+  "visual.prompt2": "Which logo works on a dark background?",
+  "visual.prompt3": "What size and weight do our headings use?",
 
   // ══ AI Chat: copy an answer, keep it as a note ══ 2026-09-16. Finnish mine.
   "chatRail.copyAnswer": "Copy answer",
@@ -2793,6 +2793,16 @@ export const en = {
   "chatRail.andyIntro3":
     "I answer from your own knowledge and nothing else: {count} files indexed so far.",
   "chatRail.andyIntro4": "Like an answer? Save it straight to your notes.",
+
+  // ── Picking images is not saving them ── 2026-09-16, Finnish mine.
+  "kImages.nothingSavedYet":
+    "Nothing is saved until you press the button below. Leave this page and these are gone.",
+  "kImages.leaveWarning":
+    "You have images that have not been uploaded yet.",
+  "import.saveFailed":
+    "Not saved: {message}. Your products are still on screen; try again.",
+  "import.noBrandYet":
+    "Not saved: your workspace is still loading. Wait a moment and try again.",
 } as const;
 
 export type StringKey = keyof typeof en;

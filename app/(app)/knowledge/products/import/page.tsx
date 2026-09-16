@@ -492,6 +492,7 @@ export default function CatalogPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -517,12 +518,16 @@ export default function CatalogPage() {
   }, [brandId, brandLoading]);
 
   const saveCatalog = useCallback(async (list: Product[]) => {
-    if (brandId === "default") return;
+    // Was a bare `return`: with no brand resolved yet, adding a product did
+    // nothing at all and said nothing, which reads as "products are not
+    // saving".
+    if (brandId === "default") { setSaveError(t("import.noBrandYet")); return; }
     setSaving(true);
+    setSaveError(null);
     const kinds = Array.from(new Set(list.map(p => p.kind)));
     const businessTypes = kinds.map(k => k === "services" ? "service" : k === "saas" ? "saas_tier" : k);
     try {
-      await authedFetch("/api/catalog", {
+      const res = await authedFetch("/api/catalog", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -532,12 +537,19 @@ export default function CatalogPage() {
           financialRules: null,
         }),
       });
+      // fetch only rejects on a network failure, so an unchecked call reports
+      // a saved catalogue over a 400 or a 403.
+      if (!res.ok) {
+        let detail = String(res.status);
+        try { detail = (await res.json())?.error ?? detail; } catch { /* keep the status */ }
+        setSaveError(t("import.saveFailed", { message: detail }));
+      }
     } catch (err) {
-      console.error("Catalog save error:", err);
+      setSaveError(t("import.saveFailed", { message: err instanceof Error ? err.message : String(err) }));
     } finally {
       setSaving(false);
     }
-  }, [brandId]);
+  }, [brandId, t]);
 
   async function handleAdd(p: Product) {
     const updated = [...products, p];
@@ -574,6 +586,9 @@ export default function CatalogPage() {
           <p className="text-[0.78rem] text-muted">
             {t("import.fullCatalogue", { brandName })}
             {saving && <span className="ml-2 text-brand-orange">{t("import.saving")}</span>}
+            {saveError && (
+              <span className="ml-2 font-semibold text-red-600" role="alert">{saveError}</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">

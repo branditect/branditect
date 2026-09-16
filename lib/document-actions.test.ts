@@ -95,3 +95,57 @@ describe("the page does the three things, and checks the dangerous one", () => {
     assert.ok(!/\/storage\/v1\/object\/public\/brand-documents/.test(page));
   });
 });
+
+describe("picking images is not saving them, and a failed upload says so", () => {
+  const lib = readFileSync("components/image-library.tsx", "utf8");
+  const body = code("components/image-library.tsx");
+
+  it("a failed upload is reported, not skipped in silence", () => {
+    // It was `if (storageError) continue;` with an unchecked insert after it,
+    // so a rejected file left the pending list looking exactly like a saved
+    // one. Reported for months as "images are not saving at all".
+    assert.ok(!/if \(storageError\) continue;/.test(body), "the bare continue is back");
+    assert.match(body, /failures\.push\(\{ fileName: item\.file\.name, kind: "storage"/);
+    assert.match(body, /const \{ error: insertError \} = await supabase\.from\("brand_images"\)\.insert/);
+    assert.match(body, /failures\.push\(\{ fileName: item\.file\.name, kind: "row"/);
+    assert.match(body, /summariseUpload\(failures, attempted, t\)/);
+  });
+
+  it("what failed stays on the list to try again", () => {
+    assert.match(body, /prev\.filter\(\(p\) => !landed\.includes\(p\.file\.name\)\)/);
+  });
+
+  it("the pending panel says nothing is saved yet", () => {
+    assert.ok(lib.includes('t("kImages.nothingSavedYet")'), "the warning is not on screen");
+    assert.match(en["kImages.nothingSavedYet"], /Nothing is saved/i);
+    assert.ok(fi["kImages.nothingSavedYet"]?.trim());
+    assert.notEqual(en["kImages.nothingSavedYet"], fi["kImages.nothingSavedYet"]);
+  });
+
+  it("and leaving with images still pending is not silent", () => {
+    assert.match(body, /addEventListener\("beforeunload"/);
+    assert.match(body, /pendingUploads\.length === 0\) return;/);
+  });
+});
+
+describe("a catalogue save that fails says so", () => {
+  const body = code("app/(app)/knowledge/products/import/page.tsx");
+
+  it("checks the response, because fetch does not reject on 400", () => {
+    assert.match(body, /if \(!res\.ok\)/);
+    assert.match(body, /t\("import\.saveFailed"/);
+  });
+
+  it("and says why nothing happened when the workspace has not loaded", () => {
+    // `if (brandId === "default") return;` was a silent no-op: the product
+    // stayed on screen and was never written.
+    assert.match(body, /brandId === "default"\) \{ setSaveError\(t\("import\.noBrandYet"\)\); return; \}/);
+  });
+
+  it("with Finnish for both", () => {
+    for (const k of ["import.saveFailed", "import.noBrandYet"] as const) {
+      assert.ok(en[k]?.trim() && fi[k]?.trim(), `${k} is missing a side`);
+      assert.notEqual(en[k], fi[k]);
+    }
+  });
+});

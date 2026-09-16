@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
+import { summariseUpload, type UploadFailure } from "@/lib/upload-report";
 import { storagePathFromUrl } from "@/lib/storage-paths";
 import { signedUrls } from "@/lib/signed-url";
 import { imageMatches } from "@/lib/product-attachments";
@@ -78,6 +79,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
   const [loading, setLoading] = useState(true);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -198,9 +200,23 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
   /* ---- Upload ---- */
 
+  /* Picked, not saved: say so on the way out. The browser shows its own
+     wording; what matters is that the tab does not close on work that was
+     never written. */
+  useEffect(() => {
+    if (pendingUploads.length === 0) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [pendingUploads.length]);
+
   const confirmUpload = useCallback(async () => {
     if (pendingUploads.length === 0) return;
     setUploading(true);
+    setUploadError(null);
+    const failures: UploadFailure[] = [];
+    const attempted = pendingUploads.length;
+    const landed: string[] = [];
 
     for (const item of pendingUploads) {
       const ext = item.file.name.split(".").pop()?.toLowerCase();
@@ -211,7 +227,13 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         .from("brand-images")
         .upload(path, item.file, { upsert: true });
 
-      if (storageError) continue;
+      if (storageError) {
+        // Was a bare `continue`: the file vanished from the pending list and
+        // nothing on screen ever said why. The same fix file-library already
+        // carries.
+        failures.push({ fileName: item.file.name, kind: "storage", detail: storageError.message });
+        continue;
+      }
 
       const { data: urlData } = supabase.storage
         .from("brand-images")
@@ -222,7 +244,9 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         .map((tag) => tag.trim())
         .filter(Boolean);
 
-      await supabase.from("brand_images").insert({
+      // supabase-js resolves { data, error } and never throws, so an
+      // unchecked insert reports a saved image that was never written.
+      const { error: insertError } = await supabase.from("brand_images").insert({
         brand_id: BRAND_ID,
         file_url: urlData.publicUrl,
         file_name: item.file.name,
@@ -232,11 +256,19 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         campaign_name: item.campaign_name,
         tags,
       });
+      if (insertError) {
+        failures.push({ fileName: item.file.name, kind: "row", detail: insertError.message });
+        continue;
+      }
 
+      landed.push(item.file.name);
       URL.revokeObjectURL(item.preview);
     }
 
-    setPendingUploads([]);
+    // What failed stays on the list, so it can be tried again rather than
+    // disappearing as if it had been saved.
+    setPendingUploads((prev) => prev.filter((p) => !landed.includes(p.file.name)));
+    setUploadError(summariseUpload(failures, attempted, t));
     setUploading(false);
     fetchImages();
     // BRAND_ID again: without it an upload writes brand_id "default", which
@@ -384,12 +416,25 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         </div>
       </div>
 
+      {uploadError && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-600" role="alert">
+          {uploadError}
+        </div>
+      )}
+
       {/* Pending uploads form */}
       {pendingUploads.length > 0 && (
-        <div className="mb-6 bg-white border border-light rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-light bg-pale flex items-center justify-between">
-            <span className="font-mono text-[0.58rem] tracking-wider uppercase text-muted">
-              {t(pendingUploads.length > 1 ? "kImages.readyMany" : "kImages.readyOne", { count: pendingUploads.length })}
+        <div className="mb-6 bg-white border border-brand-orange/40 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-light bg-brand-orange-pale/50 flex items-center justify-between gap-3">
+            <span className="min-w-0">
+              <span className="block font-mono text-[0.58rem] tracking-wider uppercase text-muted">
+                {t(pendingUploads.length > 1 ? "kImages.readyMany" : "kImages.readyOne", { count: pendingUploads.length })}
+              </span>
+              {/* Choosing files is not saving them. Nobody guesses that from a
+                  grid of thumbnails that looks exactly like the saved one. */}
+              <span className="block mt-0.5 text-[0.72rem] font-semibold text-brand-orange">
+                {t("kImages.nothingSavedYet")}
+              </span>
             </span>
             <div className="flex items-center gap-2">
               {pendingUploads.length > 1 && (

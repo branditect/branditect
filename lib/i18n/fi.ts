@@ -1234,9 +1234,9 @@ export const fi: Record<StringKey, string> = {
   "home.numbersTitle": "Laske luvut",
   "home.numbersDesc": "Kannattavuus, hinnoittelu ja tarjoukset.",
   "home.visualDesc": "Logosi, värisi ja kirjasimesi.",
-  "home.prompt1": "Mistä minun kannattaisi julkaista tällä viikolla?",
-  "home.prompt2": "Kuinka suuren alennuksen voin antaa?",
-  "home.prompt3": "Mitä brändistäni puuttuu?",
+  "home.prompt1": "Paljonko pakkaus maksaa päätuotteessamme?",
+  "home.prompt2": "Mikä on päävärimme tarkka hex-koodi?",
+  "home.prompt3": "Anna kolme Instagram-ideaa tälle viikolle",
 
   // ── Laskurit: kenttien nimet ──────────────────────────────────────────────
   "num.productionCost": "Tuotantokustannus",
@@ -2162,9 +2162,9 @@ export const fi: Record<StringKey, string> = {
   "createImages.inKnowledgeImages": "Kohdassa Tieto ▸ Kuvat",
   "createImages.refOneWhere": "1 referenssi · {where}",
   "createImages.refsWhere": "{count} referenssiä · {where}",
-  "createImages.prompt1": "Miltä valokuvamme näyttävät?",
-  "createImages.prompt2": "Mikä tuote kannattaa kuvata seuraavaksi?",
-  "createImages.prompt3": "Mitä värejä uudessa kuvassa kannattaa käyttää?",
+  "createImages.prompt1": "Mistä tuotteesta puuttuu vielä kuvat?",
+  "createImages.prompt2": "Millaista taustaa tuotekuvissamme käytetään?",
+  "createImages.prompt3": "Mitä värejä saan käyttää uudessa kuvassa?",
 
   // ── Muistiinpanot ─────────────────────────────────────────────────────────
   "notes.countOne": "{count} muistiinpano",
@@ -2708,9 +2708,9 @@ export const fi: Record<StringKey, string> = {
   "visual.guideBody": "Kaikki yllä oleva sekä valokuvauslinja, äänensävy, ikonografia ja painatuksen määrittelyt. Lue se kerran ja palaa tälle sivulle arjen tarpeisiin.",
   "visual.pages": "{count} sivua",
   "visual.updatedOn": "Päivitetty {date}",
-  "visual.prompt1": "Mitä logoa käytän tumman kuvan päällä?",
-  "visual.prompt2": "Mikä on päävärimme?",
-  "visual.prompt3": "Mitä kirjasintyyppiä otsikot käyttävät?",
+  "visual.prompt1": "Mikä on oranssimme hex-koodi?",
+  "visual.prompt2": "Mikä logo toimii tummalla taustalla?",
+  "visual.prompt3": "Mitä kokoa ja paksuutta otsikkomme käyttävät?",
 
   // ══ AI Chat: copy an answer, keep it as a note ══ 2026-09-16. Finnish mine.
   "chatRail.copyAnswer": "Kopioi vastaus",
@@ -2846,4 +2846,14 @@ export const fi: Record<StringKey, string> = {
     "Haluatko kirjoittaa sisältöä tai jotain pidempää? Studio ▸ Kirjoita hoitaa sen. Minä olen kysymyksiä varten.",
   "chatRail.andyIntro3": "Vastaan vain sinun omasta tiedostasi: {count} tiedostoa indeksoitu.",
   "chatRail.andyIntro4": "Jos vastaus on hyvä, tallenna se suoraan muistiinpanoihisi.",
+
+  // ── Picking images is not saving them ── 2026-09-16, Finnish mine.
+  "kImages.nothingSavedYet":
+    "Mitään ei tallenneta ennen kuin painat alla olevaa painiketta. Jos poistut sivulta, nämä katoavat.",
+  "kImages.leaveWarning":
+    "Sinulla on kuvia, joita ei ole vielä ladattu.",
+  "import.saveFailed":
+    "Ei tallennettu: {message}. Tuotteesi ovat yhä näkyvissä, yritä uudelleen.",
+  "import.noBrandYet":
+    "Ei tallennettu: työtilasi latautuu vielä. Odota hetki ja yritä uudelleen.",
 };

@@ -8,7 +8,8 @@ import {
   TOOLBAR, SAVED_INDICATOR, BLOCK_KINDS, flattenBlocks, previewOf,
   imageIsMissing, afterImageDeleted, collectingAfterOpen, needsCollectingPrompt,
   mergePatch, patchBelongsTo, titleInputValue, titleToSave, DEFAULT_TITLE,
-  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabel,
+  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabel, widthLabelKey,
+  MISSING_IMAGE_NOTE, MISSING_IMAGE_NOTE_KEY,
   pinLabel, isRestorable, RESTORE_WINDOW_DAYS, type NoteBlock,
 } from "./notes.ts";
 
@@ -471,7 +472,9 @@ describe("the page autosaves", () => {
   });
 
   it("shows Saved as a status, from the shared constant", () => {
-    assert.ok(src.includes("SAVED_INDICATOR.label"), "the label is duplicated rather than shared");
+    // Through its key since 2026-09-14, still from the shared constant.
+    assert.ok(src.includes("SAVED_INDICATOR.labelKey"), "the label is duplicated rather than shared");
+    assert.equal(en[SAVED_INDICATOR.labelKey], SAVED_INDICATOR.label);
   });
 
   it("a failed save says so instead of looking fine", () => {
@@ -566,6 +569,20 @@ describe("the width toggle", () => {
     assert.equal(widthLabel("half"), "Half width");
     assert.equal(widthLabel("full"), "Full width");
     assert.equal(widthLabel(undefined), "Full width");
+  });
+
+  it("and says the same through its key, which is what the editor renders", () => {
+    for (const w of ["half", "full", undefined] as const) {
+      assert.equal(en[widthLabelKey(w)], widthLabel(w));
+    }
+  });
+
+  it("the deleted-image note and every toolbar title render from keys with the same English", () => {
+    assert.equal(en[MISSING_IMAGE_NOTE_KEY], MISSING_IMAGE_NOTE);
+    for (const c of TOOLBAR) {
+      assert.equal(en[c.titleKey], c.title, `${c.id} title`);
+      if (c.labelKey) assert.equal(en[c.labelKey], c.label, `${c.id} label`);
+    }
   });
 
   /**

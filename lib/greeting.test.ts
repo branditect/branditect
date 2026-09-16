@@ -3,19 +3,24 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { greeting, greetingsDisagree, GREETING_BEFORE_MOUNT } from "./greeting.ts";
+import { translate } from "./i18n/index.ts";
+
+// greeting() returns a key since the Finnish pass; these read it in English.
+const say = (hour: number) => translate("en", greeting(hour));
 
 describe("the greeting boundaries", () => {
   it("morning up to noon", () => {
-    assert.equal(greeting(0), "Good morning");
-    assert.equal(greeting(11), "Good morning");
+    assert.equal(say(0), "Good morning");
+    assert.equal(say(11), "Good morning");
   });
   it("afternoon from noon", () => {
-    assert.equal(greeting(12), "Good afternoon");
-    assert.equal(greeting(17), "Good afternoon");
+    assert.equal(say(12), "Good afternoon");
+    assert.equal(say(17), "Good afternoon");
   });
   it("evening from six", () => {
-    assert.equal(greeting(18), "Good evening");
-    assert.equal(greeting(23), "Good evening");
+    assert.equal(say(18), "Good evening");
+    assert.equal(say(23), "Good evening");
+    assert.equal(translate("fi", greeting(9)), "Hyvää huomenta");
   });
 });
 
@@ -66,6 +71,7 @@ describe("Home does not compute the hour during render", () => {
     // this test cannot drift apart from each other.
     assert.ok(src.includes("GREETING_BEFORE_MOUNT"), "the pre-mount greeting is not rendered");
     assert.ok(/hour === null \? GREETING_BEFORE_MOUNT/.test(src), "the null hour is not handled");
-    assert.equal(GREETING_BEFORE_MOUNT, "Hello");
+    assert.ok(/t\(hour === null \? GREETING_BEFORE_MOUNT : greeting\(hour\)\)/.test(src), "the greeting is not translated");
+    assert.equal(translate("en", GREETING_BEFORE_MOUNT), "Hello");
   });
 });

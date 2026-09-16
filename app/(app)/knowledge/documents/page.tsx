@@ -47,15 +47,14 @@ type CategoryKey =
   | "presentations"
   | "other";
 
-// `label` is the English for a category with no key yet; `labelKey` wins
-// where one exists. `key` is identity and never translated.
-const CATEGORIES: { key: CategoryKey; label: string; labelKey?: StringKey }[] = [
-  { key: "all", label: "All" },
-  { key: "product-info", label: "Product info" },
-  { key: "company-info", label: "Company info" },
-  { key: "pricing", label: "Pricing" },
-  { key: "presentations", label: "", labelKey: "nav.knowledge.presentations" },
-  { key: "other", label: "", labelKey: "industry.other" },
+// `key` is identity and never translated; `labelKey` is what renders.
+const CATEGORIES: { key: CategoryKey; labelKey: StringKey }[] = [
+  { key: "all", labelKey: "docs.all" },
+  { key: "product-info", labelKey: "docs.productInfo" },
+  { key: "company-info", labelKey: "docs.companyInfo" },
+  { key: "pricing", labelKey: "site.nav.pricing" },
+  { key: "presentations", labelKey: "nav.knowledge.presentations" },
+  { key: "other", labelKey: "industry.other" },
 ];
 
 const ACCEPTED = ".pdf,.pptx,.docx,.xlsx,.jpg,.jpeg,.png,.webp";
@@ -94,7 +93,7 @@ function fileTypeBadge(ext: string): string {
 function categoryLabel(key: string, t: (k: StringKey) => string): string {
   const c = CATEGORIES.find((c) => c.key === key);
   if (!c) return key;
-  return c.labelKey ? t(c.labelKey) : c.label;
+  return t(c.labelKey);
 }
 
 /* ------------------------------------------------------------------ */
@@ -146,7 +145,7 @@ function DocumentRow({
       </span>
 
       <span className="shrink-0 text-[0.72rem] text-muted w-10 text-right">
-        {doc.pages_count > 0 ? `${doc.pages_count}p` : "—"}
+        {doc.pages_count > 0 ? t("documents.pagesShort", { count: doc.pages_count }) : "—"}
       </span>
 
       {doc.status === "ready" ? (
@@ -248,7 +247,7 @@ export default function KnowledgeVaultPage() {
     for (let index = 0; index < files.length; index++) {
       const file = files[index];
       if (file.size > MAX_BYTES) {
-        setError(`${file.name} exceeds the 50 MB limit.`);
+        setError(t("docs.tooBig", { name: file.name }));
         continue;
       }
 
@@ -337,8 +336,8 @@ export default function KnowledgeVaultPage() {
           });
       } catch (err) {
         setUploading((prev) => prev.filter((u) => u.tempId !== tempId));
-        const msg = err instanceof Error ? err.message : "Upload failed";
-        setError(`Failed to upload ${file.name}: ${msg}`);
+        const msg = err instanceof Error ? err.message : t("docs.uploadFailed");
+        setError(t("docs.uploadFailedNamed", { name: file.name, msg }));
       }
     }
   }
@@ -346,8 +345,8 @@ export default function KnowledgeVaultPage() {
   // Save text entry
   async function saveTextEntry() {
     setTextError(null);
-    if (!textTitle.trim()) { setTextError("Please add a title."); return; }
-    if (!textContent.trim()) { setTextError("Please add some content."); return; }
+    if (!textTitle.trim()) { setTextError(t("docs.needTitle")); return; }
+    if (!textContent.trim()) { setTextError(t("docs.needContent")); return; }
     setTextSaving(true);
     try {
       const pagesCount = Math.max(1, Math.ceil(textContent.length / 3000));
@@ -462,18 +461,19 @@ export default function KnowledgeVaultPage() {
   const totalPages = indexedDocs.reduce((sum, d) => sum + (d.pages_count || 0), 0);
   const hasProcessing =
     uploading.length > 0 || documents.some((d) => d.status === "processing");
-  const vaultStatus =
+  // Identity codes; the label is looked up where it renders.
+  const vaultStatus: "building" | "active" | "empty" =
     indexedDocs.length > 0
       ? hasProcessing
-        ? "Building…"
-        : "Active"
+        ? "building"
+        : "active"
       : documents.length > 0 || uploading.length > 0
-      ? "Building…"
-      : "Empty";
+      ? "building"
+      : "empty";
   const vaultStatusColor =
-    vaultStatus === "Active"
+    vaultStatus === "active"
       ? "text-emerald-600"
-      : vaultStatus === "Building…"
+      : vaultStatus === "building"
       ? "text-amber"
       : "text-muted";
 
@@ -510,9 +510,7 @@ export default function KnowledgeVaultPage() {
       >
         <p className="text-[0.8rem] text-ink leading-relaxed">
           <span className="font-semibold text-brand-orange">{t("docs.aiOnlyRule")}</span>{" "}
-          Branditect will only use information found in these documents. It will never
-          invent product names, features, pricing, or company facts. If information is
-          not in the vault, it will ask rather than guess.
+          {t("docs.onlyTheseDocs")}
         </p>
       </div>
 
@@ -532,9 +530,8 @@ export default function KnowledgeVaultPage() {
         </div>
         <div className="bg-white border border-light rounded-lg px-5 py-4">
           <div className={`text-[1.6rem] font-semibold leading-none ${vaultStatusColor}`}>
-            {/* vaultStatus is identity (the colour compares it); only
-                "Empty" has a key so far. */}
-            {vaultStatus === "Empty" ? t("notes.emptyPreview") : vaultStatus}
+            {vaultStatus === "empty" ? t("notes.emptyPreview")
+              : vaultStatus === "active" ? t("docs.active") : t("docs.building")}
           </div>
           <div className="text-[0.75rem] text-muted mt-1.5">{t("docs.vaultStatus")}</div>
         </div>
@@ -552,7 +549,7 @@ export default function KnowledgeVaultPage() {
                 : "bg-white text-mid border-light hover:border-muted hover:text-ink"
             }`}
           >
-            {cat.labelKey ? t(cat.labelKey) : cat.label}
+            {t(cat.labelKey)}
           </button>
         ))}
       </div>
@@ -573,8 +570,8 @@ export default function KnowledgeVaultPage() {
         >
           <div className="text-2xl mb-2 text-muted select-none">⬆</div>
           <p className="text-[0.85rem] font-medium text-ink mb-1">
-            Drop files here or{" "}
-            <span className="text-brand-orange underline">browse</span>
+            {t("docs.dropFilesOr")}{" "}
+            <span className="text-brand-orange underline">{t("documents.browse")}</span>
           </p>
           <p className="text-[0.75rem] text-muted">
             {t("docs.acceptedFiles")}
@@ -636,7 +633,7 @@ export default function KnowledgeVaultPage() {
                   className="w-full border border-light rounded-lg px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-brand-orange bg-white transition-colors"
                 >
                   {DOC_TYPES.map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
+                    <option key={c.id} value={c.id}>{t(c.labelKey)}</option>
                   ))}
                 </select>
               </div>
@@ -666,7 +663,7 @@ export default function KnowledgeVaultPage() {
                   className="w-full border border-light rounded-lg px-3 py-2.5 text-[0.85rem] text-ink outline-none focus:border-brand-orange transition-colors resize-none leading-relaxed"
                 />
                 <div className="text-[0.7rem] text-muted text-right mt-1">
-                  {textContent.length.toLocaleString()} chars
+                  {t("documents.chars", { count: textContent.length.toLocaleString() })}
                 </div>
               </div>
 
@@ -690,7 +687,7 @@ export default function KnowledgeVaultPage() {
                 disabled={textSaving}
                 className="flex-2 px-6 py-2 rounded-lg bg-brand-orange text-white text-[0.82rem] font-medium hover:bg-brand-orange-hover transition-all disabled:opacity-50"
               >
-                {textSaving ? t("settings.saving") : "Save to vault →"}
+                {textSaving ? t("settings.saving") : t("docs.saveToVault")}
               </button>
             </div>
           </div>
@@ -719,9 +716,7 @@ export default function KnowledgeVaultPage() {
       {uploading.length === 0 &&
       (filter === "all" ? documents : filteredDocs).length === 0 ? (
         <div className="py-12 text-center text-muted text-[0.82rem]">
-          {documents.length === 0
-            ? "No documents yet. Upload brand files to start building your vault."
-            : "No documents in this category."}
+          {documents.length === 0 ? t("docs.none") : t("docs.noneInCategory")}
         </div>
       ) : (
         <div className="flex flex-col gap-2">

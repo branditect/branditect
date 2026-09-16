@@ -112,6 +112,19 @@ try {
     })()`);
     const crashed = texts.some((t) => /^(Something went wrong|Jokin meni pieleen)/.test(t)) && route !== "/error";
     const english = texts.filter((t) => englishOnly.has(t)).map((t) => `${englishOnly.get(t)} "${t}"`);
+    // Anything that reads as English, keyed or not: two or more common English
+    // words, or one of the short UI words. Brand data (names, file names) can
+    // trip it; the list is for reading, and SWEEP=1 prints it.
+    const EN_WORDS = /\b(the|and|your|you|of|to|with|for|this|that|is|are|not|no|yet|add|new|all|from|in|on|a|an|it|what|how|or|be|can|will|here|more|see|view|open|save|edit|delete|upload|create|back|next|done|continue|cancel|search|filter|loading|nothing|every|each|per|one|two|three)\b/gi;
+    const looksEnglish = (t) => {
+      if (/[äöå]/i.test(t)) return false;
+      const hits = (t.match(EN_WORDS) ?? []).length;
+      return hits >= 2 || /^(Save|Edit|Delete|Upload|Cancel|Close|Back|Next|Done|Loading|Search|Filter|Copy|Download|Open|View|Add|Remove|Settings|Untitled|Draft|Saved|Saving)\b/.test(t);
+    };
+    const englishish = [...new Set(texts.filter((t) => t.length < 400 && looksEnglish(t)))];
+    if (process.env.SWEEP) {
+      for (const t of englishish) console.log(`EN    ${route}  ${t}`);
+    }
     const errs = page.errors.slice(before).filter((e) => !/Download the React DevTools|Fast Refresh|Largest Contentful Paint|gotrue-js: Lock/.test(e));
     if (crashed) bad(`${route} crashed into the error boundary`);
     english.length === 0 ? ok(`${route} shows no keyed English`)

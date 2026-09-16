@@ -6,6 +6,7 @@ import { useBrand } from "@/lib/useBrand";
 import { supabase } from "@/lib/supabase";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -51,6 +52,19 @@ type EditingSection =
   | "touchpoints"
   | "checklist";
 
+/** The edit modal's title per section. The section ids stay the identity. */
+const EDIT_TITLE: Record<Exclude<EditingSection, null>, StringKey> = {
+  expression: "tone.sec.expression",
+  pillars: "tone.sec.pillars",
+  dos: "tone.sec.dos",
+  donts: "tone.sec.donts",
+  vocab: "tone.sec.vocab",
+  touchpoints: "tone.sec.touchpoints",
+  checklist: "tone.sec.checklist",
+};
+
+/* Stored with the brand's tone as data, so it stays English: it is the
+   brand's checklist once saved, not interface copy. */
 const DEFAULT_CHECKLIST = [
   "Does it sound like us?",
   "Would we say this out loud?",
@@ -160,7 +174,7 @@ export default function ToneOfVoicePage() {
   const handleGenerate = async () => {
     if (!pastedText.trim()) return;
     setGenerating(true);
-    setGenProgress("Analysing your writing samples...");
+    setGenProgress(t("tone.progress.analysing"));
     try {
       const res = await fetch("/api/tone/generate", {
         method: "POST",
@@ -187,7 +201,7 @@ export default function ToneOfVoicePage() {
           try {
             const payload = JSON.parse(line.slice(6));
             if (payload.chunk) {
-              setGenProgress("Generating tone guidelines...");
+              setGenProgress(t("tone.progress.generating"));
             }
             if (payload.done && payload.tone) {
               finalTone = payload.tone;
@@ -214,7 +228,7 @@ export default function ToneOfVoicePage() {
         setShowEntry(false);
       }
     } catch {
-      setGenProgress("Generation failed. Please try again.");
+      setGenProgress(t("tone.progress.failed"));
     } finally {
       setGenerating(false);
     }
@@ -237,7 +251,7 @@ export default function ToneOfVoicePage() {
   const handlePullFromStrategy = async () => {
     if (!brandId) return;
     setGenerating(true);
-    setGenProgress("Loading your brand strategy...");
+    setGenProgress(t("tone.progress.loadingStrategy"));
     try {
       const { data, error } = await supabase
         .from("brand_strategies")
@@ -247,7 +261,7 @@ export default function ToneOfVoicePage() {
         .limit(1);
 
       if (error || !data || data.length === 0) {
-        setGenProgress("No saved brand strategy yet. Generate one in Brand Strategy first.");
+        setGenProgress(t("tone.progress.noStrategy"));
         return;
       }
 
@@ -255,7 +269,7 @@ export default function ToneOfVoicePage() {
       try {
         strategy = JSON.parse(data[0].generated_strategy);
       } catch {
-        setGenProgress("Your saved strategy isn't in the new JSON format. Re-generate it from Brand Strategy.");
+        setGenProgress(t("tone.progress.oldFormat"));
         return;
       }
 
@@ -286,13 +300,13 @@ export default function ToneOfVoicePage() {
         checklist: DEFAULT_CHECKLIST,
       };
 
-      setGenProgress("Pulling tone guidelines from your strategy...");
+      setGenProgress(t("tone.progress.pulling"));
       await saveTone(tone);
       setToneData(tone);
       setShowEntry(false);
     } catch (e) {
       console.error("Pull-from-strategy failed:", e);
-      setGenProgress("Failed to pull from brand strategy. Please try again.");
+      setGenProgress(t("tone.progress.pullFailed"));
     } finally {
       setGenerating(false);
     }
@@ -430,7 +444,7 @@ export default function ToneOfVoicePage() {
                 onClick={() => setEntryMode("menu")}
                 className="text-outline text-xs font-mono mb-4 hover:text-on-surface transition-colors"
               >
-                &larr; Back
+                {t("onboarding.back")}
               </button>
               <h2 className="font-semibold text-2xl text-on-surface mb-2">
                 {t("tone.pasteSamples")}
@@ -453,7 +467,7 @@ export default function ToneOfVoicePage() {
                 disabled={generating || !pastedText.trim()}
                 className="mt-4 w-full bg-primary text-white font-headline font-bold shadow-lg shadow-primary/20 text-sm py-3 rounded-xl hover:brightness-110 disabled:opacity-50 transition-colors"
               >
-                {generating ? "Generating..." : "Generate tone"}
+                {generating ? t("tone.generatingEllipsis") : t("tone.generateTone")}
               </button>
             </>
           )}
@@ -484,7 +498,7 @@ export default function ToneOfVoicePage() {
             href="/brand/visual-identity"
             className="text-outline hover:text-on-surface text-sm font-mono transition-colors"
           >
-            &larr; Brand Library
+            {t("tone.brandLibrary")}
           </Link>
           <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mt-3">{t("tone.title")}</h1>
           <p className="text-outline text-sm mt-1">{brandName}</p>
@@ -506,7 +520,7 @@ export default function ToneOfVoicePage() {
             }}
             className="font-headline font-extrabold italic text-3xl mb-4 text-on-surface outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1 transition-colors"
           >
-            {td.expression_label || 'Your expression here'}
+            {td.expression_label || t("tone.expressionPlaceholder")}
           </h2>
           <p
             contentEditable
@@ -519,7 +533,7 @@ export default function ToneOfVoicePage() {
             }}
             className="text-on-surface-variant text-sm leading-relaxed max-w-xl outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1 transition-colors"
           >
-            {td.expression_text || 'Click to describe your brand expression...'}
+            {td.expression_text || t("tone.expressionTextPlaceholder")}
           </p>
         </section>
 
@@ -572,7 +586,7 @@ export default function ToneOfVoicePage() {
             </div>
           ) : (
             <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-8 text-center">
-              {placeholder("No tone pillars defined yet — click edit to add")}
+              {placeholder(t("tone.noPillars"))}
             </div>
           )}
           {editBtn("pillars")}
@@ -586,7 +600,7 @@ export default function ToneOfVoicePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Dos */}
             <div className="relative bg-green-50 border border-green-200 rounded-xl p-5">
-              <h3 className="font-semibold text-green-800 text-sm mb-3">Do</h3>
+              <h3 className="font-semibold text-green-800 text-sm mb-3">{t("tone.do")}</h3>
               {dos.length > 0 ? (
                 <ul className="space-y-2">
                   {dos.map((d, i) => (
@@ -596,7 +610,7 @@ export default function ToneOfVoicePage() {
                   ))}
                 </ul>
               ) : (
-                placeholder("No items yet")
+                placeholder(t("tone.noItems"))
               )}
               <button
                 onClick={() => openEdit("dos")}
@@ -617,7 +631,7 @@ export default function ToneOfVoicePage() {
                   ))}
                 </ul>
               ) : (
-                placeholder("No items yet")
+                placeholder(t("tone.noItems"))
               )}
               <button
                 onClick={() => openEdit("donts")}
@@ -649,7 +663,7 @@ export default function ToneOfVoicePage() {
                   ))}
                 </div>
               ) : (
-                placeholder("No words defined")
+                placeholder(t("tone.noWords"))
               )}
             </div>
             <div>
@@ -666,7 +680,7 @@ export default function ToneOfVoicePage() {
                   ))}
                 </div>
               ) : (
-                placeholder("No words defined")
+                placeholder(t("tone.noWords"))
               )}
             </div>
           </div>
@@ -691,11 +705,11 @@ export default function ToneOfVoicePage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-[0.6rem] font-mono text-red-500 mb-1">&#10060; Wrong</p>
+                      <p className="text-[0.6rem] font-mono text-red-500 mb-1">&#10060; {t("tone.wrong")}</p>
                       <p className="text-xs text-red-600/80 italic">{tp.bad}</p>
                     </div>
                     <div>
-                      <p className="text-[0.6rem] font-mono text-green-600 mb-1">&#9989; Right</p>
+                      <p className="text-[0.6rem] font-mono text-green-600 mb-1">&#9989; {t("tone.right")}</p>
                       <p className="text-xs text-green-700/80 italic">{tp.good}</p>
                     </div>
                   </div>
@@ -704,7 +718,7 @@ export default function ToneOfVoicePage() {
             </div>
           ) : (
             <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-8 text-center">
-              {placeholder("No touchpoints defined yet — click edit to add")}
+              {placeholder(t("tone.noTouchpoints"))}
             </div>
           )}
           {editBtn("touchpoints")}
@@ -749,14 +763,7 @@ export default function ToneOfVoicePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto">
             <h2 className="font-semibold text-xl text-on-surface mb-5">
-              Edit &mdash;{" "}
-              {editing === "expression" && "Brand Expression"}
-              {editing === "pillars" && "Tone Pillars"}
-              {editing === "dos" && "Do's"}
-              {editing === "donts" && "Don'ts"}
-              {editing === "vocab" && "Brand Vocabulary"}
-              {editing === "touchpoints" && "Channel Touchpoints"}
-              {editing === "checklist" && "Quick Checklist"}
+              {t("tone.editTitle", { section: t(EDIT_TITLE[editing]) })}
             </h2>
 
             {/* ---- Expression ---- */}
@@ -824,7 +831,7 @@ export default function ToneOfVoicePage() {
                       className="w-full border border-outline-variant/15 rounded-lg px-3 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40"
                     />
                     <div className="space-y-1">
-                      <label className="text-xs font-mono text-outline">Bullets (one per line)</label>
+                      <label className="text-xs font-mono text-outline">{t("tone.bullets")}</label>
                       <textarea
                         value={(p.bullets || []).join("\n")}
                         onChange={(e) => {
@@ -842,7 +849,7 @@ export default function ToneOfVoicePage() {
                   onClick={() => setDraft((d) => ({ ...d, pillars: [...(d.pillars || []), { icon: "", name: "", desc: "", bullets: [""] }] }))}
                   className="text-primary text-xs font-mono hover:underline"
                 >
-                  + Add pillar
+                  {t("tone.addPillar")}
                 </button>
               </div>
             )}
@@ -855,7 +862,7 @@ export default function ToneOfVoicePage() {
                   value={(draft.dos || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, dos: e.target.value.split("\n") }))}
                   rows={8}
-                  placeholder={"Use active voice\nBe specific\n..."}
+                  placeholder={t("tone.dosPlaceholder")}
                   className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                 />
               </div>
@@ -869,7 +876,7 @@ export default function ToneOfVoicePage() {
                   value={(draft.donts || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, donts: e.target.value.split("\n") }))}
                   rows={8}
-                  placeholder={"Don't use passive voice\nDon't be vague\n..."}
+                  placeholder={t("tone.dontsPlaceholder")}
                   className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                 />
               </div>
@@ -879,7 +886,7 @@ export default function ToneOfVoicePage() {
             {editing === "vocab" && (
               <div className="space-y-5">
                 <div>
-                  <label className="text-xs font-mono text-green-700 block mb-1">Always use (comma-separated)</label>
+                  <label className="text-xs font-mono text-green-700 block mb-1">{t("tone.alwaysUseField")}</label>
                   <textarea
                     value={(draft.vocab_yes || []).join(", ")}
                     onChange={(e) =>
@@ -894,7 +901,7 @@ export default function ToneOfVoicePage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-mono text-red-600 block mb-1">Never use (comma-separated)</label>
+                  <label className="text-xs font-mono text-red-600 block mb-1">{t("tone.neverUseField")}</label>
                   <textarea
                     value={(draft.vocab_no || []).join(", ")}
                     onChange={(e) =>
@@ -988,7 +995,7 @@ export default function ToneOfVoicePage() {
                   }
                   className="text-primary text-xs font-mono hover:underline"
                 >
-                  + Add touchpoint
+                  {t("tone.addTouchpoint")}
                 </button>
               </div>
             )}
@@ -1001,7 +1008,7 @@ export default function ToneOfVoicePage() {
                   value={(draft.checklist || []).join("\n")}
                   onChange={(e) => setDraft((d) => ({ ...d, checklist: e.target.value.split("\n") }))}
                   rows={8}
-                  placeholder="Does it sound like us?\nWould we say this out loud?\n..."
+                  placeholder={t("tone.checklistPlaceholder")}
                   className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
                 />
               </div>

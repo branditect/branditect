@@ -22,7 +22,7 @@ export default function RemoveProductDialog({
   onConfirm: () => void;
 }) {
   const t = useT();
-  const copy = confirmCopy(name);
+  const copy = confirmCopy(name, t);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   // Focus lands on Cancel, not on the destructive button. A stray Enter should
@@ -65,7 +65,7 @@ export default function RemoveProductDialog({
             disabled={busy}
             className="rounded-tile bg-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {busy ? "Removing…" : copy.confirm}
+            {busy ? t("product.removing") : copy.confirm}
           </button>
         </div>
       </div>
@@ -94,7 +94,7 @@ export function UndoBar({
       className="fixed bottom-6 left-1/2 z-[80] flex -translate-x-1/2 items-center gap-3 rounded-pill bg-ink px-5 py-3 text-sm font-semibold text-white shadow-float"
     >
       <Icon name="check" size={14} />
-      <span>{name} removed</span>
+      <span>{t("product.removed", { name })}</span>
       <button
         type="button"
         onClick={onUndo}

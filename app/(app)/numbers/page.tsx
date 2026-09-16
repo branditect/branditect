@@ -8,20 +8,12 @@ import { formatMoney, fromRow, margin, type Product, DEFAULT_CURRENCY } from "@/
 import {
   breakEvenUnits, contribution, costCalculatorTitle, costLines, DEFAULT_PROFILE,
   EMPTY_RUNNING_COSTS, operatingProfit, profileSentence, RUNNING_COST_LINES,
-  runningCostsUnset, totalRunningCosts, unitNoun,
+  runningCostsUnset, totalRunningCosts, unitsPerMonth,
   type BusinessProfile, type Channel, type RunningCosts,
 } from "@/lib/numbers";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey, Vars } from "@/lib/i18n/index.ts";
-
-/**
- * Copy is a dictionary key, or English that has no key yet. `{ en }` renders
- * as written in every language and the gap scan lists it.
- */
-type Copy = StringKey | { en: string };
-type T = (key: StringKey, vars?: Vars) => string;
-const tx = (t: T, c: Copy) => (typeof c === "string" ? t(c) : c.en);
 
 /**
  * Each calculator owns a colour. It is not decoration: it is what lets someone
@@ -53,7 +45,7 @@ const TONES = {
 
 const CALCULATORS: {
   n: number; key: string; icon: IconName; href: string; tone: keyof typeof TONES;
-  title?: StringKey; promise: StringKey; desc: Copy;
+  title?: StringKey; promise: StringKey; desc: StringKey;
   /** Always needed, whatever the profile. */
   needs: StringKey[];
   /** Needed only because of a channel — highlighted so the profile visibly
@@ -106,15 +98,15 @@ type Portfolio = {
  */
 const CARD_STATE: Record<
   string,
-  (p: Portfolio, currency: string) => { label: Copy; done: boolean }
+  (p: Portfolio, currency: string) => { label: StringKey; vars?: Vars; done: boolean }
 > = {
   cost: (p, currency) =>
     p.best?.p.landedCost != null
-      ? { label: { en: `${p.best.p.name} currently ${formatMoney(p.best.p.landedCost, currency)}` }, done: true }
+      ? { label: "num.currentlyAt", vars: { name: p.best.p.name, amount: formatMoney(p.best.p.landedCost, currency) }, done: true }
       : { label: "num.noLandedCost", done: false },
   pricing: (p, currency) =>
     p.best?.p.retailPrice != null
-      ? { label: { en: `${p.best.p.name} currently ${formatMoney(p.best.p.retailPrice, currency)}` }, done: true }
+      ? { label: "num.currentlyAt", vars: { name: p.best.p.name, amount: formatMoney(p.best.p.retailPrice, currency) }, done: true }
       : { label: "num.noPrice", done: false },
   offers: () => ({ label: "num.usesPriceHere", done: false }),
   recurring: () => ({ label: "num.shownBecauseSubscription", done: false }),
@@ -234,10 +226,10 @@ export default function NumbersPage() {
       <header>
         <h1 className="text-display font-bold leading-[1.15]">{t("numbers.title")}</h1>
         <p className="mt-[3px] text-base font-normal text-muted-2">
-          Your product cards hold the real figures.{" "}
+          {t("num.cardsHoldFigures")}{" "}
           {loaded && portfolio.total > 0 && missing > 0 && (
             <b className="font-semibold text-ink-2">
-              {missing} of {portfolio.total} still need costs.
+              {t("num.stillNeedCosts", { missing, total: portfolio.total })}
             </b>
           )}
           {loaded && portfolio.total === 0 && (
@@ -283,7 +275,7 @@ export default function NumbersPage() {
               <div className="rounded-tile border-[1.2px] border-white/40 px-[11px] pb-[11px] pt-2.5">
                 <div className="text-micro font-medium text-white/[.82]">{t("numbers.breakEven")}</div>
                 <div className="text-[18px] font-bold tabular-nums">
-                  {be === null ? "—" : be === Infinity ? "never" : `${be} / mo`}
+                  {be === null ? "—" : be === Infinity ? t("num.never") : t("num.perMonthValue", { value: be })}
                 </div>
                 <div className="text-micro font-medium text-white/70">
                   {noCosts ? t("num.addRunningCostsInline") : t("num.atYourBestMargin")}
@@ -313,7 +305,7 @@ export default function NumbersPage() {
                       profile.sells === v ? "border-accent bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
                     }`}>
                     <Icon name={icon} size={13} />
-                    {tx(t, label)}
+                    {t(label)}
                   </button>
                 ))}
               </div>
@@ -322,14 +314,14 @@ export default function NumbersPage() {
             <div>
               <div className="mb-1.5 text-micro font-bold uppercase tracking-[0.7px] text-[#6b5b91]">{t("numbers.howYouCharge")}</div>
               <div role="radiogroup" aria-label={t("numbers.howYouCharge")} className="flex flex-wrap gap-1.5">
-                {([["oneoff", { en: "One-off" }, "once"], ["recurring", "num.subscription", "repeat"]] as const).map(([v, label, icon]) => (
+                {([["oneoff", "num.oneOffCharge", "once"], ["recurring", "num.subscription", "repeat"]] as const).map(([v, label, icon]) => (
                   <button key={v} type="button" role="radio" aria-checked={profile.charges === v}
                     onClick={() => setCharges(v)}
                     className={`inline-flex items-center gap-[7px] rounded-pill border px-3 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       profile.charges === v ? "border-accent bg-tint-1 text-accent" : "border-[#ded0f4] bg-white/[.92] text-[#3f3560] hover:border-accent-line hover:bg-white hover:text-accent"
                     }`}>
                     <Icon name={icon} size={13} />
-                    {tx(t, label)}
+                    {t(label)}
                   </button>
                 ))}
               </div>
@@ -362,9 +354,9 @@ export default function NumbersPage() {
             </div>
 
             <p aria-live="polite" className="mt-auto rounded-tile border border-[#ded0f4] bg-white/75 px-3 py-2.5 text-2xs font-medium leading-[1.5] text-[#5d5080]">
-              {profileSentence(profile)}{" "}
+              {profileSentence(profile, t)}{" "}
               <span className="opacity-75">
-                That means {costLines(profile).length} cost lines per sale.
+                {t("num.costLinesPerSale", { count: costLines(profile).length })}
               </span>
             </p>
           </div>
@@ -400,12 +392,12 @@ export default function NumbersPage() {
                   </span>
                 </span>
                 <div className="min-w-0">
-                  <h3 className="text-h3 font-bold">{c.title ? t(c.title) : costCalculatorTitle(profile)}</h3>
+                  <h3 className="text-h3 font-bold">{c.title ? t(c.title) : costCalculatorTitle(profile, t)}</h3>
                   <div className={`mt-1 text-xs font-bold leading-[1.35] ${tone.promise}`}>{t(c.promise)}</div>
                 </div>
               </div>
 
-              <p className="mt-[11px] text-xs font-medium leading-[1.5] text-muted">{tx(t, c.desc)}</p>
+              <p className="mt-[11px] text-xs font-medium leading-[1.5] text-muted">{t(c.desc)}</p>
 
               <div className="mt-[11px] border-t border-rule pt-[11px]">
                 <h4 className="text-micro font-extrabold uppercase tracking-[0.8px] text-muted-2">
@@ -428,7 +420,7 @@ export default function NumbersPage() {
               <div className="mt-auto pt-3">
                 <div className={`flex min-h-4 items-center gap-1.5 text-micro font-bold ${state?.done ? "text-green-ink" : "text-muted-2"}`}>
                   {state?.done && <Icon name="check" size={12} />}
-                  {state ? tx(t, state.label) : ""}
+                  {state ? t(state.label, state.vars) : ""}
                 </div>
                 <Link href={c.href}
                   className={`mt-[9px] flex items-center justify-center gap-[7px] rounded-tile p-2.5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${tone.go}`}>
@@ -472,7 +464,7 @@ export default function NumbersPage() {
           <div className="mt-1.5 flex flex-wrap gap-1">
             {RUNNING_COST_LINES.map((l) => (
               <span key={l.key} className="rounded-pill border border-rule bg-tile px-2 py-0.5 text-micro font-semibold text-ink-2">
-                {l.label}
+                {t(l.labelKey)}
               </span>
             ))}
           </div>
@@ -482,7 +474,7 @@ export default function NumbersPage() {
           <div className="flex items-baseline gap-2.5 text-xs font-semibold text-blue-ink">
             {t("numbers.runningCosts")}
             <b className="ml-auto font-extrabold tabular-nums">
-              {noCosts ? "—" : `${formatMoney(opEx, currency)} / mo`}
+              {noCosts ? "—" : t("num.perMonthValue", { value: formatMoney(opEx, currency) })}
             </b>
           </div>
           <div className="flex items-baseline gap-2.5 text-xs font-semibold text-blue-ink">
@@ -512,19 +504,23 @@ export default function NumbersPage() {
             ) : (
               <>
                 <div className="text-[24px] font-bold leading-[1.15] tracking-[-0.7px] tabular-nums text-blue-ink">
-                  {be} {unitNoun(profile)} / mo
+                  {unitsPerMonth(profile, be, t)}
                 </div>
                 <p className="mt-1 text-micro font-medium leading-[1.45] text-blue-ink opacity-80">
-                  Below this you lose money however healthy the margin looks.
-                  {volume != null && bestContribution != null && (
-                    <>
-                      {" "}At {volume} a month, operating profit is{" "}
-                      <b className="font-extrabold">
-                        {formatMoney(operatingProfit(volume, bestContribution, opEx), currency)}
-                      </b>
-                      .
-                    </>
-                  )}
+                  {t("num.belowThisLose")}
+                  {volume != null && bestContribution != null && (() => {
+                    // One sentence with the profit in bold where the key puts it.
+                    const [pre, post = ""] = t("num.atVolumeProfit", { volume }).split("{profit}");
+                    return (
+                      <>
+                        {" "}{pre}
+                        <b className="font-extrabold">
+                          {formatMoney(operatingProfit(volume, bestContribution, opEx), currency)}
+                        </b>
+                        {post}
+                      </>
+                    );
+                  })()}
                 </p>
               </>
             )}

@@ -408,7 +408,20 @@ describe("source code cannot reach the work list", () => {
     // caught it: 409 entries in the committed list matched this.
     const gap = readFileSync("branditect-ui/spec/i18n-gap.md", "utf8");
     const entries = gap.split("\n").filter((l) => l.startsWith("- ")).map((l) => l.slice(2));
-    assert.ok(entries.length > 300, `only ${entries.length} entries — regenerate with npm run i18n:gap`);
+    // Was "more than 300 entries", a floor that went stale the moment the list
+    // shrank (2026-09-16: 77). The real question is whether the file is the
+    // current scan, so it is compared against one rather than against a number.
+    const norm = (x: string) => x.trim().replace(/\s+/g, " ");
+    const known = new Set(Object.values(en).map(norm));
+    const fresh = new Set<string>();
+    for (const f of SCOPE.flatMap(tsxUnder)) {
+      const lits = findAllLiterals(readFileSync(f, "utf8"))
+        .filter((l) => !(IGNORE[f] ?? []).some((rx) => rx.test(l.text)));
+      for (const l of lits) { const t = norm(l.text); if (!known.has(t)) fresh.add(t); }
+    }
+    const missing = [...fresh].filter((t) => !entries.includes(t.replace(/\|/g, "\\|")));
+    assert.deepEqual(missing.slice(0, 8), [],
+      `${missing.length} string(s) have no key and are not in the work list — npm run i18n:gap`);
     const leaked = entries.filter((e) => isSourceFragment(e) || isClassList(e));
     assert.deepEqual(leaked.slice(0, 8), [],
       `${leaked.length} source fragment(s) in the work list; regenerate it`);
@@ -600,7 +613,11 @@ describe("the brand placeholder never renders", () => {
 
   it("the Images heading drops the possessive rather than the name", () => {
     const src = readFileSync("app/(app)/knowledge/images/page.tsx", "utf8");
-    assert.match(src, /brandLoading\s*\?\s*"Access and manage all your brand assets in one place\."/);
+    // Keys since the Knowledge extraction: the loading branch is the sentence
+    // with no name in it at all.
+    assert.match(src, /brandLoading\s*\?\s*t\("assets\.intro"\)/);
+    assert.equal(en["assets.intro"], "Access and manage all your brand assets in one place.");
+    assert.ok(!/\{brandName\}/.test(en["assets.intro"]), "the loading sentence names the brand");
   });
 });
 
@@ -637,7 +654,7 @@ describe("batch A's scanner catch never reaches the work list", () => {
   it("font stacks, transitions and a currency code are not copy", () => {
     for (const t of ["'DM Sans', sans-serif", "'Space Grotesk', sans-serif",
                      '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                     "background 0.15s", "opacity 0.15s", "EUR"]) {
+                     "background 0.15s", "opacity 0.15s", "spin 0.75s linear infinite", "EUR"]) {
       assert.ok(isTechnical(t), `${t} would be listed as copy`);
     }
   });

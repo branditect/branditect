@@ -183,7 +183,7 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
   // A font stack, `'DM Sans', sans-serif`, ends in a generic family.
   [/(^|,)\s*(sans-serif|serif|monospace|system-ui|cursive)\s*$/, "a font stack"],
   // A CSS transition, `background 0.15s` or `opacity .2s ease`.
-  [/^[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)?(\s*,\s*[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)?)*$/, "a CSS transition"],
+  [/^[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)*(\s*,\s*[a-z-]+\s+[\d.]+m?s(\s+[a-z-]+)*)*$/, "a CSS transition or animation"],
   // An ISO currency code is data for Intl, not a word a translator changes.
   [/^(EUR|USD|GBP|SEK|NOK|DKK)$/, "a currency code"],
   // `padding: "0 auto 34px"` in a style object: lengths and auto, nothing else.

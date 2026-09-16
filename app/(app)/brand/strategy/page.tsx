@@ -8,6 +8,8 @@ import { QUESTIONS, type QuestionDef } from "@/lib/strategy-questions";
 import StrategyDocument from "@/components/strategy/strategy-document";
 import { readStrategy, completeness, EMPTY_STRATEGY, type BrandStrategy } from "@/lib/strategy";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import { useLocale } from "@/lib/i18n/use-t.tsx";
+import { strategyForLocale, sectionLabelFor } from "@/lib/strategy-locale";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -45,12 +47,12 @@ interface StrategyRecord {
 const SECTIONS = Array.from(new Set(QUESTIONS.map((q) => q.section)));
 
 const GENERATION_STAGES = [
-  "Positioning framework",
-  "Audience personas",
-  "Messaging architecture",
-  "Brand voice & tone",
-  "Risks & opportunities",
-];
+  "strategy.stage.positioning",
+  "strategy.stage.personas",
+  "strategy.stage.messaging",
+  "strategy.stage.voice",
+  "strategy.stage.risks",
+] as const;
 
 
 /* ------------------------------------------------------------------ */
@@ -175,6 +177,7 @@ function parseMarkdown(md: string): string {
 
 export default function BrandStrategyPage() {
   const t = useT();
+  const locale = useLocale();
   const { brandId, loading: brandLoading } = useBrand();
   const [screen, setScreen] = useState<Screen>("entry");
   const [category, setCategory] = useState<Category | null>(null);
@@ -340,6 +343,14 @@ export default function BrandStrategyPage() {
   const totalAnswered = Object.values(answers).filter((a) => a?.trim()).length;
 
   const currentQuestion = QUESTIONS[currentIndex];
+  // The words in the interface language. `currentQuestion` stays English
+  // because questionKey() is built from it: answers are filed under the
+  // English text, and translating that in place would orphan every answer
+  // already saved in brand_strategies.answers.
+  const localised = strategyForLocale(currentIndex, locale) ?? {
+    question: currentQuestion.question,
+    placeholder: currentQuestion.placeholder,
+  };
   const currentSection = currentQuestion?.section;
 
   /* ---- image handling ---- */
@@ -415,11 +426,11 @@ export default function BrandStrategyPage() {
       const contentType = res.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         const errData = await res.json();
-        throw new Error(errData.error || "Generation failed");
+        throw new Error(errData.error || t("strategy.generationFailed"));
       }
 
       if (!res.ok || !res.body) {
-        throw new Error("Generation failed — no response from server");
+        throw new Error(t("strategy.noResponse"));
       }
 
       // Read the full stream
@@ -453,7 +464,7 @@ export default function BrandStrategyPage() {
       }
 
       if (!strategyJson) {
-        throw new Error("No strategy received. Please try again.");
+        throw new Error(t("strategy.noStrategyReceived"));
       }
 
       setGeneratedStrategy(strategyJson);
@@ -526,7 +537,7 @@ export default function BrandStrategyPage() {
         clearDraft();
       }
     } catch {
-      setError("Failed to save. Please try again.");
+      setError(t("strategy.failedToSave"));
     }
   };
 
@@ -596,7 +607,7 @@ export default function BrandStrategyPage() {
             href="/home"
             className="text-sm text-muted hover:text-brand-orange transition-colors"
           >
-            &larr; Back to Dashboard
+            {t("strategy.backToDashboard")}
           </Link>
         </div>
       )}
@@ -627,9 +638,7 @@ export default function BrandStrategyPage() {
                 {t("strategy.none")}
               </h1>
               <p className="mt-3 text-base font-normal leading-[1.6] text-muted">
-                It is built from the questionnaire. Twenty questions, five of them
-                needed to open your workspace, about four minutes. This page fills
-                itself in as you answer.
+                {t("strategy.builtFromQuestionnaire")}
               </p>
 
               {error && (
@@ -702,7 +711,7 @@ export default function BrandStrategyPage() {
               onClick={() => setScreen("entry")}
               className="text-sm text-muted hover:text-brand-orange transition-colors font-sans"
             >
-              &larr; Go back
+              {t("strategy.goBack")}
             </button>
           </div>
         </div>
@@ -732,7 +741,7 @@ export default function BrandStrategyPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="truncate">{section}</span>
+                      <span className="truncate">{sectionLabelFor(section, locale)}</span>
                       <span
                         className={`text-xs font-mono ${
                           answered === total
@@ -758,7 +767,7 @@ export default function BrandStrategyPage() {
 
             <div className="mt-auto p-5 border-t border-light space-y-3">
               <div className="text-xs text-muted font-mono">
-                {totalAnswered} / {QUESTIONS.length} answered
+                {t("strategy.answeredCount", { answered: totalAnswered, total: QUESTIONS.length })}
               </div>
               <button
                 onClick={() => generate(false)}
@@ -778,7 +787,7 @@ export default function BrandStrategyPage() {
                   {currentSection}
                 </span>
                 <span className="text-xs text-muted ml-3 font-mono">
-                  Question {currentIndex + 1} of {QUESTIONS.length}
+                  {t("strategy.questionOf", { n: currentIndex + 1, total: QUESTIONS.length })}
                 </span>
               </div>
 
@@ -792,7 +801,7 @@ export default function BrandStrategyPage() {
               </div>
 
               <h2 className="text-2xl font-semibold text-ink mb-6 leading-snug">
-                {currentQuestion.question}
+                {localised.question}
               </h2>
 
               <textarea
@@ -805,7 +814,7 @@ export default function BrandStrategyPage() {
                   }))
                 }
                 rows={6}
-                placeholder={currentQuestion.placeholder}
+                placeholder={localised.placeholder}
                 className="w-full rounded-xl border border-outline-variant/15 bg-white px-5 py-4 text-base text-dark placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-none font-sans leading-relaxed"
               />
 
@@ -828,7 +837,7 @@ export default function BrandStrategyPage() {
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  Attach Image ({images.length}/3)
+                  {t("strategy.attachImage", { count: images.length })}
                 </button>
                 {images.map((img, idx) => (
                   <div
@@ -889,8 +898,8 @@ export default function BrandStrategyPage() {
                     className="px-6 py-2.5 rounded-2xl bg-primary text-white text-sm font-semibold hover:brightness-110 transition-colors font-sans"
                   >
                     {currentIndex < QUESTIONS.length - 1
-                      ? "Next"
-                      : "Generate Strategy"}
+                      ? t("strategy.next")
+                      : t("strategy.generateStrategy")}
                   </button>
                 </div>
               </div>
@@ -908,8 +917,7 @@ export default function BrandStrategyPage() {
                 {t("strategy.crafting")}
               </h2>
               <p className="text-muted font-sans">
-                Synthesizing {totalAnswered} answers into a comprehensive
-                strategy...
+                {t("strategy.synthesizing", { count: totalAnswered })}
               </p>
             </div>
 
@@ -948,7 +956,7 @@ export default function BrandStrategyPage() {
                       idx <= generationStage ? "text-ink" : "text-muted"
                     }`}
                   >
-                    {stage}
+                    {t(stage)}
                   </span>
                 </div>
               ))}
@@ -1025,7 +1033,7 @@ export default function BrandStrategyPage() {
                     : "bg-brand-orange text-white hover:brightness-110"
                 }`}
               >
-                {saved ? "Saved \u2713" : "Save to Branditect"}
+                {saved ? t("guardrails.saved") : t("strategy.saveToBranditect")}
               </button>
             </div>
           </div>

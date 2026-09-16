@@ -67,7 +67,7 @@ export default function SignUpPage() {
         <section className="w-full max-w-[420px] rounded-panel border border-rule bg-card p-8 drop-shadow-panel">
           <h1 className="text-h2 font-bold tracking-[-0.5px]">{t("signup.checkEmail")}</h1>
           <p className="mt-3 text-sm font-normal leading-[1.6] text-muted">
-            {AUTH_COPY.confirmSent}
+            {t(AUTH_COPY.confirmSent)}
           </p>
           <p className="mt-4 text-sm font-semibold text-ink-2">{confirmSentTo}</p>
           <Link

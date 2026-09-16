@@ -2,7 +2,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { AUTH_COPY } from "./auth-errors.ts";
+import { AUTH_COPY, mapAuthError } from "./auth-errors.ts";
+import { translate } from "./i18n/index.ts";
 import {
   withTimeout, mapThrown, AuthTimeout, AUTH_TIMEOUT_MS, POST_AUTH_FALLBACK,
 } from "./auth-timeout.ts";
@@ -79,7 +80,19 @@ describe("what the person is told", () => {
   });
 
   it("the copy is a sentence a person can act on", () => {
-    assert.match(AUTH_COPY.timedOut, /try again/i);
+    // AUTH_COPY holds keys since the Finnish pass; the words are in the dictionary.
+    assert.match(translate("en", AUTH_COPY.timedOut), /try again/i);
+    assert.match(translate("fi", AUTH_COPY.timedOut), /yritä uudelleen/i);
+  });
+
+  it("a wrong password and an unknown email get the same message, in every language", () => {
+    const wrong = mapAuthError({ message: "Invalid login credentials", status: 400 });
+    const unknown = mapAuthError({ message: "Invalid credentials", status: 400 });
+    assert.equal(wrong.message, unknown.message);
+    for (const l of ["en", "fi"] as const) {
+      assert.equal(translate(l, wrong.message), translate(l, unknown.message));
+    }
+    assert.equal(translate("en", wrong.message), "That email and password don't match");
   });
 });
 

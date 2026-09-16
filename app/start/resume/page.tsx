@@ -28,12 +28,12 @@ export default function Resume() {
         // not cost them anything, and where they got to. A single sentence on
         // an empty page is what "thrown mid-questionnaire" feels like.
         <Rail
-          eyebrow="Welcome back"
-          heading="Nothing was lost."
+          eyebrow={t("start.resume.welcomeBack")}
+          heading={t("start.resume.nothingLost")}
           lede={
             loading
-              ? "Finding your place…"
-              : `${answered} of ${total} answered. ${gateFootNote(state)}`
+              ? t("start.resume.finding")
+              : `${t("start.resume.answeredOf", { answered, total })} ${(() => { const note = gateFootNote(state); return t(note.key, note.vars); })()}`
           }
           foot={
             <RailFoot icon="cloud">
@@ -46,11 +46,10 @@ export default function Resume() {
       }
     >
       <h1 className="text-h2 font-bold tracking-[-0.5px]">
-        {loading ? "Finding your place…" : `You were on question ${n} of ${total}.`}
+        {loading ? t("start.resume.finding") : t("start.resume.wereOn", { n, total })}
       </h1>
       <p className="mt-3 max-w-[54ch] text-base font-normal leading-[1.6] text-muted">
-        Everything you have written is saved. The questions you skipped are waiting in Brand
-        Readiness, not lost.
+        {t("start.resume.allSaved")}
       </p>
       <div className="mt-7 flex flex-wrap gap-3">
         <Link href={`/start/q/${n}`}

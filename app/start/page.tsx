@@ -25,13 +25,13 @@ export default function StartWelcome() {
       rail={
         <Rail
           eyebrow={t("profile.gettingStarted")}
-          heading="Four sections, twenty questions."
-          lede="Five of them open your workspace. The rest sharpen it whenever you come back."
+          heading={t("start.fourSections")}
+          lede={t("start.fiveOpen")}
           foot={
             // The one place a count of the gate belongs: a reason to come back,
             // phrased as a fact. Never a warning that blocks.
             <RailFoot icon={gateProgress(state).cleared ? "spark" : "key"}>
-              {gateFootNote(state)}
+              {(() => { const note = gateFootNote(state); return t(note.key, note.vars); })()}
             </RailFoot>
           }
         >
@@ -44,15 +44,13 @@ export default function StartWelcome() {
       </h1>
       {/* States the time cost honestly rather than hiding it. */}
       <p className="mt-4 max-w-[54ch] text-base font-normal leading-[1.6] text-muted">
-        Twenty questions, but only five are needed to open your workspace — about
-        four minutes. The rest can wait, and they show up in Brand Readiness so
-        you know what is still missing.
+        {t("start.timeCost")}
       </p>
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href={partial ? "/start/resume" : "/start/profile/1"}
           className="rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn">
-          {partial ? "Pick up where you left off" : "Start"}
+          {partial ? t("start.pickUp") : t("start.start")}
         </Link>
       </div>
 
@@ -63,7 +61,7 @@ export default function StartWelcome() {
 
       {partial && (
         <p className="mt-4 text-xs font-medium text-muted-2">
-          You were on question {resumeQuestion(state)} of 20. Everything you wrote is saved.
+          {t("start.wereOnOf20", { n: resumeQuestion(state) })}
         </p>
       )}
     </StartShell>

@@ -136,19 +136,17 @@ export default function ImagePicker({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={multi ? "Tag images to this product" : t("picker.chooseImage")}
+        aria-label={multi ? t("picker.tagToProduct") : t("picker.chooseImage")}
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[80vh] w-full max-w-[720px] flex-col overflow-hidden rounded-panel border border-rule bg-card shadow-[0_24px_60px_-20px_rgba(20,20,26,.35)]"
       >
         <div className="flex items-center gap-3 border-b border-rule px-5 py-4">
           <div className="min-w-0">
             <h2 className="text-h3 font-bold">
-              {multi ? "Tag images to this product" : t("picker.chooseImage")}
+              {multi ? t("picker.tagToProduct") : t("picker.chooseImage")}
             </h2>
             <p className="mt-0.5 text-xs font-normal text-muted-2">
-              {multi
-                ? "From your image library. They show under Images and video on this product."
-                : t("picker.intro")}
+              {multi ? t("picker.tagIntro") : t("picker.intro")}
             </p>
           </div>
           <label className="ml-auto flex h-9 w-[190px] items-center gap-2 rounded-tile border border-rule-2 px-3 focus-within:border-accent-line">
@@ -181,8 +179,7 @@ export default function ImagePicker({
             <div className="rounded-card border border-rule bg-tile p-6 text-center">
               <p className="text-sm font-semibold text-ink">{t("picker.empty")}</p>
               <p className="mx-auto mt-1.5 max-w-[46ch] text-xs font-medium leading-[1.6] text-muted">
-                Product shots live in Knowledge ▸ Images so the image creator can read them. Upload
-                some there and they&apos;ll appear here.
+                {t("picker.emptyHelp")}
               </p>
               <Link
                 href="/knowledge/images"
@@ -195,7 +192,7 @@ export default function ImagePicker({
 
           {images !== null && images.length > 0 && shown.length === 0 && (
             <p className="text-sm text-muted">
-              No images match “{query}”.{" "}
+              {t("picker.noMatch", { query })}{" "}
               <button type="button" onClick={() => setQuery("")} className="text-accent underline">
                 {t("picker.clear")}
               </button>
@@ -231,7 +228,7 @@ export default function ImagePicker({
                   >
                     {here && (
                       <span className="absolute right-1.5 top-1.5 z-10 rounded-pill bg-ink/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.4px] text-white">
-                        Tagged
+                        {t("picker.tagged")}
                       </span>
                     )}
                     <span className="block aspect-square overflow-hidden bg-tile">
@@ -267,13 +264,13 @@ export default function ImagePicker({
               >
                 {/* Entry 6c: the label says what pressing it does, not what
                     you have already done. The count is the useful part. */}
-                {busy ? "Tagging…"
-                  : picked.length === 1 ? "Tag image"
-                  : picked.length > 1 ? `Tag ${picked.length} images`
-                  : "Tag images"}
+                {busy ? t("picker.tagging")
+                  : picked.length === 1 ? t("picker.tagOne")
+                  : picked.length > 1 ? t("picker.tagN", { count: picked.length })
+                  : t("media.tagImages")}
               </button>
               <span className="text-xs font-medium text-muted-2">
-                {picked.length === 0 ? "Pick one or more" : `${picked.length} selected`}
+                {picked.length === 0 ? t("picker.pickOneOrMore") : t("picker.selected", { count: picked.length })}
               </span>
             </>
           )}

@@ -4,35 +4,13 @@ import { useBrand } from "@/lib/useBrand";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
-// `title` stays English: it is the React key. `titleKey` is what renders,
-// where a key exists.
-const basesTemplate: { icon: string; title: string; titleKey?: StringKey; descTemplate: (name: string) => string; progress: number }[] = [
-  {
-    icon: "☰",
-    title: "Brand Strategy",
-    titleKey: "channels.brandStrategy",
-    descTemplate: (name: string) => `Define ${name}'s purpose, positioning, values, and competitive landscape`,
-    progress: 100,
-  },
-  {
-    icon: "◷",
-    title: "Tone of Voice",
-    titleKey: "channels.toneOfVoice",
-    descTemplate: (name: string) => `Establish how ${name} communicates — the BrandTone™ Architect output`,
-    progress: 100,
-  },
-  {
-    icon: "◈",
-    title: "Visual Identity",
-    descTemplate: (name: string) => `Upload ${name}'s brand assets and visual guidelines`,
-    progress: 80,
-  },
-  {
-    icon: "⚡",
-    title: "Business Pulse",
-    descTemplate: () => "Goals, upcoming launches, sensitivities, financial rules",
-    progress: 60,
-  },
+// `title` stays English: it is the React key. `titleKey` and `descKey` are
+// what renders; the description takes the brand name as {name}.
+const basesTemplate: { icon: string; title: string; titleKey: StringKey; descKey: StringKey; progress: number }[] = [
+  { icon: "☰", title: "Brand Strategy", titleKey: "channels.brandStrategy", descKey: "bases.strategyDesc", progress: 100 },
+  { icon: "◷", title: "Tone of Voice", titleKey: "channels.toneOfVoice", descKey: "bases.toneDesc", progress: 100 },
+  { icon: "◈", title: "Visual Identity", titleKey: "bases.visualIdentity", descKey: "bases.visualDesc", progress: 80 },
+  { icon: "⚡", title: "Business Pulse", titleKey: "bases.businessPulse", descKey: "bases.pulseDesc", progress: 60 },
 ];
 
 export default function BrandBasesPage() {
@@ -41,7 +19,7 @@ export default function BrandBasesPage() {
 
   const bases = basesTemplate.map((b) => ({
     ...b,
-    desc: b.descTemplate(brandName),
+    desc: t(b.descKey, { name: brandName }),
   }));
 
   return (
@@ -52,10 +30,10 @@ export default function BrandBasesPage() {
       </div>
 
       <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-2">
-        Build Your Brand Foundation
+        {t("bases.title")}
       </h1>
       <p className="text-[0.84rem] text-muted max-w-[420px] leading-relaxed mb-10">
-        Complete the following steps to set up {brandName}&apos;s brand foundation. This powers all AI-assisted content creation tailored to {brandName}&apos;s voice, strategy, and identity.
+        {t("bases.intro", { brandName })}
       </p>
 
       {/* Cards */}
@@ -68,10 +46,10 @@ export default function BrandBasesPage() {
             <div className="w-8 h-8 bg-brand-orange-pale rounded-md flex items-center justify-center text-[0.9rem] mb-3">
               {base.icon}
             </div>
-            <div className="font-semibold text-[0.95rem] text-ink mb-1">{base.titleKey ? t(base.titleKey) : base.title}</div>
+            <div className="font-semibold text-[0.95rem] text-ink mb-1">{t(base.titleKey)}</div>
             <div className="text-[0.73rem] text-muted leading-relaxed mb-3.5">{base.desc}</div>
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[0.58rem] text-muted">Progress</span>
+              <span className="font-mono text-[0.58rem] text-muted">{t("bases.progress")}</span>
               <span className="font-mono text-[0.6rem] text-brand-orange">{base.progress}%</span>
             </div>
             <div className="h-[3px] bg-light rounded-sm mt-1.5 overflow-hidden">
@@ -85,7 +63,7 @@ export default function BrandBasesPage() {
       </div>
 
       <button className="px-10 py-3.5 bg-brand-orange text-white rounded-md font-medium text-[0.88rem] hover:bg-brand-orange-hover transition-all">
-        Continue Setup →
+        {t("bases.continue")}
       </button>
     </div>
   );

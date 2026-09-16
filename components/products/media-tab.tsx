@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/icon";
-import { docRoleLabel, fileSize, isVideo, UNTAG_NOTE } from "@/lib/product-attachments";
+import { docRoleLabelKey, fileSize, isVideo, UNTAG_NOTE_KEY } from "@/lib/product-attachments";
 import ProductPicker from "@/components/products/product-picker";
 import ImagePicker from "@/components/products/image-picker";
 import { authedFetch, authedJson } from "@/lib/authed-fetch";
@@ -69,13 +69,14 @@ export default function MediaTab({
         `/api/products/attachments?product_id=${encodeURIComponent(productId)}&brand_id=${encodeURIComponent(brandId)}`,
       );
       const data = await res.json();
-      if (!res.ok) { setError(data.error === "not_found" ? "Not available." : data.error || "Could not load."); return; }
+      if (!res.ok) { setError(data.error === "not_found" ? t("media.notAvailable") : data.error || t("media.couldNotLoad")); return; }
       setImages(data.images ?? []);
       setDocuments(data.documents ?? []);
       onCounts?.({ images: data.imageCount ?? 0, documents: data.documentCount ?? 0 });
     } catch {
-      setError("Could not load.");
+      setError(t("media.couldNotLoad"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t changes identity every render; the words it returns only change with the locale, which reloads the page
   }, [productId, brandId, onCounts]);
 
   useEffect(() => { void load(); }, [load]);
@@ -88,7 +89,7 @@ export default function MediaTab({
         `/api/products/attachments?product_id=${encodeURIComponent(productId)}&brand_id=${encodeURIComponent(brandId)}&${q}`,
         { method: "DELETE" },
       );
-      if (!res.ok) { setError("Could not untag. It is still on this product."); return; }
+      if (!res.ok) { setError(t("media.couldNotUntag")); return; }
       // Reload rather than splicing, so the count and the grid come from the
       // same read and cannot drift.
       await load();
@@ -115,11 +116,11 @@ export default function MediaTab({
       const json = await res.json().catch(() => ({}));
       // fetch resolves on 4xx and 5xx. Reading json without checking res.ok
       // is how a tag reports success and writes nothing.
-      if (!res.ok) { setError(json.error ?? "Could not tag. Nothing was added."); return; }
+      if (!res.ok) { setError(json.error ?? t("media.couldNotTag")); return; }
       setPicking(false);
       await load();
     } catch {
-      setError("Could not tag. Nothing was added.");
+      setError(t("media.couldNotTag"));
     } finally {
       setTagging(false);
     }
@@ -152,7 +153,7 @@ export default function MediaTab({
               onClick={() => setPicking(true)}
               className="ml-auto rounded-tile border border-rule-2 px-2.5 py-1 text-2xs font-bold text-ink-2 hover:border-accent-line hover:text-accent-dark"
             >
-              Tag images
+              {t("media.tagImages")}
             </button>
           )}
         </div>
@@ -166,7 +167,7 @@ export default function MediaTab({
           <div className="mt-2 rounded-card border border-dashed border-rule-2 bg-tile px-3.5 py-4">
             <p className="text-xs font-semibold text-ink-2">{t("media.noImages")}</p>
             <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-              Tag images from your library, or generate some in Studio.
+              {t("media.tagImagesHelp")}
             </p>
             <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <button
@@ -174,13 +175,13 @@ export default function MediaTab({
                 onClick={() => setPicking(true)}
                 className="rounded-tile bg-grad-mark px-3 py-1.5 text-2xs font-bold text-white"
               >
-                Tag images
+                {t("media.tagImages")}
               </button>
               <Link
                 href="/studio/create-images"
                 className="text-2xs font-semibold text-accent underline underline-offset-2"
               >
-                Create images in Studio
+                {t("media.createInStudio")}
               </Link>
             </div>
           </div>
@@ -192,7 +193,7 @@ export default function MediaTab({
                   type="button"
                   onClick={() => setLightbox(img)}
                   className="block h-full w-full"
-                  aria-label={`Open ${img.file_name}`}
+                  aria-label={t("media.openFile", { name: img.file_name })}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.file_url} alt={img.file_name} className="h-full w-full object-cover" />
@@ -210,7 +211,7 @@ export default function MediaTab({
                 <button
                   type="button"
                   title={t("media.tagToAnother")}
-                  aria-label={`Tag ${img.file_name} to another product`}
+                  aria-label={t("media.tagToAnotherNamed", { file_name: img.file_name })}
                   onClick={() => setTagMoreFor(img.id)}
                   className="absolute left-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                 >
@@ -218,8 +219,8 @@ export default function MediaTab({
                 </button>
                 <button
                   type="button"
-                  title={UNTAG_NOTE}
-                  aria-label={`Untag ${img.file_name}`}
+                  title={t(UNTAG_NOTE_KEY)}
+                  aria-label={t("media.untagFile", { name: img.file_name })}
                   disabled={untagging === img.id}
                   onClick={() => void untag("image", img.id)}
                   className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
@@ -251,11 +252,11 @@ export default function MediaTab({
                 empty state that names an action which exists nowhere sends
                 someone hunting for a control that was never built. */}
             <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-              Documents live in{" "}
+              {t("media.documentsLiveIn")}{" "}
               <Link href="/knowledge/documents" className="font-semibold text-accent underline underline-offset-2">
-                Knowledge ▸ Documents
+                {t("media.knowledgeDocuments")}
               </Link>
-              . Attaching one to a product is not built yet.
+              {t("media.docsNotBuiltTail")}
             </p>
           </div>
         ) : (
@@ -268,9 +269,9 @@ export default function MediaTab({
                   className="min-w-0 flex-1 truncate text-xs font-semibold text-ink-2 hover:text-accent-dark">
                   {d.file_name}
                 </a>
-                {docRoleLabel(d.doc_role) && (
+                {docRoleLabelKey(d.doc_role) && (
                   <span className="shrink-0 rounded-pill bg-lav-wash px-2 py-0.5 text-micro font-bold text-lav-ink">
-                    {docRoleLabel(d.doc_role)}
+                    {t(docRoleLabelKey(d.doc_role)!)}
                   </span>
                 )}
                 {fileSize(d.file_size) && (
@@ -278,7 +279,7 @@ export default function MediaTab({
                     {fileSize(d.file_size)}
                   </span>
                 )}
-                <button type="button" title={UNTAG_NOTE} aria-label={`Untag ${d.file_name}`}
+                <button type="button" title={t(UNTAG_NOTE_KEY)} aria-label={t("media.untagFile", { name: d.file_name })}
                   disabled={untagging === d.id}
                   onClick={() => void untag("document", d.id)}
                   className="shrink-0 text-muted-2 hover:text-accent-dark">

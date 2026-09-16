@@ -17,12 +17,13 @@ import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
 import ChatRail from "@/components/chat-rail";
 import {
-  briefBlocker, briefReady, defaultKind, defaultWhere, productIdFor, refsAfterKindChange,
+  briefBlockerKey, briefReadyKey, defaultKind, defaultWhere, productIdFor, refsAfterKindChange,
   FORMATS, type Format, type Kind, type Where,
 } from "@/lib/image-brief";
 import s from "@/components/studio/create-images.module.css";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 type RefSource = "knowledge" | "product" | "upload";
 
@@ -44,11 +45,14 @@ type Shot =
       src: string; base64: string; mimeType: string; saved: boolean; subject: string; productId: string | null }
   | { id: string; state: "failed"; format: Format; refs: Reference[]; where: Where; reason: string };
 
-const WHERE_OPTIONS: { id: Where; label: string; detail: string; icon: "target" | "box" | "cloud"; tone: string }[] = [
-  { id: "studio", label: "Studio", detail: "Plain background", icon: "target", tone: "bg-grad-more" },
-  { id: "indoors", label: "Indoors", detail: "A room, a shop", icon: "box", tone: "bg-grad-numbers" },
-  { id: "outdoors", label: "Outdoors", detail: "Outside, daylight", icon: "cloud", tone: "bg-grad-assets" },
+/* Labels only. The id is what the route turns into a scene description, in
+   English, in lib/image-brief.ts — the interface language never reaches it. */
+const WHERE_OPTIONS: { id: Where; label: StringKey; detail: StringKey; icon: "target" | "box" | "cloud"; tone: string }[] = [
+  { id: "studio", label: "nav.studio", detail: "ci.plainBackground", icon: "target", tone: "bg-grad-more" },
+  { id: "indoors", label: "ci.indoors", detail: "createImages.whereIndoorsDetail", icon: "box", tone: "bg-grad-numbers" },
+  { id: "outdoors", label: "ci.outdoors", detail: "ci.outsideDaylight", icon: "cloud", tone: "bg-grad-assets" },
 ];
+const WHERE_LABEL = Object.fromEntries(WHERE_OPTIONS.map((w) => [w.id, w.label])) as Record<Where, StringKey>;
 
 const RATIO_BOX: Record<Format, { w: number; h: number }> = {
   "1:1": { w: 22, h: 22 }, "4:5": { w: 18, h: 22 }, "9:16": { w: 13, h: 23 }, "16:9": { w: 28, h: 16 },
@@ -153,10 +157,10 @@ export default function CreateImagesPage() {
     setRefs((prev) => {
       const mine = prev.filter((r) => r.source !== "product");
       if (!p?.image_url) return mine;
-      return [{ id: `product:${p.id}`, name: `${p.name} · product`, url: p.image_url, source: "product" as const },
+      return [{ id: `product:${p.id}`, name: t("createImages.productRef", { name: p.name }), url: p.image_url, source: "product" as const },
               ...mine].slice(0, MAX_REFS);
     });
-  }, [products]);
+  }, [products, t]);
 
   /**
    * Switching to Something else removes the product's photos. Leaving them
@@ -189,7 +193,8 @@ export default function CreateImagesPage() {
   }, [addRef]);
 
   /* ---- generate ---- */
-  const blocker = briefBlocker(refs.length, subject);
+  const blockerKey = briefBlockerKey(refs.length, subject);
+  const blocker = blockerKey ? t(blockerKey) : null;
 
   const generate = useCallback(async () => {
     if (blocker || busy) return;
@@ -215,7 +220,7 @@ export default function CreateImagesPage() {
       if (!res.ok || data.error) {
         // The brief is untouched on a failure.
         setShots((prev) => prev.map((sh) => sh.id === id
-          ? { ...snapshot, id, state: "failed", reason: data.message || "That didn't work." } : sh));
+          ? { ...snapshot, id, state: "failed", reason: data.message || t("ci.didntWork") } : sh));
         return;
       }
       setShots((prev) => prev.map((sh) => sh.id === id ? {
@@ -225,12 +230,12 @@ export default function CreateImagesPage() {
         src: `data:${data.mimeType || "image/png"};base64,${data.imageBase64}`,
       } : sh));
     } catch (err) {
-      const reason = err instanceof Error ? err.message : "That didn't work.";
+      const reason = err instanceof Error ? err.message : t("ci.didntWork");
       setShots((prev) => prev.map((sh) => sh.id === id ? { ...snapshot, id, state: "failed", reason } : sh));
     } finally {
       setBusy(false);
     }
-  }, [blocker, busy, refs, format, where, subject, extra, kind, productId, brandId]);
+  }, [blocker, busy, refs, format, where, subject, extra, kind, productId, brandId, t]);
 
   /* Saved images become reference material for the next round, which is how a
      brand's look compounds instead of drifting. */
@@ -242,7 +247,7 @@ export default function CreateImagesPage() {
       const path = `${brandId}/${fileName}`;
       const { error: upErr } = await supabase.storage.from("brand-images")
         .upload(path, new Blob([bytes], { type: shot.mimeType }), { upsert: true });
-      if (upErr) { flash(`Not saved — ${upErr.message}`); return; }
+      if (upErr) { flash(t("ci.notSavedReason", { message: upErr.message })); return; }
 
       const { data: urlData } = supabase.storage.from("brand-images").getPublicUrl(path);
       const { error } = await supabase.from("brand_images").insert({
@@ -261,15 +266,15 @@ export default function CreateImagesPage() {
         },
       });
       // supabase-js resolves {data, error} and never throws.
-      if (error) { flash(`Not saved — ${error.message}`); return; }
+      if (error) { flash(t("ci.notSavedReason", { message: error.message })); return; }
 
       setShots((prev) => prev.map((x) => x.id === shot.id && x.state === "done" ? { ...x, saved: true } : x));
       setSavedImages((prev) => [{ id: path, file_url: urlData.publicUrl, file_name: fileName }, ...prev]);
-      flash("Saved to Knowledge ▸ Images");
+      flash(t("ci.savedToKnowledge"));
     } catch (err) {
-      flash(err instanceof Error ? `Not saved — ${err.message}` : "Not saved");
+      flash(err instanceof Error ? t("ci.notSavedReason", { message: err.message }) : t("ci.notSaved"));
     }
-  }, [brandId, flash]);
+  }, [brandId, flash, t]);
 
   const download = useCallback((shot: Shot) => {
     if (shot.state !== "done") return;
@@ -279,12 +284,14 @@ export default function CreateImagesPage() {
     document.body.appendChild(a); a.click(); a.remove();
   }, []);
 
-  const examples = useMemo(() => [
-    product ? `${product.name} on a silver background` : "This product on a silver background",
-    "A girl running outside wearing a yellow dress",
-    "A man on a construction site looking up at the sky",
-    "The bottle on a kitchen counter in morning light",
-  ], [product]);
+  /* Suggestions for the subject. Tapping one fills the box with it as the
+     person read it; what they send is their own description. */
+  const examples = [
+    product ? t("ci.exNamedProduct", { name: product.name }) : t("ci.exThisProduct"),
+    t("createImages.egGirl"),
+    t("createImages.egMan"),
+    t("ci.exBottle"),
+  ];
 
   return (
     <div className="flex items-start gap-3 stack:flex-col">
@@ -294,13 +301,15 @@ export default function CreateImagesPage() {
             <div>
               <div className={s.eyebrow}>{t("nav.studio")}</div>
               <h1>{t("nav.studio.createImages")}</h1>
-              <p>
-                Pick something that already looks right, say what you want to see, and get a new
-                image shot in the same light.
-              </p>
+              <p>{t("ci.lede")}</p>
             </div>
             {savedImages.length > 0 && (
-              <span className={s.hcount}><b>{savedImages.length}</b>&nbsp;saved</span>
+              <span className={s.hcount}>
+                {(() => {
+                  const [before, after = ""] = t("createImages.savedCount").split("{count}");
+                  return <>{before}<b>{savedImages.length}</b>{after.replace(/^ /, "\u00a0")}</>;
+                })()}
+              </span>
             )}
           </div>
 
@@ -309,31 +318,31 @@ export default function CreateImagesPage() {
             <div className={s.brief}>
               {/* 1 · an explicit either/or */}
               <div className={s.step}>
-                <div className={s.slab}><span className={s.snum}>1</span><h3>What are you making?</h3></div>
+                <div className={s.slab}><span className={s.snum}>1</span><h3>{t("ci.whatAreYouMaking")}</h3></div>
                 <div className={s.kind}>
                   <button type="button" className={`${s.kd} ${kind === "product" ? s.on : ""}`}
                     aria-pressed={kind === "product"} onClick={() => chooseKind("product")}>
                     <Icon name="bag" size={19} />
-                    <span className={s.kl}>A product picture</span>
-                    <span className={s.kdd}>Something from your catalogue</span>
+                    <span className={s.kl}>{t("createImages.productPicture")}</span>
+                    <span className={s.kdd}>{t("ci.fromCatalogue")}</span>
                   </button>
                   <button type="button" className={`${s.kd} ${kind === "other" ? s.on : ""}`}
                     aria-pressed={kind === "other"} onClick={() => chooseKind("other")}>
                     <Icon name="img" size={19} />
-                    <span className={s.kl}>Something else</span>
-                    <span className={s.kdd}>People, places, moods</span>
+                    <span className={s.kl}>{t("ci.somethingElse")}</span>
+                    <span className={s.kdd}>{t("ci.peoplePlacesMoods")}</span>
                   </button>
                 </div>
 
                 {kind === "product" && (
                   <div className={s.pwrap}>
                     {products.length === 0 ? (
-                      <p className={s.pnote}>No products yet. Add one in Knowledge ▸ Products, or pick Something else.</p>
+                      <p className={s.pnote}>{t("ci.noProducts")}</p>
                     ) : (
                       <>
                         <label className={s.psel}>
-                          <span className="sr-only">Which product?</span>
-                          <select value={productId} onChange={(e) => chooseProduct(e.target.value)} aria-label="Which product?">
+                          <span className="sr-only">{t("ci.whichProduct")}</span>
+                          <select value={productId} onChange={(e) => chooseProduct(e.target.value)} aria-label={t("ci.whichProduct")}>
                             <option value="">{t("guardrails.pickProduct")}</option>
                             {products.map((p) => (
                               <option key={p.id} value={p.id}>{p.name}{p.category ? ` — ${p.category}` : ""}</option>
@@ -345,11 +354,10 @@ export default function CreateImagesPage() {
                           <p className={s.pnote}>
                             <b>
                               {product.image_url
-                                ? "1 product photo added as reference below."
-                                : "No product photo on file, so nothing was added below."}
+                                ? t("ci.onePhotoAdded")
+                                : t("ci.noPhotoOnFile")}
                             </b>{" "}
-                            The label, shape and colour are kept exact, and &ldquo;this product&rdquo; in
-                            your description means this one.
+                            {t("ci.keptExact")}
                           </p>
                         )}
                       </>
@@ -361,18 +369,16 @@ export default function CreateImagesPage() {
               {/* 2 · references */}
               <div className={s.step}>
                 <div className={s.slab}>
-                  <span className={s.snum}>2</span><h3>Pick your reference pictures</h3>
+                  <span className={s.snum}>2</span><h3>{t("ci.pickReferences")}</h3>
                   <span className={s.req}>{t("common.required")}</span>
                 </div>
-                <p className={s.shint}>
-                  Choose pictures that show what you are after. Up to three, and all of them are read.
-                </p>
+                <p className={s.shint}>{t("ci.pickReferencesHelp")}</p>
                 <div className={s.refs}>
                   {refs.map((r) => (
                     <div key={r.id} className={`${s.ref} ${r.source === "product" ? s.fromprod : ""}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={r.url} alt={r.name} />
-                      <button type="button" className={s.rm} aria-label={`Remove ${r.name}`} onClick={() => removeRef(r.id)}>
+                      <button type="button" className={s.rm} aria-label={t("createImages.removeRef", { name: r.name })} onClick={() => removeRef(r.id)}>
                         <Icon name="close" size={9} />
                       </button>
                       <span className={s.tagn}>{r.name}</span>
@@ -382,12 +388,19 @@ export default function CreateImagesPage() {
                     <>
                       <button type="button" className={s.addref} onClick={() => void openLibrary()}>
                         <Icon name="img" size={17} />
-                        <span>From<br />Knowledge</span>
+                        {/* Two lines, broken after the first word: "From /
+                            Knowledge", "Kohdasta / Tieto". */}
+                        <span>
+                          {(() => {
+                            const [first, ...rest] = t("createImages.fromKnowledge").split(" ");
+                            return rest.length ? <>{first}<br />{rest.join(" ")}</> : first;
+                          })()}
+                        </span>
                       </button>
                       {refs.length < MAX_REFS - 1 && (
                         <button type="button" className={s.addref} onClick={() => fileRef.current?.click()}>
                           <Icon name="upload" size={17} />
-                          <span>Upload</span>
+                          <span>{t("ci.upload")}</span>
                         </button>
                       )}
                     </>
@@ -398,8 +411,8 @@ export default function CreateImagesPage() {
 
               {/* 3 · where */}
               <div className={s.step}>
-                <div className={s.slab}><span className={s.snum}>3</span><h3>Where is it?</h3></div>
-                <p className={s.shint}>This is the one thing a picture cannot tell us on its own.</p>
+                <div className={s.slab}><span className={s.snum}>3</span><h3>{t("ci.whereIsIt")}</h3></div>
+                <p className={s.shint}>{t("ci.whereHelp")}</p>
                 <div className={s.wheres}>
                   {WHERE_OPTIONS.map((w) => (
                     <button key={w.id} type="button" className={`${s.wh} ${where === w.id ? s.on : ""}`}
@@ -407,8 +420,8 @@ export default function CreateImagesPage() {
                       <span className={`${s.wi} ${w.tone}`}>
                         <Icon name={w.icon} size={17} />
                       </span>
-                      <span className={s.wl}>{w.label}</span>
-                      <span className={s.wd}>{w.detail}</span>
+                      <span className={s.wl}>{t(w.label)}</span>
+                      <span className={s.wd}>{t(w.detail)}</span>
                     </button>
                   ))}
                 </div>
@@ -417,12 +430,12 @@ export default function CreateImagesPage() {
               {/* 4 · subject */}
               <div className={s.step}>
                 <div className={s.slab}>
-                  <span className={s.snum}>4</span><h3>What do you want to see?</h3>
+                  <span className={s.snum}>4</span><h3>{t("ci.whatDoYouWant")}</h3>
                   <span className={s.req}>{t("common.required")}</span>
                 </div>
-                <p className={s.shint}>Say it plainly, the way you would to a photographer.</p>
+                <p className={s.shint}>{t("ci.sayItPlainly")}</p>
                 <textarea className={s.brf} value={subject} onChange={(e) => setSubject(e.target.value)}
-                  placeholder="One sentence is enough." aria-label="What do you want to see?" />
+                  placeholder={t("ci.oneSentence")} aria-label={t("ci.whatDoYouWant")} />
                 <div className={s.exs}>
                   {examples.map((e) => (
                     <button key={e} type="button" className={s.ex} onClick={() => setSubject(e)}>{e}</button>
@@ -432,7 +445,7 @@ export default function CreateImagesPage() {
 
               {/* 5 · shape */}
               <div className={s.step}>
-                <div className={s.slab}><span className={s.snum}>5</span><h3>Shape</h3></div>
+                <div className={s.slab}><span className={s.snum}>5</span><h3>{t("ci.shape")}</h3></div>
                 <div className={s.ratios}>
                   {FORMATS.map((f) => (
                     <button key={f} type="button" className={`${s.rt} ${format === f ? s.on : ""}`}
@@ -444,31 +457,31 @@ export default function CreateImagesPage() {
                 </div>
                 <button type="button" className={s.moreBtn} onClick={() => setExtraOpen((v) => !v)}>
                   <Icon name="chevronRight" size={11} />
-                  Anything else — props, angle, space for text
+                  {t("ci.anythingElseLong")}
                 </button>
                 {extraOpen && (
                   <textarea className={s.brf} style={{ minHeight: 62, marginTop: 8 }} value={extra}
-                    onChange={(e) => setExtra(e.target.value)} aria-label="Anything else" />
+                    onChange={(e) => setExtra(e.target.value)} aria-label={t("ci.anythingElse")} />
                 )}
               </div>
 
               <button type="button" className={s.go} disabled={Boolean(blocker) || busy} onClick={() => void generate()}>
-                {busy ? "Making it…" : "Make the image"}
+                {busy ? t("createImages.making") : t("createImages.makeImage")}
               </button>
-              <p className={s.gowhy}>{blocker ?? briefReady(refs.length)}</p>
+              <p className={s.gowhy}>{blocker ?? (() => { const r = briefReadyKey(refs.length); return t(r.key, r.vars); })()}</p>
             </div>
 
             {/* ══════════ CANVAS ══════════ */}
             <div className={s.canvas}>
               <div className={s.ctop}>
                 <div>
-                  <h2>{tab === "session" ? "This session" : "Saved"}</h2>
+                  <h2>{tab === "session" ? t("createImages.thisSession") : t("common.saved")}</h2>
                   <div className={s.csub}>
-                    {tab === "session" ? "Nothing is kept unless you save it" : "In Knowledge ▸ Images"}
+                    {tab === "session" ? t("createImages.keptUnless") : t("createImages.inKnowledgeImages")}
                   </div>
                 </div>
-                <div className={s.seg} role="group" aria-label="Which images">
-                  <button type="button" className={tab === "session" ? s.on : undefined} onClick={() => setTab("session")}>Session</button>
+                <div className={s.seg} role="group" aria-label={t("ci.whichImages")}>
+                  <button type="button" className={tab === "session" ? s.on : undefined} onClick={() => setTab("session")}>{t("ci.session")}</button>
                   <button type="button" className={tab === "saved" ? s.on : undefined} onClick={() => setTab("saved")}>{t("common.saved")}</button>
                 </div>
               </div>
@@ -477,8 +490,8 @@ export default function CreateImagesPage() {
                 shots.length === 0 ? (
                   <div className={s.empty}>
                     <span className={s.emptyIc}><Icon name="img" size={26} /></span>
-                    <h3>Nothing made yet.</h3>
-                    <p>Pick a reference picture and say what you want to see. The first one takes about fifteen seconds.</p>
+                    <h3>{t("ci.nothingMade")}</h3>
+                    <p>{t("ci.nothingMadeHelp")}</p>
                   </div>
                 ) : (
                   <div className={s.grid}>
@@ -501,12 +514,14 @@ export default function CreateImagesPage() {
                               <img key={r.id} className={s.th} src={r.url} alt="" />
                             ))}
                             <span>
-                              {shot.refs.length} reference{shot.refs.length === 1 ? "" : "s"} · {shot.where}
+                              {shot.refs.length === 1
+                                ? t("createImages.refOneWhere", { where: t(WHERE_LABEL[shot.where]) })
+                                : t("createImages.refsWhere", { count: shot.refs.length, where: t(WHERE_LABEL[shot.where]) })}
                             </span>
                           </div>
 
                           {shot.state === "working" && (
-                            <p className={s.wstat}><i />Matching the light and grade from your references…</p>
+                            <p className={s.wstat}><i />{t("ci.matchingLight")}</p>
                           )}
                           {shot.state === "failed" && (
                             <>
@@ -523,10 +538,10 @@ export default function CreateImagesPage() {
                               <button type="button" className={`${s.act} ${shot.saved ? s.done : s.prime}`}
                                 disabled={shot.saved} onClick={() => void save(shot)}>
                                 <Icon name={shot.saved ? "check" : "upload"} size={12} />
-                                {shot.saved ? "Saved" : "Save"}
+                                {shot.saved ? t("common.saved") : t("files.save")}
                               </button>
                               <button type="button" className={s.act} onClick={() => download(shot)}>
-                                <Icon name="upload" size={12} />Get
+                                <Icon name="upload" size={12} />{t("ci.get")}
                               </button>
                               <button type="button" className={s.act} disabled={busy} onClick={() => void generate()}>
                                 <Icon name="repeat" size={12} />{t("common.again")}
@@ -541,8 +556,8 @@ export default function CreateImagesPage() {
               ) : savedImages.length === 0 ? (
                 <div className={s.empty}>
                   <span className={s.emptyIc}><Icon name="img" size={26} /></span>
-                  <h3>Nothing saved yet.</h3>
-                  <p>Saved images go to Knowledge ▸ Images, and can be used as references next time.</p>
+                  <h3>{t("ci.nothingSaved")}</h3>
+                  <p>{t("ci.savedGoTo")}</p>
                 </div>
               ) : (
                 <div className={s.grid}>
@@ -556,7 +571,7 @@ export default function CreateImagesPage() {
                         <div className={s.acts} style={{ gridTemplateColumns: "1fr" }}>
                           <button type="button" className={s.act}
                             onClick={() => addRef({ id: `knowledge:${img.id}`, name: img.file_name, url: img.file_url, source: "knowledge" })}>
-                            <Icon name="plus" size={12} />Use as reference
+                            <Icon name="plus" size={12} />{t("ci.useAsReference")}
                           </button>
                         </div>
                       </div>
@@ -568,17 +583,17 @@ export default function CreateImagesPage() {
           </div>
 
           {library && (
-            <div className={s.sheet} role="dialog" aria-label="Pick from Knowledge" onClick={() => setLibrary(null)}>
+            <div className={s.sheet} role="dialog" aria-label={t("ci.pickFromKnowledge")} onClick={() => setLibrary(null)}>
               <div className={s.sheetBox} onClick={(e) => e.stopPropagation()}>
                 <div className={s.sheetTop}>
-                  <h3>From Knowledge ▸ Images</h3>
+                  <h3>{t("ci.fromKnowledgeImages")}</h3>
                   <button type="button" className={s.act} style={{ marginLeft: "auto", width: "auto", padding: "7px 12px" }}
                     onClick={() => setLibrary(null)}>
                     <Icon name="close" size={12} />{t("common.close")}
                   </button>
                 </div>
                 {library.length === 0 ? (
-                  <p style={{ padding: "22px 18px" }} className={s.csub}>No images in Knowledge yet.</p>
+                  <p style={{ padding: "22px 18px" }} className={s.csub}>{t("ci.noImagesInKnowledge")}</p>
                 ) : (
                   <div className={s.sheetGrid}>
                     {library.map((img) => (
@@ -603,11 +618,7 @@ export default function CreateImagesPage() {
 
       <ChatRail
         indexedFileCount={savedImages.length}
-        suggestions={[
-          "What does our photography look like?",
-          "Which product should I photograph next?",
-          "What colours should a new image use?",
-        ]}
+        suggestions={[t("createImages.prompt1"), t("createImages.prompt2"), t("createImages.prompt3")]}
       />
     </div>
   );

@@ -2,28 +2,35 @@
  * Auth copy, from branditect-ui/spec/auth.md.
  *
  * Say what went wrong and what to do. No apologies, no "Oops!".
+ *
+ * The table holds dictionary keys; the words are in lib/i18n. Every renderer
+ * calls t() on them, so an error reads in the interface language. The
+ * identical-message rule below is unchanged: it is about which key, and a
+ * wrong password and an unknown email still get the same one.
  */
+import type { StringKey } from "./i18n/index.ts";
 
 export const AUTH_COPY = {
-  emptyEmail: "Enter your email",
-  emptyPassword: "Enter your password",
-  emptyBrandName: "Enter your brand name",
-  badEmail: "That doesn't look like an email address",
-  badCredentials: "That email and password don't match",
-  shortPassword: "At least 10 characters",
-  alreadyRegistered: "That email already has an account.",
-  rateLimited: "Too many attempts. Try again in 15 minutes.",
-  serverError: "Something went wrong at our end. Try again.",
-  timedOut: "That took too long. Check your connection and try again.",
-  resetSent: "If that email has an account, a reset link is on its way.",
-  resetExpired: "That link has expired. Request a new one.",
-  confirmSent: "Check your email to confirm your address, then sign in. Your questionnaire is waiting.",
-} as const;
+  emptyEmail: "auth.emptyEmail",
+  emptyPassword: "auth.enterPassword",
+  emptyBrandName: "auth.emptyBrandName",
+  badEmail: "auth.badEmail",
+  badCredentials: "auth.badCredentials",
+  shortPassword: "auth.shortPassword",
+  alreadyRegistered: "auth.alreadyRegistered",
+  rateLimited: "auth.rateLimited",
+  serverError: "auth.serverError",
+  timedOut: "auth.timedOut",
+  resetSent: "auth.resetSent",
+  resetExpired: "auth.resetExpired",
+  confirmSent: "auth.confirmSent",
+} as const satisfies Record<string, StringKey>;
 
 /** Minimum password length on sign-up. Length beats composition rules. */
 export const MIN_PASSWORD = 10;
 
-export type AuthError = { message: string; linkHref?: string; linkLabel?: string };
+/** `message` and `linkLabel` are keys; render them with t(). */
+export type AuthError = { message: StringKey; linkHref?: string; linkLabel?: StringKey };
 
 /**
  * Map a Supabase auth failure onto the copy table.
@@ -48,7 +55,7 @@ export function mapAuthError(err: { message?: string; status?: number } | null):
     return {
       message: AUTH_COPY.alreadyRegistered,
       linkHref: "/login",
-      linkLabel: "Sign in instead",
+      linkLabel: "auth.signInInstead",
     };
   }
   if (raw.includes("invalid login credentials") || raw.includes("invalid credentials")) {

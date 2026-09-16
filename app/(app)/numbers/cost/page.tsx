@@ -72,13 +72,12 @@ export default function CostCalculator() {
   const costable = lines.filter((l) => !RATE_LINES.has(l.label)).length;
 
   return (
-    <CalcShell n={1} tone="green" title={costCalculatorTitle(profile)}
+    <CalcShell n={1} tone="green" title={costCalculatorTitle(profile, t)}
       promise={t("num.costLede")}>
       <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-start gap-3 stack:grid-cols-1">
         <Panel title={t("numbers.yourCostLines")}>
           <p className="mt-1 text-xs font-medium leading-[1.55] text-muted">
-            These lines come from how you said you sell. Highlighted ones were added by your
-            channels — change them in <b className="text-ink-2">{t("numbers.howYouSell")}</b> {t("num.cost.onNumbers")}
+            {t("num.cost.fromChannels")} <b className="text-ink-2">{t("numbers.howYouSell")}</b> {t("num.cost.onNumbers")}
           </p>
 
           <div className="mt-3.5">

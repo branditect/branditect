@@ -10,16 +10,22 @@
  */
 
 import { decideAccess } from "./ownership.ts";
+import type { StringKey } from "./i18n/index.ts";
 
 /** Set when tagging. Optional, and blank is fine. */
 export type DocRole = "safety_sheet" | "spec" | "manual" | "certificate";
 
-export const DOC_ROLES: { id: DocRole; label: string }[] = [
-  { id: "safety_sheet", label: "Safety sheet" },
-  { id: "spec", label: "Spec" },
-  { id: "manual", label: "Manual" },
-  { id: "certificate", label: "Certificate" },
+export const DOC_ROLES: { id: DocRole; label: string; labelKey: StringKey }[] = [
+  { id: "safety_sheet", label: "Safety sheet", labelKey: "media.role.safetySheet" },
+  { id: "spec", label: "Spec", labelKey: "media.role.spec" },
+  { id: "manual", label: "Manual", labelKey: "media.role.manual" },
+  { id: "certificate", label: "Certificate", labelKey: "media.role.certificate" },
 ];
+
+/** The key a role renders through. docRoleLabel stays the English. */
+export function docRoleLabelKey(role: string | null | undefined): StringKey | null {
+  return DOC_ROLES.find((r) => r.id === role)?.labelKey ?? null;
+}
 
 export function docRoleLabel(role: string | null | undefined): string | null {
   return DOC_ROLES.find((r) => r.id === role)?.label ?? null;
@@ -131,6 +137,8 @@ export function suggestionCopy(product: { name: string }, fileCount: number): st
 
 /** Untag says what it does not do, because that is the worrying part. */
 export const UNTAG_NOTE = "Removes it from this product. The file stays in Knowledge.";
+/** What the untag controls render; its English is UNTAG_NOTE. */
+export const UNTAG_NOTE_KEY: StringKey = "media.untagNote";
 
 /* ------------------------------------------------------------------ */
 /*  Searching the image library                                        */

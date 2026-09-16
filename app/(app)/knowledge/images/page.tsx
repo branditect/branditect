@@ -29,9 +29,7 @@ export default function AssetsPage() {
             the real name. The sentence drops the possessive while it waits
             rather than showing a placeholder or collapsing the block. */}
         <p className="text-[0.78rem] text-muted">
-          {brandLoading
-            ? "Access and manage all your brand assets in one place."
-            : `Access and manage all of ${brandName}\u2019s brand assets in one place.`}
+          {brandLoading ? t("assets.intro") : t("assets.introNamed", { brandName })}
         </p>
       </div>
 
@@ -50,9 +48,9 @@ export default function AssetsPage() {
             >
               <span className="text-xl block mb-2">{type.icon}</span>
               <div className={`font-medium text-[0.82rem] mb-0.5 ${activeType === type.key ? "text-brand-orange" : "text-ink"}`}>
-                {"labelKey" in type ? t(type.labelKey) : type.label}
+                {t(type.labelKey)}
               </div>
-              <div className="font-mono text-[0.55rem] text-muted leading-relaxed">{type.desc}</div>
+              <div className="font-mono text-[0.55rem] text-muted leading-relaxed">{t(type.descKey)}</div>
             </button>
           ))}
         </div>

@@ -291,7 +291,7 @@ export default function TemplatesPage() {
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, color: '#6B6760' }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: isConnected ? '#34C759' : '#D9D6D0', display: 'inline-block' }} />
-                    {isConnected ? 'Connected' : 'Not connected'}
+                    {isConnected ? t('links.connected') : t('links.notConnected')}
                   </span>
                 </div>
 
@@ -429,7 +429,7 @@ export default function TemplatesPage() {
                 disabled={!modalName.trim() || saving}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: !modalName.trim() || saving ? '#F5F4F2' : '#E16C00', color: !modalName.trim() || saving ? '#B0ACA4' : 'white', border: 'none', borderRadius: 6, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: !modalName.trim() || saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
               >
-                {saving ? 'Adding…' : t('templates.add')}
+                {saving ? t('templates.adding') : t('templates.add')}
               </button>
             </div>
           </div>

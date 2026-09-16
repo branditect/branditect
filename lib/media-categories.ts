@@ -18,6 +18,8 @@
  * for.
  */
 
+import type { StringKey } from "./i18n/index.ts";
+
 /** The six the original table declared. Live rows use these. */
 export const ORIGINAL_CATEGORIES = [
   "social", "event", "product", "campaign", "brand", "ai-generated",
@@ -37,32 +39,36 @@ export const ALLOWED_CATEGORIES: readonly string[] = [
  * noticing.
  */
 export const TYPE_TABS = [
-  // `labelKey` is what renders where the dictionary has one; `label` stays the
-  // English. The other tabs have no key yet and show `label`.
-  { key: "images", label: "Images", labelKey: "nav.knowledge.images", icon: "IMG", category: "product",
-    desc: "Photos, screenshots, brand imagery",
-    accept: "", acceptLabel: "", maxSize: 0, previewType: "image", emptyMessage: "" },
-  { key: "videos", label: "Videos", icon: "VID", category: "video",
-    desc: "Brand videos, reels, ads",
+  // Copy is keys: `labelKey`, `descKey`, and `emptyMessage`, which names a key
+  // too (the images tab has its own empty state in ImageLibrary). Everything
+  // else is identity or technical and stays as it is.
+  { key: "images", labelKey: "nav.knowledge.images", icon: "IMG", category: "product",
+    descKey: "mediaTabs.imagesDesc",
+    accept: "", acceptLabel: "", maxSize: 0, previewType: "image", emptyMessage: null },
+  { key: "videos", labelKey: "mediaTabs.videos", icon: "VID", category: "video",
+    descKey: "mediaTabs.videosDesc",
     accept: ".mp4,.mov,.webm,.avi", acceptLabel: "MP4, MOV, WEBM, AVI", maxSize: 100,
     previewType: "video",
-    emptyMessage: "No videos uploaded yet. Drop video files above to get started." },
-  { key: "sounds", label: "Sounds", icon: "SND", category: "audio",
-    desc: "Audio logos, jingles, podcasts",
+    emptyMessage: "mediaTabs.videosEmpty" },
+  { key: "sounds", labelKey: "mediaTabs.sounds", icon: "SND", category: "audio",
+    descKey: "mediaTabs.soundsDesc",
     accept: ".mp3,.wav,.aac,.ogg,.m4a", acceptLabel: "MP3, WAV, AAC, OGG, M4A", maxSize: 50,
     previewType: "audio",
-    emptyMessage: "No audio files yet. Upload audio logos, jingles, or podcast clips." },
-  { key: "graphics", label: "Graphics", icon: "GFX", category: "graphic",
-    desc: "Logos, icons, illustrations, vectors",
+    emptyMessage: "mediaTabs.soundsEmpty" },
+  { key: "graphics", labelKey: "mediaTabs.graphics", icon: "GFX", category: "graphic",
+    descKey: "mediaTabs.graphicsDesc",
     accept: ".svg,.png,.ai,.eps,.pdf,.psd", acceptLabel: "SVG, PNG, AI, EPS, PDF, PSD", maxSize: 50,
     previewType: "image",
-    emptyMessage: "No graphics yet. Upload logos, icons, illustrations, and vectors." },
-  { key: "web", label: "Website / App", icon: "WEB", category: "web",
-    desc: "Screenshots, wireframes, UI components",
+    emptyMessage: "mediaTabs.graphicsEmpty" },
+  { key: "web", labelKey: "mediaTabs.web", icon: "WEB", category: "web",
+    descKey: "mediaTabs.webDesc",
     accept: ".png,.jpg,.jpeg,.webp,.svg,.pdf,.fig", acceptLabel: "PNG, JPG, WEBP, SVG, PDF, FIG",
     maxSize: 20, previewType: "image",
-    emptyMessage: "No website or app assets yet. Upload screenshots, wireframes, and UI references." },
-] as const;
+    emptyMessage: "mediaTabs.webEmpty" },
+] as const satisfies readonly {
+  key: string; labelKey: StringKey; descKey: StringKey; emptyMessage: StringKey | null;
+  icon: string; category: string; accept: string; acceptLabel: string; maxSize: number; previewType: string;
+}[];
 
 export function isAllowedCategory(category: string): boolean {
   return ALLOWED_CATEGORIES.includes(category);

@@ -6,6 +6,11 @@ import {
   railSteps, answeredInSection, answeredTotal, questionTotal,
   sectionOf, sectionIndex, sectionTitle, gateProgress, gateFootNote,
 } from "./rail-steps.ts";
+import { translate } from "./i18n/index.ts";
+import type { Msg } from "./i18n/msg.ts";
+
+// Row meta and the foot note are keys since the Finnish pass; read in English.
+const say = (m: Msg) => translate("en", m.key, m.vars);
 
 /**
  * Criterion 4's fixture — 7 of 20 answered.
@@ -53,8 +58,8 @@ describe("the stepper counts", () => {
   });
 
   it("reads '3 of 5 answered', and '5 questions' before anything is written", () => {
-    assert.equal(rows[0].meta, "3 of 5 answered");
-    assert.equal(railSteps(EMPTY_ONBOARDING)[0].meta, "5 questions");
+    assert.equal(say(rows[0].meta), "3 of 5 answered");
+    assert.equal(say(railSteps(EMPTY_ONBOARDING)[0].meta), "5 questions");
   });
 
   /** Q18 carries no text answer — it counts once a voice is picked. */
@@ -138,21 +143,24 @@ describe("the gate-aware foot note", () => {
 
   it("reads as the spec's sentence before the gate", () => {
     assert.equal(
-      gateFootNote(at({ 6: "a" }, false, true)),
+      say(gateFootNote(at({ 6: "a" }, false, true))),
       "Studio needs 5 answers before it can write in your voice. You're 2 of 5 in.",
     );
   });
 
   it("changes once the gate is cleared", () => {
     assert.equal(
-      gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true)),
+      say(gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true))),
       "Your workspace is open. The remaining questions are in Brand Readiness.",
     );
   });
 
   it("never says skip", () => {
-    for (const s of [gateFootNote(at({}, false, false)), gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true))]) {
-      assert.ok(!/skip/i.test(s), s);
+    for (const m of [gateFootNote(at({}, false, false)), gateFootNote(at({ 6: "a", 11: "b", 13: "c" }, true, true))]) {
+      for (const l of ["en", "fi"] as const) {
+        const s = translate(l, m.key, m.vars);
+        assert.ok(!/skip|ohit/i.test(s), s);
+      }
     }
   });
 });

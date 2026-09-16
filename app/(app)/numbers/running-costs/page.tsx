@@ -8,7 +8,7 @@ import { formatMoney, fromRow, margin, type Product, DEFAULT_CURRENCY } from "@/
 import {
   breakEvenUnits, contribution, DEFAULT_PROFILE, floorPrice,
   floorPriceBasis, operatingProfit, RUNNING_COST_LINES, runningCostsUnset,
-  totalRunningCosts, unitNoun, type BusinessProfile, type RunningCosts,
+  totalRunningCosts, unitsPerMonth, type BusinessProfile, type RunningCosts,
 } from "@/lib/numbers";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
@@ -146,7 +146,7 @@ export default function RunningCostsPage() {
           <div className="mt-3.5 flex flex-col gap-2.5">
             {RUNNING_COST_LINES.map((l) => (
               <label key={l.key} className="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3">
-                <span className="text-sm font-medium text-ink-2">{l.label}</span>
+                <span className="text-sm font-medium text-ink-2">{t(l.labelKey)}</span>
                 <input
                   inputMode="decimal"
                   value={costs[l.key]}
@@ -162,19 +162,18 @@ export default function RunningCostsPage() {
             <div className="mt-1 flex items-center gap-2 border-t border-rule pt-3 text-sm font-bold">
               {t("numbers.total")}
               <b className="ml-auto tabular-nums">
-                {noCosts ? "—" : `${formatMoney(opEx, currency)} / mo`}
+                {noCosts ? "—" : t("num.perMonthValue", { value: formatMoney(opEx, currency) })}
               </b>
             </div>
           </div>
 
           <h2 className="mt-6 text-h3 font-bold">{t("numbers.expectedVolume")}</h2>
           <p className="mt-1 text-xs font-medium text-muted">
-            Roughly how many {unitNoun(profile)} you sell in a month. This is the second half of the
-            floor price test — without it the floor only checks your margin.
+            {t(profile.sells === "digital" ? "num.run.volumeHelpCustomers" : "num.run.volumeHelpUnits")}
           </p>
           <label className="mt-2.5 grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3">
             <span className="text-sm font-medium text-ink-2">
-              {unitNoun(profile, true)} per month
+              {t(profile.sells === "digital" ? "num.run.customersPerMonth" : "num.run.unitsPerMonth")}
             </span>
             <input
               inputMode="decimal"
@@ -221,8 +220,7 @@ export default function RunningCostsPage() {
 
               {selected && contrib == null && (
                 <p className="mt-3 rounded-tile bg-amber-wash px-3 py-2.5 text-2xs font-medium leading-[1.5] text-amber">
-                  {selected.name} has no price or no cost recorded, so its contribution can&apos;t be
-                  worked out. Add them on the product card.
+                  {t("num.run.noPriceOrCost", { name: selected.name })}
                 </p>
               )}
 
@@ -254,18 +252,22 @@ export default function RunningCostsPage() {
                     ) : (
                       <>
                         <div className="text-[22px] font-bold tracking-[-0.5px] tabular-nums">
-                          {be} {unitNoun(profile)} / mo
+                          {unitsPerMonth(profile, be ?? "", t)}
                         </div>
                         <p className="mt-1 text-2xs font-medium leading-[1.5] text-muted">
-                          Below this you lose money however healthy the margin looks.
-                          {vol != null && (
-                            <>
-                              {" "}At {vol} a month, operating profit is{" "}
-                              <b className={operatingProfit(vol, contrib, opEx) < 0 ? "text-accent" : "text-green-ink"}>
-                                {formatMoney(operatingProfit(vol, contrib, opEx), currency)}
-                              </b>.
-                            </>
-                          )}
+                          {t("num.belowThisLose")}
+                          {vol != null && (() => {
+                            const [pre, post = ""] = t("num.atVolumeProfit", { volume: vol }).split("{profit}");
+                            return (
+                              <>
+                                {" "}{pre}
+                                <b className={operatingProfit(vol, contrib, opEx) < 0 ? "text-accent" : "text-green-ink"}>
+                                  {formatMoney(operatingProfit(vol, contrib, opEx), currency)}
+                                </b>
+                                {post}
+                              </>
+                            );
+                          })()}
                         </p>
                       </>
                     )}
@@ -274,7 +276,7 @@ export default function RunningCostsPage() {
                   {floor != null && basis != null && (
                     <div className="rounded-tile border border-accent-line bg-tint-1 px-3 py-2.5">
                       <div className="text-micro font-bold uppercase tracking-[0.7px] text-accent">
-                        Floor price for {selected!.name}
+                        {t("num.run.floorPriceFor", { name: selected!.name })}
                       </div>
                       <div className="text-[22px] font-bold tracking-[-0.5px] tabular-nums text-accent-dark">
                         {formatMoney(floor, currency)}
@@ -286,7 +288,7 @@ export default function RunningCostsPage() {
                       </p>
                       <Link href={`/knowledge/products?product=${selected!.id}`}
                         className="mt-2.5 block rounded-lg bg-grad-mark px-3 py-2 text-center text-2xs font-bold text-white">
-                        Apply to {selected!.name} →
+                        {t("num.run.applyTo", { name: selected!.name })}
                       </Link>
                       <p className="mt-1.5 text-micro font-medium leading-[1.5] text-accent-dark/80">
                         {t("numbers.opensProductCard")}
@@ -296,8 +298,7 @@ export default function RunningCostsPage() {
 
                   {selected && selected.minMarginPct == null && (
                     <p className="rounded-tile bg-tile px-3 py-2.5 text-2xs font-medium leading-[1.5] text-muted">
-                      {selected.name} has no minimum margin set, so a floor price can&apos;t be
-                      worked out. Set one in the product card&apos;s Pricing tab.
+                      {t("num.run.noMinMargin", { name: selected.name })}
                     </p>
                   )}
                 </div>
@@ -306,8 +307,11 @@ export default function RunningCostsPage() {
           )}
 
           <p className="mt-4 border-t border-rule pt-3 text-2xs font-medium leading-[1.6] text-muted">
-            {t("numbers.overheadDeliberately")} <b className="text-ink-2">not</b>{" "}
-            {t("num.run.notFullyLoaded")}
+            {(() => {
+              // One sentence; the bold word sits wherever the language puts it.
+              const [pre, post = ""] = t("num.run.overheadNotDivided").split("{not}");
+              return <>{pre}<b className="text-ink-2">{t("num.run.not")}</b>{post}</>;
+            })()}
           </p>
         </section>
       </div>

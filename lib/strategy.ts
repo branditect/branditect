@@ -5,6 +5,10 @@
  * reading the page once to understand the brand, and Branditect itself —
  * Studio ▸ Write, Create images and AI Chat all read these fields.
  */
+import { translate, type StringKey, type Vars } from "./i18n/index.ts";
+
+type Tr = (key: StringKey, vars?: Vars) => string;
+const EN: Tr = (key, vars) => translate("en", key, vars);
 
 export type Stage = "discovery" | "consideration" | "decision" | "retention";
 
@@ -91,6 +95,9 @@ export interface SectionDef {
   title: string;
   /** The one-line why. It is doing real work: "Boundaries" means nothing on its own. */
   why: string;
+  /** What renders. `title` and `why` stay the English. */
+  titleKey: StringKey;
+  whyKey: StringKey;
   isFilled: (s: BrandStrategy) => boolean;
 }
 
@@ -98,22 +105,31 @@ const has = (v: string | undefined | null) => Boolean(v && v.trim());
 
 export const SECTIONS: SectionDef[] = [
   { id: "core", no: "01", title: "Brand core", why: "The four answers everything else is built on",
+    titleKey: "strategyDoc.sec.core", whyKey: "strategyDoc.why.core",
     isFilled: (s) => has(s.core.whoWeAre) && has(s.core.whatWeDo) && has(s.core.whyWeExist) && has(s.core.promise) },
   { id: "positioning", no: "02", title: "Positioning", why: "Where you sit, and who you are not for",
+    titleKey: "strategyDoc.sec.positioning", whyKey: "strategyDoc.why.positioning",
     isFilled: (s) => has(s.positioning.difference) && has(s.positioning.notFor) },
   { id: "audience", no: "03", title: "Audience", why: "Who decides, and where they decide it",
+    titleKey: "strategyDoc.sec.audience", whyKey: "strategyDoc.why.audience",
     isFilled: (s) => s.audience.length > 0 && s.audience.some((a) => a.isPrimary) },
   { id: "competitors", no: "04", title: "Competitive landscape", why: "The gap you are standing in",
+    titleKey: "strategyDoc.sec.competitors", whyKey: "strategyDoc.why.competitors",
     isFilled: (s) => s.competitors.length > 0 },
   { id: "pillars", no: "05", title: "What makes us different", why: "Three claims, each with a fact behind it",
+    titleKey: "sdoc.different", whyKey: "strategyDoc.why.pillars",
     isFilled: (s) => s.pillars.length > 0 && s.pillars.every((p) => has(p.proof)) },
   { id: "messages", no: "06", title: "Key messages", why: "What to say, matched to when they hear it",
+    titleKey: "strategyDoc.sec.messages", whyKey: "strategyDoc.why.messages",
     isFilled: (s) => has(s.messages.tagline) && s.messages.supporting.length > 0 },
   { id: "principles", no: "07", title: "Brand principles", why: "How the brand behaves",
+    titleKey: "strategyDoc.sec.principles", whyKey: "strategyDoc.why.principles",
     isFilled: (s) => s.principles.length > 0 },
   { id: "boundaries", no: "08", title: "Boundaries", why: "The section that stops the AI writing the wrong thing",
+    titleKey: "strategyDoc.sec.boundaries", whyKey: "strategyDoc.why.boundaries",
     isFilled: (s) => s.boundaries.never.length > 0 && s.boundaries.always.length > 0 },
   { id: "focus", no: "09", title: "Strategic focus", why: "What this year is actually for",
+    titleKey: "strategyDoc.sec.focus", whyKey: "strategyDoc.why.focus",
     isFilled: (s) => has(s.focus.goal) && s.focus.priorities.length > 0 },
 ];
 
@@ -166,7 +182,7 @@ export function derivePyramid(s: BrandStrategy): BrandStrategy["pyramid"] {
  */
 export type SummaryPart = { text: string; strong?: boolean };
 
-export function generateSummary(s: BrandStrategy): SummaryPart[] {
+export function generateSummary(s: BrandStrategy, t: Tr = EN): SummaryPart[] {
   const out: SummaryPart[] = [];
   // Guard on truthiness, not trim: the separators between clauses are single
   // spaces, and a trim guard drops every one of them — "…StandardDeklan…".
@@ -174,18 +190,24 @@ export function generateSummary(s: BrandStrategy): SummaryPart[] {
 
   if (has(s.core.whoWeAre)) { push(s.core.whoWeAre, true); push(" "); }
   if (has(s.core.whatWeDo)) { push(s.core.whatWeDo); push(" "); }
-  if (has(s.positioning.difference)) { push("What makes it different: "); push(s.positioning.difference, true); push(" "); }
+  // A sentence with its bold phrase where the language puts it: the key holds
+  // {name}, and the text either side of it is pushed plain.
+  const around = (key: StringKey, name: string, strong: string) => {
+    const [pre, post = ""] = t(key).split(`{${name}}`);
+    push(pre); push(strong, true); push(post);
+  };
+  if (has(s.positioning.difference)) { push(`${t("strategyDoc.sumDifferent")} `); push(s.positioning.difference, true); push(" "); }
   // Fields are written as full sentences by the questionnaire, so trim any
   // trailing stop before adding our own — otherwise the paragraph reads "…results.. ".
   const stop = (t: string) => t.trim().replace(/[.]+$/, "");
-  if (has(s.positioning.notFor)) { push(`It is deliberately not for ${stop(s.positioning.notFor)}. `); }
-  if (has(s.core.promise)) { push("The promise is "); push(stop(s.core.promise), true); push(". "); }
+  if (has(s.positioning.notFor)) { push(`${t("strategyDoc.sumNotFor", { notFor: stop(s.positioning.notFor) })} `); }
+  if (has(s.core.promise)) { around("strategyDoc.sumPromise", "promise", stop(s.core.promise)); push(" "); }
 
   const proofs = s.pillars.map((p) => p.proof).filter(has);
-  if (proofs.length) { push("Proof: "); push(proofs.map(stop).join("; "), true); push(". "); }
+  if (proofs.length) { around("strategyDoc.sumProof", "proof", proofs.map(stop).join("; ")); push(" "); }
 
   if (s.principles.length) {
-    push(`It behaves by ${s.principles.map((p) => p.title.toLowerCase()).join(", ")}. `);
+    push(`${t("strategyDoc.sumBehaves", { principles: s.principles.map((p) => p.title.toLowerCase()).join(", ") })} `);
   }
   return out;
 }

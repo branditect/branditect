@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useBrand } from "@/lib/useBrand";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey, Vars } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -34,8 +35,8 @@ type Kind = Product["kind"];
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const KIND_LABEL: Record<Kind, string> = {
-  physical: "Physical", services: "Service", saas: "SaaS", digital: "Digital",
+const KIND_LABEL: Record<Kind, StringKey> = {
+  physical: "import.kindPhysical", services: "import.kindService", saas: "import.kindSaas", digital: "import.kindDigital",
 };
 /**
  * Brand tokens, not Tailwind's default scales.
@@ -51,13 +52,19 @@ const KIND_COLOR: Record<Kind, string> = {
   saas: "bg-lavender text-violet-ink border-lav-line",
   digital: "bg-amber-wash text-amber border-amber",
 };
-const KIND_OPTIONS: { kind: Kind; icon: string; label: string; desc: string }[] = [
-  { kind: "physical", icon: "PHY", label: "Physical Product", desc: "Tangible goods, shipped to customers" },
-  { kind: "services", icon: "SRV", label: "Service", desc: "Consulting, coaching, agency work" },
-  { kind: "saas", icon: "SAS", label: "SaaS / Subscription", desc: "Software or recurring digital service" },
-  { kind: "digital", icon: "DIG", label: "Digital Product", desc: "Downloads, courses, templates" },
+const KIND_OPTIONS: { kind: Kind; icon: string; label: StringKey; desc: StringKey }[] = [
+  { kind: "physical", icon: "PHY", label: "import.optPhysical", desc: "import.optPhysicalDesc" },
+  { kind: "services", icon: "SRV", label: "import.kindService", desc: "import.optServiceDesc" },
+  { kind: "saas", icon: "SAS", label: "import.optSaas", desc: "import.optSaasDesc" },
+  { kind: "digital", icon: "DIG", label: "import.optDigital", desc: "import.optDigitalDesc" },
 ];
+/* Stored in catalog_products.price_model as the English, so the value stays
+   English and only the option text translates. */
 const PRICE_MODELS = ["Per project", "Per hour", "Retainer / monthly", "Custom quote"];
+const PRICE_MODEL_KEY: Record<string, StringKey> = {
+  "Per project": "import.modelPerProject", "Per hour": "import.modelPerHour",
+  "Retainer / monthly": "import.modelRetainer", "Custom quote": "import.modelCustomQuote",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -74,12 +81,12 @@ function blankProduct(kind: Kind): Product {
   }
 }
 
-function getPrice(p: Product): string {
+function getPrice(p: Product, t: (key: StringKey, vars?: Vars) => string): string {
   switch (p.kind) {
-    case "physical": return p.rrp ? `€${p.rrp}` : "—";
-    case "services": return p.price ? `€${p.price}` : "—";
-    case "saas": return p.monthlyPrice ? `€${p.monthlyPrice}/mo` : "—";
-    case "digital": return p.price ? `€${p.price}` : "—";
+    case "physical": return p.rrp ? t("import.priceEur", { amount: p.rrp }) : "—";
+    case "services": return p.price ? t("import.priceEur", { amount: p.price }) : "—";
+    case "saas": return p.monthlyPrice ? t("import.priceMonthly", { amount: p.monthlyPrice }) : "—";
+    case "digital": return p.price ? t("import.priceEur", { amount: p.price }) : "—";
   }
 }
 
@@ -140,41 +147,41 @@ function ProductFormFields({ product, onChange }: { product: Product; onChange: 
   switch (product.kind) {
     case "physical": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exProductName")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldProductName")} value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exProductName")} /></div>
         <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exProductCategory")} />
-        <Field label="SKU" value={product.sku} onChange={v => set({ sku: v })} placeholder={t("import.exSku")} />
+        <Field label={t("product.sku")} value={product.sku} onChange={v => set({ sku: v })} placeholder={t("import.exSku")} />
         <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsProduct")} rows={2} /></div>
-        <Field label="RRP (€)" value={product.rrp} onChange={v => set({ rrp: v })} placeholder="29.99" type="number" />
-        <Field label="Wholesale price (€)" value={product.wholesalePrice} onChange={v => set({ wholesalePrice: v })} placeholder="15.00" type="number" />
-        <Field label="COGS (€)" value={product.cogs} onChange={v => set({ cogs: v })} placeholder="8.00" type="number" />
-        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exLeadTime")} />
-        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exUnits")} /></div>
+        <Field label={t("import.fieldRrp")} value={product.rrp} onChange={v => set({ rrp: v })} placeholder="29.99" type="number" />
+        <Field label={t("import.fieldWholesale")} value={product.wholesalePrice} onChange={v => set({ wholesalePrice: v })} placeholder="15.00" type="number" />
+        <Field label={t("import.fieldCogs")} value={product.cogs} onChange={v => set({ cogs: v })} placeholder="8.00" type="number" />
+        <Field label={t("import.fieldDeliveryTime")} value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exLeadTime")} />
+        <div className="col-span-2"><Field label={t("import.fieldCapacity")} value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exUnits")} /></div>
       </div>
     );
     case "services": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Service name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exServiceName")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldServiceName")} value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exServiceName")} /></div>
         <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exServiceCategory")} />
-        <Field label="Price (€)" value={product.price} onChange={v => set({ price: v })} placeholder="500" type="number" />
+        <Field label={t("import.fieldPrice")} value={product.price} onChange={v => set({ price: v })} placeholder="500" type="number" />
         <div className="col-span-2">
           <label className={lbl}>{t("import.priceModel")}</label>
           <select className={inp} value={product.priceModel} onChange={e => set({ priceModel: e.target.value })}>
-            {PRICE_MODELS.map(m => <option key={m}>{m}</option>)}
+            {PRICE_MODELS.map(m => <option key={m} value={m}>{t(PRICE_MODEL_KEY[m])}</option>)}
           </select>
         </div>
         <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsIncludedService")} rows={2} /></div>
-        <Field label="Ideal client" value={product.idealClient} onChange={v => set({ idealClient: v })} placeholder={t("import.exServiceAudience")} />
-        <Field label="Delivery time" value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exDuration")} />
-        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exDeliverables")} /></div>
-        <div className="col-span-2"><Field label="Capacity per month" value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exCapacity")} /></div>
+        <Field label={t("import.fieldIdealClient")} value={product.idealClient} onChange={v => set({ idealClient: v })} placeholder={t("import.exServiceAudience")} />
+        <Field label={t("import.fieldDeliveryTime")} value={product.deliveryTime} onChange={v => set({ deliveryTime: v })} placeholder={t("import.exDuration")} />
+        <div className="col-span-2"><Field label={t("import.fieldIncluded")} value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exDeliverables")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldCapacity")} value={product.capacityPerMonth} onChange={v => set({ capacityPerMonth: v })} placeholder={t("import.exCapacity")} /></div>
       </div>
     );
     case "saas": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Plan name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exPlanName")} /></div>
-        <Field label="Monthly price (€)" value={product.monthlyPrice} onChange={v => set({ monthlyPrice: v })} placeholder="49" type="number" />
+        <div className="col-span-2"><Field label={t("import.fieldPlanName")} value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exPlanName")} /></div>
+        <Field label={t("import.fieldMonthlyPrice")} value={product.monthlyPrice} onChange={v => set({ monthlyPrice: v })} placeholder="49" type="number" />
         <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatIsIncludedPlan")} rows={2} /></div>
-        <div className="col-span-2"><Field label="What's included (comma-separated)" value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exPlanFeatures")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldIncluded")} value={product.inclusions} onChange={v => set({ inclusions: v })} placeholder={t("import.exPlanFeatures")} /></div>
         <label className="col-span-2 flex items-center gap-3 cursor-pointer">
           <button type="button" onClick={() => set({ flagship: !product.flagship })} className={`w-9 h-5 rounded-full transition-colors ${product.flagship ? "bg-brand-orange" : "bg-light"}`}>
             <span className={`block h-4 w-4 rounded-full bg-white shadow ml-0.5 transition-transform ${product.flagship ? "translate-x-4" : ""}`} />
@@ -185,11 +192,11 @@ function ProductFormFields({ product, onChange }: { product: Product; onChange: 
     );
     case "digital": return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2"><Field label="Product name *" value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exDigitalName")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldProductName")} value={product.name} onChange={v => set({ name: v })} placeholder={t("import.exDigitalName")} /></div>
         <Field label={t("common.category")} value={product.category} onChange={v => set({ category: v })} placeholder={t("import.exDigitalCategory")} />
-        <Field label="Price (€)" value={product.price} onChange={v => set({ price: v })} placeholder="29" type="number" />
+        <Field label={t("import.fieldPrice")} value={product.price} onChange={v => set({ price: v })} placeholder="29" type="number" />
         <div className="col-span-2"><TextArea label={t("common.description")} value={product.description} onChange={v => set({ description: v })} placeholder={t("import.whatDoesCustomerGet")} rows={2} /></div>
-        <div className="col-span-2"><Field label="Delivery format" value={product.deliveryFormat} onChange={v => set({ deliveryFormat: v })} placeholder={t("import.exDigitalFormat")} /></div>
+        <div className="col-span-2"><Field label={t("import.fieldDeliveryFormat")} value={product.deliveryFormat} onChange={v => set({ deliveryFormat: v })} placeholder={t("import.exDigitalFormat")} /></div>
       </div>
     );
   }
@@ -216,7 +223,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
-          <h2 className="font-semibold text-ink text-[0.95rem]">{isEdit ? "Edit product" : t("products.add")}</h2>
+          <h2 className="font-semibold text-ink text-[0.95rem]">{isEdit ? t("import.editProduct") : t("products.add")}</h2>
           <button onClick={onClose} className="text-muted hover:text-ink text-lg leading-none">×</button>
         </div>
 
@@ -231,8 +238,8 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
                     className={`flex items-start gap-2.5 p-3 rounded-lg border text-left transition-all ${kind === o.kind ? "border-brand-orange bg-brand-orange-pale" : "border-light hover:border-brand-orange/40"}`}>
                     <span className="text-xl mt-0.5 shrink-0">{o.icon}</span>
                     <div>
-                      <div className={`text-xs font-semibold ${kind === o.kind ? "text-brand-orange" : "text-ink"}`}>{o.label}</div>
-                      <div className="text-[0.65rem] text-muted leading-tight mt-0.5">{o.desc}</div>
+                      <div className={`text-xs font-semibold ${kind === o.kind ? "text-brand-orange" : "text-ink"}`}>{t(o.label)}</div>
+                      <div className="text-[0.65rem] text-muted leading-tight mt-0.5">{t(o.desc)}</div>
                     </div>
                   </button>
                 ))}
@@ -254,7 +261,7 @@ function ProductModal({ initial, onSave, onClose }: { initial: Product | null; o
             disabled={!product.name.trim() || pickingKind}
             className="flex-1 py-2.5 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover disabled:opacity-40 transition-colors"
           >
-            {isEdit ? "Save changes" : "Add to catalogue"}
+            {isEdit ? t("product.saveChanges") : t("import.addToCatalogue")}
           </button>
         </div>
       </div>
@@ -295,12 +302,12 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
         });
       }
       const json = await res.json();
-      if (!res.ok) { setError(json.error || "Extraction failed"); return; }
+      if (!res.ok) { setError(json.error || t("import.extractionFailed")); return; }
       const products = (json.products as Product[]).map(p => ({ ...p, id: uid() }));
       setPreview(products);
       setSelected(new Set(products.map(p => p.id)));
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("import.somethingWrong"));
     } finally {
       setExtracting(false);
     }
@@ -336,7 +343,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                 {(["text", "file"] as const).map(mode => (
                   <button key={mode} onClick={() => setTab(mode)}
                     className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${tab === mode ? "bg-white text-ink shadow-sm" : "text-muted"}`}>
-                    {mode === "text" ? "Paste text" : "Upload PDF"}
+                    {mode === "text" ? t("import.pasteText") : t("import.uploadPdf")}
                   </button>
                 ))}
               </div>
@@ -347,7 +354,7 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                   rows={10}
                   value={text}
                   onChange={e => setText(e.target.value)}
-                  placeholder={"Paste your product list, price list, service menu, or any text describing your products/services here...\n\nExample:\nBrand Strategy Workshop — €1,500\nA full-day workshop to define your brand positioning and messaging framework.\n\nSocial Media Retainer — €800/month\nMonthly management of 2 social channels including content creation and scheduling."}
+                  placeholder={t("import.pastePlaceholder")}
                 />
               ) : (
                 <div
@@ -380,14 +387,14 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                     <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
                     {t("import.extracting")}
                   </>
-                ) : "Extract products with AI"}
+                ) : t("import.extractWithAi")}
               </button>
             </>
           ) : (
             <>
               {/* Preview extracted products */}
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-ink">{preview.length} product{preview.length !== 1 ? "s" : ""} found — select which to add</p>
+                <p className="text-sm font-medium text-ink">{t(preview.length === 1 ? "import.foundOne" : "import.foundMany", { count: preview.length })}</p>
                 <button onClick={() => setPreview(null)} className="text-xs text-muted hover:text-ink">{t("onboarding.back")}</button>
               </div>
 
@@ -400,9 +407,9 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm text-ink">{p.name || "Unnamed"}</span>
-                        <span className={`text-[0.6rem] font-mono px-1.5 py-0.5 rounded border ${KIND_COLOR[p.kind]}`}>{KIND_LABEL[p.kind]}</span>
-                        <span className="text-xs text-brand-orange font-medium">{getPrice(p)}</span>
+                        <span className="font-medium text-sm text-ink">{p.name || t("import.unnamed")}</span>
+                        <span className={`text-[0.6rem] font-mono px-1.5 py-0.5 rounded border ${KIND_COLOR[p.kind]}`}>{t(KIND_LABEL[p.kind])}</span>
+                        <span className="text-xs text-brand-orange font-medium">{getPrice(p, t)}</span>
                       </div>
                       {p.description && <p className="text-xs text-muted mt-0.5 line-clamp-2">{p.description}</p>}
                     </div>
@@ -419,7 +426,9 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
                   disabled={selectedProducts.length === 0}
                   className="flex-1 py-2.5 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover disabled:opacity-40 transition-colors"
                 >
-                  Add {selectedProducts.length > 0 ? selectedProducts.length : ""} to catalogue
+                  {selectedProducts.length > 0
+                    ? t("import.addNToCatalogue", { count: selectedProducts.length })
+                    : t("import.addToCatalogue")}
                 </button>
               </div>
             </>
@@ -442,15 +451,15 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className={`text-[0.6rem] font-mono font-medium px-1.5 py-0.5 rounded border ${KIND_COLOR[product.kind]}`}>
-              {KIND_LABEL[product.kind]}
+              {t(KIND_LABEL[product.kind])}
             </span>
             {product.kind === "saas" && product.flagship && (
               <span className="text-[0.6rem] font-mono px-1.5 py-0.5 rounded border bg-amber-wash text-amber border-amber">{t("import.flagship")}</span>
             )}
           </div>
-          <h3 className="font-semibold text-ink text-[0.95rem] leading-snug">{product.name || "Unnamed product"}</h3>
+          <h3 className="font-semibold text-ink text-[0.95rem] leading-snug">{product.name || t("import.unnamedProduct")}</h3>
         </div>
-        <span className="text-brand-orange font-semibold text-sm shrink-0">{getPrice(product)}</span>
+        <span className="text-brand-orange font-semibold text-sm shrink-0">{getPrice(product, t)}</span>
       </div>
 
       {product.description && (
@@ -563,7 +572,7 @@ export default function CatalogPage() {
         <div>
           <h1 className="font-semibold text-[1.75rem] text-ink tracking-tight mb-1">{t("import.productsAndServices")}</h1>
           <p className="text-[0.78rem] text-muted">
-            {brandName}&apos;s full product catalogue
+            {t("import.fullCatalogue", { brandName })}
             {saving && <span className="ml-2 text-brand-orange">{t("import.saving")}</span>}
           </p>
         </div>
@@ -595,7 +604,7 @@ export default function CatalogPage() {
             <p className="text-muted text-sm max-w-sm mb-8">{t("products.noneHelp")}</p>
             <div className="flex gap-3">
               <button onClick={() => setShowAdd(true)} className="px-5 py-2.5 rounded-lg bg-brand-orange text-white text-sm font-semibold hover:bg-brand-orange-hover transition-colors">
-                + Add product
+                {t("import.addProductPlus")}
               </button>
               <button onClick={() => setShowImport(true)} className="px-5 py-2.5 rounded-lg border border-light text-mid text-sm font-medium hover:border-brand-orange hover:text-brand-orange transition-colors">
                 {t("import.fromTextOrPdf")}

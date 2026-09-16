@@ -12,6 +12,7 @@
  */
 
 import { decideAccess } from "./ownership.ts";
+import { translate, type StringKey, type Vars } from "./i18n/index.ts";
 
 export type Where = "studio" | "indoors" | "outdoors";
 export type Format = "1:1" | "4:5" | "9:16" | "16:9";
@@ -147,15 +148,33 @@ export function buildParts(prompt: string, images: string[], mimeTypes?: (string
   return parts;
 }
 
-/** What the button says when it cannot be pressed. Never a silent dead button. */
-export function briefBlocker(referenceCount: number, subject: string): string | null {
-  if (referenceCount < 1) return "Add a reference to start";
-  if (!subject.trim()) return "Say what you want to see";
+/**
+ * What the button says when it cannot be pressed. Never a silent dead button.
+ *
+ * As a key, so the page can say it in the interface language. The English
+ * functions below are the same decision read through the English dictionary,
+ * which is what the tests and any server-side caller see.
+ */
+export function briefBlockerKey(referenceCount: number, subject: string): StringKey | null {
+  if (referenceCount < 1) return "createImages.addReference";
+  if (!subject.trim()) return "createImages.sayWhat";
   return null;
 }
 
+export function briefReadyKey(referenceCount: number): { key: StringKey; vars: Vars } {
+  return referenceCount === 1
+    ? { key: "createImages.readyOne", vars: {} }
+    : { key: "createImages.readyMany", vars: { count: referenceCount } };
+}
+
+export function briefBlocker(referenceCount: number, subject: string): string | null {
+  const key = briefBlockerKey(referenceCount, subject);
+  return key ? translate("en", key) : null;
+}
+
 export function briefReady(referenceCount: number): string {
-  return `${referenceCount} reference${referenceCount === 1 ? "" : "s"} read · about 15 seconds`;
+  const { key, vars } = briefReadyKey(referenceCount);
+  return translate("en", key, vars);
 }
 
 

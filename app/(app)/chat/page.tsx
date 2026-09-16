@@ -8,8 +8,8 @@ export default function Page() {
     <NotBuiltYet
       icon="chat"
       title={translate(locale, "chat.title")}
-      description="The full-page conversation with your brand-trained assistant, reading your Brand, your Numbers and everything in Knowledge. The rail on Home is live; this larger view is still to come."
-      cta={{ label: "Back to Home", href: "/home" }}
+      description={translate(locale, "chat.pageDescription")}
+      cta={{ label: translate(locale, "shell.backToHome"), href: "/home" }}
     />
   );
 }

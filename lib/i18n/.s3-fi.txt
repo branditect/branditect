@@ -1,0 +1,110 @@
+
+  // ══ SIVUSTO, kolmas kierros ══ No em dashes. Placeholders kept verbatim.
+
+  // ── Tietoa: leipäteksti ───────────────────────────────────────────────────
+  "site.about.opening":
+    "Mitä me edustamme. Mitä tarkalleen myymme. Mitä meillä on varaa veloittaa. Vastaukset ovat jo olemassa, hautautuneina esitykseen jota kukaan ei avaa, sähköpostilaatikkoon josta kukaan ei hae ja taulukkoon jota yksi ihminen ylläpitää. Branditectissä ne ovat yhdessä paikassa.",
+  "site.about.homeCaption":
+    "Yksi näkymä, joka tietää kuinka paljon brändistäsi on kirjattu ylös ja mitä vielä puuttuu. Se kertoo diagnoosin, ei kehua.",
+  "site.about.asteriskCaption":
+    "Katso tähteä katesarakkeessa. Se on järjestelmän tapa kertoa, että luku on arvio koska kokonaishankintahinta puuttuu. Mieluummin se myöntää sen kuin liioittelee katettasi hiljaa.",
+  "site.about.threeVerbs":
+    "Kolme verbiä järjestyksessä. Jokainen näkymä kuuluu tasan yhteen niistä, eikä mitään sellaista jota ei voi sijoittaa yhteenkään rakenneta.",
+  "site.about.defineBody":
+    "Kaksikymmentä kysymystä rakentaa strategiasi, äänensävysi ja visuaalisen ilmeesi. Viisi niistä riittää avaamaan työtilan. Loput saavat odottaa.",
+  "site.about.feedBody":
+    "Tuotteet, dokumentit, kuvat, linkit. Kaikki lataamasi luetaan ja indeksoidaan, eikä se osa maksa koskaan krediittiä.",
+  "site.about.makeBody":
+    "Kaikki Studiossa lukee samoja aivoja. Millään täällä ei ole omaa erillistä käsitystä siitä, mikä brändisi on.",
+  // "five points" is percentage points, and Finnish has to say which:
+  // "prosenttiyksikköä", never "prosenttia". Getting this wrong turns a real
+  // number into a different real number.
+  "site.about.marginMath":
+    "Katteet lasketaan verottomina ja kokonaishankintahintaa vasten, ei koskaan tehdashintaa bruttohintaa vasten. Ero on noin viisi prosenttiyksikköä, ja se on ero tuotteen välillä jonka luulet olevan kannattava ja sellaisen joka on.",
+  "site.about.secondColumn":
+    "Toinen sarake ei ole vaatimattomuutta. Se on se, mikä tekee ensimmäisestä uskottavan, ja se säästää meiltä molemmilta yhden keskustelun.",
+  "site.about.oneInbox": "Yksi postilaatikko, jota lukevat ne jotka tämän rakentavat.",
+  "site.about.fourMinutes":
+    "Noin neljä minuuttia niihin viiteen, joilla on väliä. Sata krediittiä, ei korttia, eikä mikään vanhene.",
+  "site.about.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmius neljine tarkistuksineen, luvut aivojen lukemista tiedostoista ja Studion työkalut alla.",
+  "site.about.altProducts":
+    "Ruffle Studion Tuotteet-näkymä, jossa jokainen tuote kustannuksineen, hintoineen ja oikeine katteineen, ja yksi kateluku merkittynä tähdellä.",
+
+  // ── Tietoa: metatiedot ja OG ──────────────────────────────────────────────
+  "site.about.metaDesc":
+    "Branditect on yksi paikka, joka tietää brändistrategiasi, tuotteesi ja katteesi, ja tekee niistä asioita. Rakennettu Suomessa, EU:n infrastruktuurissa.",
+  "site.about.ogSub":
+    "Yksi paikka, joka tietää strategiasi, tuotteesi ja katteesi, ja tekee niistä asioita.",
+  "site.about.ogTag": "Mikä se on, mitä se ei tee, ja kenelle se on.",
+
+  // ── Etusivu: metatiedot ja OG ─────────────────────────────────────────────
+  "site.home.metaDesc":
+    "Yksi paikka, joka pitää strategiasi, tuotetotuutesi ja katteesi, joten kaikki mitä julkaiset on brändin mukaista, paikkansapitävää ja kannattavaa. Rakenna se ilmaiseksi.",
+  "site.home.ogSub":
+    "Yksi paikka, joka pitää strategiasi, tuotetotuutesi ja katteesi. Rakenna se ilmaiseksi.",
+  "site.home.ogTag": "Yksi paikka, joka tietää strategiasi, tuotteesi ja katteesi.",
+
+  // ── Hinnoittelu: metatiedot ja OG ─────────────────────────────────────────
+  "site.pricing.metaDesc":
+    "Rakenna brändiaivosi ilmaiseksi, sadalla krediitillä ja ilman korttia. Tilaukset alkaen {FROM} kuukaudessa, sis. alv.",
+  "site.pricing.ogSub":
+    "Rakenna brändiaivosi ilmaiseksi. Tilaukset alkaen {FROM} kuukaudessa, sis. alv.",
+  "site.pricing.ogTag": "Rakenna ilmaiseksi. Maksa kun haluat sen tekevän töitä puolestasi.",
+
+  // ── Etusivu ───────────────────────────────────────────────────────────────
+  "site.home.ledeFull":
+    "Kaupalliset aivot tuote- ja verkkokauppabrändeille. Se pitää strategiasi, tuotetotuutesi ja katteesi yhdessä, joten kaikki mitä julkaiset on brändin mukaista, paikkansapitävää ja kannattavaa. Se kirjoittaa tekstisi tuntien jokaisen tuotteesi, äänensävysi ja tyylisi. Ja tekee kuvasi siinä samalla. Se on kuin sinulla olisi huippuluokan markkinointitiimi takanasi.",
+  "site.home.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmiuspisteet neljine tarkistuksineen, luvut aivojen lukemista dokumenteista ja kuvista, ja rivi Studion työkaluja.",
+  "site.home.homeCaption":
+    "Brändin valmius kertoo mitä vielä puuttuu, ja Studio-rivi on se mitä voit tehdä sillä minkä aivot jo tietävät. Mikään tällä näytöllä ei ole arvaus.",
+  "site.home.eachUsable":
+    "Jokainen niistä on kaikkien muiden käytettävissä, ja siinä on koko ero brändiaivojen ja dokumenttikansion välillä.",
+  "site.home.altProducts":
+    "Ruffle Studion Tuotteet-näkymä, jossa jokainen tuote kustannuksineen, hintoineen ja oikeine katteineen, ja yksi kateluku tähdellä merkittynä.",
+  "site.home.sameBrain":
+    "Kaikki täällä lukee samoja aivoja. Millään ei ole omaa erillistä käsitystä siitä, mikä brändisi on.",
+  "site.home.builtBy":
+    "Rakentanut tiimi, joka on viettänyt kaksi vuosikymmentä brändien parissa ympäri maailmaa. Tehty Suomessa.",
+  "site.home.notInstincts":
+    "Isolla brändillä ei ole parempaa vaistoa kuin sinulla. Sillä on strategia ja infrastruktuuri.",
+  "site.home.givesYouBoth":
+    "Branditect antaa sinulle molemmat, olitpa missä vaiheessa tahansa. Ensimmäinen tuote tai neljässadas. Teet edelleen jokaisen päätöksen. Lakkaat vain tekemästä niitä muistin varassa.",
+  "site.home.fourMinutes":
+    "Noin neljä minuuttia niihin viiteen, joilla on väliä. Sata krediittiä, ei korttia, eikä mikään vanhene.",
+
+  // ── Hinnoittelusivu ───────────────────────────────────────────────────────
+  "site.pricing.lede":
+    "Branditect muuttaa hajallaan olevat tiedostosi, päätöksesi ja lukusi yhdeksi tietokerrokseksi, joka tuntee strategiasi, tuotteesi ja katteesi. Rakenna koko juttu ilmaiseksi. Maksa kun haluat sen tekevän töitä puolestasi.",
+  "site.pricing.billingPeriod": "Laskutusjakso",
+  "site.pricing.twoMonthsFree": "2 kuukautta ilmaiseksi",
+  "site.pricing.plans": "Tilaukset",
+  "site.pricing.vatYearly": "Sis. alv, laskutetaan {yearlyTotal} vuodessa",
+  "site.pricing.vatLine": "Sis. alv {VAT_RATE}",
+  "site.pricing.letsTalk": "Jutellaan",
+  "site.pricing.creditIs":
+    "Yksi yksikkö työtä, jonka aivot tekevät puolestasi. Lataamasi aineiston lukeminen ja indeksointi on aina ilmaista, koska aivot jotka laskuttavat oppimisesta ovat väärän muotoiset.",
+  "site.pricing.freeHomeCaption":
+    "Tämä on etusivusi ilmaisella tilauksella. Brändin valmius vasemmalla, mitä aivot ovat lukeneet oikealla, ja alla se mitä voit niillä tehdä.",
+  "site.pricing.altHome":
+    "Branditectin etusivu brändille nimeltä Ruffle Studio: brändin valmiuspisteet neljine tarkistuksineen, luvut aivojen lukemista dokumenteista ja kuvista, ja rivi Studion työkaluja.",
+  "site.pricing.readinessIs":
+    "Brändin valmius on neljä tarkistusta, kukin neljäsosan arvoinen. Se kertoo mitä puuttuu sen sijaan että onnittelisi sinua, koska pistemäärä jonka voi ennustaa on arvokkaampi kuin sellainen joka näyttää tarkalta.",
+
+  // ── Yhteiset ──────────────────────────────────────────────────────────────
+  "site.perMonth": "/kk",
+  "site.signUpOrLogIn": "Luo tili tai kirjaudu sisään",
+  "site.ogTitle": "Branditect, brändisi kaupalliset aivot",
+
+  // ── Tilaukset: loput ──────────────────────────────────────────────────────
+  "plan.everythingInPro": "Kaikki Prosta, ja lisäksi",
+  "plan.proplus.f1": "3 brändiä, kullakin oma totuutensa. Ne eivät koskaan sekoitu keskenään",
+  "plan.proplus.f2": "3 käyttäjää, jotta tiimisi kirjoittaa samoista aivoista",
+  "plan.proplus.f3": "20 Gt",
+  "plan.proplus.f4": "Etusijainen tuki",
+  // Finnish uses Mt and Gt, not MB and GB. A Finnish page that says "200 MB"
+  // reads as untranslated, and it is the kind of thing a reader notices first.
+  "plan.storage200mb": "200 Mt",
+  "plan.storage5gb": "5 Gt",
+  "plan.storage20gb": "20 Gt",

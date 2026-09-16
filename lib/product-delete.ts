@@ -10,6 +10,14 @@
  *
  * Pure, so the rules can be asserted without a database.
  */
+import { translate, type StringKey, type Vars } from "./i18n/index.ts";
+
+/**
+ * A translator. Components pass `useT()`; everything else, tests included,
+ * gets English, so the English wording has one definition: the dictionary.
+ */
+type Tr = (key: StringKey, vars?: Vars) => string;
+const EN: Tr = (key, vars) => translate("en", key, vars);
 
 export interface DeletableRow {
   id: string;
@@ -56,12 +64,10 @@ export function recoveryNote(deletedAt: string, now: Date = new Date()): string 
  * What the confirm step says. Naming the product is the whole point: a generic
  * "are you sure" is the dialog people click through without reading.
  */
-export function confirmCopy(name: string): { title: string; body: string; confirm: string } {
+export function confirmCopy(name: string, t: Tr = EN): { title: string; body: string; confirm: string } {
   return {
-    title: `Remove ${name}?`,
-    body:
-      "It comes off your product list and out of everything Studio writes. " +
-      `Its costs, prices and guardrails are kept for ${RECOVERABLE_DAYS} days, so you can put it back.`,
-    confirm: "Remove it",
+    title: t("product.confirmTitle", { name }),
+    body: t("product.confirmBody", { days: RECOVERABLE_DAYS }),
+    confirm: t("product.confirmRemove"),
   };
 }

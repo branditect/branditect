@@ -18,10 +18,12 @@ interface BrandTheme {
 
 interface LogoSlot {
   id: string
-  label: string
-  desc: string
+  label: StringKey
+  desc: StringKey
   darkBg: boolean
 }
+
+type T = ReturnType<typeof useT>
 
 interface BrandData {
   meta: { name: string; tagline: string }
@@ -67,13 +69,14 @@ interface BrandImage {
 
 /* ─── Logo slots ─────────────────────────────────────────────────────────────── */
 
+// `id` is the slot stored on the uploaded image. Label and description are keys.
 const LOGO_SLOTS: LogoSlot[] = [
-  { id: 'brandmark',   label: 'Brandmark',        desc: 'Symbol / icon only',          darkBg: true  },
-  { id: 'wordmark',    label: 'Wordmark',          desc: 'Logotype / text only',        darkBg: false },
-  { id: 'combination', label: 'Combination mark',  desc: 'Symbol + wordmark together',  darkBg: false },
-  { id: 'darkbg',      label: 'Dark background',   desc: 'White/reversed on dark',      darkBg: true  },
-  { id: 'lightbg',     label: 'Light background',  desc: 'Primary on white',            darkBg: false },
-  { id: 'mono',        label: 'Monochrome',         desc: 'Single colour / emboss',      darkBg: false },
+  { id: 'brandmark',   label: 'guideline.slot.brandmark',   desc: 'guideline.slot.brandmarkDesc',   darkBg: true  },
+  { id: 'wordmark',    label: 'guideline.slot.wordmark',    desc: 'guideline.slot.wordmarkDesc',    darkBg: false },
+  { id: 'combination', label: 'guideline.slot.combination', desc: 'guideline.slot.combinationDesc', darkBg: false },
+  { id: 'darkbg',      label: 'guideline.slot.darkbg',      desc: 'guideline.slot.darkbgDesc',      darkBg: true  },
+  { id: 'lightbg',     label: 'guideline.slot.lightbg',     desc: 'guideline.slot.lightbgDesc',     darkBg: false },
+  { id: 'mono',        label: 'guideline.slot.mono',        desc: 'guideline.slot.monoDesc',        darkBg: false },
 ]
 
 /* ─── Nav ────────────────────────────────────────────────────────────────────── */
@@ -102,10 +105,25 @@ const ALL_LABELS: Record<string, string> = Object.fromEntries(
   NAV_GROUPS.flatMap(g => g.items).map(i => [i.id, i.label])
 )
 
-// What renders, where a key exists. ALL_LABELS stays English: it is sent to
+// What renders. ALL_LABELS stays English: it is sent to
 // /api/brand-guideline/edit as `sectionLabel`, inside the model's instructions.
-const NAV_ITEM_KEYS: Record<string, StringKey> = { logos: 'visual.logos' }
-const NAV_GROUP_KEYS: Record<string, StringKey> = { Products: 'nav.knowledge.products', Channels: 'nav.brand.channels' }
+const NAV_ITEM_KEYS: Record<string, StringKey> = {
+  logos: 'visual.logos',
+  type: 'guideline.nav.typography',
+  colors: 'guideline.nav.colors',
+  imgstyle: 'guideline.nav.imageStyle',
+  buttons: 'guideline.nav.buttons',
+  graphics: 'guideline.nav.graphics',
+  icons: 'guideline.nav.icons',
+  packaging: 'guideline.nav.packaging',
+  social: 'guideline.nav.social',
+}
+const NAV_GROUP_KEYS: Record<string, StringKey> = {
+  'Brand identity': 'guideline.group.identity',
+  'Design system': 'guideline.group.designSystem',
+  Products: 'nav.knowledge.products',
+  Channels: 'nav.brand.channels',
+}
 
 /* ─── Asset gallery — module-level component ─────────────────────────────────── */
 
@@ -118,6 +136,7 @@ interface AssetGalleryProps {
 }
 
 function AssetGallery({ items, columns = 3, onUpload, onRemove, uploading }: AssetGalleryProps) {
+  const t = useT()
   const fileRef = useRef<HTMLInputElement>(null)
   return (
     <div>
@@ -141,7 +160,7 @@ function AssetGallery({ items, columns = 3, onUpload, onRemove, uploading }: Ass
           ) : (
             <>
               <div style={{ fontSize: 22, color: 'var(--bd-border)' }}>+</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Upload image</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('guideline.uploadImage')}</div>
             </>
           )}
         </div>
@@ -159,11 +178,17 @@ function AssetGallery({ items, columns = 3, onUpload, onRemove, uploading }: Ass
 
 /* ─── Build initial data ─────────────────────────────────────────────────────── */
 
+/**
+ * The placeholder guideline shown before the brand has one of its own. It is
+ * written in code, so it is copy, built in the interface language. Whatever
+ * the brand-text route or an extraction returns replaces it section by section.
+ */
 function buildInitialData(
   brandName: string,
   colors: { name: string; hex: string; role: string }[],
   fontName: string,
-  brandImages: BrandImage[]
+  brandImages: BrandImage[],
+  t: T,
 ): BrandData {
   const dark    = colors[0]?.hex || '#141c26'
   const accent  = colors[1]?.hex || '#3a6ea5'
@@ -183,87 +208,87 @@ function buildInitialData(
   const palette = colors.length >= 3
     ? colors.slice(0, 5).map(c => ({ ...c, aa: true, aaa: false }))
     : [
-        { name: 'Primary Dark',   hex: dark,   role: 'Backgrounds & headlines',       aa: true, aaa: true  },
-        { name: 'Accent',         hex: accent, role: 'CTAs & interactive elements',   aa: true, aaa: false },
-        { name: 'Light',          hex: light,  role: 'Light backgrounds & surfaces',  aa: true, aaa: true  },
+        { name: t('guideline.def.primaryDark'), hex: dark,   role: t('guideline.def.roleBackgrounds'), aa: true, aaa: true  },
+        { name: t('colourRole.accent'),      hex: accent, role: t('guideline.def.roleCtas'),        aa: true, aaa: false },
+        { name: t('guideline.def.light'),       hex: light,  role: t('guideline.def.roleSurfaces'),    aa: true, aaa: true  },
       ]
 
   return {
     meta: { name: brandName, tagline: '' },
     theme: { darkColor: dark, accentColor: accent, lightColor: light, fontFamily: fontName },
     logos: {
-      intro: `The ${brandName} logo is the primary visual expression of the brand. Built from deliberate, structured decisions, it communicates the values that define ${brandName} — precision, authority and reliability. The mark and wordmark work together as a cohesive system, and each element is protected by clear rules that ensure consistency across every application.`,
-      wordmarkNote: 'The full combination mark is the primary brand expression. The brandmark alone is reserved for applications where the brand context is already established.',
-      clearspace: 'Maintain clearspace equal to the full cap-height of the wordmark on all four sides. No element may enter this zone.',
-      minimumSize: 'Never reproduce the logo smaller than 24mm in print or 80px in digital environments.',
+      intro: t('guideline.def.logoIntro', { brandName }),
+      wordmarkNote: t('guideline.def.wordmarkNote'),
+      clearspace: t('guideline.def.clearspace'),
+      minimumSize: t('guideline.def.minimumSize'),
       restrictions: [
-        'Do not stretch, skew or distort the logo proportions in any direction',
-        'Use the white reversed version on all dark or coloured backgrounds',
-        'Never apply gradients, shadows, outlines or effects to the logo',
-        'Always use approved master artwork — never recreate from scratch',
-        'Never place the logo on backgrounds that compromise legibility',
+        t('guideline.def.restriction1'),
+        t('guideline.def.restriction2'),
+        t('guideline.def.restriction3'),
+        t('guideline.def.restriction4'),
+        t('guideline.def.restriction5'),
       ],
       uploads,
       analyses,
     },
     typography: {
-      intro: `The ${brandName} type system is built on clarity, hierarchy and restraint. Every weight and size decision serves a functional purpose. The system performs across digital and print with equal authority.`,
+      intro: t('guideline.def.typographyIntro', { brandName }),
       displayFont: fontName,
       bodyFont: fontName,
       scale: [
-        { role: 'Display',   size: '52px', wt: '300', tr: '−0.03em', usage: 'Campaign heroes',  sample: 'Brand in motion' },
-        { role: 'Heading 1', size: '36px', wt: '400', tr: '−0.02em', usage: 'Page titles',      sample: 'Our core proposition' },
-        { role: 'Heading 2', size: '26px', wt: '500', tr: '−0.01em', usage: 'Section heads',    sample: 'Built for demanding environments' },
-        { role: 'Body',      size: '16px', wt: '400', tr: '0',       usage: 'Running text',     sample: 'Precise language, clear thinking. Every word earns its place.' },
-        { role: 'Label',     size: '11px', wt: '600', tr: '0.1em',   usage: 'Tags & metadata',  sample: 'Category · Reference' },
+        { role: t('guideline.def.roleDisplay'),  size: '52px', wt: '300', tr: '−0.03em', usage: t('guideline.def.usageDisplay'),  sample: t('guideline.def.sampleDisplay') },
+        { role: t('guideline.def.roleHeading1'), size: '36px', wt: '400', tr: '−0.02em', usage: t('guideline.def.usageHeading1'), sample: t('guideline.def.sampleHeading1') },
+        { role: t('guideline.def.roleHeading2'), size: '26px', wt: '500', tr: '−0.01em', usage: t('guideline.def.usageHeading2'), sample: t('guideline.def.sampleHeading2') },
+        { role: t('guideline.def.roleBody'),     size: '16px', wt: '400', tr: '0',       usage: t('guideline.def.usageBody'),     sample: t('guideline.def.sampleBody') },
+        { role: t('guideline.def.roleLabel'),    size: '11px', wt: '600', tr: '0.1em',   usage: t('guideline.def.usageLabel'),    sample: t('guideline.def.sampleLabel') },
       ],
       dos: [
-        `Use ${fontName} as the single primary typeface across all materials`,
-        'Maintain strict hierarchy — never skip a level or mix scale steps',
-        'Sentence case throughout — never title case in body or headline copy',
+        t('guideline.def.do1', { fontName }),
+        t('guideline.def.do2'),
+        t('guideline.def.do3'),
       ],
       donts: [
-        'Never use 700 or 900 weight for display or headline text',
-        'Do not mix more than two weights within a single layout',
-        'Never use all-caps for body text — only for labels and metadata',
+        t('guideline.def.dont1'),
+        t('guideline.def.dont2'),
+        t('guideline.def.dont3'),
       ],
     },
     colors: {
-      intro: `Color is one of the most immediate expressions of the ${brandName} identity. The palette is carefully considered — each color earns its place by serving a specific communicative role. Used consistently, the system builds immediate recognition.`,
+      intro: t('guideline.def.colorsIntro', { brandName }),
       palette,
       secondary: colors.length > 5
         ? colors.slice(5).map(c => ({ name: c.name, hex: c.hex, role: c.role }))
-        : [{ name: 'Neutral', hex: '#8a8580', role: 'Dividers, secondary text' }],
+        : [{ name: t('guideline.def.neutral'), hex: '#8a8580', role: t('guideline.def.roleDividers') }],
       rules: [
-        { label: 'Primary pairing', dots: [dark, light], rule: `${palette[0]?.name} on ${palette[2]?.name || 'white'}. Default for all marketing and digital surfaces.` },
-        { label: 'Dark mode', dots: [light, accent, dark], rule: `Light with ${palette[1]?.name || 'accent'} on ${palette[0]?.name}. Use for hero sections.` },
-        { label: 'Never combine', dots: [accent, palette[3]?.hex || '#6b8a6e'], rule: 'Do not pair accent and supporting colors — their visual weights conflict at scale.' },
+        { label: t('guideline.def.primaryPairing'), dots: [dark, light], rule: t('guideline.def.pairingRule', { first: String(palette[0]?.name), second: palette[2]?.name || t('guideline.def.white') }) },
+        { label: t('guideline.def.darkMode'), dots: [light, accent, dark], rule: t('guideline.def.darkModeRule', { accent: palette[1]?.name || t('guideline.def.accentFallback'), dark: String(palette[0]?.name) }) },
+        { label: t('guideline.def.neverCombine'), dots: [accent, palette[3]?.hex || '#6b8a6e'], rule: t('guideline.def.neverCombineRule') },
       ],
     },
     buttons: {
       cornerRadius: 6,
-      note: 'Buttons use a 6px corner radius — structured and confident. One primary action per view. Secondary actions are always outlined, never filled.',
+      note: t('guideline.def.buttonsNote'),
     },
     imgstyle: {
-      intro: `${brandName} imagery is defined by restraint, honesty and controlled composition. Every image should feel like it was taken, not produced — real moments in real environments, captured with professional precision.`,
+      intro: t('guideline.def.imageryIntro', { brandName }),
       approved: [
-        'Clean, directional lighting — no harsh flash or artificial drama',
-        'Cool, neutral colour temperature aligned to the brand palette',
-        'Real working environments and authentic surfaces',
-        'Tight, confident compositions with a clear subject',
-        'Professionals at work in real environments, unstaged',
+        t('guideline.def.approved1'),
+        t('guideline.def.approved2'),
+        t('guideline.def.approved3'),
+        t('guideline.def.approved4'),
+        t('guideline.def.approved5'),
       ],
       prohibited: [
-        'Stock photography of smiling people in bright offices',
-        'Warm, golden-hour tones or lifestyle-adjacent photography',
-        'Anything domestic or wholly unrelated to professional performance',
-        'Heavy post-processing, artificial colour grading or filter effects',
-        'Generic landscape imagery without direct brand relevance',
+        t('guideline.def.prohibited1'),
+        t('guideline.def.prohibited2'),
+        t('guideline.def.prohibited3'),
+        t('guideline.def.prohibited4'),
+        t('guideline.def.prohibited5'),
       ],
     },
-    graphics: { note: 'Geometric forms, fine rule lines and systematic grid patterns are the core graphic language.' },
-    packaging: { note: 'Product labels use the full primary palette. The logo appears in the approved colour variant for the surface it sits on.' },
-    social: { note: 'Social content leads with strong imagery and minimal copy. The brand always appears composed and considered — never reactive or trend-chasing.', templateLink: '' },
+    graphics: { note: t('guideline.def.graphicsNote') },
+    packaging: { note: t('guideline.def.packagingNote') },
+    social: { note: t('guideline.def.socialNote'), templateLink: '' },
   }
 }
 
@@ -272,6 +297,7 @@ function buildInitialData(
 export default function BrandGuidelineClient() {
   const t = useT()
   const shownLabel = (id: string) => (NAV_ITEM_KEYS[id] ? t(NAV_ITEM_KEYS[id]) : ALL_LABELS[id] || id)
+  const shownGroup = (group: string) => (NAV_GROUP_KEYS[group] ? t(NAV_GROUP_KEYS[group]) : group)
   const { brand, brandName, brandId } = useBrand()
 
   const [bd, setBd] = useState<BrandData | null>(null)
@@ -305,7 +331,7 @@ export default function BrandGuidelineClient() {
 
   // Chat
   const [chatOpen, setChatOpen] = useState(false)
-  const [chatMsgs, setChatMsgs] = useState([{ type: 'bot', text: 'Ask me anything about this brand — logos, colors, typography, usage rules...' }])
+  const [chatMsgs, setChatMsgs] = useState([{ type: 'bot', text: t('guideline.chatHello') }])
   const [chatInput, setChatInput] = useState('')
   const chatIdx = useRef(0)
 
@@ -322,8 +348,8 @@ export default function BrandGuidelineClient() {
   useEffect(() => {
     if (!brand || !brandName || bd) return
     const colors = (brand.colors as { name: string; hex: string; role: string }[] | null) || []
-    setBd(buildInitialData(brandName, colors, 'Inter', []))
-  }, [brand, brandName, bd])
+    setBd(buildInitialData(brandName, colors, 'Inter', [], t))
+  }, [brand, brandName, bd]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch brand images & build logo slots
   const fetchImages = useCallback(async () => {
@@ -430,9 +456,11 @@ export default function BrandGuidelineClient() {
             analyses: { ...prev.logos.analyses, [slotId]: json.analysis?.logoType || 'uploaded' },
           },
         } : prev)
-        showToast(`Logo uploaded${json.analysis?.logoType ? ` — ${json.analysis.logoType}` : ''} ✓`)
-      } else showToast('Upload failed: ' + json.error)
-    } catch { showToast('Upload error') }
+        showToast(json.analysis?.logoType
+          ? t('guideline.toast.logoUploadedType', { type: json.analysis.logoType })
+          : t('guideline.toast.logoUploaded'))
+      } else showToast(t('guideline.toast.uploadFailedReason', { error: String(json.error) }))
+    } catch { showToast(t('guideline.toast.uploadError')) }
     setLogoUploading(p => ({ ...p, [slotId]: false }))
   }
 
@@ -451,9 +479,9 @@ export default function BrandGuidelineClient() {
       const json = await res.json()
       if (json.success) {
         setGalleryAssets(p => ({ ...p, [category]: [...(p[category] || []), { id: json.id, url: json.url }] }))
-        showToast('Uploaded ✓')
+        showToast(t('guideline.toast.uploaded'))
       }
-    } catch { showToast('Upload failed') }
+    } catch { showToast(t('docs.uploadFailed')) }
     setGalleryUploading(p => ({ ...p, [category]: false }))
   }
 
@@ -498,9 +526,9 @@ export default function BrandGuidelineClient() {
         if (editSection === 'colors' && json.data.palette?.[0]?.hex) {
           setBd(p => p ? { ...p, theme: { ...p.theme, darkColor: json.data.palette[0].hex } } : p)
         }
-        setEditOpen(false); showToast('Updated ✓')
-      } else showToast('Could not update — try rephrasing')
-    } catch { showToast('API error') }
+        setEditOpen(false); showToast(t('guideline.toast.updated'))
+      } else showToast(t('guideline.toast.couldNotUpdate'))
+    } catch { showToast(t('guideline.toast.apiError')) }
     setEditLoading(false)
   }
 
@@ -549,21 +577,21 @@ export default function BrandGuidelineClient() {
           return next
         })
         setModalOpen(false); setGuidelineImgs([])
-        showToast('Guideline extracted — theme applied ✓')
-      } else showToast('Could not parse — try clearer screenshots')
-    } catch { showToast('API error') }
+        showToast(t('guideline.toast.extracted'))
+      } else showToast(t('guideline.toast.couldNotParse'))
+    } catch { showToast(t('guideline.toast.apiError')) }
     setExtractLoading(false)
   }
 
   /* ── Chat ────────────────────────────────────────────────────────────────── */
 
   const chatFallbacks = bd ? [
-    `Primary color is ${bd.colors.palette[0]?.hex} — use on light backgrounds only.`,
-    'Use the combination mark in all primary communications. Brandmark alone only when context is established.',
-    `Typography: Display at ${bd.typography.scale[0]?.wt} weight. Never use 700/900 on headlines.`,
-    'Photography: real environments, professionals at work. No stock smiles or warm tones.',
-    `Button corner radius is ${bd.buttons.cornerRadius}px. Never fully rounded.`,
-    'Clearspace = full cap-height of the wordmark on all 4 sides. Nothing enters that zone.',
+    t('guideline.chat.primaryColor', { hex: String(bd.colors.palette[0]?.hex) }),
+    t('guideline.chat.combinationMark'),
+    t('guideline.chat.typography', { wt: String(bd.typography.scale[0]?.wt) }),
+    t('guideline.chat.photography'),
+    t('guideline.chat.buttons', { cornerRadius: bd.buttons.cornerRadius }),
+    t('guideline.chat.clearspace'),
   ] : []
 
   function sendChat() {
@@ -581,7 +609,7 @@ export default function BrandGuidelineClient() {
   if (!bd) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 13 }}>
-        Loading brand guidelines…
+        {t('guideline.loading')}
       </div>
     )
   }
@@ -651,13 +679,13 @@ export default function BrandGuidelineClient() {
   function renderLogos() {
     return (
       <>
-        <HeroBand tag={`Brand identity — Logos`} title={`${bd!.meta.name} logo system`} body={bd!.logos.intro} />
+        <HeroBand tag={t('guideline.tag.logos')} title={t('guideline.logoSystem', { name: bd!.meta.name })} body={bd!.logos.intro} />
         <AccentBand>{bd!.logos.wordmarkNote}</AccentBand>
 
-        <SectionRule label="Logo versions" sId="logos" />
+        <SectionRule label={t('guideline.logoVersions')} sId="logos" />
         <div style={{ padding: '0 56px 28px' }}>
           <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.8, maxWidth: 620, marginBottom: 20 }}>
-            Upload each logo variant below. The AI detects whether each upload is a wordmark, logomark, combination mark or emblem.
+            {t('guideline.logoVersionsHelp')}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--bd-border)', border: '1px solid var(--bd-border)', borderRadius: 10, overflow: 'hidden' }}>
             {LOGO_SLOTS.map(slot => {
@@ -674,13 +702,13 @@ export default function BrandGuidelineClient() {
                     {uploadUrl ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={uploadUrl} alt={slot.label} style={{ maxHeight: 64, maxWidth: '80%', objectFit: 'contain' }} />
+                        <img src={uploadUrl} alt={t(slot.label)} style={{ maxHeight: 64, maxWidth: '80%', objectFit: 'contain' }} />
                         <div
                           style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}
                           onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = '1' }}
                           onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = '0' }}
                         >
-                          <span style={{ fontSize: 12, color: 'white', fontWeight: 500 }}>↑ Replace</span>
+                          <span style={{ fontSize: 12, color: 'white', fontWeight: 500 }}>{t('guideline.replace')}</span>
                         </div>
                       </>
                     ) : isUploading ? (
@@ -688,17 +716,17 @@ export default function BrandGuidelineClient() {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0.6 }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M7 9l5-5 5 5M3 20h18" stroke={slot.darkBg ? 'white' : '#6b7a8d'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        <span style={{ fontSize: 11, color: labelColor }}>Upload {slot.label}</span>
+                        <span style={{ fontSize: 11, color: labelColor }}>{t('guideline.uploadSlot', { label: t(slot.label) })}</span>
                       </div>
                     )}
                     <input id={inputId} type="file" accept="image/*,.svg" style={{ display: 'none' }} onChange={e => { uploadLogo(slot.id, e.target.files); e.target.value = '' }} />
                   </label>
                   <div style={{ padding: '10px 13px', background: 'white' }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--bd-text)' }}>{slot.label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{slot.desc}</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--bd-text)' }}>{t(slot.label)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{t(slot.desc)}</div>
                     <div style={{ marginTop: 6 }}>
                       <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, background: detectedType ? 'var(--bg-light)' : 'transparent', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.04em', border: detectedType ? 'none' : '1px dashed var(--bd-border)' }}>
-                        {detectedType || 'empty slot'}
+                        {detectedType === 'uploaded' ? t('guideline.uploaded') : detectedType || t('guideline.emptySlot')}
                       </span>
                     </div>
                   </div>
@@ -708,20 +736,20 @@ export default function BrandGuidelineClient() {
           </div>
         </div>
 
-        <SectionRule label="Clearspace & size rules" sId="logos" padTop={0} />
+        <SectionRule label={t('guideline.clearspaceRules')} sId="logos" padTop={0} />
         <div style={{ padding: '0 56px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
-            { title: 'Clearspace rule', body: bd!.logos.clearspace },
-            { title: 'Minimum size',    titleKey: 'visual.minSize' as const, body: bd!.logos.minimumSize },
-          ].map(({ title, titleKey, body }) => (
-            <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: '16px 18px' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{titleKey ? t(titleKey) : title}</div>
+            { titleKey: 'guideline.clearspaceRule' as const, body: bd!.logos.clearspace },
+            { titleKey: 'visual.minSize' as const,           body: bd!.logos.minimumSize },
+          ].map(({ titleKey, body }) => (
+            <div key={titleKey} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: '16px 18px' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{t(titleKey)}</div>
               <div style={{ fontSize: 13, color: 'var(--bd-text)', lineHeight: 1.75 }}>{body}</div>
             </div>
           ))}
         </div>
 
-        <SectionRule label="Prohibited use" sId="logos" padTop={0} />
+        <SectionRule label={t('guideline.prohibitedUse')} sId="logos" padTop={0} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 56px 48px' }}>
           {bd!.logos.restrictions.map((r, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', border: '1px solid var(--bd-border)', borderRadius: 7, background: 'white' }}>
@@ -738,19 +766,19 @@ export default function BrandGuidelineClient() {
     const szMap: Record<string, string> = { '52px': '34px', '36px': '24px', '26px': '18px', '16px': '14px', '11px': '11px' }
     return (
       <>
-        <HeroBand tag="Brand identity — Typography" title="Our typography" body={bd!.typography.intro} />
+        <HeroBand tag={t('guideline.tag.typography')} title={t('guideline.ourTypography')} body={bd!.typography.intro} />
         <div style={{ background: 'var(--bg-dark)', padding: '14px 56px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 3, height: 28, background: 'rgba(255,255,255,0.15)' }} />
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
-            Primary: <strong style={{ color: 'white' }}>{bd!.typography.displayFont}</strong>
+            {t('guideline.primaryFont')} <strong style={{ color: 'white' }}>{bd!.typography.displayFont}</strong>
             {bd!.typography.bodyFont !== bd!.typography.displayFont && (
-              <> &nbsp;·&nbsp; Body: <strong style={{ color: 'white' }}>{bd!.typography.bodyFont}</strong></>
+              <> &nbsp;·&nbsp; {t('guideline.bodyFont')} <strong style={{ color: 'white' }}>{bd!.typography.bodyFont}</strong></>
             )}
-            &nbsp;·&nbsp; Sentence case only &nbsp;·&nbsp; Hierarchy always respected
+            &nbsp;·&nbsp; {t('guideline.sentenceCaseOnly')} &nbsp;·&nbsp; {t('guideline.hierarchyRespected')}
           </div>
         </div>
 
-        <SectionRule label="Type scale" sId="type" />
+        <SectionRule label={t('guideline.typeScale')} sId="type" />
         <div style={{ padding: '0 56px 32px' }}>
           {bd!.typography.scale.map((row, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '14px 0', borderBottom: i < bd!.typography.scale.length - 1 ? '1px solid var(--bd-border)' : 'none' }}>
@@ -768,12 +796,12 @@ export default function BrandGuidelineClient() {
           ))}
         </div>
 
-        <SectionRule label="Do / Don&apos;t" sId="type" padTop={0} />
+        <SectionRule label={t('guideline.doDont')} sId="type" padTop={0} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 56px 48px' }}>
-          {[{ title: 'Do this', items: bd!.typography.dos, pass: true }, { title: 'Not this', items: bd!.typography.donts, pass: false }].map(({ title, items, pass }) => (
-            <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
+          {[{ titleKey: 'guideline.doThis' as const, items: bd!.typography.dos, pass: true }, { titleKey: 'guideline.notThis' as const, items: bd!.typography.donts, pass: false }].map(({ titleKey, items, pass }) => (
+            <div key={titleKey} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: pass ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, letterSpacing: '0.05em' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title === 'Never use' ? t("tone.neverUse") : title}
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{t(titleKey)}
               </div>
               {items.map((d, i) => (
                 <div key={i} style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 7, display: 'flex', gap: 7, lineHeight: 1.55 }}>
@@ -790,7 +818,7 @@ export default function BrandGuidelineClient() {
   function renderColors() {
     return (
       <>
-        <HeroBand tag="Brand identity — Colors" title="Colour system" body={bd!.colors.intro} />
+        <HeroBand tag={t('guideline.tag.colors')} title={t('guideline.colourSystem')} body={bd!.colors.intro} />
 
         {/* Large interactive color strip */}
         <div style={{ display: 'flex', height: 150 }}>
@@ -807,7 +835,7 @@ export default function BrandGuidelineClient() {
           ))}
         </div>
 
-        <SectionRule label="Primary palette" sId="colors" />
+        <SectionRule label={t('guideline.primaryPalette')} sId="colors" />
         <div style={{ margin: '0 56px', border: '1px solid var(--bd-border)', borderRadius: 10, overflow: 'hidden', display: 'flex', marginBottom: 8 }}>
           {bd!.colors.palette.map((c, i) => (
             <div key={i} style={{ flex: 1, borderRight: i < bd!.colors.palette.length - 1 ? '1px solid var(--bd-border)' : 'none' }}>
@@ -828,7 +856,7 @@ export default function BrandGuidelineClient() {
 
         {bd!.colors.secondary.length > 0 && (
           <>
-            <SectionRule label="Secondary palette" sId="colors" padTop={24} />
+            <SectionRule label={t('guideline.secondaryPalette')} sId="colors" padTop={24} />
             <div style={{ margin: '0 56px 8px', border: '1px solid var(--bd-border)', borderRadius: 10, overflow: 'hidden', display: 'flex' }}>
               {bd!.colors.secondary.map((c, i) => (
                 <div key={i} style={{ flex: 1, borderRight: i < bd!.colors.secondary.length - 1 ? '1px solid var(--bd-border)' : 'none' }}>
@@ -844,7 +872,7 @@ export default function BrandGuidelineClient() {
           </>
         )}
 
-        <SectionRule label="Usage rules" sId="colors" padTop={24} />
+        <SectionRule label={t('guideline.usageRules')} sId="colors" padTop={24} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, padding: '0 56px 48px' }}>
           {bd!.colors.rules.map((rule, i) => (
             <div key={i} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: '14px 16px' }}>
@@ -863,15 +891,15 @@ export default function BrandGuidelineClient() {
   function renderImageStyle() {
     return (
       <>
-        <HeroBand tag="Brand identity — Image style" title="Photography" body={bd!.imgstyle.intro} />
-        <AccentBand>Imagery focuses on real environments and authentic performance — not lifestyle, not aspiration. Every image should feel like it was taken, not produced.</AccentBand>
+        <HeroBand tag={t('guideline.tag.imageStyle')} title={t('guideline.photography')} body={bd!.imgstyle.intro} />
+        <AccentBand>{t('guideline.imageryBand')}</AccentBand>
 
-        <SectionRule label="Style rules" sId="imgstyle" />
+        <SectionRule label={t('guideline.styleRules')} sId="imgstyle" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 56px 48px' }}>
-          {[{ title: 'Approved style', items: bd!.imgstyle.approved, pass: true }, { title: 'Never use', items: bd!.imgstyle.prohibited, pass: false }].map(({ title, items, pass }) => (
-            <div key={title} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
+          {[{ titleKey: 'guideline.approvedStyle' as const, items: bd!.imgstyle.approved, pass: true }, { titleKey: 'tone.neverUse' as const, items: bd!.imgstyle.prohibited, pass: false }].map(({ titleKey, items, pass }) => (
+            <div key={titleKey} style={{ border: '1px solid var(--bd-border)', borderRadius: 8, padding: 18 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: pass ? '#16a34a' : '#dc2626', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, letterSpacing: '0.05em' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{title === 'Never use' ? t("tone.neverUse") : title}
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: pass ? '#16a34a' : '#dc2626', display: 'inline-block' }} />{t(titleKey)}
               </div>
               {items.map((item, i) => (
                 <div key={i} style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 7, display: 'flex', gap: 7, lineHeight: 1.55 }}>
@@ -889,22 +917,22 @@ export default function BrandGuidelineClient() {
     const r = bd!.buttons.cornerRadius
     return (
       <>
-        <HeroBand tag="Design system — Button styles" title="Button styles" body={bd!.buttons.note} dark={false} />
-        <SectionRule label="Variants" sId="buttons" />
+        <HeroBand tag={t('guideline.tag.buttons')} title={t('guideline.nav.buttons')} body={bd!.buttons.note} dark={false} />
+        <SectionRule label={t('guideline.variants')} sId="buttons" />
         <div style={{ padding: '0 56px 28px', display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
           {[
-            { label: 'Primary',   bg: 'var(--bg-dark)',   tc: 'white',              border: 'none' },
-            { label: 'Secondary', bg: 'transparent',      tc: 'var(--bd-text)',     border: '1.5px solid var(--bg-dark)' },
-            { label: 'Accent',    bg: 'var(--bd-accent)', tc: 'white',              border: 'none' },
-            { label: 'Disabled',  bg: 'transparent',      tc: 'rgba(0,0,0,0.25)',  border: '1px solid var(--bd-border)' },
+            { id: 'primary',   label: 'guideline.btn.primary' as const,   bg: 'var(--bg-dark)',   tc: 'white',              border: 'none' },
+            { id: 'secondary', label: 'guideline.btn.secondary' as const, bg: 'transparent',      tc: 'var(--bd-text)',     border: '1.5px solid var(--bg-dark)' },
+            { id: 'accent',    label: 'guideline.btn.accent' as const,    bg: 'var(--bd-accent)', tc: 'white',              border: 'none' },
+            { id: 'disabled',  label: 'guideline.btn.disabled' as const,  bg: 'transparent',      tc: 'rgba(0,0,0,0.25)',  border: '1px solid var(--bd-border)' },
           ].map(btn => (
-            <button key={btn.label} style={{ padding: '10px 24px', borderRadius: r, fontSize: 14, fontWeight: 500, fontFamily: 'var(--bd-font)', background: btn.bg, color: btn.tc, border: btn.border, cursor: btn.label === 'Disabled' ? 'not-allowed' : 'default' }}>
-              {btn.label}
+            <button key={btn.id} style={{ padding: '10px 24px', borderRadius: r, fontSize: 14, fontWeight: 500, fontFamily: 'var(--bd-font)', background: btn.bg, color: btn.tc, border: btn.border, cursor: btn.id === 'disabled' ? 'not-allowed' : 'default' }}>
+              {t(btn.label)}
             </button>
           ))}
         </div>
 
-        <SectionRule label="Corner radius" sId="buttons" padTop={0} />
+        <SectionRule label={t('guideline.cornerRadius')} sId="buttons" padTop={0} />
         <div style={{ padding: '0 56px 48px', display: 'flex', gap: 20, alignItems: 'flex-end' }}>
           {[0, 4, 6, 8, 12, 24].map(rv => (
             <div key={rv} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
@@ -919,11 +947,12 @@ export default function BrandGuidelineClient() {
     )
   }
 
-  function renderGallerySection(id: string, title: string, body: string) {
+  function renderGallerySection(id: string, body: string) {
+    const title = shownLabel(id)
     return (
       <>
-        <HeroBand tag={`Design system — ${title}`} title={title} body={body} dark={false} />
-        <SectionRule label={`${title} library`} sId={id} />
+        <HeroBand tag={t('guideline.tag.designSystem', { title })} title={title} body={body} dark={false} />
+        <SectionRule label={t('guideline.library', { title })} sId={id} />
         <div style={{ padding: '0 56px 48px' }}>
           <AssetGallery
             items={galleryAssets[id] || []}
@@ -940,22 +969,22 @@ export default function BrandGuidelineClient() {
   function renderSocial() {
     return (
       <>
-        <HeroBand tag="Channels — Social media" title="Social media" body={bd!.social.note} dark={false} />
-        <SectionRule label="Canva template" sId="social" />
+        <HeroBand tag={t('guideline.tag.social')} title={t('guideline.nav.social')} body={bd!.social.note} dark={false} />
+        <SectionRule label={t('guideline.canvaTemplate')} sId="social" />
         <div style={{ padding: '0 56px 24px', display: 'flex', gap: 10, alignItems: 'center' }}>
           <input
             value={templateLink}
             onChange={e => setTemplateLink(e.target.value)}
-            placeholder="Paste Canva template link…"
+            placeholder={t('guideline.canvaPlaceholder')}
             style={{ flex: 1, padding: '9px 13px', border: '1px solid var(--bd-border)', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', outline: 'none', color: 'var(--bd-text)' }}
           />
           {templateLink ? (
-            <a href={templateLink} target="_blank" rel="noreferrer" style={{ padding: '9px 18px', borderRadius: 6, background: 'var(--bg-dark)', color: 'white', fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open in Canva ↗</a>
+            <a href={templateLink} target="_blank" rel="noreferrer" style={{ padding: '9px 18px', borderRadius: 6, background: 'var(--bg-dark)', color: 'white', fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>{t('guideline.openInCanva')}</a>
           ) : (
-            <button disabled style={{ padding: '9px 18px', borderRadius: 6, background: 'var(--bg-dark)', color: 'white', border: 'none', fontSize: 12, opacity: 0.35, cursor: 'not-allowed', fontFamily: 'inherit' }}>Open in Canva ↗</button>
+            <button disabled style={{ padding: '9px 18px', borderRadius: 6, background: 'var(--bg-dark)', color: 'white', border: 'none', fontSize: 12, opacity: 0.35, cursor: 'not-allowed', fontFamily: 'inherit' }}>{t('guideline.openInCanva')}</button>
           )}
         </div>
-        <SectionRule label="Post gallery" sId="social" padTop={0} />
+        <SectionRule label={t('guideline.postGallery')} sId="social" padTop={0} />
         <div style={{ padding: '0 56px 48px' }}>
           <AssetGallery
             items={galleryAssets.social || []}
@@ -976,9 +1005,9 @@ export default function BrandGuidelineClient() {
       case 'colors':   return renderColors()
       case 'imgstyle': return renderImageStyle()
       case 'buttons':  return renderButtons()
-      case 'graphics': return renderGallerySection('graphics', 'Graphic elements', bd!.graphics.note)
-      case 'icons':    return renderGallerySection('icons', 'Icons', bd!.graphics.note)
-      case 'packaging':return renderGallerySection('packaging', 'Package style', bd!.packaging.note)
+      case 'graphics': return renderGallerySection('graphics', bd!.graphics.note)
+      case 'icons':    return renderGallerySection('icons', bd!.graphics.note)
+      case 'packaging':return renderGallerySection('packaging', bd!.packaging.note)
       case 'social':   return renderSocial()
       default:         return renderLogos()
     }
@@ -996,12 +1025,12 @@ export default function BrandGuidelineClient() {
             {Array(12).fill(0).map((_, i) => <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.35)', display: 'block' }} />)}
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{bd.meta.name}</div>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>Brand guideline</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>{t('guideline.title')}</div>
         </div>
         <div style={{ flex: 1 }}>
           {NAV_GROUPS.map(g => (
             <div key={g.group}>
-              <div style={{ padding: '14px 18px 4px', fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{NAV_GROUP_KEYS[g.group] ? t(NAV_GROUP_KEYS[g.group]) : g.group}</div>
+              <div style={{ padding: '14px 18px 4px', fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{shownGroup(g.group)}</div>
               {g.items.map(item => (
                 <button
                   key={item.id}
@@ -1033,11 +1062,11 @@ export default function BrandGuidelineClient() {
             <button
               onClick={() => setModalOpen(true)}
               style={{ fontSize: 11, padding: '6px 14px', borderRadius: 6, border: '1px solid var(--bd-border)', background: 'white', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
-            >↑ Upload guideline</button>
+            >{t('guideline.uploadGuideline')}</button>
             <button
               onClick={() => openEdit(cur)}
               style={{ fontSize: 11, padding: '6px 14px', borderRadius: 6, border: 'none', background: 'var(--bg-dark)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
-            >Edit section</button>
+            >{t('guideline.editSection')}</button>
           </div>
         </div>
 
@@ -1049,40 +1078,40 @@ export default function BrandGuidelineClient() {
         {/* EDIT PANEL */}
         <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 340, background: 'white', borderLeft: '1px solid var(--bd-border)', display: 'flex', flexDirection: 'column', transform: editOpen ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.22s ease', zIndex: 55, boxShadow: '-4px 0 24px rgba(0,0,0,0.08)' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--bd-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 500 }}>Edit: {ALL_LABELS[editSection] || editSection}</span>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>{t('guideline.editLabel', { label: shownLabel(editSection) })}</span>
             <button onClick={() => setEditOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
           </div>
           {editLoading ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
               <div style={{ width: 28, height: 28, border: '2px solid var(--bd-border)', borderTopColor: 'var(--bg-dark)', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Updating section…</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('guideline.updating')}</div>
             </div>
           ) : (
             <>
               <div style={{ flex: 1, overflowY: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 5 }}>What would you like to change?</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 5 }}>{t('guideline.whatToChange')}</div>
                   <textarea
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
-                    placeholder="e.g. 'Add a monochrome color variant' or 'Update the clearspace rule to x-height instead of cap-height'"
+                    placeholder={t('guideline.changePlaceholder')}
                     style={{ width: '100%', height: 100, padding: '10px 12px', border: '1px solid var(--bd-border)', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 5 }}>Reference image (optional)</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 5 }}>{t('guideline.referenceImage')}</div>
                   {editImg ? (
                     <div>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={editImg.preview} alt="" style={{ width: '100%', borderRadius: 7, border: '1px solid var(--bd-border)' }} />
-                      <button onClick={() => setEditImg(null)} style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', marginTop: 5, padding: 0, fontFamily: 'inherit' }}>Remove ×</button>
+                      <button onClick={() => setEditImg(null)} style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', marginTop: 5, padding: 0, fontFamily: 'inherit' }}>{t('guideline.remove')}</button>
                     </div>
                   ) : (
                     <div
                       onClick={() => editFileRef.current?.click()}
                       style={{ border: '1.5px dashed var(--bd-border)', borderRadius: 8, padding: 18, textAlign: 'center', cursor: 'pointer' }}
                     >
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Upload reference screenshot or design</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('guideline.uploadReference')}</div>
                       <div style={{ fontSize: 11, color: 'var(--bd-accent)', marginTop: 3 }}>PNG, JPG</div>
                     </div>
                   )}
@@ -1111,7 +1140,7 @@ export default function BrandGuidelineClient() {
                   disabled={!editText && !editImg}
                   style={{ flex: 2, padding: 9, border: 'none', borderRadius: 6, background: !editText && !editImg ? '#f0f0f0' : 'var(--bg-dark)', color: !editText && !editImg ? '#aaa' : 'white', cursor: !editText && !editImg ? 'not-allowed' : 'pointer', fontSize: 12, fontFamily: 'inherit' }}
                 >
-                  Apply with AI →
+                  {t('guideline.applyWithAi')}
                 </button>
               </div>
             </>
@@ -1123,7 +1152,7 @@ export default function BrandGuidelineClient() {
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ background: 'white', borderRadius: 12, width: 500, display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: '80%' }}>
               <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--bd-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14, fontWeight: 500 }}>Upload brand guideline</span>
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{t('guideline.uploadModalTitle')}</span>
                 <button onClick={() => { setModalOpen(false); setGuidelineImgs([]) }} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1132,10 +1161,10 @@ export default function BrandGuidelineClient() {
                   style={{ border: '2px dashed var(--bd-border)', borderRadius: 10, padding: 28, textAlign: 'center', cursor: 'pointer' }}
                 >
                   <div style={{ fontSize: 28, marginBottom: 10 }}>📄</div>
-                  <div style={{ fontSize: 14, color: 'var(--bd-text)', fontWeight: 500, marginBottom: 5 }}>Upload brand guideline screenshots</div>
+                  <div style={{ fontSize: 14, color: 'var(--bd-text)', fontWeight: 500, marginBottom: 5 }}>{t('guideline.uploadScreenshots')}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.65 }}>
-                    PNG or JPG — upload multiple pages.<br/>
-                    Claude reads all pages in depth and extracts colors, fonts, logo rules, photography guidelines and all section text.
+                    {t('guideline.pngOrJpg')}<br/>
+                    {t('guideline.claudeReads')}
                   </div>
                 </div>
                 <input ref={modalFileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => { handleGuidelineFiles(e.target.files); e.target.value = '' }} />
@@ -1154,18 +1183,18 @@ export default function BrandGuidelineClient() {
                   </div>
                 )}
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7, background: 'var(--bg-light)', padding: '11px 14px', borderRadius: 7 }}>
-                  <strong>What gets extracted:</strong> Brand colors (applied as theme to the entire guideline), font names, logo philosophy text, photography approach, color usage rules, clearspace rules, prohibited use guidelines.
+                  <strong>{t('guideline.whatGetsExtracted')}</strong> {t('guideline.extractedList')}
                 </div>
               </div>
               <div style={{ padding: '14px 22px', borderTop: '1px solid var(--bd-border)', display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
-                {extractLoading && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Extracting…</span>}
+                {extractLoading && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('guideline.extracting')}</span>}
                 <button onClick={() => { setModalOpen(false); setGuidelineImgs([]) }} style={{ padding: '8px 16px', border: '1px solid var(--bd-border)', borderRadius: 6, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>{t("common.cancel")}</button>
                 <button
                   onClick={extractGuideline}
                   disabled={!guidelineImgs.length || extractLoading}
                   style={{ padding: '8px 22px', border: 'none', borderRadius: 6, background: 'var(--bg-dark)', color: 'white', cursor: !guidelineImgs.length ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'inherit', opacity: !guidelineImgs.length ? 0.4 : 1 }}
                 >
-                  {extractLoading ? 'Extracting...' : 'Extract brand data'}
+                  {extractLoading ? t('guideline.extractingDots') : t('guideline.extract')}
                 </button>
               </div>
             </div>
@@ -1183,7 +1212,7 @@ export default function BrandGuidelineClient() {
           <div style={{ position: 'absolute', bottom: 72, right: 20, width: 290, background: 'white', border: '1px solid var(--bd-border)', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', zIndex: 60, overflow: 'hidden', maxHeight: 340 }}>
             <div style={{ padding: '10px 13px', background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', gap: 7 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e' }} />
-              <span style={{ fontSize: 12, fontWeight: 500, color: 'white', flex: 1 }}>Brand AI</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'white', flex: 1 }}>{t('guideline.brandAi')}</span>
               <button onClick={() => setChatOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 16 }}>×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 11, display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -1196,7 +1225,7 @@ export default function BrandGuidelineClient() {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendChat()}
-                placeholder="Ask the brand…"
+                placeholder={t('guideline.askPlaceholder')}
                 style={{ flex: 1, fontSize: 11, padding: '6px 9px', border: '1px solid var(--bd-border)', borderRadius: 6, outline: 'none', fontFamily: 'inherit' }}
               />
               <button onClick={sendChat} style={{ padding: '6px 10px', background: 'var(--bg-dark)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 11 }}>↑</button>

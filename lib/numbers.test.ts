@@ -206,3 +206,19 @@ describe("cost lines render from keys and stay English underneath", () => {
     assert.ok(all.filter((l) => l.labelKey).length >= 14);
   });
 });
+
+describe("the Numbers read-back follows the interface language", () => {
+  it("builds the profile sentence from whole keys in Finnish", async () => {
+    const { translate } = await import("./i18n/index.ts");
+    const fiT = (k: Parameters<typeof translate>[1], v?: Parameters<typeof translate>[2]) => translate("fi", k, v);
+    const p = { sells: "physical" as const, charges: "oneoff" as const, channels: ["direct" as const, "trade" as const] };
+    assert.equal(profileSentence(p, fiT), "Myyt fyysisiä tuotteita kertaostoina, kanavina oma verkkokauppa ja tukkumyynti.");
+    assert.ok(!/You sell|through/.test(profileSentence({ ...p, channels: [] }, fiT)));
+  });
+
+  it("every running cost line renders a key whose English is its label", async () => {
+    const { en } = await import("./i18n/en.ts");
+    const { RUNNING_COST_LINES } = await import("./numbers.ts");
+    for (const l of RUNNING_COST_LINES) assert.equal(en[l.labelKey], l.label, l.key);
+  });
+});

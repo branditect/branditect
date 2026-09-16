@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import s from "./auth.module.css";
+import { useT } from "@/lib/i18n/use-t.tsx";
 
 /**
  * Password input with a reveal toggle.
@@ -28,6 +29,7 @@ export default function PasswordField({
   describedBy?: string;
   invalid?: boolean;
 }) {
+  const t = useT();
   const [shown, setShown] = useState(false);
 
   return (
@@ -48,7 +50,7 @@ export default function PasswordField({
         <button
           type="button"
           className={s.eye}
-          aria-label={shown ? "Hide password" : "Show password"}
+          aria-label={shown ? t("auth.hidePassword") : t("auth.showPassword")}
           onClick={() => setShown((v) => !v)}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">

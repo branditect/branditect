@@ -24,12 +24,16 @@
  * link stores it again per product and lets the copies disagree.
  */
 
+import { type StringKey } from "./i18n/index.ts";
+
 export type Category =
   | "product-info" | "company-info" | "pricing" | "presentations" | "other";
 
 export interface DocType {
   id: string;
+  /** English, for tests and anything outside a component. `labelKey` renders. */
   label: string;
+  labelKey: StringKey;
   category: Category;
   /**
    * Whether Studio may draw on this document when writing something a customer
@@ -49,27 +53,27 @@ export interface DocType {
  * and "catalogue" would otherwise swallow "product catalogue price list".
  */
 export const DOC_TYPES: DocType[] = [
-  { id: "safety_sheet", label: "Product safety sheet", category: "product-info", useInOutput: true,
+  { id: "safety_sheet", label: "Product safety sheet", labelKey: "documents.type.safetySheet", category: "product-info", useInOutput: true,
     hints: /safety|sds|msds|hazard|coshh|k[aä]ytt[oö]turva/i },
-  { id: "certificate", label: "Certificate or test report", category: "product-info", useInOutput: true,
+  { id: "certificate", label: "Certificate or test report", labelKey: "documents.type.certificate", category: "product-info", useInOutput: true,
     hints: /certificat|test report|t[uü]v|iso[\s-]?\d|conformit|sertifi|testira/i },
-  { id: "spec", label: "Specification", category: "product-info", useInOutput: true,
+  { id: "spec", label: "Specification", labelKey: "documents.type.spec", category: "product-info", useInOutput: true,
     hints: /spec|datasheet|data sheet|technical|dimensions|tekniset/i },
-  { id: "manual", label: "Manual or instructions", category: "product-info", useInOutput: true,
+  { id: "manual", label: "Manual or instructions", labelKey: "documents.type.manual", category: "product-info", useInOutput: true,
     // `guide` must not swallow `guideline` — "brand-guidelines-v3.pdf" is a
     // brand guideline, not a manual, and it matched here first.
     hints: /manual|instruction|guide(?!line)|how[\s-]?to|handbook|k[aä]ytt[oö]ohje/i },
-  { id: "price_list", label: "Price list", category: "pricing", useInOutput: true,
+  { id: "price_list", label: "Price list", labelKey: "documents.type.priceList", category: "pricing", useInOutput: true,
     hints: /pric|rate|fee|invoice|cost|tariff|hinnasto|hinta/i },
-  { id: "contract", label: "Contract or quotation", category: "company-info", useInOutput: false,
+  { id: "contract", label: "Contract or quotation", labelKey: "documents.type.contract", category: "company-info", useInOutput: false,
     hints: /contract|agreement|quotation|quote|nda|terms|sopimus|tarjous/i },
-  { id: "presentation", label: "Presentation", category: "presentations", useInOutput: true,
+  { id: "presentation", label: "Presentation", labelKey: "documents.type.presentation", category: "presentations", useInOutput: true,
     hints: /present|deck|slide|pitch|pptx|esitys/i },
-  { id: "brand_guideline", label: "Brand guideline", category: "company-info", useInOutput: true,
+  { id: "brand_guideline", label: "Brand guideline", labelKey: "documents.type.brandGuideline", category: "company-info", useInOutput: true,
     hints: /brand|guideline|identity|style guide|logo|brandi/i },
-  { id: "catalogue", label: "Catalogue", category: "product-info", useInOutput: true,
+  { id: "catalogue", label: "Catalogue", labelKey: "documents.type.catalogue", category: "product-info", useInOutput: true,
     hints: /catalog|catalogue|range|collection|luettelo|esite/i },
-  { id: "other", label: "Other", category: "other", useInOutput: true,
+  { id: "other", label: "Other", labelKey: "industry.other", category: "other", useInOutput: true,
     hints: /(?!)/ },   // never matches; the fallback is explicit below
 ];
 
@@ -123,7 +127,8 @@ export function detectCategory(filename: string): Category {
   return categoryFor(detectDocType(filename));
 }
 
-/** Shown beside the type when Studio will not draw on the file. */
+/** Shown beside the type when Studio will not draw on the file. The panel
+ *  renders it as ask.notUsedInContent + documents.contractNoteRest. */
 export const CONTRACT_NOTE =
   "Not used in generated content. Stored, searchable by you, never quoted by Studio.";
 

@@ -355,3 +355,21 @@ describe("migration no longer leaks field names", () => {
     assert.ok(!derivePyramid(m).personality.includes("Philosophy"));
   });
 });
+
+describe("the strategy document renders from keys", () => {
+  it("every section's keys carry its English title and why", async () => {
+    const { en } = await import("./i18n/en.ts");
+    for (const s of SECTIONS) {
+      assert.equal(en[s.titleKey], s.title, s.id);
+      assert.equal(en[s.whyKey], s.why, s.id);
+    }
+  });
+
+  it("the summary reads the same in English and has no English connectors in Finnish", async () => {
+    const { translate } = await import("./i18n/index.ts");
+    const fiT = (k: Parameters<typeof translate>[1], v?: Parameters<typeof translate>[2]) => translate("fi", k, v);
+    const fiText = generateSummary(filled(), fiT).map((p) => p.text).join("");
+    assert.ok(!/What makes it different|deliberately not for|The promise is|Proof:|It behaves by/.test(fiText), fiText);
+    assert.ok(generateSummary(filled(), fiT).some((p) => p.strong && p.text.includes("Science-based")));
+  });
+});

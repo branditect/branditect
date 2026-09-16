@@ -7,7 +7,8 @@ import { railSteps } from "@/lib/rail-steps";
 import type { OnboardingState } from "@/lib/onboarding";
 import type { SectionId } from "@/lib/onboarding-questions";
 import s from "./start.module.css";
-import { useT } from "@/lib/i18n/use-t.tsx";
+import { useT, useLocale } from "@/lib/i18n/use-t.tsx";
+import { sectionTitleFor } from "@/lib/onboarding-locale";
 
 /**
  * The left rail. Guide on the left, the box you type in on the right — the
@@ -68,6 +69,7 @@ export function RailSteps({
   activeSection?: SectionId | null;
 }) {
   const t = useT();
+  const locale = useLocale();
   const rows = railSteps(state, activeSection);
   return (
     <ol className={s.steps} aria-label={t("start.yourProgress")}>
@@ -81,8 +83,8 @@ export function RailSteps({
             {row.answered === row.total ? <Icon name="check" size={12} /> : row.index}
           </span>
           <div>
-            <div className={s.t}>{row.title}</div>
-            <div className={s.m}>{row.meta}</div>
+            <div className={s.t}>{sectionTitleFor(row.id, locale)}</div>
+            <div className={s.m}>{t(row.meta.key, row.meta.vars)}</div>
           </div>
         </li>
       ))}
@@ -97,12 +99,12 @@ export function RailSteps({
 export function GuideCard({
   help,
   example,
-  exemplar,
+  attribution,
 }: {
   help: string;
   example?: string;
-  /** "a boot repair business" — the business the example came from. */
-  exemplar?: string;
+  /** The whole sentence naming whose example it is, already translated. */
+  attribution?: string;
 }) {
   const t = useT();
   return (
@@ -116,9 +118,7 @@ export function GuideCard({
         <>
           <div className={s.exlab}>{t("start.exampleAnswer")}</div>
           <p className={s.ex}>{example}</p>
-          {exemplar && (
-            <p className={s.exwho}>— {exemplar}, not yours. Copy the shape, not the words.</p>
-          )}
+          {attribution && <p className={s.exwho}>{attribution}</p>}
         </>
       )}
     </div>

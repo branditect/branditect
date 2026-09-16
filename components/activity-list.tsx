@@ -2,6 +2,7 @@ import Link from "next/link";
 import IconTile from "@/components/icon-tile";
 import type { IconName } from "@/components/icon";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey, Vars } from "@/lib/i18n/index.ts";
 
 export type ActivityType = "strategy" | "upload" | "created" | "chat";
 
@@ -25,17 +26,17 @@ const ICONS: Record<ActivityType, IconName> = {
  * own clock and the browser something else. Rendering nothing until the clock
  * is known keeps the two renders identical.
  */
-function relative(at: Date, now: Date | null): string {
+function relative(at: Date, now: Date | null, t: (key: StringKey, vars?: Vars) => string): string {
   if (now === null) return "";
   const mins = Math.max(0, Math.round((now.getTime() - at.getTime()) / 60000));
-  if (mins < 60) return mins <= 1 ? "Just now" : `${mins}m ago`;
+  if (mins < 60) return mins <= 1 ? t("activity.justNow") : t("activity.minutesAgo", { mins });
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("activity.hoursAgo", { hours });
   const days = Math.round(hours / 24);
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
+  if (days === 1) return t("activity.yesterday");
+  if (days < 7) return t("activity.daysAgo", { days });
   const weeks = Math.round(days / 7);
-  return weeks === 1 ? "Last week" : `${weeks} weeks ago`;
+  return weeks === 1 ? t("activity.lastWeek") : t("activity.weeksAgo", { weeks });
 }
 
 /**
@@ -77,7 +78,7 @@ export default function ActivityList({
               <IconTile icon={ICONS[item.type]} size={28} tint={1} />
               <span className="text-sm font-semibold tracking-[-.05px]">{item.title}</span>
               <span className="ml-auto whitespace-nowrap text-xs font-normal text-faint">
-                {relative(item.at, now)}
+                {relative(item.at, now, t)}
               </span>
             </div>
           ))

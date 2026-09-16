@@ -7,16 +7,17 @@
 
 /** The four slots the page renders plates for. Upload targets one of them. */
 export const UPLOAD_SLOTS = [
-  { slot: "primary", label: "Primary", hint: "On light backgrounds" },
-  { slot: "dark", label: "Reversed", hint: "On dark backgrounds" },
-  { slot: "icon", label: "Symbol only", hint: "The mark without the wordmark" },
-  { slot: "white", label: "White", hint: "On colour" },
+  { slot: "primary", label: "Primary", hint: "On light backgrounds", labelKey: "uploads.slot.primary", hintKey: "uploads.slot.primaryHint" },
+  { slot: "dark", label: "Reversed", hint: "On dark backgrounds", labelKey: "uploads.slot.dark", hintKey: "uploads.slot.darkHint" },
+  { slot: "icon", label: "Symbol only", hint: "The mark without the wordmark", labelKey: "uploads.slot.icon", hintKey: "uploads.slot.iconHint" },
+  { slot: "white", label: "White", hint: "On colour", labelKey: "uploads.slot.white", hintKey: "uploads.slot.whiteHint" },
 ] as const;
 
+/* `labelKey` renders; `id` is what is saved. */
 export const FONT_ROLES = [
-  { id: "heading", label: "Headings" },
-  { id: "body", label: "Body" },
-  { id: "accent", label: "Accent" },
+  { id: "heading", label: "Headings", labelKey: "uploads.role.heading" },
+  { id: "body", label: "Body", labelKey: "uploads.role.body" },
+  { id: "accent", label: "Accent", labelKey: "colourRole.accent" },
 ] as const;
 
 /** A Google Fonts stylesheet URL for a family name. */

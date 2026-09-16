@@ -45,12 +45,12 @@ export default function RecurringCalculator() {
             value={r == null ? "—" : formatMoney(r.ltv, currency)}
             sub={r == null
               ? ch === 0
-                ? "At zero churn nobody ever leaves, so lifetime is infinite — not a number worth showing."
+                ? t("num.rec.zeroChurn")
                 : t("num.rec.fillFour")
-              : <>{r.lifetimeMonths.toFixed(1)} months at {formatMoney((a ?? 0) * ((g ?? 0) / 100), currency)} gross profit a month. Computed on gross profit, not revenue — revenue ignores what serving them costs.</>}
+              : t("num.rec.lifetimeNote", { months: r.lifetimeMonths.toFixed(1), profit: formatMoney((a ?? 0) * ((g ?? 0) / 100), currency) })}
           />
           <Readout tone="blue" label={t("num.rec.payback")}
-            value={r == null ? "—" : r.paybackMonths === Infinity ? t("common.never") : `${r.paybackMonths.toFixed(1)} months`}
+            value={r == null ? "—" : r.paybackMonths === Infinity ? t("common.never") : t("num.rec.monthsValue", { months: r.paybackMonths.toFixed(1) })}
             sub={r == null ? undefined
               : r.paybackMonths === Infinity
                 ? t("num.rec.noMargin")

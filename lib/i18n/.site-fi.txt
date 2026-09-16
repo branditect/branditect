@@ -1,0 +1,149 @@
+
+  // ══ MARKKINOINTISIVUSTO ══
+  //
+  // This is persuasion, not labelling, and it is translated as such. Several
+  // lines are deliberately NOT literal — a marketing line that survives
+  // word-for-word translation was usually not doing much work in English
+  // either. Where a line is reshaped, the reason is on the line above it.
+  //
+  // Register is the same as the app: written form, singular "sinä". A Finnish
+  // landing page that addresses one founder as "te" sounds like a bank.
+
+  // ── Navigaatio ja yhteiset ────────────────────────────────────────────────
+  "site.nav.howItWorks": "Miten se toimii",
+  "site.nav.pricing": "Hinnoittelu",
+  "site.nav.about": "Tietoa",
+  "site.nav.logIn": "Kirjaudu sisään",
+  "site.startFree": "Aloita ilmaiseksi",
+  "site.mostPopular": "Suosituin",
+  "site.threeTruths": "Brändin totuus · Tuotteen totuus · Kaupallinen totuus",
+  // "Aivot" is plural-only in Finnish, so the singular "a brain" cannot carry
+  // over. "Kaupalliset aivot" is the form a Finn would actually say.
+  "site.notAGenerator": "Ei tekstigeneraattori. Kaupalliset aivot.",
+  "site.commercialBrain": "Kaupalliset aivot",
+  "site.checkEmail": "Tarkista sähköpostisi",
+  "site.goToSignIn": "Siirry kirjautumaan",
+
+  // ── Etusivu ───────────────────────────────────────────────────────────────
+  "site.home.metaTitle": "Branditect · Brändisi kaupalliset aivot",
+  "site.home.h1a": "Sinä pyörität yritystä.",
+  "site.home.h1b": "Me teemme työn.",
+  // "lives in your head … put it instead" does not survive literally: Finnish
+  // has no neat equivalent of "instead" in this position. The contrast is kept
+  // by ending on where it goes rather than on the word.
+  "site.home.sub": "Koko yrityksesi on pääsi sisällä. Branditect on paikka, jonne se kuuluu.",
+  "site.home.cta": "Aloita rakentaminen Branditectillä ilmaiseksi jo tänään.",
+  "site.home.noCard": "Ei korttia. Brändisi aivot jäävät sinulle.",
+  "site.home.askIt": "Kysy siltä",
+  "site.home.itAnswers": "Se vastaa",
+  "site.home.secHome": "Etusivu.",
+  "site.home.secProducts": "Tuotteet.",
+  "site.home.secStudio": "Studio.",
+  "site.home.yourStrategy": "Strategiasi.",
+  "site.home.yourProductKnowledge": "Tuotetietosi.",
+  "site.home.yourTrueNumbers": "Oikeat lukusi.",
+  "site.home.q25": "Vastaat 25 kysymykseen. Ei ”mikä on missiosi”. Miksi aloitit, kuka olet",
+  "site.home.step1": "Kerro mikä brändi on",
+  "site.home.step1Body":
+    "Kaksikymmentä kysymystä rakentaa strategiasi ja äänensävysi. Viisi niistä avaa työtilan. Loput saavat odottaa.",
+  "site.home.step2": "Anna sille se, minkä tiedät",
+  "site.home.step2Body":
+    "Tuotteet, dokumentit, kuvat ja linkit. Kaikki lataamasi luetaan ja indeksoidaan, eikä se osa maksa koskaan krediittiä.",
+  "site.home.step3": "Saat työtä takaisin",
+  "site.home.step3Body":
+    "Tekstiä sinun äänelläsi ja sinun faktoihisi nojaten, kuvia sinun valossasi, ja tarjouksia jotka kunnioittavat alarajaasi.",
+  "site.home.gaps": "Isot brändit paikkaavat nuo aukot ihmisillä.",
+  "site.home.gapsPunch": "Heillä on markkinointitiimi. Sinulla on Branditect.",
+  "site.home.readWhole": "Lue koko juttu",
+  "site.home.getStartedFree": "Aloita ilmaiseksi!",
+  // "no countdown" → "ei kelloa": a countdown clock is the image, and Finnish
+  // "ei ajastinta" reads like a kitchen timer.
+  "site.home.freeTerms":
+    "Sata krediittiä, ei korttia, ei kelloa. Maksa vasta kun haluat sen tekevän töitä puolestasi.",
+  "site.home.everyPlan": "Kaikki tilaukset rinnakkain, ja mitä yhdellä krediitillä saa",
+
+  // ── Hinnoittelu ───────────────────────────────────────────────────────────
+  "site.pricing.metaTitle": "Hinnoittelu · Branditect",
+  "site.pricing.freeToBuild": "Rakentaminen on ilmaista.",
+  "site.pricing.monthly": "Kuukausittain",
+  "site.pricing.yearly": "Vuosittain",
+  "site.pricing.whatIsCredit": "Mikä on krediitti?",
+  "site.pricing.action": "Toiminto",
+  "site.pricing.cost": "Hinta",
+  "site.pricing.topUp": "Jos ne loppuvat kesken kuun, voit lisätä",
+  "site.pricing.sideBySide": "Kaikki rinnakkain",
+  "site.pricing.buildFree": "Rakenna aivot ilmaiseksi.",
+  "site.pricing.readWhatItDoes": "Lue mitä se tekee",
+
+  // ── Tietoa ────────────────────────────────────────────────────────────────
+  "site.about.metaTitle": "Tietoa · Branditect",
+  "site.about.whatThisIs": "Mistä on kyse",
+  "site.about.threeQuestions":
+    "Kolme kysymystä, joihin jokaisen brändin on vastattava. Vastaa niihin kerran.",
+  "site.about.threeTruthsBody":
+    "Kolmenlaista totuutta yhdessä paikassa, ja jokainen niistä on kaiken muun käytettävissä.",
+
+  "site.about.brandTruth": "Brändin totuus",
+  "site.about.brandTruthBody":
+    "Strategiasi, asemointisi, äänensävysi ja visuaalinen ilmeesi — kirjattuna kerran ja käytössä kaikessa, mitä teet sen jälkeen.",
+  "site.about.productTruth": "Tuotteen totuus",
+  "site.about.productTruthBody":
+    "Jokainen tuote, sen tiedot ja ne väitteet, jotka pystyt todistamaan. Jos jotain lukua ei ole siellä, mikään ei kirjoita sitä.",
+  "site.about.commercialTruth": "Kaupallinen totuus",
+  "site.about.commercialTruthBody":
+    "Kokonaishankintahinta, oikea kate, alaraja ja suurin alennus, jonka annat. Se osa, joka ratkaisee, kannattiko työ.",
+
+  "site.about.howItWorks": "Miten se toimii",
+  "site.about.defineFeedMake": "Määritä, syötä, tee.",
+  "site.about.define": "Määritä",
+  "site.about.feed": "Syötä",
+  "site.about.make": "Tee",
+
+  "site.about.fourDecisions": "Neljä päätöstä, joista emme tingi.",
+  "site.about.fourDecisionsBody":
+    "Nämä ovat niitä, joita olisi helppo pehmentää ja kallista menettää.",
+  "site.about.closedBook": "Suljettu kirja",
+  "site.about.closedBookBody":
+    "Se kirjoittaa siitä, minkä annoit sille, eikä mistään muusta. Pyydä tuotetta, jota siellä ei ole, ja se sanoo niin sen sijaan että keksisi sellaisen.",
+  "site.about.sourcedClaims": "Väitteillä on lähde",
+  "site.about.sourcedClaimsBody":
+    "Jokainen kova fakta luonnoksessa kantaa mukanaan lähteensä. Ilmoittamaton luku on juuri se virhe, jonka estämiseksi tämä koko järjestelmä on olemassa.",
+  "site.about.marginAwareness": "Kate tiedossa",
+  "site.about.marginAwarenessBody":
+    "Tarjoukset ja alennukset tarkistetaan alarajaasi vasten ennen kuin näet ne, joten mikään ei ehdota hintaa, jolla häviät rahaa.",
+  "site.about.staysYours": "Brändisi pysyy sinun",
+  "site.about.staysYoursBody":
+    "Tiedostosi, strategiasi ja lukusi kuuluvat sinulle. Järjestelmästä lähtee ulos vain yhtä reittiä, ja sinä lähetät sen tietoisesti.",
+
+  "site.about.whoItIsFor": "Kenelle se on.",
+  "site.about.forYouIf": "Sinulle, jos",
+  "site.about.for1": "Myyt jotain tiettyä ja tiedät, mitä se sinulle maksaa",
+  "site.about.for2": "Brändipäätöksesi ovat pääsi sisällä tai yhdessä vanhassa esityksessä",
+  "site.about.for3": "Kirjoitat tekstit itse ja olet kyllästynyt selittämään brändin joka kerta",
+  "site.about.for4": "Olet polttanut näppisi työkaluun, joka keksi tuotteelle ominaisuuden",
+  "site.about.for5":
+    "Pyörität yhtä brändiä kunnolla, tai muutamaa jotka eivät saa sekoittua keskenään",
+  "site.about.notForYouIf": "Ei sinulle, jos",
+  "site.about.not1": "Haluat sisältöä paljon etkä välitä, mistä faktat tulivat",
+  "site.about.not2": "Sinulla ei ole vielä tuotteita eikä mitään, mistä olla rehellinen",
+  "site.about.not3": "Tarvitset design-työkalun. Tämä päättää mitä sanotaan, ei miltä se näyttää",
+  "site.about.not4": "Haluat chatbotin ilman määrittelyä. Ne viisi kysymystä ovat koko idea",
+  "site.about.not5":
+    "Tarvitset laskutusta, alv-ilmoituksia tai kirjanpitoa. Laskurit on katteesta, ei kirjanpidosta",
+
+  "site.about.theCompany": "Yritys",
+  "site.about.builtInFinland": "Rakennettu Suomessa.",
+  "site.about.whereItRuns": "Missä se pyörii",
+  "site.about.whereItRunsBody":
+    "Tietosi säilytetään EU:n infrastruktuurissa, ja käsittelemme niitä GDPR:n mukaisesti antamasi aineiston käsittelijänä.",
+  "site.about.whoOwnsIt": "Kuka omistaa",
+  "site.about.whoOwnsItBody":
+    "Tiedostosi, strategiasi ja kaikki tekemäsi pysyvät sinun. Sulje tili, ja saat ne mukaasi.",
+  "site.about.reachUs": "Mistä meidät tavoittaa",
+  "site.about.answerThree": "Vastaa kolmeen kysymykseen.",
+  "site.about.seePlans": "Katso tilaukset",
+
+  "site.about.altStudio":
+    "Branditectin Studio-rivi: kortit tekstien kirjoittamiseen, kuvien luomiseen, lukujen laskemiseen ja brändimateriaalien käyttöön.",
+  "site.about.altNumbers":
+    "Branditectin Laskurit-osio, jossa on kolme laskuria kokonaishankintahinnan, katteen ja alarajan laskemiseen.",

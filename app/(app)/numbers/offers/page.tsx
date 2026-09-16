@@ -71,8 +71,8 @@ export default function OffersCalculator() {
           </div>
 
           <div className="mt-4 flex flex-col gap-2.5">
-            <Field label={t("num.retailPrice")} hint="gross" value={price} onChange={setPrice} suffix={currency} />
-            <Field label={t("num.costPerUnit")} hint="landed" value={cost} onChange={setCost} suffix={currency} />
+            <Field label={t("num.retailPrice")} hint={t("num.hintGross")} value={price} onChange={setPrice} suffix={currency} />
+            <Field label={t("num.costPerUnit")} hint={t("num.hintLanded")} value={cost} onChange={setCost} suffix={currency} />
             <Field label={t("num.taxRate")} value={tax} onChange={setTax} suffix="%" />
             <Field label={t("num.minMargin")} hint={t("num.offers.lineYouWontCross")} value={minMargin} onChange={setMinMargin} suffix="%" />
           </div>
@@ -83,10 +83,9 @@ export default function OffersCalculator() {
               <p className={`mt-2.5 rounded-tile px-3 py-2.5 text-2xs font-semibold leading-[1.5] ${
                 breaches ? "bg-tint-1 text-accent-dark" : "bg-green-wash text-green-ink"
               }`}>
-                {tryPct}% off takes it to {formatMoney(tryPrice!, currency)} and leaves{" "}
-                {tryMargin.toFixed(1)}% margin.{" "}
+                {t("num.offers.tryResult", { pct: tryPct ?? "", price: formatMoney(tryPrice!, currency), margin: tryMargin.toFixed(1) })}{" "}
                 {breaches
-                  ? `That is below your ${mm}% minimum — Studio would refuse to write this offer.`
+                  ? t("num.offers.belowMinimum", { mm: mm ?? "" })
                   : t("num.offers.clearsMinimum")}
               </p>
             )}
@@ -101,7 +100,7 @@ export default function OffersCalculator() {
               ? t("num.offers.enterThree")
               : ceiling === 0
                 ? t("num.offers.alreadyAtFloor", { currency: formatMoney(p!, currency), mm: mm ?? "" })
-                : <>Takes the price to {formatMoney(floorAtCeiling!, currency)} — the lowest that still leaves {mm}% margin. Net of tax that is {formatMoney(netPrice(floorAtCeiling!, taxPct), currency)}.</>}
+                : t("num.offers.takesPriceTo", { price: formatMoney(floorAtCeiling!, currency), mm: mm ?? "", net: formatMoney(netPrice(floorAtCeiling!, taxPct), currency) })}
           />
 
           <ApplyPanel tone="orange" productId={productId || null}

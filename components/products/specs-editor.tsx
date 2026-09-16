@@ -31,7 +31,7 @@ export function SpecsEditor({
           {specs.map((s, i) => (
             <div key={s.id ?? `new-${i}`} className="grid grid-cols-[104px_minmax(0,1fr)_28px] items-start gap-1.5">
               <input
-                aria-label={`Specification ${i + 1} name`}
+                aria-label={t("specs.nameField", { i: i + 1 })}
                 value={s.key}
                 maxLength={KEY_MAX}
                 placeholder={t("specs.example")}
@@ -39,16 +39,16 @@ export function SpecsEditor({
                 className="h-8 rounded-tile border border-rule bg-card px-2.5 text-xs font-semibold text-ink outline-none focus:border-accent focus:ring-2 focus:ring-tint-1"
               />
               <input
-                aria-label={`Specification ${i + 1} value`}
+                aria-label={t("specs.valueField", { i: i + 1 })}
                 value={s.value}
                 maxLength={VALUE_MAX}
-                placeholder="8.4 L/kg"
+                placeholder={t("specs.exampleValue")}
                 onChange={(e) => update(i, { value: e.target.value })}
                 className="h-8 rounded-tile border border-rule bg-card px-2.5 font-mono text-xs text-ink-2 outline-none focus:border-accent focus:ring-2 focus:ring-tint-1"
               />
               <button
                 type="button"
-                aria-label={`Remove ${s.key || `specification ${i + 1}`}`}
+                aria-label={t("product.removeName", { name: s.key || t("specs.fallbackName", { n: i + 1 }) })}
                 onClick={() => onChange(specs.filter((_, j) => j !== i))}
                 className="grid h-8 w-7 place-items-center rounded-tile text-muted-2 hover:bg-tile hover:text-accent-dark"
               >
@@ -64,12 +64,11 @@ export function SpecsEditor({
         onClick={() => onChange([...specs, { key: "", value: "" }])}
         className={`${specs.length ? "mt-2" : ""} rounded-tile border border-dashed border-accent-line px-3 py-2 text-xs font-bold text-accent hover:bg-tint-1`}
       >
-        + Add specification
+        {t("specs.addRow")}
       </button>
 
       <p className="mt-2 text-2xs font-medium text-muted">
-        Structured facts Studio can quote verbatim — spec tables, comparison blocks, ad claims.
-        A row with no name is discarded.
+        {t("specs.helpStructured")}
       </p>
     </>
   );

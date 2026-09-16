@@ -56,9 +56,9 @@ export default function OnboardingStrip({ onboarding }: { onboarding: Onboarding
       </span>
       <p className="min-w-0 text-sm font-medium text-ink-2">
         <b className="font-bold text-ink">
-          You&rsquo;re {onboarding.answered} of {questionTotal()} into your strategy.
+          {t("onboardingStrip.progress", { answered: onboarding.answered, total: questionTotal() })}
         </b>{" "}
-        Five answers open Studio.
+        {t("onboardingStrip.fiveOpenStudio")}
       </p>
       <Link
         href="/start"

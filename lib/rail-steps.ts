@@ -11,11 +11,13 @@
 
 import { GATE, SECTIONS, type SectionId } from "./onboarding-questions.ts";
 import { isProfileComplete, type OnboardingState } from "./onboarding.ts";
+import type { Msg } from "./i18n/msg.ts";
 
 export type StepState = "todo" | "started" | "done" | "active";
 
 export interface StepRow {
   id: SectionId;
+  /** English, for identity. The rail renders sectionTitleFor(id, locale). */
   title: string;
   /** 1-based, shown in the bubble until the section is finished. */
   index: number;
@@ -23,7 +25,7 @@ export interface StepRow {
   total: number;
   state: StepState;
   /** "3 of 5 answered", or "5 questions" before anything is written. */
-  meta: string;
+  meta: Msg;
 }
 
 /**
@@ -76,7 +78,9 @@ export function railSteps(state: OnboardingState, activeSection: SectionId | nul
       answered,
       total,
       state: stepState,
-      meta: answered ? `${answered} of ${total} answered` : `${total} questions`,
+      meta: (answered
+        ? { key: "rail.sectionAnswered", vars: { answered, total } }
+        : { key: "rail.sectionQuestions", vars: { total } }) as Msg,
     };
   });
 }
@@ -117,9 +121,9 @@ export function gateProgress(state: OnboardingState): GateProgress {
  * — a reason to come back, phrased as a fact. This is the one place a count of
  * the gate belongs.
  */
-export function gateFootNote(state: OnboardingState): string {
+export function gateFootNote(state: OnboardingState): Msg {
   const { done, total, cleared } = gateProgress(state);
   return cleared
-    ? "Your workspace is open. The remaining questions are in Brand Readiness."
-    : `Studio needs ${total} answers before it can write in your voice. You're ${done} of ${total} in.`;
+    ? { key: "start.gate.cleared" }
+    : { key: "start.gate.needs", vars: { total, done } };
 }

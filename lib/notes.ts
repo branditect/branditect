@@ -12,6 +12,8 @@
  * buttons.
  */
 
+import type { StringKey } from "./i18n/en.ts";
+
 /* ── the toolbar, criterion 13 ────────────────────────────────────────────── */
 
 export interface ToolbarControl {
@@ -20,6 +22,13 @@ export interface ToolbarControl {
   /** Where it sits, left to right, with a separator between the groups. */
   group: "insert" | "block" | "note";
   title: string;
+  /**
+   * What renders, in the interface language. `label` and `title` stay the
+   * English identity the criterion-13 tests read; a control with no visible
+   * label (pin, more) has no labelKey. "PDF" reads the same in both.
+   */
+  labelKey?: StringKey;
+  titleKey: StringKey;
 }
 
 /**
@@ -35,12 +44,12 @@ export interface ToolbarControl {
  * array is what makes that true rather than aspirational.
  */
 export const TOOLBAR: ToolbarControl[] = [
-  { id: "image", label: "Image", group: "insert", title: "Insert an image" },
-  { id: "heading", label: "Heading", group: "block", title: "Heading" },
-  { id: "list", label: "List", group: "block", title: "List" },
-  { id: "pin", label: "", group: "note", title: "Pinned" },
-  { id: "pdf", label: "PDF", group: "note", title: "Download as PDF" },
-  { id: "more", label: "", group: "note", title: "More" },
+  { id: "image", label: "Image", labelKey: "notes.image", group: "insert", title: "Insert an image", titleKey: "notes.insertImage" },
+  { id: "heading", label: "Heading", labelKey: "notes.heading", group: "block", title: "Heading", titleKey: "notes.heading" },
+  { id: "list", label: "List", labelKey: "notes.list", group: "block", title: "List", titleKey: "notes.list" },
+  { id: "pin", label: "", group: "note", title: "Pinned", titleKey: "notes.pinned" },
+  { id: "pdf", label: "PDF", group: "note", title: "Download as PDF", titleKey: "notes.downloadPdf" },
+  { id: "more", label: "", group: "note", title: "More", titleKey: "notes.more" },
 ];
 
 /**
@@ -49,7 +58,9 @@ export const TOOLBAR: ToolbarControl[] = [
  * surface. It sits in the toolbar row, which is exactly why it is easy to
  * mistake for a seventh control when counting.
  */
-export const SAVED_INDICATOR = { id: "saved", label: "Saved", isControl: false as const };
+export const SAVED_INDICATOR = {
+  id: "saved", label: "Saved", labelKey: "common.saved" as StringKey, isControl: false as const,
+};
 
 /* ── blocks ──────────────────────────────────────────────────────────────── */
 
@@ -129,11 +140,18 @@ export function widthLabel(w: BlockWidth | undefined): string {
   return w === "half" ? "Half width" : "Full width";
 }
 
+/** The same, as a key, for the editor. Asserted equal to widthLabel's English. */
+export function widthLabelKey(w: BlockWidth | undefined): StringKey {
+  return w === "half" ? "notes.halfWidth" : "notes.fullWidth";
+}
+
 export function imageIsMissing(block: NoteBlock): boolean {
   return block.kind === "image" && (block.image_id === null || block.image_id === undefined);
 }
 
 export const MISSING_IMAGE_NOTE = "This image was deleted from Knowledge. The text around it is untouched.";
+/** What the editor renders; its English is MISSING_IMAGE_NOTE (asserted). */
+export const MISSING_IMAGE_NOTE_KEY: StringKey = "notes.imageDeleted";
 
 /**
  * What survives when a picture is deleted. Used by the criterion-10 test and

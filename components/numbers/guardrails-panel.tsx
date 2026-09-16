@@ -126,8 +126,7 @@ export default function GuardrailsPanel({
 
           {floorAbovePrice && (
             <p className="mt-2.5 rounded-tile bg-amber-wash px-3 py-2 text-2xs font-medium leading-[1.5] text-amber">
-              The floor is above the retail price of {formatMoney(retail!, currency)}. Nothing could
-              be sold at that price without breaking the rule you just wrote.
+              {t("guardrails.floorAbovePrice", { price: formatMoney(retail!, currency) })}
             </p>
           )}
 
@@ -149,9 +148,7 @@ export default function GuardrailsPanel({
           </div>
 
           <p className="mt-3 border-t border-rule pt-2.5 text-2xs font-medium leading-[1.6] text-muted">
-            Copy and offers written about {selected.name} stay inside these limits. This is what the
-            pricing page means when it says offers are checked against your floor price before you
-            see them.
+            {t("guardrails.stayInside", { name: selected.name })}
           </p>
         </>
       )}

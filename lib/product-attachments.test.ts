@@ -1,11 +1,12 @@
 /** Run with: npm test — criteria from branditect-ui/spec/product-attachments.md */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { en } from "./i18n/en.ts";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   decideDownloadAccess, suggestProduct, suggestionCopy, zipName,
-  isVideo, durationBadge, fileSize, docRoleLabel, isDocRole, DOC_ROLES, UNTAG_NOTE,
+  isVideo, durationBadge, fileSize, docRoleLabel, isDocRole, DOC_ROLES, UNTAG_NOTE, UNTAG_NOTE_KEY,
   imageMatches, IMAGE_SEARCH_COLUMNS,
 } from "./product-attachments.ts";
 
@@ -318,7 +319,10 @@ describe("the product card can tag, not only untag", () => {
     const at = src.indexOf('t("media.noImages")');
     assert.ok(at > 0, "the empty state no longer renders media.noImages");
     const empty = src.slice(at, at + 900);
-    assert.match(empty, /Tag images from your library/);
+    // The sentence is a key since the Knowledge extraction; its English still
+    // names the action the button beside it performs.
+    assert.match(empty, /t\("media\.tagImagesHelp"\)/);
+    assert.match(en["media.tagImagesHelp"], /Tag images from your library/);
     assert.match(empty, /onClick=\{\(\) => setPicking\(true\)\}/,
       "the empty state names tagging and offers no control");
   });
@@ -365,15 +369,18 @@ describe("the product card can tag, not only untag", () => {
     // Entry 6c, which this button is a new instance of. It would have been
     // born saying "Pick an image" otherwise.
     const src = read("components/products/image-picker.tsx");
-    assert.match(src, /`Tag \$\{picked\.length\} images`/);
+    assert.match(src, /t\("picker\.tagN", \{ count: picked\.length \}\)/);
+    assert.equal(en["picker.tagN"], "Tag {count} images");
     assert.ok(!/>\s*Pick (an image|images)\s*</.test(src));
+    assert.ok(!/^Pick (an image|images)$/.test(en["picker.pickOneOrMore"]));
   });
 
   it("the documents empty state no longer names an action nothing can do", () => {
     // Nothing in this app inserts into product_documents — see the next test.
     const src = read(MEDIA);
     assert.ok(!/Tag a safety sheet, a spec or a certificate from Knowledge/.test(src));
-    assert.match(src, /Attaching one to a product is not built yet/);
+    assert.match(src, /t\("media\.docsNotBuiltTail"\)/);
+    assert.match(en["media.docsNotBuiltTail"], /Attaching one to a product is not built yet/);
   });
 
   it("and that claim is checked against the code, not remembered", () => {
@@ -419,7 +426,7 @@ describe("6b · the floating sentence is gone, not reworded", () => {
     // It sat at the bottom of the tab with no control beside it, describing
     // an untag button two sections up.
     const src = readFileSync(MEDIA, "utf8").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
-    assert.ok(!/<p[^>]*>\s*\{UNTAG_NOTE\}\s*<\/p>/.test(src),
+    assert.ok(!/<p[^>]*>\s*\{(UNTAG_NOTE|t\(UNTAG_NOTE_KEY\))\}\s*<\/p>/.test(src),
       "the floating note is still rendered as a paragraph");
   });
 
@@ -427,8 +434,9 @@ describe("6b · the floating sentence is gone, not reworded", () => {
     // Cut, not deleted: it is the title on both untag buttons, which is
     // where an explanation of a control belongs.
     const src = readFileSync(MEDIA, "utf8");
-    assert.ok((src.match(/title=\{UNTAG_NOTE\}/g) ?? []).length >= 2,
+    assert.ok((src.match(/title=\{t\(UNTAG_NOTE_KEY\)\}/g) ?? []).length >= 2,
       "the untag controls lost their explanation along with the paragraph");
+    assert.equal(en[UNTAG_NOTE_KEY], UNTAG_NOTE, "the key and the English note have drifted apart");
   });
 
   it("and no roadmap promise is left in a product surface", () => {
@@ -442,7 +450,8 @@ describe("6d · the hero shot and the tagged images are told apart", () => {
     // nothing said so, and the natural expectation after tagging is that the
     // product now looks different.
     const src = readFileSync("components/products/product-drawer.tsx", "utf8");
-    assert.match(src, /The shot on the product list\. Tagged images below do not change it\./);
+    assert.match(src, /t\("product\.imageNote"\)/);
+    assert.equal(en["product.imageNote"], "The shot on the product list. Tagged images below do not change it.");
     assert.ok(!/Picked from your image library in Knowledge/.test(src),
       "the old line, which explained where it came from rather than what it is");
   });

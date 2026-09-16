@@ -26,6 +26,11 @@ import s from "@/components/visual-identity/visual-identity.module.css";
 import { AddLogo, AddColour, AddTypeface } from "@/components/visual-identity/uploads";
 import u from "@/components/visual-identity/uploads.module.css";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
+
+const CONTRAST_LABEL: Record<string, StringKey> = {
+  AAA: "visual.contrast.aaa", AA: "visual.contrast.aa", large: "visual.contrast.large", surface: "visual.contrast.surface",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Rows. Optional fields are the columns supabase/visual-identity.sql */
@@ -70,7 +75,9 @@ interface VisualRow {
 }
 
 const WEIGHT_LADDER = [300, 400, 500, 600, 700, 800];
-const PANGRAM = "Sphinx of black quartz, judge my vow";
+/* The specimen line. A pangram in the interface language, so the specimen
+   shows the letters that language actually uses (ä, ö in Finnish). */
+const PANGRAM_KEY: StringKey = "vi.pangram";
 
 /** "INSTAGRAM POST 1:1" → "1:1". No ratio column exists, and a wrong badge is
  *  worse than none. */
@@ -187,9 +194,9 @@ export default function VisualIdentityPage() {
   const copy = useCallback((value: string, message: string) => {
     navigator.clipboard?.writeText(value).then(
       () => flash(message),
-      () => flash("Couldn't copy — select it instead"),
+      () => flash(t("visual.copyFailed")),
     );
-  }, [flash]);
+  }, [flash, t]);
 
   /** Files are on public storage URLs; `download` asks the browser to save. */
   const download = useCallback((url: string | null, fileName: string | null) => {
@@ -259,7 +266,7 @@ export default function VisualIdentityPage() {
               </span>
               <h1>{t("visual.title")}</h1>
               <p className={s.lede}>
-                Every logo, colour and typeface, in the versions that are actually current.{" "}
+                {t("vi.lede1")}{" "}
                 <b>{t("visual.intro")}</b>
               </p>
             </div>
@@ -278,8 +285,8 @@ export default function VisualIdentityPage() {
               <div className={s.vrow}>
                 <i />
                 {updated
-                  ? `Updated ${new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · everything here is the live version`
-                  : "Everything here is the live version"}
+                  ? t("visual.updatedLive", { date: new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short" }) })
+                  : t("visual.everythingLive")}
               </div>
             </div>
           </div>
@@ -294,8 +301,7 @@ export default function VisualIdentityPage() {
                   <div className={s.eyebrow}>{t("visual.startHere")}</div>
                   <h2 style={{ marginTop: 5 }}>{t("visual.whichOne")}</h2>
                   <p>
-                    Files named &ldquo;primary&rdquo; and &ldquo;symbol only&rdquo; are a filing
-                    cabinet. This is the same set, sorted by the question people actually arrive with.
+                    {t("vi.lede2")}
                   </p>
                 </div>
               </div>
@@ -310,10 +316,10 @@ export default function VisualIdentityPage() {
                       className={`${s.uc} ${s[u.tone]}`}
                       onClick={() => download(files[0].file_url, files[0].file_name)}
                     >
-                      <div className={s.ucq}>{u.question}</div>
+                      <div className={s.ucq}>{t(u.questionKey)}</div>
                       <div className={s.ucans}>
-                        <div className={s.ucfile}>{u.answer}</div>
-                        <div className={s.ucfmt}>{fmts.length ? fmts.join(" · ") : u.note}</div>
+                        <div className={s.ucfile}>{t(u.answerKey)}</div>
+                        <div className={s.ucfmt}>{fmts.length ? fmts.join(" · ") : t(u.noteKey)}</div>
                         <span className={s.go}>{t("common.download")}<Icon name="upload" size={12} /></span>
                       </div>
                     </button>
@@ -331,12 +337,11 @@ export default function VisualIdentityPage() {
               <div>
                 <h2>{t("visual.logos")}</h2>
                 <p>
-                  Each plate is fixed to its slot, so you can see whether a reversed file actually
-                  works before you use it. Download the one you need.
+                  {t("vi.platesFixed")}
                 </p>
               </div>
               <div className={u.headActions}>
-                <AddLogo brandId={brandId} onDone={() => { reload(); flash("Logo uploaded"); }} />
+                <AddLogo brandId={brandId} onDone={() => { reload(); flash(t("visual.toast.logoUploaded")); }} />
               </div>
             </div>
 
@@ -344,13 +349,12 @@ export default function VisualIdentityPage() {
               <div className={s.empty}>
                 <h3>{t("visual.noLogos")}</h3>
                 <p>
-                  Upload the primary, a reversed version and the symbol on its own — those three
-                  cover almost every use.
+                  {t("vi.uploadThree")}
                 </p>
                 <AddLogo
                   brandId={brandId}
                   variant="empty"
-                  onDone={() => { reload(); flash("Logo uploaded"); }}
+                  onDone={() => { reload(); flash(t("visual.toast.logoUploaded")); }}
                 />
               </div>
             ) : (
@@ -362,13 +366,13 @@ export default function VisualIdentityPage() {
                   return (
                     <div key={def.slot} className={s.lc}>
                       <div className={s.lcTop}>
-                        <div className={s.lcT}>{def.label}</div>
-                        <div className={s.lcU}>{def.usage}</div>
+                        <div className={s.lcT}>{t(def.labelKey)}</div>
+                        <div className={s.lcU}>{t(def.usageKey)}</div>
                       </div>
                       <div className={`${s.plate} ${s[def.plate]}`}>
-                        <span className={s.tag}>{def.tag}</span>
+                        <span className={s.tag}>{t(def.tagKey)}</span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={first.file_url!} alt={`${def.label} for ${brandName}`} />
+                        <img src={first.file_url!} alt={t("visual.logoAlt", { label: t(def.labelKey), brand: brandName })} />
                       </div>
                       <div className={s.lcBot}>
                         <div className={s.fmts}>
@@ -406,7 +410,7 @@ export default function VisualIdentityPage() {
                         onClick={() => download(f.file_url, f.file_name)}
                       >
                         <Icon name="upload" size={12} />
-                        {f.file_name ?? f.slot ?? "File"}
+                        {f.file_name ?? f.slot ?? t("visual.file")}
                       </button>
                     ))}
                   </div>
@@ -425,13 +429,11 @@ export default function VisualIdentityPage() {
                 <div>
                   <h2>{t("visual.colour")}</h2>
                   <p>
-                    Every swatch copies. The contrast badge is measured against white at render, so
-                    it cannot go stale — it is the difference between a colour you can set text in
-                    and one you can only fill a shape with.
+                    {t("vi.swatchesCopy")}
                   </p>
                 </div>
                 <div className={u.headActions}>
-                  <AddColour brandId={brandId} onDone={() => { reload(); flash("Colour added"); }} />
+                  <AddColour brandId={brandId} onDone={() => { reload(); flash(t("visual.toast.colourAdded")); }} />
                 </div>
               </div>
 
@@ -439,25 +441,24 @@ export default function VisualIdentityPage() {
                 <div className={s.empty}>
                   <h3>{t("visual.noColours")}</h3>
                   <p>
-                    Add the ones you actually use — a primary, an ink and a background will carry
-                    most of what Studio makes. Or pull them straight out of a screenshot.
+                    {t("vi.addTheOnesYouUse")}
                   </p>
                   <AddColour
                     brandId={brandId}
                     variant="empty"
-                    onDone={() => { reload(); flash("Colour added"); }}
+                    onDone={() => { reload(); flash(t("visual.toast.colourAdded")); }}
                   />
                 </div>
               )}
 
               {[
-                { key: "core", label: "Core", rows: core },
-                { key: "gradient", label: "Gradients", rows: gradients },
+                { key: "core", label: "visual.groupCore" as StringKey, rows: core },
+                { key: "gradient", label: "visual.groupGradients" as StringKey, rows: gradients },
               ]
                 .filter((g) => g.rows.length > 0)
                 .map((group) => (
                   <div key={group.key} className={s.cgroup}>
-                    <div className={s.cglab}>{group.label}</div>
+                    <div className={s.cglab}>{t(group.label)}</div>
                     <div className={s.sw}>
                       {group.rows.map((c) => {
                         const isGradient = group.key === "gradient";
@@ -468,7 +469,7 @@ export default function VisualIdentityPage() {
                             key={String(c.id)}
                             type="button"
                             className={s.swatch}
-                            onClick={() => copy(value, isGradient ? "CSS copied" : `${value} copied`)}
+                            onClick={() => copy(value, isGradient ? t("visual.toast.cssCopied") : t("visual.toast.valueCopied", { value }))}
                           >
                             <span
                               className={s.chip}
@@ -482,18 +483,18 @@ export default function VisualIdentityPage() {
                                 className={s.cta}
                                 style={{ color: isGradient ? "#fff" : readableInkOn(value) === "#15151b" ? "#fff" : "#fff" }}
                               >
-                                {isGradient ? t("visual.copyCss") : "Copy HEX"}
+                                {isGradient ? t("visual.copyCss") : t("visual.copyHex")}
                               </span>
                             </span>
                             <span className={s.meta}>
-                              <span className={s.nm}>{c.name || "Untitled"}</span>
+                              <span className={s.nm}>{c.name || t("notes.untitled")}</span>
                               <span className={s.hx}>{value.toUpperCase()}</span>
                               {c.role && <span className={s.roleT}>{c.role}</span>}
                               {contrast && (
                                 <span
                                   className={`${s.ok} ${contrast.level === "AAA" || contrast.level === "AA" ? s.pass : s.warn}`}
                                 >
-                                  {contrast.ratio}:1 · {contrast.label}
+                                  {contrast.ratio}:1 · {t(CONTRAST_LABEL[contrast.level])}
                                 </span>
                               )}
                             </span>
@@ -514,7 +515,7 @@ export default function VisualIdentityPage() {
                 <p>{t("visual.typefacesHelp")}</p>
               </div>
               <div className={u.headActions}>
-                <AddTypeface brandId={brandId} onDone={() => { reload(); flash("Typeface added"); }} />
+                <AddTypeface brandId={brandId} onDone={() => { reload(); flash(t("visual.toast.typefaceAdded")); }} />
               </div>
             </div>
 
@@ -525,7 +526,7 @@ export default function VisualIdentityPage() {
                 <AddTypeface
                   brandId={brandId}
                   variant="empty"
-                  onDone={() => { reload(); flash("Typeface added"); }}
+                  onDone={() => { reload(); flash(t("visual.toast.typefaceAdded")); }}
                 />
               </div>
             ) : (
@@ -537,10 +538,10 @@ export default function VisualIdentityPage() {
                     <div key={String(font.id)} className={s.tc}>
                       <div className={`${s.spec} ${i % 2 === 0 ? s.specA : s.specB}`}>
                         <div className={s.ag} style={{ fontFamily: familyFor(font) }}>Ag</div>
-                        <div className={s.pang} style={{ fontFamily: familyFor(font) }}>{PANGRAM}</div>
+                        <div className={s.pang} style={{ fontFamily: familyFor(font) }}>{t(PANGRAM_KEY)}</div>
                       </div>
                       <div className={s.tbody}>
-                        <h3>{font.name || "Untitled"}</h3>
+                        <h3>{font.name || t("notes.untitled")}</h3>
                         {font.role && <div className={s.roleLab}>{font.role}</div>}
                         <div className={s.wts}>
                           {WEIGHT_LADDER.map((w) => (
@@ -549,7 +550,7 @@ export default function VisualIdentityPage() {
                         </div>
                         <pre className={s.code}>{snippet}</pre>
                         <div className={s.trow}>
-                          <button type="button" className={`${s.act} ${s.prime}`} onClick={() => copy(snippet, "CSS copied")}>
+                          <button type="button" className={`${s.act} ${s.prime}`} onClick={() => copy(snippet, t("visual.toast.cssCopied"))}>
                             <Icon name="doc" size={12} />
                             {t("visual.copyCss")}
                           </button>
@@ -592,8 +593,8 @@ export default function VisualIdentityPage() {
                         {ratio && <span className={s.ratio}>{ratio}</span>}
                       </span>
                       <span className={s.tb}>
-                        <span className={s.tn}>{tpl.name || "Template"}</span>
-                        <span className={s.td}>{tpl.platform ? `Opens in ${tpl.platform}` : "Opens in a new tab"}</span>
+                        <span className={s.tn}>{tpl.name || t("visual.template")}</span>
+                        <span className={s.td}>{tpl.platform ? t("vi.opensIn", { platform: tpl.platform }) : t("vi.opensInNewTab")}</span>
                       </span>
                     </a>
                   );
@@ -612,8 +613,7 @@ export default function VisualIdentityPage() {
               <div>
                 <h2>{t("visual.howToHold")}</h2>
                 <p>
-                  The four things that go wrong most often. They live here rather than on page 34
-                  of a PDF, because a rule nobody reads is not a rule.
+                  {t("vi.fourThings")}
                 </p>
               </div>
             </div>
@@ -647,20 +647,20 @@ export default function VisualIdentityPage() {
               <div>
                 <div className={s.cglab}>{t("common.never")}</div>
                 <div className={s.donts}>
-                  {[
-                    { cls: s.sq, title: "Don't stretch it", sub: "Scale both sides together, always", busy: false },
-                    { cls: s.rc, title: "Don't recolour it", sub: "The brand colours. Nothing else.", busy: false },
-                    { cls: s.sh, title: "Don't add effects", sub: "No shadows, glows, bevels or outlines", busy: false },
-                    { cls: "", title: "Don't fight the background", sub: "Busy photo? Use the reversed file on a solid block.", busy: true },
-                  ].map((d) => (
+                  {([
+                    { cls: s.sq, title: "visual.dont.stretch", sub: "visual.dont.stretchSub", busy: false },
+                    { cls: s.rc, title: "visual.dont.recolour", sub: "visual.dont.recolourSub", busy: false },
+                    { cls: s.sh, title: "visual.dont.effects", sub: "visual.dont.effectsSub", busy: false },
+                    { cls: "", title: "visual.dont.background", sub: "visual.dont.backgroundSub", busy: true },
+                  ] satisfies { cls: string; title: StringKey; sub: StringKey; busy: boolean }[]).map((d) => (
                     <div key={d.title} className={s.dont}>
                       <div className={`${s.dstage} ${d.busy ? s.busy : ""}`}>
                         <span className={s.x}><Icon name="close" size={9} /></span>
                         <Mark url={heroLogo?.file_url ?? null} className={d.cls || undefined} />
                       </div>
                       <div className={s.cap}>
-                        {d.title}
-                        <span>{d.sub}</span>
+                        {t(d.title)}
+                        <span>{t(d.sub)}</span>
                       </div>
                     </div>
                   ))}
@@ -676,15 +676,14 @@ export default function VisualIdentityPage() {
               <div className="min-w-0">
                 <h3>{t("visual.fullGuidelines")}</h3>
                 <p>
-                  Everything above, plus photography direction, tone of voice, iconography and the
-                  print specifications. Read it once; come back to this page for the day-to-day.
+                  {t("visual.guideBody")}
                 </p>
                 <div className={s.gmeta}>
-                  {pageCount > 0 && <span className={s.gpill}>{pageCount} pages</span>}
+                  {pageCount > 0 && <span className={s.gpill}>{t("visual.pages", { count: pageCount })}</span>}
                   <span className={s.gpill}>{version}</span>
                   {updated && (
                     <span className={s.gpill}>
-                      Updated {new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                      {t("visual.updatedOn", { date: new Date(updated).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) })}
                     </span>
                   )}
                 </div>
@@ -709,8 +708,7 @@ export default function VisualIdentityPage() {
           {!loading && logos.length === 0 && colors.length === 0 && fonts.length === 0 && (
             <div className={s.sec}>
               <p className={s.emptyNote}>
-                Nothing has been uploaded for this brand yet. Logos, colours and typefaces appear
-                here as they are added.
+                {t("vi.nothingUploaded")}
               </p>
             </div>
           )}
@@ -725,9 +723,9 @@ export default function VisualIdentityPage() {
       <ChatRail
         indexedFileCount={fileCount}
         suggestions={[
-          "Which logo should I use on a dark photo?",
-          "What is our primary colour?",
-          "Which typeface do headings use?",
+          t("visual.prompt1"),
+          t("visual.prompt2"),
+          t("visual.prompt3"),
         ]}
       />
     </div>

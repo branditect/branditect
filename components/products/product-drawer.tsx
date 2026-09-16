@@ -14,16 +14,22 @@ import {
 import ImagePicker from "@/components/products/image-picker";
 import {
   categoryStyle,
-  STOCK_LABELS,
+  STOCK_LABEL_KEYS,
   STOCK_STYLES,
   type Product,
   type StockStatus,
 } from "@/lib/products";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 const TABS = ["Details", "Pricing", "Inventory", "Media", "History"] as const;
 type Tab = (typeof TABS)[number];
+/* The tab names above are identity (state, ids, aria-controls); these render. */
+const TAB_LABEL: Record<Tab, StringKey> = {
+  Details: "product.tabDetails", Pricing: "site.nav.pricing", Inventory: "product.tabInventory",
+  Media: "product.tabMedia", History: "product.tabHistory",
+};
 
 /** The shape held while editing. Numbers are strings so a field can be blank. */
 interface Draft {
@@ -276,7 +282,7 @@ export default function ProductDrawer({
   dirtyRef.current = dirty;
 
   function requestClose() {
-    if (dirtyRef.current && !window.confirm("Discard unsaved changes to this product?")) return;
+    if (dirtyRef.current && !window.confirm(t("product.discardChanges"))) return;
     onClose();
     returnFocusTo?.focus();
   }
@@ -379,14 +385,14 @@ export default function ProductDrawer({
     <>
       <aside
         ref={panelRef}
-        aria-label={`${product.name} detail`}
+        aria-label={t("product.detailLabel", { name: product.name })}
         className="sticky top-3 z-[1100] flex max-h-[calc(100vh-24px)] w-[400px] shrink-0 flex-col overflow-hidden rounded-panel border border-rule bg-card drop-shadow-panel"
       >
         <div className="relative flex gap-3.5 px-[18px] pt-[18px]">
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            aria-label={draft.imageUrl ? "Change product image" : t("picker.chooseImage")}
+            aria-label={draft.imageUrl ? t("product.changeImage") : t("picker.chooseImage")}
             className={`group relative grid h-[74px] w-[74px] shrink-0 place-items-center overflow-hidden rounded-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               draft.imageUrl ? "border border-rule" : categoryStyle(draft.category)
             }`}
@@ -398,13 +404,13 @@ export default function ProductDrawer({
               <Icon name="bag" size={34} />
             )}
             <span className="absolute inset-0 grid place-items-center bg-ink/55 text-micro font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none">
-              {draft.imageUrl ? "Change" : t("templates.addImage")}
+              {draft.imageUrl ? t("product.change") : t("templates.addImage")}
             </span>
           </button>
 
           <div className="min-w-0 flex-1">
             <h2 className="pr-8 text-h3 font-bold leading-[1.25] tracking-[-0.3px]">
-              {draft.name || "Untitled product"}
+              {draft.name || t("product.untitled")}
             </h2>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {status && (
@@ -423,7 +429,7 @@ export default function ProductDrawer({
                       status === "in_stock" ? "bg-good" : status === "low_stock" ? "bg-amber" : "bg-accent"
                     }`}
                   />
-                  {STOCK_LABELS[status]}
+                  {t(STOCK_LABEL_KEYS[status])}
                 </span>
               )}
               {draft.category && (
@@ -468,7 +474,7 @@ export default function ProductDrawer({
                   : "font-semibold text-muted hover:text-ink-2"
               }`}
             >
-              {name}
+              {t(TAB_LABEL[name])}
             </button>
           ))}
         </div>
@@ -479,14 +485,14 @@ export default function ProductDrawer({
               <>
                 <Section title={t("product.information")}>
                   <div className="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
-                    <Field label="Product name" value={draft.name} onChange={(v) => set("name", v)} />
+                    <Field label={t("product.name")} value={draft.name} onChange={(v) => set("name", v)} />
                     <DescriptionField
                       value={draft.description}
                       onChange={(v) => set("description", v)}
                     />
                     <Field label={t("common.category")} value={draft.category} onChange={(v) => set("category", v)} />
-                    <Field label="SKU" value={draft.sku} onChange={(v) => set("sku", v)} />
-                    <Field label="Barcode" value={draft.barcode} onChange={(v) => set("barcode", v)} />
+                    <Field label={t("product.sku")} value={draft.sku} onChange={(v) => set("sku", v)} />
+                    <Field label={t("product.barcode")} value={draft.barcode} onChange={(v) => set("barcode", v)} />
                     <Field
                       label={t("images.tags")}
                       value={draft.tags}
@@ -531,14 +537,14 @@ export default function ProductDrawer({
                       className={fieldClass}
                     >
                       <option value="">{t("product.notSet")}</option>
-                      {(Object.keys(STOCK_LABELS) as StockStatus[]).map((s) => (
+                      {(Object.keys(STOCK_LABEL_KEYS) as StockStatus[]).map((s) => (
                         <option key={s} value={s}>
-                          {STOCK_LABELS[s]}
+                          {t(STOCK_LABEL_KEYS[s])}
                         </option>
                       ))}
                     </select>
-                    <Field label="Units" type="number" value={draft.stockUnits} onChange={(v) => set("stockUnits", v)} />
-                    <Row label="Source">{product.stockSource ?? dash}</Row>
+                    <Field label={t("product.units")} type="number" value={draft.stockUnits} onChange={(v) => set("stockUnits", v)} />
+                    <Row label={t("product.source")}>{product.stockSource ?? dash}</Row>
                   </div>
                   {status === "out_of_stock" && (
                     <p className={`mt-2 text-2xs font-semibold ${STOCK_STYLES[status]}`}>
@@ -548,9 +554,7 @@ export default function ProductDrawer({
                 </Section>
                 <Section>
                   <p className="text-xs font-medium leading-[1.6] text-muted">
-                    Stock is here for one reason: so Studio won&apos;t promote something you
-                    can&apos;t ship. Reorder points, suppliers and lead times belong in your
-                    inventory system, not your brand brain.
+                    {t("product.stockNote")}
                   </p>
                 </Section>
               </>
@@ -576,7 +580,7 @@ export default function ProductDrawer({
                     </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-bold text-ink">
-                        {draft.imageUrl ? "Change product image" : t("picker.chooseImage")}
+                        {draft.imageUrl ? t("product.changeImage") : t("picker.chooseImage")}
                       </span>
                       {/* Entry 6d. Two different things share this tab:
                           this single shot, which is what the product list
@@ -587,7 +591,7 @@ export default function ProductDrawer({
                           after tagging was that the product would look
                           different. It does not. */}
                       <span className="mt-0.5 block text-2xs font-medium text-muted">
-                        The shot on the product list. Tagged images below do not change it.
+                        {t("product.imageNote")}
                       </span>
                     </span>
                   </button>
@@ -605,8 +609,7 @@ export default function ProductDrawer({
             {tab === "History" && (
               <Section title={t("product.changes")}>
                 <p className="text-xs font-medium leading-[1.6] text-muted">
-                  No changes recorded yet. Price and cost edits will appear here with who made them —
-                  someone will eventually need to know when a price changed and why.
+                  {t("product.noHistory")}
                 </p>
               </Section>
             )}
@@ -637,7 +640,7 @@ export default function ProductDrawer({
             onClick={save}
             className="ml-auto rounded-tile bg-grad-mark px-5 py-2.5 text-sm font-bold text-white drop-shadow-[0_4px_8px_rgba(232,73,32,.28)] disabled:bg-none disabled:bg-rule-2 disabled:text-muted disabled:drop-shadow-none"
           >
-            {saving ? t("settings.saving") : dirty ? "Save changes" : t("common.saved")}
+            {saving ? t("settings.saving") : dirty ? t("product.saveChanges") : t("common.saved")}
           </button>
         </div>
       </aside>

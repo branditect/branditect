@@ -174,3 +174,20 @@ describe("brief helpers", () => {
     assert.equal(wordCount("   "), 0);
   });
 });
+
+/** Saara, 2026-09-14: everything on screen follows the interface language. */
+describe("formats render from keys and send English", () => {
+  it("every label and example chip has a key whose English is the field", async () => {
+    const { en } = await import("./i18n/en.ts");
+    for (const f of FORMATS) {
+      assert.equal(en[f.labelKey], f.label, `${f.id} label`);
+      f.exampleKeys.forEach((k, i) => assert.equal(en[k], f.examples[i], `${f.id} example ${i + 1}`));
+    }
+  });
+
+  it("the model's fields have no keys: deliverables and word targets stay English", async () => {
+    const src = (await import("node:fs")).readFileSync("app/api/copy-architect/route.ts", "utf8");
+    assert.ok(/def\.deliverable/.test(src) && /def\.words\[/.test(src));
+    assert.ok(!/labelKey|exampleKeys/.test(src), "the route reads a display key");
+  });
+});

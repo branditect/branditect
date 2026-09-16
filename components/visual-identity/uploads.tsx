@@ -61,13 +61,13 @@ export function AddLogo({
       const res = await authedFetch("/api/brand-assets/upload", { method: "POST", body: fd });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.success) {
-        setError(json.error ?? `Upload failed (${res.status})`);
+        setError(json.error ?? t("uploads.uploadFailedStatus", { status: res.status }));
       } else {
         setOpen(false);
         onDone();
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : t("docs.uploadFailed"));
     }
     setBusy(false);
   }
@@ -94,8 +94,8 @@ export function AddLogo({
                 className={`${u.slot} ${slot === sl.slot ? u.slotOn : ""}`}
                 onClick={() => setSlot(sl.slot)}
               >
-                <span className={u.slotL}>{sl.label}</span>
-                <span className={u.slotH}>{sl.hint}</span>
+                <span className={u.slotL}>{t(sl.labelKey)}</span>
+                <span className={u.slotH}>{t(sl.hintKey)}</span>
               </button>
             ))}
           </div>
@@ -108,7 +108,7 @@ export function AddLogo({
             disabled={busy}
             onClick={() => fileRef.current?.click()}
           >
-            {busy ? "Uploading…" : "Choose a file"}
+            {busy ? t("vi.uploading") : t("vi.chooseFile")}
           </button>
           <input
             ref={fileRef}
@@ -140,14 +140,14 @@ export function AddColour({
   const parsed = normaliseHex(hex);
 
   async function save() {
-    if (!parsed) { setError("That is not a hex colour — try #1a1a1a"); return; }
+    if (!parsed) { setError(t("uploads.notHex")); return; }
     setBusy(true); setError(null);
     const res = await authedJson("/api/brand-book/color", "POST", {
       brandId, hex: parsed, name: name.trim() || "Untitled",
     });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) { setError(json.error ?? `Could not save (${res.status})`); return; }
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
     setHex(""); setName(""); setOpen(false);
     onDone();
   }
@@ -163,8 +163,8 @@ export function AddColour({
     const res = await authedFetch("/api/brand-assets/upload", { method: "POST", body: fd });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) { setError(json.error ?? `Extraction failed (${res.status})`); return; }
-    if (!json.colors?.length) { setError("No colours found — try a clearer screenshot"); return; }
+    if (!res.ok) { setError(json.error ?? t("uploads.extractionFailedStatus", { status: res.status })); return; }
+    if (!json.colors?.length) { setError(t("uploads.noColoursFound")); return; }
     setOpen(false);
     onDone();
   }
@@ -205,10 +205,10 @@ export function AddColour({
             aria-label={t("vupload.colourName")}
           />
           <button type="button" className={u.go} disabled={busy || !parsed} onClick={save}>
-            {busy ? t("settings.saving") : "Add colour"}
+            {busy ? t("settings.saving") : t("uploads.addColour")}
           </button>
 
-          <div className={u.orLine}><span>or</span></div>
+          <div className={u.orLine}><span>{t("uploads.or")}</span></div>
           <button
             type="button"
             className={u.ghost}
@@ -246,14 +246,14 @@ export function AddTypeface({
 
   async function save() {
     const family = name.trim();
-    if (!family) { setError("Name the typeface first"); return; }
+    if (!family) { setError(t("vi.nameTypefaceFirst")); return; }
     setBusy(true); setError(null);
     const res = await authedJson("/api/brand-assets/font", "POST", {
       brandId, name: family, role, google_font_url: googleFontUrl(family),
     });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) { setError(json.error ?? `Could not save (${res.status})`); return; }
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
     setName(""); setOpen(false);
     onDone();
   }
@@ -287,16 +287,15 @@ export function AddTypeface({
                 className={`${u.role} ${role === r.id ? u.roleOn : ""}`}
                 onClick={() => setRole(r.id)}
               >
-                {r.label}
+                {t(r.labelKey)}
               </button>
             ))}
           </div>
           <p className={u.note}>
-            The specimen on this page is set in the real typeface, so a name that is not on Google
-            Fonts will show as a fallback rather than silently look right.
+            {t("vi.specimenNote")}
           </p>
           <button type="button" className={u.go} disabled={busy || !name.trim()} onClick={save}>
-            {busy ? t("settings.saving") : "Add typeface"}
+            {busy ? t("settings.saving") : t("vi.addTypeface")}
           </button>
           {error && <p className={u.err} role="alert">{error}</p>}
         </Panel>

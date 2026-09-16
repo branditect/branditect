@@ -5,11 +5,12 @@ import Link from "next/link";
 import Icon from "@/components/icon";
 import { formatMoney } from "@/lib/products";
 import {
-  GROUPS, LINES, PRESETS, PRESET_LABELS, contributionMargin, cogsTotal,
+  GROUPS, LINES, PRESETS, PRESET_LABEL_KEYS, contributionMargin, cogsTotal,
   grossMargin, groupTotal, toggleLine, visibleLines,
   type CustomLine, type LineGroup, type LineId, type Preset, type Values,
 } from "@/lib/pricing-lines";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 const fieldClass =
   "w-full rounded-lg border border-rule-2 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-2 focus:border-accent-line focus:outline-none focus:ring-2 focus:ring-tint-1";
@@ -75,18 +76,17 @@ export default function PricingTab({
           <MarginCard
             label={t("num.rec.grossMargin")} tone="good" money={money}
             result={gross}
-            note="Net of tax, against cost of goods."
+            note={t("pricing.netOfTax")}
           />
           <MarginCard
-            label="Contribution" tone="lav" money={money}
+            label={t("pricing.contribution")} tone="lav" money={money}
             result={contrib}
-            note="After cost to sell as well."
+            note={t("pricing.afterCostToSell")}
           />
         </div>
         {gross?.assumedNoTax && (
           <p className="mt-2 rounded-tile bg-amber-wash px-3 py-2 text-2xs font-medium leading-[1.5] text-amber">
-            No tax rate recorded, so both figures assume zero. A missing rate treated as zero reads
-            the gross price as net and flatters the margin.
+            {t("pricing.noTaxRate")}
           </p>
         )}
       </section>
@@ -105,7 +105,7 @@ export default function PricingTab({
                   activePreset === p ? "bg-ink text-white" : "bg-tile text-muted hover:text-ink-2"
                 }`}
               >
-                {PRESET_LABELS[p]}
+                {t(PRESET_LABEL_KEYS[p])}
               </button>
             ))}
           </div>
@@ -126,7 +126,7 @@ export default function PricingTab({
                 }`}
               >
                 {on && <Icon name="check" size={10} />}
-                {l.label}
+                {t(l.labelKey)}
               </button>
             );
           })}
@@ -143,7 +143,7 @@ export default function PricingTab({
               <GroupHeader g={g} total={null} money={money} />
               <button type="button" onClick={() => setAdding(g.id)}
                 className="mt-2 text-2xs font-bold text-accent-dark hover:underline">
-                + Add your own line
+                {t("pricing.addOwnLine")}
               </button>
             </section>
           );
@@ -155,10 +155,10 @@ export default function PricingTab({
             <div className="mt-2 grid grid-cols-[128px_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
               {lines.map((l) => (
                 <PriceField
-                  key={l.id} label={l.label}
+                  key={l.id} id={`pl-${l.id}`} label={t(l.labelKey)}
                   value={String(values[l.column] ?? "")}
                   suffix={l.hint === "%" ? "%" : currency}
-                  hint={l.hint && l.hint !== "%" ? l.hint : undefined}
+                  hint={l.hintKey ? t(l.hintKey) : undefined}
                   onChange={(v) => onValue(l.column, v)}
                 />
               ))}
@@ -200,7 +200,7 @@ export default function PricingTab({
             ) : (
               <button type="button" onClick={() => setAdding(g.id)}
                 className="mt-2 text-2xs font-bold text-accent-dark hover:underline">
-                + Add your own line
+                {t("pricing.addOwnLine")}
               </button>
             )}
           </section>
@@ -222,7 +222,7 @@ export default function PricingTab({
               className={`${fieldClass} resize-y leading-[1.5]`}
             />
             <p className="mt-1 text-2xs font-medium text-muted">
-              Studio reads this and follows it. {notes.length} characters.
+              {t("pricing.studioFollows", { length: notes.length })}
             </p>
           </div>
         </div>
@@ -230,11 +230,11 @@ export default function PricingTab({
 
       <section className="mt-[22px]">
         <p className="text-xs font-medium leading-[1.6] text-muted">
-          Floor price, maximum discount and minimum margin now live in{" "}
+          {t("pricing.guardrailsMoved")}{" "}
           <Link href="/numbers/pricing" className="font-semibold text-accent-dark underline underline-offset-2">
             {t("pricing.numbersLink")}
           </Link>
-          . Same limits, same enforcement, the room this app keeps pricing rules in.
+          {t("productPricing.limitsTail")}
         </p>
       </section>
     </>
@@ -243,15 +243,16 @@ export default function PricingTab({
 
 function GroupHeader({
   g, total, money,
-}: { g: { id: LineGroup; label: string; note: string }; total: number | null; money: (n: number) => string }) {
+}: { g: { id: LineGroup; labelKey: StringKey; noteKey: StringKey }; total: number | null; money: (n: number) => string }) {
+  const t = useT();
   return (
     <div className="flex items-baseline gap-2">
       <span className={`grid h-6 w-6 place-items-center rounded-tile ${GROUP_TONE[g.id]}`} aria-hidden="true">
         <Icon name="check" size={11} />
       </span>
       <div className="min-w-0">
-        <h4 className="text-sm font-bold tracking-[-0.15px]">{g.label}</h4>
-        <p className="text-2xs font-medium text-muted">{g.note}</p>
+        <h4 className="text-sm font-bold tracking-[-0.15px]">{t(g.labelKey)}</h4>
+        <p className="text-2xs font-medium text-muted">{t(g.noteKey)}</p>
       </div>
       {/* A configurable list is only readable if the home has a number. */}
       <b className="ml-auto shrink-0 text-sm font-bold tabular-nums">
@@ -262,9 +263,10 @@ function GroupHeader({
 }
 
 function PriceField({
-  label, value, suffix, hint, onChange,
-}: { label: string; value: string; suffix: string; hint?: string; onChange: (v: string) => void }) {
-  const id = `pl-${label.replace(/\s+/g, "-").toLowerCase()}`;
+  id, label, value, suffix, hint, onChange,
+}: { id: string; label: string; value: string; suffix: string; hint?: string; onChange: (v: string) => void }) {
+  // The id comes from the line id, not the label, so it does not change with
+  // the interface language.
   return (
     <>
       <label htmlFor={id} className="pt-1.5 text-xs font-medium text-muted">
@@ -284,6 +286,7 @@ function PriceField({
 function CustomField({
   line, suffix, onChange, onRemove,
 }: { line: CustomLine; suffix: string; onChange: (v: number | null) => void; onRemove: () => void }) {
+  const t = useT();
   return (
     <>
       <span className="pt-1.5 text-xs font-medium text-muted">{line.label}</span>
@@ -296,7 +299,7 @@ function CustomField({
           }}
           className={`${fieldClass} tabular-nums`} />
         <span className="shrink-0 text-2xs font-semibold text-muted">{suffix}</span>
-        <button type="button" onClick={onRemove} aria-label={`Remove ${line.label}`}
+        <button type="button" onClick={onRemove} aria-label={t("product.removeName", { name: line.label })}
           className="shrink-0 text-muted-2 hover:text-accent-dark">
           <Icon name="close" size={11} />
         </button>

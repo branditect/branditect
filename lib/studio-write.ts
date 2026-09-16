@@ -11,13 +11,17 @@
  */
 
 import { sanitiseOutput } from "./sanitise-output.ts";
+import type { StringKey } from "./i18n/en.ts";
 
 export type FormatId = "ad" | "email" | "instagram" | "linkedin" | "product" | "customer" | "other";
 export type Length = "short" | "medium" | "long";
 
 export interface FormatDef {
   id: FormatId;
+  /** English. Shown through `labelKey`; kept as the format's readable name. */
   label: string;
+  /** What the button says, in the interface language. Never sent anywhere. */
+  labelKey: StringKey;
   /** What the model is asked to produce. */
   deliverable: string;
   /** CSS module class carrying the Home gradient. */
@@ -28,11 +32,20 @@ export interface FormatDef {
   words: Record<Length, string>;
   /** Three tappable briefs. Criterion 3: switching format changes these. */
   examples: string[];
+  /**
+   * The same three, as keys, in the same order. The chips render these, and
+   * tapping one fills the brief with the chip as the person read it: a brief
+   * is the person's own words, in whatever language they write. `deliverable`
+   * and `words` are the model's and have no keys.
+   */
+  exampleKeys: [StringKey, StringKey, StringKey];
 }
 
 export const FORMATS: FormatDef[] = [
   {
     id: "ad",
+    labelKey: "studioWrite.fmt.ad",
+    exampleKeys: ["studioWrite.eg.ad1", "studioWrite.eg.ad2", "studioWrite.eg.ad3"],
     label: "Ad copy",
     deliverable: "an advertisement: a hook, the body, and one call to action",
     tone: "ad",
@@ -46,6 +59,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "email",
+    labelKey: "auth.email",
+    exampleKeys: ["studioWrite.eg.email1", "studioWrite.eg.email2", "studioWrite.eg.email3"],
     label: "Email",
     deliverable: "an email: a subject line, then the body, then a sign-off",
     tone: "email",
@@ -59,6 +74,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "instagram",
+    labelKey: "studioWrite.fmt.instagram",
+    exampleKeys: ["studioWrite.eg.instagram1", "studioWrite.eg.instagram2", "studioWrite.eg.instagram3"],
     label: "Instagram caption",
     deliverable: "an Instagram caption: a first line that survives the truncation, then the rest",
     tone: "instagram",
@@ -72,6 +89,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "linkedin",
+    labelKey: "studioWrite.fmt.linkedin",
+    exampleKeys: ["studioWrite.eg.linkedin1", "studioWrite.eg.linkedin2", "studioWrite.eg.linkedin3"],
     label: "LinkedIn post",
     deliverable: "a LinkedIn post: an opening line that earns the click, then the point",
     tone: "linkedin",
@@ -85,6 +104,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "product",
+    labelKey: "studioWrite.fmt.product",
+    exampleKeys: ["studioWrite.eg.product1", "studioWrite.eg.product2", "studioWrite.eg.product3"],
     label: "Product description",
     deliverable: "a product description: what it is, what it does, and who it is for",
     tone: "product",
@@ -98,6 +119,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "customer",
+    labelKey: "studioWrite.fmt.customer",
+    exampleKeys: ["studioWrite.eg.customer1", "studioWrite.eg.customer2", "studioWrite.eg.customer3"],
     label: "Customer message",
     deliverable:
       "a direct message to a customer: what happened, what it means for them, and what happens next",
@@ -112,6 +135,8 @@ export const FORMATS: FormatDef[] = [
   },
   {
     id: "other",
+    labelKey: "studioWrite.fmt.other",
+    exampleKeys: ["studioWrite.eg.other1", "studioWrite.eg.other2", "studioWrite.eg.other3"],
     label: "Something else — tell us what",
     deliverable: "the format the user named",
     tone: "other",

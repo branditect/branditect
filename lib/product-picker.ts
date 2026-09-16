@@ -10,6 +10,14 @@
  * components/products/image-picker.tsx, which chooses one image and returns a
  * URL for the product hero. The two are different components on purpose.
  */
+import { translate, type StringKey, type Vars } from "./i18n/index.ts";
+
+/**
+ * A translator. Components pass `useT()`; everything else, tests included,
+ * gets English, so the English wording has one definition: the dictionary.
+ */
+type Tr = (key: StringKey, vars?: Vars) => string;
+const EN: Tr = (key, vars) => translate("en", key, vars);
 
 export interface PickableProduct {
   id: string;
@@ -88,8 +96,8 @@ export function isUntagged(imageId: string, links: { image_id: string }[]): bool
  * What the selection bar says. Written down because "1 selected" reading
  * "1 selecteds" is the kind of thing nobody notices until a customer does.
  */
-export function selectionLabel(n: number): string {
-  return `${n} selected`;
+export function selectionLabel(n: number, t: Tr = EN): string {
+  return t("picker.selected", { count: n });
 }
 
 /**
@@ -97,17 +105,20 @@ export function selectionLabel(n: number): string {
  * something, or something to nothing, is a no-op that should not look
  * available.
  */
-export function confirmState(imageCount: number, productCount: number): {
+export function confirmState(imageCount: number, productCount: number, t: Tr = EN): {
   disabled: boolean; label: string;
 } {
   // Entry 6c. It said "Pick a product" and stayed disabled until you had
   // picked one, so it told you to do the thing you had just done and by the
   // time it was pressable the label was already false. A button's label is
   // what pressing it does; the modal title carries the instruction.
-  if (productCount === 0) return { disabled: true, label: "Tag" };
-  const imgs = `${imageCount} image${imageCount === 1 ? "" : "s"}`;
-  const prods = productCount === 1 ? "1 product" : `${productCount} products`;
-  return { disabled: imageCount === 0, label: `Tag ${imgs} to ${prods}` };
+  if (productCount === 0) return { disabled: true, label: t("picker.confirmTag") };
+  // One whole sentence per plural combination: the count words are not
+  // assembled, so each language says it in its own order.
+  const key: StringKey = imageCount === 1
+    ? (productCount === 1 ? "picker.confirmOneToOne" : "picker.confirmOneToMany")
+    : (productCount === 1 ? "picker.confirmManyToOne" : "picker.confirmManyToMany");
+  return { disabled: imageCount === 0, label: t(key, { images: imageCount, products: productCount }) };
 }
 
 /** Never the file. The chip's × removes the link only. */

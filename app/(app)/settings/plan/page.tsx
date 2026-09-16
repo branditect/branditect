@@ -3,12 +3,13 @@ import { localeFromCookies } from "@/lib/i18n/server.tsx";
 import { translate } from "@/lib/i18n/index.ts";
 
 export default function Page() {
+  const locale = localeFromCookies();
   return (
     <NotBuiltYet
       icon="target"
-      title={translate(localeFromCookies(), "settings.yourPlan")}
-      description="Billing, plan tier and renewal date. Not wired up yet — your workspace is unaffected."
-      cta={{ label: "Back to Home", href: "/home" }}
+      title={translate(locale, "settings.yourPlan")}
+      description={translate(locale, "planPage.description")}
+      cta={{ label: translate(locale, "shell.backToHome"), href: "/home" }}
     />
   );
 }

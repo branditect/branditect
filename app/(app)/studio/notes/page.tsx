@@ -26,12 +26,13 @@ import { uploadBrandImage, isImageFile } from "@/lib/brand-image-upload";
 import {
   TOOLBAR, SAVED_INDICATOR, flattenBlocks, previewOf, imageIsMissing,
   type SaveQueue,
-  MISSING_IMAGE_NOTE, patchBelongsTo, titleInputValue, titleToSave,
-  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabel,
+  MISSING_IMAGE_NOTE_KEY, patchBelongsTo, titleInputValue, titleToSave,
+  emptyQueue, enqueue, takeNext, settle, isBusy, nextWidth, widthLabelKey,
   type NoteBlock, type NotePatch,
 } from "@/lib/notes";
 import s from "./notes.module.css";
-import { useT } from "@/lib/i18n/use-t.tsx";
+import { useLocale, useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 interface NoteRow {
   id: string;
@@ -44,8 +45,14 @@ interface NoteRow {
 
 const AUTOSAVE_MS = 900;
 
+/** The accessible name of each block kind. `kind` itself is stored data. */
+const BLOCK_ARIA: Record<NoteBlock["kind"], StringKey> = {
+  text: "notes.blockText", heading: "notes.blockHeading", list: "notes.blockList", image: "notes.blockImage",
+};
+
 export default function NotesPage() {
   const t = useT();
+  const locale = useLocale();
   const { brandId, loading: brandLoading } = useBrand();
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -290,23 +297,25 @@ export default function NotesPage() {
       n.title.toLowerCase().includes(q) || (n.flat_text ?? "").toLowerCase().includes(q));
   }, [notes, query]);
 
-  const savedLabel = saving === "saving" ? t("settings.saving") : saving === "saved" ? SAVED_INDICATOR.label : "";
+  const savedLabel = saving === "saving" ? t("settings.saving") : saving === "saved" ? t(SAVED_INDICATOR.labelKey) : "";
 
   return (
     <div className={s.wrap}>
       <aside className={s.left}>
         <div className={s.leftHead}>
-          <span className={s.count}>{notes.length} note{notes.length === 1 ? "" : "s"}</span>
+          <span className={s.count}>
+            {t(notes.length === 1 ? "notes.countOne" : "notes.countMany", { count: notes.length })}
+          </span>
           <button type="button" className={s.new} onClick={newNote} aria-label={t("notes.new")}>
             <Icon name="plus" size={14} />
           </button>
         </div>
         <input
           className={s.search}
-          placeholder="Search notes"
+          placeholder={t("notes.search")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="Search notes"
+          aria-label={t("notes.search")}
         />
         {loading ? (
           <p className={s.note}>{t("common.loading")}</p>
@@ -331,7 +340,7 @@ export default function NotesPage() {
                 </span>
                 <span className={s.cardPreview}>{previewOf(n.flat_text) || t("notes.emptyPreview")}</span>
                 <span className={s.cardDate}>
-                  {new Date(n.updated_at).toLocaleDateString("en-GB",
+                  {new Date(n.updated_at).toLocaleDateString(locale === "fi" ? "fi-FI" : "en-GB",
                     { day: "numeric", month: "short" })}
                 </span>
               </button>
@@ -356,11 +365,11 @@ export default function NotesPage() {
                   <button
                     type="button"
                     className={s.tb}
-                    title={c.title}
-                    aria-label={c.title}
+                    title={t(c.titleKey)}
+                    aria-label={t(c.titleKey)}
                     onClick={() => onToolbar(c.id)}
                   >
-                    {c.label || <Icon name={c.id === "pin" ? "pin" : "more"} size={12} />}
+                    {(c.labelKey ? t(c.labelKey) : c.label) || <Icon name={c.id === "pin" ? "pin" : "more"} size={12} />}
                   </button>
                 </span>
               ))}
@@ -397,7 +406,7 @@ export default function NotesPage() {
                         // CRITERION 10. The block stays, keeps its caption, and
                         // says the image is gone. The paragraphs either side are
                         // untouched.
-                        <p className={s.missing} data-image-missing>{MISSING_IMAGE_NOTE}</p>
+                        <p className={s.missing} data-image-missing>{t(MISSING_IMAGE_NOTE_KEY)}</p>
                       ) : (
                         <>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -406,9 +415,12 @@ export default function NotesPage() {
                             type="button"
                             className={s.widthBtn}
                             onClick={() => toggleWidth(i)}
-                            aria-label={`${widthLabel(b.width)}. Switch to ${widthLabel(nextWidth(b.width))}`}
+                            aria-label={t("notes.switchWidth", {
+                              current: t(widthLabelKey(b.width)),
+                              next: t(widthLabelKey(nextWidth(b.width))),
+                            })}
                           >
-                            {widthLabel(b.width)}
+                            {t(widthLabelKey(b.width))}
                           </button>
                         </>
                       )}
@@ -427,7 +439,7 @@ export default function NotesPage() {
                       value={b.body ?? ""}
                       onChange={(e) => editBlock(i, e.target.value)}
                       placeholder={b.kind === "heading" ? t("notes.heading") : b.kind === "list" ? t("tone.oneItemPerLine") : t("nav.studio.write")}
-                      aria-label={`${b.kind} block`}
+                      aria-label={t(BLOCK_ARIA[b.kind])}
                       rows={b.kind === "heading" ? 1 : 3}
                       onKeyDown={(e) => onBlockKeyDown(e, i)}
                       onFocus={() => setFocused(i)}

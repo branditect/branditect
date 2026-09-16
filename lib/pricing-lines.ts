@@ -10,6 +10,7 @@
  */
 
 import { netPrice, marginPct } from "./numbers.ts";
+import type { StringKey } from "./i18n/index.ts";
 
 export type LineGroup = "in" | "goods" | "sell";
 export type LineId =
@@ -19,40 +20,46 @@ export type LineId =
 
 export interface LineDef {
   id: LineId;
+  /** English. Also what the field id is built from, so it stays put. */
   label: string;
+  labelKey: StringKey;
   group: LineGroup;
   /** The catalog_products column this reads and writes. */
   column: string;
   /** Retail, RRP and tax are inputs, not costs, and are never summed as one. */
   isCost: boolean;
   hint?: string;
+  hintKey?: StringKey;
 }
 
-export const GROUPS: { id: LineGroup; label: string; note: string }[] = [
-  { id: "in", label: "What comes in", note: "What the customer pays, and the tax inside it." },
-  { id: "goods", label: "Cost of goods", note: "What the thing costs you before you sell it." },
-  { id: "sell", label: "Cost to sell", note: "What it costs to get that sale, per sale." },
+export const GROUPS: { id: LineGroup; label: string; note: string; labelKey: StringKey; noteKey: StringKey }[] = [
+  { id: "in", label: "What comes in", note: "What the customer pays, and the tax inside it.",
+    labelKey: "productPricing.groupIn", noteKey: "productPricing.groupInNote" },
+  { id: "goods", label: "Cost of goods", note: "What the thing costs you before you sell it.",
+    labelKey: "productPricing.groupGoods", noteKey: "productPricing.groupGoodsNote" },
+  { id: "sell", label: "Cost to sell", note: "What it costs to get that sale, per sale.",
+    labelKey: "productPricing.groupSell", noteKey: "productPricing.groupSellNote" },
 ];
 
 export const LINES: LineDef[] = [
-  { id: "retail", label: "Retail price", group: "in", column: "price_retail", isCost: false },
-  { id: "rrp", label: "RRP", group: "in", column: "price_rrp", isCost: false },
-  { id: "tax", label: "Tax rate", group: "in", column: "tax_rate_pct", isCost: false, hint: "%" },
+  { id: "retail", label: "Retail price", labelKey: "num.retailPrice", group: "in", column: "price_retail", isCost: false },
+  { id: "rrp", label: "RRP", labelKey: "productPricing.lineRrp", group: "in", column: "price_rrp", isCost: false },
+  { id: "tax", label: "Tax rate", labelKey: "num.taxRate", group: "in", column: "tax_rate_pct", isCost: false, hint: "%" },
 
   // "Unit cost" is the old "factory cost". The column keeps its name.
-  { id: "unit", label: "Unit cost", group: "goods", column: "price_cogs", isCost: true,
-    hint: "What the supplier charges" },
-  { id: "freight", label: "Freight & duty", group: "goods", column: "freight_duty", isCost: true },
-  { id: "pack", label: "Packaging", group: "goods", column: "packaging_cost", isCost: true },
-  { id: "licence", label: "Licence cost", group: "goods", column: "licence_cost", isCost: true },
-  { id: "labour", label: "Labour per job", group: "goods", column: "labour_per_job", isCost: true },
+  { id: "unit", label: "Unit cost", labelKey: "productPricing.lineUnit", group: "goods", column: "price_cogs", isCost: true,
+    hint: "What the supplier charges", hintKey: "productPricing.lineUnitHint" },
+  { id: "freight", label: "Freight & duty", labelKey: "num.freightDuty", group: "goods", column: "freight_duty", isCost: true },
+  { id: "pack", label: "Packaging", labelKey: "num.packaging", group: "goods", column: "packaging_cost", isCost: true },
+  { id: "licence", label: "Licence cost", labelKey: "productPricing.lineLicence", group: "goods", column: "licence_cost", isCost: true },
+  { id: "labour", label: "Labour per job", labelKey: "productPricing.lineLabour", group: "goods", column: "labour_per_job", isCost: true },
 
-  { id: "cac", label: "CAC", group: "sell", column: "cac", isCost: true,
-    hint: "What one customer costs to win" },
-  { id: "fees", label: "Payment fees", group: "sell", column: "payment_fees", isCost: true },
-  { id: "ship", label: "Shipping to customer", group: "sell", column: "shipping_cost", isCost: true },
-  { id: "returns", label: "Returns allowance", group: "sell", column: "returns_allowance", isCost: true },
-  { id: "platform", label: "Platform fee", group: "sell", column: "platform_fee", isCost: true },
+  { id: "cac", label: "CAC", labelKey: "productPricing.lineCac", group: "sell", column: "cac", isCost: true,
+    hint: "What one customer costs to win", hintKey: "productPricing.lineCacHint" },
+  { id: "fees", label: "Payment fees", labelKey: "num.paymentFees", group: "sell", column: "payment_fees", isCost: true },
+  { id: "ship", label: "Shipping to customer", labelKey: "productPricing.lineShip", group: "sell", column: "shipping_cost", isCost: true },
+  { id: "returns", label: "Returns allowance", labelKey: "productPricing.lineReturns", group: "sell", column: "returns_allowance", isCost: true },
+  { id: "platform", label: "Platform fee", labelKey: "productPricing.linePlatform", group: "sell", column: "platform_fee", isCost: true },
 ];
 
 export function lineDef(id: string): LineDef | null {
@@ -89,6 +96,10 @@ export const PRESETS: Record<Preset, LineId[]> = {
   physical: ["retail", "tax", "unit", "freight", "pack", "fees", "ship", "returns"],
   digital: ["retail", "tax", "licence", "cac", "fees", "platform"],
   service: ["retail", "tax", "labour", "cac", "fees"],
+};
+
+export const PRESET_LABEL_KEYS: Record<Preset, StringKey> = {
+  physical: "num.physicalGoods", digital: "import.kindDigital", service: "import.kindService",
 };
 
 export const PRESET_LABELS: Record<Preset, string> = {

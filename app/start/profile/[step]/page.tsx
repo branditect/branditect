@@ -90,7 +90,7 @@ export default function ProfileStep() {
             // The one place a count of the gate belongs: a reason to come back,
             // phrased as a fact. Never a warning that blocks.
             <RailFoot icon={gateProgress(state).cleared ? "spark" : "key"}>
-              {gateFootNote(state)}
+              {(() => { const note = gateFootNote(state); return t(note.key, note.vars); })()}
             </RailFoot>
           }
         >

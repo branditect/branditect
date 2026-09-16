@@ -12,7 +12,7 @@ export function SavePill({ save }: { save: SaveState }) {
   const map = {
     saving: [t("settings.saving"), "bg-tile text-muted-2"],
     saved: [t("guardrails.saved"), "bg-green-wash text-green-ink"],
-    error: ["Not saved — retrying", "bg-tint-1 text-accent-dark"],
+    error: [t("start.notSavedRetrying"), "bg-tint-1 text-accent-dark"],
   } as const;
   const [label, cls] = map[save.kind];
   return (
@@ -93,7 +93,7 @@ export function StartShell({
               disabled={leaving}
               className="text-sm font-semibold text-muted-2 transition-colors hover:text-ink-2 disabled:opacity-60"
             >
-              {leaving ? t("settings.saving") : "Finish later →"}
+              {leaving ? t("settings.saving") : t("start.finishLater")}
             </button>
             <span className="mt-1 text-2xs font-medium text-faint">
               {t("start.answersSaved")}

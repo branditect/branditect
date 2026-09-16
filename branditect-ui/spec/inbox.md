@@ -994,3 +994,162 @@ the danger.
 7a now — it is small and the settings page is fresh. Then **inbox entry 6**, product image
 tagging, starting with 6a. 7b after that: it is the largest remaining piece and nothing is
 blocked on it.
+
+---
+
+## 8 · OPEN — batch C is in the dictionary. What is left is wiring, plus four bugs.
+
+**2026-09-14, after your batch A commit.**
+
+I regenerated `npm run i18n:gap` against the dictionary as it stands now, not as
+the committed report had it. The 530 in the checked-in copy was measured before
+batch B landed: **107 distinct strings across 22 files** is the real number.
+
+I then split that 107 by whether you currently have the file open. You have 81
+files modified. I wrote keys only for the fourteen you have not touched, so
+nothing here can collide with what you are in the middle of.
+
+### What I added
+
+**29 keys, both files, `en.ts` and `fi.ts` at 1237 each, 0 duplicates, `tsc`
+clean on the i18n side.** They cover:
+
+- `app/(app)/brand/visual-identity/page.tsx` — `vi.lede1`, `vi.lede2`,
+  `vi.platesFixed`, `vi.uploadThree`, `vi.swatchesCopy`, `vi.addTheOnesYouUse`,
+  `vi.opensIn`, `vi.opensInNewTab`, `vi.fourThings`, `vi.nothingUploaded`,
+  `vi.pangram`
+- `components/visual-identity/uploads.tsx` — `vi.uploading`, `vi.chooseFile`,
+  `vi.nameTypefaceFirst`, `vi.specimenNote`, `vi.addTypeface`
+- `app/(app)/knowledge/products/import/page.tsx` — `import.pastePlaceholder`
+- `app/(app)/knowledge/products/page.tsx` — `products.noneMatch`
+- `components/documents/ask-panel.tsx` — `ask.skipKeepsA`, `ask.skipKeepsB`
+- `components/image-library.tsx` — `images.uploadOne`, `images.uploadMany`,
+  `images.shownOf`, `images.removeFromFile`
+- `components/products/image-picker.tsx` — `picker.tagToProduct`,
+  `picker.tagOne`, `picker.tagN` (plain "Tag images" is already
+  `media.tagImages`; reuse it rather than keying the same sentence twice)
+- `components/products/product-picker.tsx` — `picker.oneWillShow`, `picker.nWillShow`
+
+`app/(app)/knowledge/images/page.tsx` needs no new key. Its one string is
+`assets.introNamed`, keyed in batch B. Read the note under it before you wire it.
+
+### Three of those need a rule, not just a `t()`
+
+**`vi.pangram` is not a translation and must never be "corrected" into one.**
+A pangram's whole job is to put every letter in front of you. The English one,
+"Sphinx of black quartz, judge my vow", contains no ä and no ö, which are
+exactly the two glyphs a Finnish reader checks a typeface for first. The Finnish
+value is a different sentence on purpose. If a future scan flags it as a
+mismatched translation, the scan is wrong.
+
+**`ask.skipKeepsB` carries its own leading space in English and opens on a comma
+in Finnish.** The source today is:
+
+```
+wait under{" "}<strong>{t("ask.notDescribed")}</strong> until you add it.
+```
+
+If you keep that `{" "}` and also key the tail, Finnish renders
+`Ei kuvausta , kunnes`. The `{" "}` before the `<strong>` is fine and must stay.
+The space *after* it has to live inside the key.
+
+**`import.pastePlaceholder` has real newlines in it.** `\n\n` between the blocks,
+`\n` inside them. It is a textarea placeholder with a worked example under it,
+and the Finnish example is priced Finnish: `1 500 €` and `800 €/kk`, not
+`€1,500` and `€800/month`.
+
+### The scanner catches — do not key these
+
+`i18n-gap.md` will keep listing them and they are all correctly English:
+
+- the Tailwind class string in `product-drawer.tsx`, `analyses: Record` in
+  `BrandGuidelineClient`, `1fr 1fr`, `2px solid transparent`, and all nine CSS
+  values in `knowledge/links`
+- `AA` / `AAA` — WCAG grades, the same in every language
+- `IMG`, `VID`, `SND`, `GFX`, `WEB` and their extension lists in
+  `lib/media-categories.ts`; `PHY`, `SRV`, `SAS`, `DIG` in products/import
+- `Google`, `Microsoft`, `Apple`, `Canva`, `Google Slides`, `DM Sans`,
+  `Branditect`, `BRANDITECT`, `SIGNED_OUT`
+- `Ag`, `120px / 32mm`, `24px / 8mm`
+- **`Routing` in `app/login/page.tsx` and `Brand setup` in `app/signup/page.tsx`.**
+  These are `withTimeout(work, what)` labels. `mapThrown` replaces them with
+  `AUTH_COPY.timedOut` before anything reaches a person, so they never render.
+  Worth confirming that stays true if you touch `lib/auth-timeout.ts`.
+- everything in `lib/studio-write.ts`. Its `deliverable` and `words` fields are
+  the model's instructions, and the file already says so in a comment. Which
+  brings me to the one real bug in it.
+
+### Four bugs, none of which I fixed, because three are in your open files
+
+**1 · The Finnish word bands in `lib/studio-write.ts` are wrong, and not by a
+rounding error.** `words: { short: "15 to 25 words", … }` goes into the prompt
+as the target length. Finnish is agglutinative: the same content takes roughly a
+third fewer words than English, because case endings do the work English spends
+prepositions and articles on. A Finnish ad written to "60 to 90 words" comes back
+noticeably longer than the English one it is supposed to match, and a LinkedIn
+post written to "220 to 320 words" overruns the fold.
+
+This is not a translation problem, so no key fixes it. It needs the band chosen
+by output language: a second set of numbers, roughly 0.65–0.7× the English, read
+when `output_language` is `fi`. Worth flagging that `output_language` and
+`interface_language` are separate columns and this one follows `output_language`
+— someone reading the interface in English can still be writing Finnish copy.
+
+**2 · `{brandName}'s social strategy` in `app/(app)/brand/channels/page.tsx:423.`**
+Same shape as the one I hit in `BrandBookClient`. A genitive on a variable has no
+translatable form: Finnish inflects the name itself — Deklanin, Sorbifyn, Vetran —
+and no template can do that from outside. The sentence has to be restructured so
+the name stays nominative, the way `assets.introNamed` was. The file is yours
+right now, so I left it alone.
+
+**3 · `No {toLowerCase} yet` in `BrandBookClient`.** Still there. A method name has
+leaked into a template literal. `bb.noneYet` is keyed as `No {kind} yet` and is
+ready for whichever noun was meant.
+
+**4 · `tone.sec.expression` and its six siblings do not exist in `en.ts`.**
+`app/(app)/brand/tone-of-voice/page.tsx:56` types `EDIT_TITLE` as
+`Record<…, StringKey>` and names seven keys — `tone.sec.expression`,
+`.pillars`, `.dos`, `.donts`, `.vocab`, `.touchpoints`, `.checklist` — none of
+which are in the dictionary. That file does not typecheck as it stands. I did
+**not** add them: you are mid-edit in that file and two of us writing the same
+seven keys is exactly how the `specs.help` collision happened. They are yours.
+If you would rather I write the Finnish for them, say so in this file and I will
+take them once you have committed.
+
+### Where that leaves the count
+
+Of the 107, the fourteen files above are keyed. The rest are in the 81 files you
+have open, plus the catch list, which is not work. Once your extraction pass
+commits, regenerate the gap and what remains should be close to nothing but the
+catches — at which point `FI_COPY_READY` is the only thing between here and a
+Finnish app.
+
+### Order
+
+Nothing here blocks you. Finish the extraction pass and commit it; the batch C
+wiring is fourteen small files and can ride along or follow. Bug 1 is the only
+one that needs a decision rather than a keystroke, and it can wait until the
+interface stops being half English.
+
+### After batch C: 107 → 51, and only two of the 51 are copy
+
+I regenerated the gap again with the new keys in. Everything still listed is on
+the catch list above or is `lib/studio-write.ts`, except two, and both are the
+scanner comparing literally rather than a missing translation:
+
+- `image-picker.tsx` "Tag {picked} images" is `picker.tagN`, keyed with
+  `{count}`. Different variable name, same sentence.
+- `product-picker.tsx` "{imageIds} images will show on the product's card." is
+  `picker.nWillShow`, keyed with `{count}` and a curly apostrophe, which is what
+  the rest of `en.ts` uses.
+
+So the dictionary side of the app is done. What decides whether the app looks
+Finnish is now entirely your extraction pass.
+
+**5 · One more, and it is a launch problem rather than a bug.**
+`DEFAULT_CHECKLIST` in `tone-of-voice/page.tsx:68` seeds a new brand's tone
+checklist with six English sentences, and the comment above it is right that once
+saved they are the brand's data and not interface copy. But a Finnish brand is
+seeded in English and has to rewrite all six by hand before the page is any use
+to them. The fix is to seed from `interface_language` at creation, not to key
+them. I have the Finnish ready when you want it; say so here.

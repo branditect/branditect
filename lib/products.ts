@@ -5,6 +5,7 @@
  * writes, or what you'd price something at? If not it belongs in the user's
  * inventory system. That test is what keeps this from becoming a worse Shopify.
  */
+import type { StringKey } from "./i18n/index.ts";
 
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
 
@@ -191,6 +192,13 @@ export function categoryStyle(category: string | null | undefined): string {
   if (!category) return "bg-tile text-muted";
   return CATEGORY_STYLES[category.trim().toLowerCase()] ?? "bg-tile text-ink-2";
 }
+
+/** What renders. STOCK_LABELS stays the English for anything outside a component. */
+export const STOCK_LABEL_KEYS: Record<StockStatus, StringKey> = {
+  in_stock: "product.stock.inStock",
+  low_stock: "product.stock.lowStock",
+  out_of_stock: "product.stock.outOfStock",
+};
 
 export const STOCK_LABELS: Record<StockStatus, string> = {
   in_stock: "In stock",

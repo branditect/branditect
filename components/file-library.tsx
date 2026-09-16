@@ -7,6 +7,7 @@ import { storagePathFromUrl } from "@/lib/storage-paths";
 import { signedUrls } from "@/lib/signed-url";
 import { summariseUpload, anyLanded, type UploadFailure } from "@/lib/upload-report";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 interface FileItem {
   id: string;
@@ -25,7 +26,8 @@ interface FileLibraryProps {
   acceptLabel: string;
   maxSize: number;
   icon: string;
-  emptyMessage: string;
+  /** A dictionary key, from TYPE_TABS. */
+  emptyMessage: StringKey | null;
   previewType: "image" | "video" | "audio" | "file";
 }
 
@@ -125,9 +127,9 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
       }
     }
     setUploading(false);
-    setUploadError(summariseUpload(failures, all.length));
+    setUploadError(summariseUpload(failures, all.length, t));
     if (anyLanded(failures, all.length)) fetchFiles();
-  }, [category, maxSize, fetchFiles, BRAND_ID]);
+  }, [category, maxSize, fetchFiles, BRAND_ID, t]);
 
   const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault(); setDragOver(false);
@@ -245,7 +247,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
           <>
             <span className="text-lg mb-2 text-muted">{icon}</span>
             <span className="font-mono text-[0.65rem] tracking-wide uppercase text-muted">{t("files.drop")}</span>
-            <span className="font-mono text-[0.5rem] text-muted/60 mt-1">{acceptLabel} · Max {maxSize}MB</span>
+            <span className="font-mono text-[0.5rem] text-muted/60 mt-1">{t("files.maxSize", { acceptLabel, maxSize })}</span>
           </>
         )}
       </div>
@@ -279,7 +281,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-[0.78rem] text-muted">{filterText ? "No files match your search" : emptyMessage}</p>
+          <p className="text-[0.78rem] text-muted">{filterText ? t("files.noMatch") : emptyMessage ? t(emptyMessage) : null}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -317,7 +319,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
                         {t("common.download")}
                       </a>
                       <button onClick={() => copyUrl(srcOf(item))} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
-                        {copiedUrl === srcOf(item) ? "Copied" : t("files.copyUrl")}
+                        {copiedUrl === srcOf(item) ? t("wr.copied") : t("files.copyUrl")}
                       </button>
                       <button onClick={() => startEditTags(item)} className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30">
                         {t("files.editTags")}

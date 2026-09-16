@@ -72,12 +72,15 @@ export default function HomePage() {
         <header className="flex items-start gap-4">
           <div className="min-w-0">
             <h1 className="text-display font-bold leading-[1.15] stack:text-h2">
-              {hour === null ? GREETING_BEFORE_MOUNT : greeting(hour)}
+              {t(hour === null ? GREETING_BEFORE_MOUNT : greeting(hour))}
               {firstName ? `, ${firstName}` : ""}
             </h1>
             <p className="mt-[3px] text-base font-normal text-muted-2">
               {(() => {
-                const line = readinessHeadline(readiness);
+                const headline = readinessHeadline(readiness);
+                const line = t(headline.key, headline.vars);
+                // English puts the diagnosis after a dash and bolds it; a
+                // language without the dash renders the sentence plain.
                 const [head, ...rest] = line.split("—");
                 return rest.length ? (
                   <>

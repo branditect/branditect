@@ -63,7 +63,7 @@ export default function ProductPicker({
     [products, query],
   );
 
-  const confirm = confirmState(imageIds.length, picked.size);
+  const confirm = confirmState(imageIds.length, picked.size, t);
 
   function toggle(id: string) {
     setPicked((prev) => {
@@ -82,7 +82,7 @@ export default function ProductPicker({
     setBusy(false);
     // fetch resolves on 4xx and 5xx. Reading json without checking res.ok is
     // how a tag reports success and writes nothing.
-    if (!res.ok) { setError(json.error ?? `Could not tag (${res.status})`); return; }
+    if (!res.ok) { setError(json.error ?? t("picker.couldNotTag", { status: res.status })); return; }
     onTagged(json.inserted ?? 0);
   }
 
@@ -99,8 +99,8 @@ export default function ProductPicker({
             <h2 className={s.title}>{t("images.tagToProduct")}</h2>
             <p className={s.sub}>
               {imageIds.length === 1
-                ? "This image will show on the product's card."
-                : `${imageIds.length} images will show on the product's card.`}
+                ? t("picker.oneWillShow")
+                : t("picker.nWillShow", { count: imageIds.length })}
             </p>
           </div>
           <button type="button" className={s.close} onClick={onClose} aria-label={t("common.close")}>
@@ -110,7 +110,12 @@ export default function ProductPicker({
 
         {matchWord && (
           <p className={s.match}>
-            {t("products.openedFromSuggestion")} <b>{matchWord}</b>. Nothing is tagged until you confirm.
+            {(() => {
+              // One sentence, split where the word goes, so Finnish can put it
+              // where Finnish puts it.
+              const [before, after = ""] = t("picker.openedFromSuggestion").split("{word}");
+              return <>{before}<b>{matchWord}</b>{after}</>;
+            })()}
           </p>
         )}
 
@@ -128,7 +133,7 @@ export default function ProductPicker({
         ) : shown.length === 0 ? (
           <p className={s.note}>
             {products.length === 0
-              ? "No products yet. Add one in Knowledge ▸ Products first."
+              ? t("picker.noProducts")
               : t("notes.noMatch", { query })}
           </p>
         ) : (
@@ -140,7 +145,7 @@ export default function ProductPicker({
                     type="checkbox"
                     checked={picked.has(p.id)}
                     onChange={() => toggle(p.id)}
-                    aria-label={`Tag to ${p.name}`}
+                    aria-label={t("picker.tagToName", { name: p.name })}
                   />
                   <span className={s.nm}>{p.name}</span>
                   {p.sku && <span className={s.sku}>{p.sku}</span>}
@@ -162,7 +167,7 @@ export default function ProductPicker({
             onClick={save}
             disabled={confirm.disabled || busy}
           >
-            {busy ? "Tagging…" : confirm.label}
+            {busy ? t("picker.tagging") : confirm.label}
           </button>
         </div>
       </div>

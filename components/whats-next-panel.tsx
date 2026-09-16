@@ -55,8 +55,8 @@ export default function WhatsNextPanel({
           >
             <IconTile icon={ICONS[check.id]} size={30} tint={TINTS[i] ?? 4} />
             <div className="min-w-0">
-              <div className="text-sm font-bold tracking-[-.1px]">{check.label}</div>
-              <div className="mt-px text-2xs font-medium text-muted">{check.detail}</div>
+              <div className="text-sm font-bold tracking-[-.1px]">{t(check.label)}</div>
+              <div className="mt-px text-2xs font-medium text-muted">{t(check.detail.key, check.detail.vars)}</div>
             </div>
             {check.passed ? (
               <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold text-good">
@@ -68,7 +68,7 @@ export default function WhatsNextPanel({
                 href={check.href!}
                 className="ml-auto whitespace-nowrap text-xs font-bold text-accent hover:underline"
               >
-                {check.action} →
+                {check.action ? t(check.action) : ""} →
               </Link>
             )}
           </div>

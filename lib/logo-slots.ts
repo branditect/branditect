@@ -10,6 +10,7 @@
  * are kept below as aliases so data written later still lands in the right
  * card instead of falling through to All files.
  */
+import type { StringKey } from "./i18n/en.ts";
 
 export type PlateKind = "light" | "dark" | "check";
 
@@ -26,11 +27,16 @@ export interface SlotDef {
   plate: PlateKind;
   /** The corner tag on the plate. */
   tag: string;
+  /** What renders; the English fields above stay as written. */
+  labelKey: StringKey;
+  usageKey: StringKey;
+  tagKey: StringKey;
 }
 
 export const SLOTS: SlotDef[] = [
   {
     slot: "primary",
+    labelKey: "visual.slot.primary.label", usageKey: "visual.slot.primary.usage", tagKey: "visual.slot.primary.tag",
     label: "Primary logo",
     usage: "The default. Use this unless there's a reason not to.",
     plate: "light",
@@ -38,6 +44,7 @@ export const SLOTS: SlotDef[] = [
   },
   {
     slot: "dark",
+    labelKey: "visual.slot.dark.label", usageKey: "visual.slot.dark.usage", tagKey: "visual.slot.dark.tag",
     label: "Primary, reversed",
     usage: "For dark backgrounds and photography.",
     plate: "dark",
@@ -45,6 +52,7 @@ export const SLOTS: SlotDef[] = [
   },
   {
     slot: "white",
+    labelKey: "visual.slot.white.label", usageKey: "visual.slot.white.usage", tagKey: "visual.slot.white.tag",
     label: "White / mono",
     usage: "One colour. For print, embroidery and anything single-ink.",
     plate: "dark",
@@ -52,6 +60,7 @@ export const SLOTS: SlotDef[] = [
   },
   {
     slot: "icon",
+    labelKey: "visual.slot.icon.label", usageKey: "visual.slot.icon.usage", tagKey: "visual.slot.icon.tag",
     label: "Symbol only",
     usage: "Favicons, app icons, avatars. Under 24px the wordmark stops being readable.",
     plate: "check",
@@ -99,6 +108,9 @@ export interface UseCase {
   slot: string;
   answer: string;
   note: string;
+  questionKey: StringKey;
+  answerKey: StringKey;
+  noteKey: StringKey;
   /** Home gradient, in reference order. */
   tone: "a" | "b" | "c";
 }
@@ -106,6 +118,7 @@ export interface UseCase {
 export const USE_CASES: UseCase[] = [
   {
     id: "light",
+    questionKey: "visual.use.light.question", answerKey: "visual.use.light.answer", noteKey: "visual.use.light.note",
     question: "I'm putting it on a white page",
     slot: "primary",
     answer: "Primary, on light",
@@ -114,6 +127,7 @@ export const USE_CASES: UseCase[] = [
   },
   {
     id: "dark",
+    questionKey: "visual.use.dark.question", answerKey: "visual.use.dark.answer", noteKey: "visual.use.dark.note",
     question: "It's going on a photo or a dark background",
     slot: "dark",
     answer: "Primary, reversed",
@@ -122,6 +136,7 @@ export const USE_CASES: UseCase[] = [
   },
   {
     id: "small",
+    questionKey: "visual.use.small.question", answerKey: "visual.use.small.answer", noteKey: "visual.use.small.note",
     question: "It needs to be tiny — favicon, app icon, avatar",
     slot: "icon",
     answer: "Symbol only",

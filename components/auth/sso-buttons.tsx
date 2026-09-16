@@ -18,8 +18,6 @@ import { useT } from "@/lib/i18n/use-t.tsx";
  * When a provider is wired, drop `demo` and its tag from that button only.
  */
 
-const NOTE = "Demo version. Sign in with email for now.";
-
 const PROVIDERS = [
   {
     name: "Google",
@@ -79,9 +77,9 @@ export default function SsoButtons({ emailFieldId }: { emailFieldId: string }) {
             onClick={handleDemoClick}
           >
             <span className={s.g}>{p.mark}</span>
-            <span className={s.lbl}>Continue with {p.name}</span>
+            <span className={s.lbl}>{t("auth.continueWith", { name: p.name })}</span>
             <span className={s.tag}>{t("auth.demo")}</span>
-            <span className={s.tip} role="tooltip">{NOTE}</span>
+            <span className={s.tip} role="tooltip">{t("auth.ssoDemoNote")}</span>
           </button>
         ))}
       </div>
@@ -96,7 +94,7 @@ export default function SsoButtons({ emailFieldId }: { emailFieldId: string }) {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 5a1.3 1.3 0 1 1 0 2.6A1.3 1.3 0 0 1 12 7m1.2 10.5h-2.4v-6h2.4z" />
             </svg>
-            {NOTE}
+            {t("auth.ssoDemoNote")}
           </>
         )}
       </p>

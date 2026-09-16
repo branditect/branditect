@@ -1,0 +1,123 @@
+
+  // ══ SIVUSTO, toinen kierros ══
+  //
+  // NO EM DASHES ANYWHERE BELOW. The public site bans them and the first round
+  // put one into site.about.brandTruthBody. Finnish does not need one: a comma
+  // or a full stop carries the same break, and ajatusviiva is the same
+  // machine-written tell in Finnish that the em dash is in English.
+
+  // ── Kolme katkennutta ─────────────────────────────────────────────────────
+  "site.home.q25full":
+    "Vastaat 25 kysymykseen. Ei ”mikä on missiosi”. Miksi aloitit, kenelle oikeasti teet, mitä et koskaan väitä edes kaupan hinnalla. Branditect kääntää vastaukset strategian perustaksi: asemointi, kohderyhmä, ääni, antiääni ja väitesääntösi.",
+  "site.pricing.topUpFull":
+    "Jos ne loppuvat kesken kuun, voit lisätä {topUp} yhdellä klikkauksella tai odottaa seuraavaa kuuta. Mitään ei poisteta eikä mikään lakkaa toimimasta. Brändiaivosi pysyvät luettavissa kummassakin tapauksessa.",
+  // Finnish reverses the English order: the owner comes first, the noun last.
+  // So the <br/> in the heading belongs after "Brändisi", not in the middle of
+  // the phrase where the English breaks it.
+  "site.pricing.h1": "Brändisi kaupalliset aivot.",
+
+  // ── Etusivu: hero ja luottamus ────────────────────────────────────────────
+  "site.home.lede":
+    "Kaupalliset aivot tuote- ja verkkokauppabrändeille. Se pitää strategiasi, tuotetotuutesi ja katteesi yhdessä, joten kaikki mitä julkaiset on brändin mukaista, paikkansapitävää ja kannattavaa. Se kirjoittaa tekstisi tuntien jokaisen tuotteesi, äänensävysi ja tyylisi. Ja tekee kuvasi siinä samalla. Se on kuin",
+  "site.home.trust1": "Ilmainen ikuisesti",
+  "site.home.trust2": "Ei korttia aloittamiseen",
+  "site.home.trust3": "100 krediittiä kaiken kokeiluun",
+  "site.home.trust4": "Tietosi pysyvät EU:ssa",
+
+  // ── Etusivu: roolit ───────────────────────────────────────────────────────
+  "site.home.role1": "Strategi, joka päättää mitä brändi edustaa ja mitä se ei koskaan sano",
+  "site.home.role2": "Tuotepäällikkö, joka hallitsee jokaisen tuotteen, yksityiskohdan ja hinnan",
+  // "the same way twice" is the joke, and it survives: kahdesti samalla tavalla.
+  "site.home.role3": "Copywriter, joka osaa kirjoittaa sen kahdesti samalla tavalla",
+  "site.home.role4": "Suunnittelija ja valokuvaaja, jotka tekevät kuvat ennen kuin kukaan ehtii pyytää",
+  "site.home.role5":
+    "Joku joka pitää kirjastoa: jokainen tuotekuva, video ja logo, joka formaatissa ja rajauksessa",
+  "site.home.role6":
+    "Yhteinen levyasema, jota yhden ihmisen pitäisi ylläpitää täysipäiväisesti, eikä yleensä ylläpidä",
+
+  // ── Etusivu: kolme korttia ────────────────────────────────────────────────
+  "site.home.card1Ask": "Kenelle tämä oikeasti on, ja miten heille pitäisi puhua?",
+  "site.home.card1Answer":
+    "Asiakassegmenttisi yhtenä kappaleena, jonka voisit antaa freelancerille, se laukaisija joka saa heidät ostamaan, valitsemasi ääni, ja ne neljä väitettä jotka omat sääntösi estävät. Kaikki tämän jälkeen tuotettu noudattaa sitä, ja siitä kaksi seuraavaa korttia kertovat.",
+  "site.home.card2Ask":
+    "Kirjoita julkaisu ja tuoteluettelon teksti tuotteille SKU 12 ja SKU 14, ja etsi kaikki niihin liitetyt kuvat.",
+  "site.home.card2Answer":
+    "Molemmat formaatit, sinun äänelläsi, kirjoitettuna sille segmentille jonka määritit ensimmäisessä kortissa. Kolme todennettua myyntiargumenttia ja dokumentti, josta kukin on peräisin. Kaksi väitettä estettynä todisteiden puutteesta. Yksitoista kuvaa kahdelle tuotteelle, ja niistä viisi merkittynä vähittäismyyntiin hyväksytyiksi.",
+  "site.home.card3Ask": "Voinko antaa tästä tuotteesta 25 prosentin alennuksen?",
+  "site.home.card3Answer":
+    "Et nykyisellä kustannuksella. Alarajasi on 21 prosenttia, ja se muuttui kun pakkaus kallistui maaliskuussa. Kirjoitetaanko kampanja 21 prosenttiin?",
+
+  // ── Alatunniste ───────────────────────────────────────────────────────────
+  "site.footer.contact": "Yhteystiedot",
+  "site.footer.madeIn": "Tehty Suomessa",
+
+  // ── Tilaukset ─────────────────────────────────────────────────────────────
+  "plan.free.name": "Ilmainen",
+  "plan.free.who": "Rakenna aivot. Pidä ne niin kauan kuin haluat.",
+  "plan.free.vatLine": "Ei korttia",
+  "plan.free.credits": "100 krediittiä",
+  "plan.free.creditsLabel": "Kertaluonteinen, ei vanhene",
+  "plan.free.f1": "Brändin totuus. Strategia, asemointi, äänensävy, visuaalinen ilme",
+  "plan.free.f2": "Tuotteen totuus. Jokainen tuote, sen tiedot ja väitteet jotka pystyt todistamaan",
+  "plan.free.f3": "Kaupallinen totuus. Kokonaishankintahinta, kate, alaraja, alennusrajat",
+  "plan.free.f4": "Jokainen lataamasi tiedosto luettuna ja indeksoituna, ilmaiseksi",
+  "plan.free.f5": "Brändin valmius, jotta tiedät mitä vielä puuttuu",
+  "plan.free.f6": "1 brändi, 200 Mt. Aina sinun luettavissasi",
+
+  "plan.pro.who": "Yrittäjälle, joka pyörittää yhtä brändiä kunnolla.",
+  "plan.pro.credits": "350 krediittiä",
+  "plan.everyMonth": "Joka kuukausi",
+  "plan.pro.cta": "Aloita ilmaiseksi, päivitä myöhemmin",
+  "plan.pro.f1": "Koko aivot, nyt sinun töissäsi",
+  "plan.pro.f2": "Tekstiä joka nojaa omiin tuotetietoihisi ja näyttää mistä jokainen luku tuli",
+  "plan.pro.f3": "Tarjoukset ja alennukset tarkistettuna alarajaasi vasten ennen kuin näet ne",
+  "plan.pro.f4": "Kuvia sinun valossasi, omista referensseistäsi",
+  "plan.pro.f5": "Kysy aivoilta mitä vain. Ne ovat lukeneet kaiken minkä annoit",
+  "plan.pro.f6": "Brändipakettisi linkki freelancereille ja painoille",
+  "plan.pro.f7": "1 brändi, 1 käyttäjä, 5 Gt",
+
+  "plan.proplus.who": "Toimistoille ja kaikille, jotka pyörittävät useampaa kuin yhtä brändiä.",
+  "plan.proplus.credits": "600 krediittiä",
+
+  "plan.ent.who": "Brändiportfolioille ja isommille tiimeille.",
+  "plan.ent.vatLine": "Hinta sen mukaan mitä tarvitset",
+  "plan.ent.credits": "Sovitaan",
+  "plan.ent.creditsLabel": "Sovitaan kanssasi",
+  "plan.ent.cta": "Ota yhteyttä",
+  "plan.ent.f1": "Rajattomasti brändejä ja käyttäjiä",
+  "plan.ent.f2": "Kertakirjautuminen",
+  "plan.ent.f3": "Räätälöity tietosopimus",
+  "plan.ent.f4": "Nimetty yhteyshenkilö, ei jonoa",
+  "plan.ent.f5": "Rakennamme aivot yhdessä kanssasi",
+
+  // ── Vertailutaulukko ──────────────────────────────────────────────────────
+  "cmp.price": "Hinta sis. alv, kuukaudessa",
+  "cmp.credits": "Krediitit",
+  "cmp.brands": "Brändit",
+  "cmp.seats": "Käyttäjät",
+  "cmp.storage": "Tallennustila",
+  "cmp.kitLink": "Brändipaketin jakolinkki",
+  "cmp.support": "Tuki",
+  "cmp.onceOnly": "100 kerran",
+  "cmp.perMonth350": "350/kk",
+  "cmp.perMonth600": "600/kk",
+  "cmp.agreed": "Sovitaan",
+  "cmp.unlimited": "Rajaton",
+  "cmp.yes": "Kyllä",
+  "cmp.no": "Ei",
+  "cmp.docs": "Ohjeet",
+  "cmp.email": "Sähköposti",
+  "cmp.emailPriority": "Sähköposti, etusija",
+  "cmp.namedContact": "Nimetty yhteyshenkilö",
+
+  // ── Mitä krediitillä saa ──────────────────────────────────────────────────
+  "credit.image": "Yksi kuva",
+  "credit.image.cost": "5 krediittiä",
+  "credit.copy": "Kolmen tekstiluonnoksen sarja",
+  "credit.copy.cost": "2 krediittiä",
+  "credit.question": "Yksi kysymys brändiaivoillesi",
+  "credit.question.cost": "1 krediitti",
+  "credit.indexing": "Minkä tahansa lataamasi tiedoston lukeminen ja indeksointi",
+  "credit.indexing.cost": "Ilmaista",
+  // Finnish puts the unit after the number and uses a space before the symbol.
+  "credit.topUp": "9 € 200 lisäkrediitistä",

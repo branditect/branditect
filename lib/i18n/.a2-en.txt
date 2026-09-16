@@ -1,0 +1,190 @@
+
+  // ══ APP, batch B ══ Studio (create images, write, brand book), Knowledge
+  // (documents, images, links) and the whole product card.
+  //
+  // NOT KEYED, deliberately: the seven CSS values in knowledge/links
+  // ("1px solid #EDEBE8", "spin 0.75s linear infinite", "64px 1fr auto" …), the
+  // Tailwind class string in product-drawer, and the product names Canva and
+  // Google Slides. Scanner catch, not copy.
+
+  // ── Knowledge ▸ Documents ─────────────────────────────────────────────────
+  "docs.all": "All",
+  "docs.productInfo": "Product info",
+  "docs.companyInfo": "Company info",
+  "docs.tooBig": "{name} exceeds the 50 MB limit.",
+  "docs.uploadFailed": "Upload failed",
+  "docs.uploadFailedNamed": "Failed to upload {name}: {msg}",
+  "docs.needTitle": "Please add a title.",
+  "docs.needContent": "Please add some content.",
+  "docs.building": "Building…",
+  "docs.active": "Active",
+  "docs.onlyTheseDocs":
+    "Branditect will only use information found in these documents. It will never invent product names, features, pricing, or company facts. If information is not in the vault, it will ask rather than guess.",
+  "docs.dropFilesOr": "Drop files here or",
+  "docs.saveToVault": "Save to vault →",
+  "docs.none": "No documents yet. Upload brand files to start building your vault.",
+  "docs.noneInCategory": "No documents in this category.",
+
+  // ── Knowledge ▸ Images ────────────────────────────────────────────────────
+  "assets.intro": "Access and manage all your brand assets in one place.",
+  // Reworded so the brand name is never inflected. See the note in fi.ts: the
+  // English possessive has no translatable form when the noun is a variable.
+  "assets.introNamed": "Access and manage all brand assets for {brandName} in one place.",
+
+  // ── Knowledge ▸ Links ─────────────────────────────────────────────────────
+  "templates.adding": "Adding…",
+
+  // ── Studio ▸ Brand book ───────────────────────────────────────────────────
+  "bb.title": "Brand book",
+  "bb.upload": "Upload brand book",
+  "bb.uploadYours": "Upload your brand book",
+  "bb.fileTypes": "PNG, JPG, PDF, screenshots",
+  "bb.fileTypesDrag": "PNG, JPG, screenshots — drag & drop or click",
+  "bb.chooseFiles": "Choose files",
+  "bb.colorCodes": "Color codes",
+  "bb.add": "+ Add",
+  "bb.addPages": "+ Add pages",
+  "bb.autoExtracted": "Auto-extracted when you ask AI about colors",
+  "bb.viewer": "Brand book viewer",
+  "bb.reading": "Reading the brand materials...",
+  "bb.askPlaceholder": "Ask about the brand — colors, fonts, logo rules...",
+  "bb.uploadFirst": "Upload brand book first, then ask questions...",
+  "bb.ask": "Ask",
+  // FIXME (build side): the source reads `No {toLowerCase} yet` — a method name
+  // has leaked into the template. It needs the actual noun before it can be
+  // translated. Keyed with a placeholder so the Finnish is ready either way.
+  "bb.noneYet": "No {kind} yet",
+
+  // ── Studio ▸ Create images ────────────────────────────────────────────────
+  "ci.lede":
+    "Pick something that already looks right, say what you want to see, and get a new image shot in the same light.",
+  "ci.whatAreYouMaking": "What are you making?",
+  "ci.fromCatalogue": "Something from your catalogue",
+  "ci.somethingElse": "Something else",
+  "ci.peoplePlacesMoods": "People, places, moods",
+  "ci.noProducts": "No products yet. Add one in Knowledge ▸ Products, or pick Something else.",
+  "ci.whichProduct": "Which product?",
+  "ci.onePhotoAdded": "1 product photo added as reference below.",
+  "ci.noPhotoOnFile": "No product photo on file, so nothing was added below.",
+  "ci.keptExact":
+    "The label, shape and colour are kept exact, and “this product” in your description means this one.",
+  "ci.pickReferences": "Pick your reference pictures",
+  "ci.pickReferencesHelp":
+    "Choose pictures that show what you are after. Up to three, and all of them are read.",
+  "ci.from": "From",
+  "ci.upload": "Upload",
+  "ci.whereIsIt": "Where is it?",
+  "ci.whereHelp": "This is the one thing a picture cannot tell us on its own.",
+  "ci.plainBackground": "Plain background",
+  "ci.indoors": "Indoors",
+  "ci.outdoors": "Outdoors",
+  "ci.outsideDaylight": "Outside, daylight",
+  "ci.whatDoYouWant": "What do you want to see?",
+  "ci.sayItPlainly": "Say it plainly, the way you would to a photographer.",
+  "ci.oneSentence": "One sentence is enough.",
+  "ci.shape": "Shape",
+  "ci.anythingElseLong": "Anything else — props, angle, space for text",
+  "ci.anythingElse": "Anything else",
+  "ci.exThisProduct": "This product on a silver background",
+  "ci.exNamedProduct": "{name} on a silver background",
+  "ci.exBottle": "The bottle on a kitchen counter in morning light",
+  "ci.whichImages": "Which images",
+  "ci.session": "Session",
+  "ci.nothingMade": "Nothing made yet.",
+  "ci.nothingMadeHelp":
+    "Pick a reference picture and say what you want to see. The first one takes about fifteen seconds.",
+  "ci.matchingLight": "Matching the light and grade from your references…",
+  "ci.get": "Get",
+  "ci.nothingSaved": "Nothing saved yet.",
+  "ci.savedGoTo":
+    "Saved images go to Knowledge ▸ Images, and can be used as references next time.",
+  "ci.useAsReference": "Use as reference",
+  "ci.pickFromKnowledge": "Pick from Knowledge",
+  "ci.fromKnowledgeImages": "From Knowledge ▸ Images",
+  "ci.noImagesInKnowledge": "No images in Knowledge yet.",
+  "ci.didntWork": "That didn't work.",
+  "ci.notSavedReason": "Not saved — {message}",
+  "ci.savedToKnowledge": "Saved to Knowledge ▸ Images",
+  "ci.notSaved": "Not saved",
+
+  // ── Studio ▸ Write ────────────────────────────────────────────────────────
+  "wr.short": "Short",
+  "wr.medium": "Medium",
+  "wr.long": "Long",
+  "wr.didntWork": "That didn't work.",
+  "wr.lede":
+    "Two answers and you have a draft. Everything it writes obeys your strategy, your tone of voice and your real product facts.",
+  "wr.whatAreWeWriting": "What are we writing?",
+  "wr.whatPlaceholder": "What are we writing? A press note, a video script…",
+  "wr.whatsItAbout": "What’s it about?",
+  "wr.aboutHelp": "One or two lines is enough. Say what happened and who it's for.",
+  "wr.tapExample": "Tap an example to fill it in, then edit. These change with the format you picked.",
+  "wr.options": "Options",
+  "wr.aboutAProduct": "About a product",
+  "wr.noParticularProduct": "No particular product",
+  "wr.drafts": "Drafts",
+  "wr.howManyDrafts": "How many drafts",
+  "wr.writing": "Writing…",
+  "wr.writeIt": "Write it",
+  "wr.writesFrom": "Writes from",
+  "wr.oneProductRecord": "1 product record",
+  "wr.productRecords": "{products} product records",
+  "wr.writeMore": "Write {count} more",
+  "wr.pickFormat": "Pick a format and say what it’s about.",
+  "wr.didntFinish": "didn't finish",
+  "wr.copied": "Copied",
+  "wr.checkingClaims": "Checking every claim against your product records…",
+  "wr.noTone": "No tone of voice yet, using plain, neutral copy.",
+  "wr.setOne": "Set one →",
+  "wr.fact": "Fact: {claim}, from {source}",
+
+  // ── Product card ▸ media ──────────────────────────────────────────────────
+  "media.notAvailable": "Not available.",
+  "media.couldNotLoad": "Could not load.",
+  "media.couldNotUntag": "Could not untag. It is still on this product.",
+  "media.couldNotTag": "Could not tag. Nothing was added.",
+  "media.tagImages": "Tag images",
+  "media.tagImagesHelp": "Tag images from your library, or generate some in Studio.",
+  "media.createInStudio": "Create images in Studio",
+  "media.tagToAnotherNamed": "Tag {file_name} to another product",
+  "media.documentsLiveIn": "Documents live in",
+  "media.knowledgeDocuments": "Knowledge ▸ Documents",
+
+  // ── Product card ▸ pricing ────────────────────────────────────────────────
+  "pricing.netOfTax": "Net of tax, against cost of goods.",
+  "pricing.contribution": "Contribution",
+  "pricing.afterCostToSell": "After cost to sell as well.",
+  "pricing.noTaxRate":
+    "No tax rate recorded, so both figures assume zero. A missing rate treated as zero reads the gross price as net and flatters the margin.",
+  "pricing.addOwnLine": "+ Add your own line",
+  "pricing.studioFollows": "Studio reads this and follows it. {length} characters.",
+  "pricing.guardrailsMoved": "Floor price, maximum discount and minimum margin now live in",
+
+  // ── Product card ▸ drawer ─────────────────────────────────────────────────
+  "product.tabDetails": "Details",
+  "product.tabInventory": "Inventory",
+  "product.tabMedia": "Media",
+  "product.tabHistory": "History",
+  "product.discardChanges": "Discard unsaved changes to this product?",
+  "product.changeImage": "Change product image",
+  "product.change": "Change",
+  "product.untitled": "Untitled product",
+  "product.name": "Product name",
+  "product.sku": "SKU",
+  "product.barcode": "Barcode",
+  "product.units": "Units",
+  "product.source": "Source",
+  "product.stockNote":
+    "Stock is here for one reason: so Studio won't promote something you can't ship. Reorder points, suppliers and lead times belong in your inventory system, not your brand brain.",
+  "product.imageNote": "The shot on the product list. Tagged images below do not change it.",
+  "product.noHistory":
+    "No changes recorded yet. Price and cost edits will appear here with who made them — someone will eventually need to know when a price changed and why.",
+  "product.saveChanges": "Save changes",
+
+  // ── Product card ▸ specs ──────────────────────────────────────────────────
+  "specs.nameField": "Specification {i} name",
+  "specs.valueField": "Specification {i} value",
+  "specs.exampleValue": "8.4 L/kg",
+  "specs.addRow": "+ Add specification",
+  "specs.help":
+    "Structured facts Studio can quote verbatim — spec tables, comparison blocks, ad claims. A row with no name is discarded.",

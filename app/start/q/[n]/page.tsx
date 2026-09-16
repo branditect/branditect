@@ -5,16 +5,29 @@ import { useRouter, useParams } from "next/navigation";
 import { useOnboarding } from "@/lib/use-onboarding";
 import { StartShell } from "@/components/start/shell";
 import { Rail, RailFoot, GuideCard } from "@/components/start/rail";
-import { sectionIndex, sectionOf, sectionTitle } from "@/lib/rail-steps";
-import {
-  QUESTIONS, EXEMPLAR, forTrack, type Track,
-} from "@/lib/onboarding-questions";
-import { useT } from "@/lib/i18n/use-t.tsx";
+import { sectionIndex, sectionOf } from "@/lib/rail-steps";
+import { QUESTIONS, type Track } from "@/lib/onboarding-questions";
+import { forLocale, sectionTitleFor } from "@/lib/onboarding-locale";
+import { useT, useLocale } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
+
+/** Why a question earns its place, for the four that say so. */
+const NOTE_KEY: Partial<Record<number, StringKey>> = {
+  6: "start.qNote.6", 8: "start.qNote.8", 10: "start.qNote.10", 20: "start.qNote.20",
+};
+
+/** Whose example this is, as a whole sentence per track. */
+const EXEMPLAR_KEY: Record<Track, StringKey> = {
+  physical: "start.exemplar.physical",
+  digital: "start.exemplar.digital",
+  service: "start.exemplar.service",
+};
 
 const TOTAL = QUESTIONS.length;
 
 export default function QuestionScreen() {
   const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const params = useParams<{ n: string }>();
   const n = Math.min(Math.max(Number(params.n) || 1, 1), TOTAL);
@@ -22,6 +35,9 @@ export default function QuestionScreen() {
 
   const { state, setAnswer, skip, flush, save, loading } = useOnboarding();
   const track: Track = state.profile?.track ?? "physical";
+  // The question, its guidance and its example in the interface language,
+  // falling back to English per field (lib/onboarding-locale.ts).
+  const lq = forLocale(n, track, locale)!;
   const [text, setText] = useState("");
 
   // Seed from saved state once it arrives, without clobbering live typing.
@@ -42,7 +58,7 @@ export default function QuestionScreen() {
       flush={flush}
       counter={
         <span className="text-micro font-extrabold uppercase tracking-[1.2px] text-lav-ink">
-          Question {n} of {TOTAL}
+          {t("start.questionOf", { n, total: TOTAL })}
         </span>
       }
       rail={
@@ -50,21 +66,22 @@ export default function QuestionScreen() {
         // screen the rail carries the question, so the stepper collapses to the
         // eyebrow plus the counter already in the header.
         <Rail
-          eyebrow={`Step ${sectionIndex(sectionId)} of 4 · ${sectionTitle(sectionId)}`}
-          heading={forTrack(q.q, track)}
+          eyebrow={t("start.stepOf", { index: sectionIndex(sectionId), title: sectionId ? sectionTitleFor(sectionId, locale) : "" })}
+          heading={lq.q}
           foot={
             <RailFoot icon={q.required ? "key" : "spark"}>
-              {q.note ??
-                (q.required
-                  ? "One of the five answers that unlocks your workspace."
-                  : "Skippable — it becomes a Brand Readiness item you can come back to.")}
+              {NOTE_KEY[n]
+                ? t(NOTE_KEY[n]!)
+                : q.required
+                  ? t("start.requiredNote")
+                  : t("start.skippableNote")}
             </RailFoot>
           }
         >
           <GuideCard
-            help={forTrack(q.help, track)}
-            example={q.ex[track]}
-            exemplar={EXEMPLAR[track]}
+            help={lq.help}
+            example={lq.ex}
+            attribution={t(EXEMPLAR_KEY[track])}
           />
         </Rail>
       }
@@ -82,7 +99,7 @@ export default function QuestionScreen() {
         onChange={(e) => { setText(e.target.value); setAnswer(n, e.target.value); }}
         onBlur={() => { void flush(); }}
         rows={7}
-        aria-label={forTrack(q.q, track)}
+        aria-label={lq.q}
         placeholder={t("start.answerPlaceholder")}
         className="min-h-[200px] w-full resize-y rounded-panel border-[1.5px] border-rule-2 bg-card px-5 py-[18px] text-base leading-[1.6] text-ink outline-none placeholder:font-normal placeholder:text-faint focus:border-accent focus:ring-4 focus:ring-tint-1"
       />
@@ -94,7 +111,7 @@ export default function QuestionScreen() {
 
         <button type="button" disabled={blocked} onClick={() => void go(n + 1)}
           className="ml-auto rounded-card bg-grad-mark px-6 py-3 text-sm font-bold text-white drop-shadow-btn disabled:opacity-50">
-          {n === TOTAL ? "Finish" : "Next question"}
+          {n === TOTAL ? t("start.finish") : t("start.nextQuestion")}
         </button>
 
         {/* Absent on the four required questions, never greyed out — a disabled

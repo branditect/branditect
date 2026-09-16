@@ -1,0 +1,186 @@
+
+  // ══ SOVELLUS, erä B ══ Studio, Tieto ja tuotekortti.
+
+  // ── Tieto ▸ Dokumentit ────────────────────────────────────────────────────
+  "docs.all": "Kaikki",
+  "docs.productInfo": "Tuotetiedot",
+  "docs.companyInfo": "Yritystiedot",
+  "docs.tooBig": "{name} ylittää 50 Mt:n rajan.",
+  "docs.uploadFailed": "Lataus epäonnistui",
+  "docs.uploadFailedNamed": "Tiedoston {name} lataus epäonnistui: {msg}",
+  "docs.needTitle": "Lisää otsikko.",
+  "docs.needContent": "Lisää sisältöä.",
+  "docs.building": "Rakennetaan…",
+  "docs.active": "Aktiivinen",
+  "docs.onlyTheseDocs":
+    "Branditect käyttää vain näistä dokumenteista löytyvää tietoa. Se ei koskaan keksi tuotenimiä, ominaisuuksia, hintoja tai yritystietoja. Jos tieto ei ole tallessa, se kysyy sen sijaan että arvaisi.",
+  "docs.dropFilesOr": "Pudota tiedostot tähän tai",
+  "docs.saveToVault": "Tallenna tietoihin →",
+  "docs.none": "Ei vielä dokumentteja. Lataa brändisi tiedostot, niin pääset alkuun.",
+  "docs.noneInCategory": "Tässä luokassa ei ole dokumentteja.",
+
+  // ── Tieto ▸ Kuvat ─────────────────────────────────────────────────────────
+  "assets.intro": "Hallitse kaikkia brändimateriaalejasi yhdessä paikassa.",
+  // THE ENGLISH POSSESSIVE CANNOT BE TRANSLATED HERE. "{brandName}'s brand
+  // assets" needs the genitive ON THE NAME in Finnish — Deklanin, Sorbifyn,
+  // Vetran — and the ending depends on the name's own ending, which no template
+  // can know. Gluing "in" onto a variable produces wrong Finnish for most
+  // names. So the sentence is rebuilt to put the name in a position that takes
+  // no ending at all. Do not "fix" this back to a possessive.
+  "assets.introNamed": "Hallitse brändin {brandName} kaikkia materiaaleja yhdessä paikassa.",
+
+  // ── Tieto ▸ Linkit ────────────────────────────────────────────────────────
+  "templates.adding": "Lisätään…",
+
+  // ── Studio ▸ Brändikirja ──────────────────────────────────────────────────
+  "bb.title": "Brändikirja",
+  "bb.upload": "Lataa brändikirja",
+  "bb.uploadYours": "Lataa brändikirjasi",
+  "bb.fileTypes": "PNG, JPG, PDF, kuvakaappaukset",
+  "bb.fileTypesDrag": "PNG, JPG, kuvakaappaukset. Raahaa tai klikkaa.",
+  "bb.chooseFiles": "Valitse tiedostot",
+  "bb.colorCodes": "Värikoodit",
+  "bb.add": "+ Lisää",
+  "bb.addPages": "+ Lisää sivuja",
+  "bb.autoExtracted": "Poimitaan automaattisesti kun kysyt tekoälyltä väreistä",
+  "bb.viewer": "Brändikirjan katselu",
+  "bb.reading": "Luetaan brändimateriaaleja…",
+  "bb.askPlaceholder": "Kysy brändistä: värit, kirjasimet, logosäännöt…",
+  "bb.uploadFirst": "Lataa ensin brändikirja, sitten voit kysyä…",
+  "bb.ask": "Kysy",
+  "bb.noneYet": "Ei vielä {kind}",
+
+  // ── Studio ▸ Luo kuvia ────────────────────────────────────────────────────
+  "ci.lede":
+    "Valitse jotain joka jo näyttää oikealta, kerro mitä haluat nähdä, ja saat uuden kuvan samassa valossa.",
+  "ci.whatAreYouMaking": "Mitä olet tekemässä?",
+  "ci.fromCatalogue": "Jotain luettelostasi",
+  "ci.somethingElse": "Jotain muuta",
+  "ci.peoplePlacesMoods": "Ihmisiä, paikkoja, tunnelmia",
+  "ci.noProducts": "Ei vielä tuotteita. Lisää tuote kohdassa Tieto ▸ Tuotteet, tai valitse Jotain muuta.",
+  "ci.whichProduct": "Mikä tuote?",
+  "ci.onePhotoAdded": "1 tuotekuva lisätty referenssiksi alle.",
+  "ci.noPhotoOnFile": "Tuotekuvaa ei ole tallessa, joten alle ei lisätty mitään.",
+  "ci.keptExact":
+    "Etiketti, muoto ja väri pidetään täsmällisinä, ja ”tämä tuote” kuvauksessasi tarkoittaa juuri tätä.",
+  "ci.pickReferences": "Valitse referenssikuvasi",
+  "ci.pickReferencesHelp":
+    "Valitse kuvia jotka näyttävät mitä haet. Enintään kolme, ja kaikki luetaan.",
+  "ci.from": "Lähde",
+  "ci.upload": "Lataa",
+  "ci.whereIsIt": "Missä se on?",
+  "ci.whereHelp": "Tämä on se ainoa asia jota kuva ei voi kertoa itsestään.",
+  "ci.plainBackground": "Yksivärinen tausta",
+  "ci.indoors": "Sisällä",
+  "ci.outdoors": "Ulkona",
+  "ci.outsideDaylight": "Ulkona, päivänvalossa",
+  "ci.whatDoYouWant": "Mitä haluat nähdä?",
+  "ci.sayItPlainly": "Sano se suoraan, niin kuin sanoisit valokuvaajalle.",
+  "ci.oneSentence": "Yksi lause riittää.",
+  "ci.shape": "Muoto",
+  "ci.anythingElseLong": "Muuta: rekvisiitta, kuvakulma, tila tekstille",
+  "ci.anythingElse": "Muuta",
+  "ci.exThisProduct": "Tämä tuote hopeanvärisellä taustalla",
+  "ci.exNamedProduct": "{name} hopeanvärisellä taustalla",
+  "ci.exBottle": "Pullo keittiön tasolla aamuvalossa",
+  "ci.whichImages": "Mitkä kuvat",
+  "ci.session": "Istunto",
+  "ci.nothingMade": "Ei vielä tehty mitään.",
+  "ci.nothingMadeHelp":
+    "Valitse referenssikuva ja kerro mitä haluat nähdä. Ensimmäinen kestää noin viisitoista sekuntia.",
+  "ci.matchingLight": "Sovitetaan valo ja sävyt referensseistäsi…",
+  "ci.get": "Hae",
+  "ci.nothingSaved": "Mitään ei ole vielä tallennettu.",
+  "ci.savedGoTo":
+    "Tallennetut kuvat menevät kohteeseen Tieto ▸ Kuvat, ja niitä voi käyttää referensseinä ensi kerralla.",
+  "ci.useAsReference": "Käytä referenssinä",
+  "ci.pickFromKnowledge": "Valitse Tiedosta",
+  "ci.fromKnowledgeImages": "Kohteesta Tieto ▸ Kuvat",
+  "ci.noImagesInKnowledge": "Tiedossa ei ole vielä kuvia.",
+  "ci.didntWork": "Se ei onnistunut.",
+  "ci.notSavedReason": "Ei tallennettu: {message}",
+  "ci.savedToKnowledge": "Tallennettu kohteeseen Tieto ▸ Kuvat",
+  "ci.notSaved": "Ei tallennettu",
+
+  // ── Studio ▸ Kirjoita ─────────────────────────────────────────────────────
+  "wr.short": "Lyhyt",
+  "wr.medium": "Keskipitkä",
+  "wr.long": "Pitkä",
+  "wr.didntWork": "Se ei onnistunut.",
+  "wr.lede":
+    "Kaksi vastausta ja sinulla on luonnos. Kaikki mitä se kirjoittaa noudattaa strategiaasi, äänensävyäsi ja oikeita tuotetietojasi.",
+  "wr.whatAreWeWriting": "Mitä kirjoitamme?",
+  "wr.whatPlaceholder": "Mitä kirjoitamme? Tiedote, videokäsikirjoitus…",
+  "wr.whatsItAbout": "Mistä se kertoo?",
+  "wr.aboutHelp": "Rivi tai kaksi riittää. Kerro mitä tapahtui ja kenelle se on.",
+  "wr.tapExample":
+    "Napauta esimerkkiä täyttääksesi sen, ja muokkaa sitten. Nämä vaihtuvat valitsemasi formaatin mukaan.",
+  "wr.options": "Vaihtoehdot",
+  "wr.aboutAProduct": "Tuotteesta",
+  "wr.noParticularProduct": "Ei tiettyä tuotetta",
+  "wr.drafts": "Luonnokset",
+  "wr.howManyDrafts": "Montako luonnosta",
+  "wr.writing": "Kirjoitetaan…",
+  "wr.writeIt": "Kirjoita se",
+  "wr.writesFrom": "Kirjoittaa lähteistä",
+  "wr.oneProductRecord": "1 tuotetietue",
+  "wr.productRecords": "{products} tuotetietuetta",
+  "wr.writeMore": "Kirjoita {count} lisää",
+  "wr.pickFormat": "Valitse formaatti ja kerro mistä se kertoo.",
+  "wr.didntFinish": "ei valmistunut",
+  "wr.copied": "Kopioitu",
+  "wr.checkingClaims": "Tarkistetaan jokainen väite tuotetietojasi vasten…",
+  "wr.noTone": "Äänensävyä ei ole vielä määritetty, käytetään selkeää ja neutraalia tekstiä.",
+  "wr.setOne": "Määritä se →",
+  "wr.fact": "Fakta: {claim}, lähde {source}",
+
+  // ── Tuotekortti ▸ media ───────────────────────────────────────────────────
+  "media.notAvailable": "Ei saatavilla.",
+  "media.couldNotLoad": "Lataus ei onnistunut.",
+  "media.couldNotUntag": "Liitoksen poisto ei onnistunut. Kuva on yhä tässä tuotteessa.",
+  "media.couldNotTag": "Liittäminen ei onnistunut. Mitään ei lisätty.",
+  "media.tagImages": "Liitä kuvia",
+  "media.tagImagesHelp": "Liitä kuvia kirjastostasi tai luo niitä Studiossa.",
+  "media.createInStudio": "Luo kuvia Studiossa",
+  "media.tagToAnotherNamed": "Liitä {file_name} toiseen tuotteeseen",
+  "media.documentsLiveIn": "Dokumentit ovat kohdassa",
+  "media.knowledgeDocuments": "Tieto ▸ Dokumentit",
+
+  // ── Tuotekortti ▸ hinnoittelu ─────────────────────────────────────────────
+  "pricing.netOfTax": "Verottomana, tavaran hankintahintaa vasten.",
+  "pricing.contribution": "Myyntikate",
+  "pricing.afterCostToSell": "Myös myyntikustannusten jälkeen.",
+  "pricing.noTaxRate":
+    "Verokantaa ei ole kirjattu, joten molemmat luvut olettavat nollaa. Puuttuva verokanta nollana tulkitsee bruttohinnan nettona ja imartelee katetta.",
+  "pricing.addOwnLine": "+ Lisää oma rivi",
+  "pricing.studioFollows": "Studio lukee tämän ja noudattaa sitä. {length} merkkiä.",
+  "pricing.guardrailsMoved": "Alarajahinta, enimmäisalennus ja vähimmäiskate ovat nyt kohdassa",
+
+  // ── Tuotekortti ▸ paneeli ─────────────────────────────────────────────────
+  "product.tabDetails": "Tiedot",
+  "product.tabInventory": "Varasto",
+  "product.tabMedia": "Media",
+  "product.tabHistory": "Historia",
+  "product.discardChanges": "Hylätäänkö tallentamattomat muutokset?",
+  "product.changeImage": "Vaihda tuotekuva",
+  "product.change": "Vaihda",
+  "product.untitled": "Nimetön tuote",
+  "product.name": "Tuotteen nimi",
+  "product.sku": "SKU",
+  "product.barcode": "Viivakoodi",
+  "product.units": "Yksiköt",
+  "product.source": "Lähde",
+  "product.stockNote":
+    "Varastotieto on täällä yhdestä syystä: jotta Studio ei mainosta jotain mitä et voi toimittaa. Tilauspisteet, toimittajat ja toimitusajat kuuluvat varastojärjestelmääsi, eivät brändiaivoihisi.",
+  "product.imageNote": "Kuva tuotelistassa. Alla liitetyt kuvat eivät muuta sitä.",
+  "product.noHistory":
+    "Muutoksia ei ole vielä kirjattu. Hinta- ja kustannusmuutokset näkyvät täällä tekijöineen. Joku tulee vielä kysymään, milloin hinta muuttui ja miksi.",
+  "product.saveChanges": "Tallenna muutokset",
+
+  // ── Tuotekortti ▸ ominaisuudet ────────────────────────────────────────────
+  "specs.nameField": "Ominaisuuden {i} nimi",
+  "specs.valueField": "Ominaisuuden {i} arvo",
+  "specs.exampleValue": "8,4 l/kg",
+  "specs.addRow": "+ Lisää ominaisuus",
+  "specs.help":
+    "Jäsenneltyjä faktoja, joita Studio voi lainata sanatarkasti: taulukot, vertailut, mainosväitteet. Rivi ilman nimeä hylätään.",

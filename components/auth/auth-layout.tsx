@@ -18,10 +18,10 @@ type Copy = StringKey | { en: string };
  */
 
 const FEATURES: [Copy, Copy][] = [
-  [{ en: "Write on brand" }, "home.writeDesc"],
-  ["nav.studio.createImages", { en: "New visuals based on your products and style." }],
-  ["home.numbersTitle", { en: "Profitability, pricing and offers that make sense." }],
-  [{ en: "Brand assets" }, { en: "Logos, colors, guidelines and everything in one place." }],
+  ["auth.feature.write", "home.writeDesc"],
+  ["nav.studio.createImages", "auth.feature.imagesDesc"],
+  ["home.numbersTitle", "auth.feature.numbersDesc"],
+  ["auth.feature.assets", "auth.feature.assetsDesc"],
 ];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {

@@ -134,7 +134,7 @@ export function ApplyPanel({
         <Link href={`/knowledge/products?${query.toString()}`}
           className="mt-3 flex items-center justify-center gap-[7px] rounded-tile bg-grad-mark p-2.5 text-sm font-bold text-white drop-shadow-[0_5px_10px_rgba(232,73,32,.3)] hover:brightness-[1.03]"
           aria-disabled={disabled}>
-          Apply to {productName}
+          {t("calc.applyTo", { name: productName ?? "" })}
           <Icon name="arrow" size={14} />
         </Link>
       ) : (
@@ -156,8 +156,7 @@ export function ProductPicker({
   if (products.length === 0) {
     return (
       <p className="rounded-card border border-rule bg-tile px-3.5 py-3 text-xs font-medium leading-[1.55] text-muted">
-        No products yet, so there is nothing to prefill from — this is a quick calculation. That is
-        a normal way to use it: work out the numbers first, add the product after.
+        {t("calc.noProductsToPrefill")}
       </p>
     );
   }

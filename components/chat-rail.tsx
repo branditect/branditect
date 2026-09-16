@@ -71,12 +71,16 @@ export default function ChatRail({ indexedFileCount, suggestions, source }: Chat
 
         <div className="mt-[11px] flex items-center gap-1.5">
           <span aria-hidden="true" className="block h-1.5 w-1.5 rounded-full bg-good" />
-          <span className="text-micro font-bold tracking-[1px] text-ink-3">TRAINED</span>
+          <span className="text-micro font-bold tracking-[1px] text-ink-3">{t("chatRail.trained")}</span>
         </div>
 
         <p className="mt-[7px] text-xs font-normal leading-[1.45] text-muted-2">
-          Reads your Brand, your Numbers and everything in Knowledge.{" "}
-          <span className="tabular-nums">{indexedFileCount}</span> files indexed.
+          {t("chatRail.readsEverything")}{" "}
+          {(() => {
+            // The count keeps its tabular figures, wherever the sentence puts it.
+            const [before, after = ""] = t("chatRail.filesIndexed").split("{count}");
+            return <>{before}<span className="tabular-nums">{indexedFileCount}</span>{after}</>;
+          })()}
         </p>
 
         {/* Suggestions seed the input rather than navigating away. */}

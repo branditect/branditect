@@ -12,7 +12,7 @@ import {
   fromRow,
   margin,
   sortByMargin,
-  STOCK_LABELS,
+  STOCK_LABEL_KEYS,
   STOCK_STYLES,
   type Product,
 } from "@/lib/products";
@@ -119,14 +119,14 @@ export default function ProductsPage() {
       if (!res.ok) {
         // supabase-js never throws, so the route's own error is the only
         // signal that nothing happened. Say so rather than showing it gone.
-        setRemoveError(data.message || data.error || "That did not save. The product is still here.");
+        setRemoveError(data.message || data.error || t("product.saveFailed"));
         return;
       }
       setProducts((prev) => (prev ?? []).filter((x) => x.id !== p.id));
       if (selectedId === p.id) setSelectedId(null);
       setUndo(p);
     } catch {
-      setRemoveError("That did not save. The product is still here.");
+      setRemoveError(t("product.saveFailed"));
     } finally {
       setRemoving(false);
       setConfirming(null);
@@ -140,7 +140,7 @@ export default function ProductsPage() {
       { method: "DELETE" },
     );
     if (!res.ok) {
-      setRemoveError("Could not put it back. Reload and try again.");
+      setRemoveError(t("product.restoreFailed"));
       return;
     }
     setProducts((prev) => [...(prev ?? []), p]);
@@ -229,8 +229,7 @@ export default function ProductsPage() {
           <div className="mt-8 rounded-card border border-rule bg-tile p-6">
             <h2 className="text-h3 font-bold">{t("products.none")}</h2>
             <p className="mt-2 max-w-[52ch] text-sm font-medium leading-[1.6] text-ink-2">
-              Branditect can&apos;t write about products it doesn&apos;t know. Add your first, or
-              import your catalogue.
+              {t("product.emptyBody")}
             </p>
             <div className="mt-4 flex gap-2.5">
               <Link
@@ -253,7 +252,7 @@ export default function ProductsPage() {
           <div className="mt-8 rounded-card border border-rule bg-tile p-6">
             <h2 className="text-h3 font-bold">{t("notes.noMatch", { query })}</h2>
             <p className="mt-2 text-sm font-medium text-ink-2">
-              {products?.length} products in the catalogue, none with that name, SKU or category.
+              {t("products.noneMatch", { length: products?.length ?? 0 })}
             </p>
             <button
               type="button"
@@ -270,11 +269,11 @@ export default function ProductsPage() {
             <div className="mt-[18px] overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse">
                 <caption className="sr-only">
-                  Products, sorted by {sort} {dir === "asc" ? "ascending" : "descending"}
+                  {t(dir === "asc" ? "product.sortedAsc" : "product.sortedDesc", { sort: t(`product.sort.${sort}`) })}
                 </caption>
                 <thead>
                   <tr>
-                    <SortHeader label="Product" active={sort === "name"} dir={dir} onClick={() => toggleSort("name")} />
+                    <SortHeader label={t("product.colProduct")} active={sort === "name"} dir={dir} onClick={() => toggleSort("name")} />
                     <th scope="col" className="border-b border-rule px-2.5 pb-2.5 text-left text-2xs font-bold tracking-[0.3px] text-muted-2">
                       {t("common.category")}
                     </th>
@@ -284,8 +283,8 @@ export default function ProductsPage() {
                     <th scope="col" className="whitespace-nowrap border-b border-rule px-2.5 pb-2.5 text-right text-2xs font-bold tracking-[0.3px] text-muted-2">
                       {t("common.cost")}
                     </th>
-                    <SortHeader label="Price" numeric active={sort === "price"} dir={dir} onClick={() => toggleSort("price")} />
-                    <SortHeader label="Margin" numeric active={sort === "margin"} dir={dir} onClick={() => toggleSort("margin")} />
+                    <SortHeader label={t("product.colPrice")} numeric active={sort === "price"} dir={dir} onClick={() => toggleSort("price")} />
+                    <SortHeader label={t("product.colMargin")} numeric active={sort === "margin"} dir={dir} onClick={() => toggleSort("margin")} />
                     <th scope="col" className="border-b border-rule pb-2.5">
                       <span className="sr-only">{t("products.openDetail")}</span>
                     </th>
@@ -353,7 +352,7 @@ export default function ProductsPage() {
                           )}
                           {p.stockStatus ? (
                             <span className={`text-2xs font-semibold ${STOCK_STYLES[p.stockStatus]}`}>
-                              {STOCK_LABELS[p.stockStatus]}
+                              {t(STOCK_LABEL_KEYS[p.stockStatus])}
                             </span>
                           ) : (
                             <span className="text-2xs text-faint">—</span>
@@ -393,8 +392,8 @@ export default function ProductsPage() {
                             {/* Stops the row click, which opens the drawer. */}
                             <button
                               type="button"
-                              aria-label={`Remove ${p.name}`}
-                              title={`Remove ${p.name}`}
+                              aria-label={t("product.removeName", { name: p.name })}
+                              title={t("product.removeName", { name: p.name })}
                               onClick={(e) => { e.stopPropagation(); setConfirming(p); }}
                               className="grid h-7 w-7 place-items-center rounded-[9px] border border-rule-2 bg-white text-muted-2 hover:border-[#f3c9c9] hover:bg-[#fdecec] hover:text-[#a63232] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
                             >
@@ -421,8 +420,7 @@ export default function ProductsPage() {
 
             {sorted.some((p) => !margin(p)?.exact) && (
               <p className="mt-3 text-2xs font-medium text-muted">
-                <span className="text-amber">*</span> Estimated — computed without a landed cost or
-                tax rate, so it reads high. Open a product to see which figure is missing.
+                <span className="text-amber">*</span> {t("product.estimatedNote")}
               </p>
             )}
 
@@ -467,8 +465,11 @@ export default function ProductsPage() {
                 <Icon name="chevronRight" size={12} />
               </button>
               <span className="text-xs font-medium text-muted-2">
-                Showing {(current - 1) * PAGE_SIZE + 1}–
-                {Math.min(current * PAGE_SIZE, sorted.length)} of {sorted.length} products
+                {t("product.showing", {
+                  from: (current - 1) * PAGE_SIZE + 1,
+                  to: Math.min(current * PAGE_SIZE, sorted.length),
+                  total: sorted.length,
+                })}
               </span>
             </nav>
           </>

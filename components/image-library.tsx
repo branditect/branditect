@@ -13,6 +13,7 @@ import {
 } from "@/lib/product-picker";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -42,6 +43,16 @@ interface PendingUpload {
 
 const CATEGORIES = ["social", "event", "product", "campaign", "brand", "ai-generated"];
 const FORMATS = ["square", "story", "landscape", "portrait", "other"];
+/* The stored values above stay English; these are what a person reads. A value
+   with no entry (an older row) shows as stored. */
+const CATEGORY_KEY: Record<string, StringKey> = {
+  social: "kImages.cat.social", event: "kImages.cat.event", product: "kImages.cat.product",
+  campaign: "kImages.cat.campaign", brand: "kImages.cat.brand", "ai-generated": "kImages.cat.aiGenerated",
+};
+const FORMAT_KEY: Record<string, StringKey> = {
+  square: "kImages.format.square", story: "kImages.format.story", landscape: "kImages.format.landscape",
+  portrait: "kImages.format.portrait", other: "kImages.format.other",
+};
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 // Brand ID is passed as prop or defaults
 const DEFAULT_BRAND_ID = "default";
@@ -300,7 +311,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
       `/api/products/attachments?product_id=${productId}&brand_id=${brandId}&image_id=${imageId}`,
       { method: "DELETE" },
     );
-    if (!res.ok) { setTagNote("Could not remove that link."); return; }
+    if (!res.ok) { setTagNote(t("kImages.removeLinkFailed")); return; }
     await loadLinks();
   }
 
@@ -378,7 +389,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         <div className="mb-6 bg-white border border-light rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-light bg-pale flex items-center justify-between">
             <span className="font-mono text-[0.58rem] tracking-wider uppercase text-muted">
-              {pendingUploads.length} image{pendingUploads.length > 1 ? "s" : ""} ready
+              {t(pendingUploads.length > 1 ? "kImages.readyMany" : "kImages.readyOne", { count: pendingUploads.length })}
             </span>
             <div className="flex items-center gap-2">
               {pendingUploads.length > 1 && (
@@ -388,7 +399,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                     onChange={(e) => setBatchCategory(e.target.value)}
                     className="font-mono text-[0.6rem] border border-light rounded px-2 py-1 text-ink"
                   >
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEY[c])}</option>)}
                   </select>
                   <input
                     value={batchCampaign}
@@ -430,7 +441,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                       onChange={(e) => updatePending(i, "category", e.target.value)}
                       className="w-full text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
                     >
-                      {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEY[c])}</option>)}
                     </select>
                   </div>
                   <div>
@@ -440,7 +451,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                       onChange={(e) => updatePending(i, "format", e.target.value)}
                       className="w-full text-[0.7rem] border border-light rounded px-2 py-1 text-ink"
                     >
-                      {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
+                      {FORMATS.map((f) => <option key={f} value={f}>{t(FORMAT_KEY[f])}</option>)}
                     </select>
                   </div>
                   <div>
@@ -487,7 +498,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
               disabled={uploading}
               className="px-5 py-2 rounded-lg bg-brand-orange text-white font-mono text-[0.65rem] uppercase tracking-wide hover:bg-brand-orange-hover disabled:opacity-50 transition-all"
             >
-              {uploading ? t("files.uploading") : `Upload ${pendingUploads.length} image${pendingUploads.length > 1 ? "s" : ""}`}
+              {uploading ? t("files.uploading") : (pendingUploads.length > 1 ? t("images.uploadMany", { count: pendingUploads.length }) : t("images.uploadOne"))}
             </button>
           </div>
         </div>
@@ -501,7 +512,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           className="font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white"
         >
           <option value="">{t("images.allCategories")}</option>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEY[c])}</option>)}
         </select>
         <select
           value={filterFormat}
@@ -509,7 +520,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           className="font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white"
         >
           <option value="">{t("images.allFormats")}</option>
-          {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
+          {FORMATS.map((f) => <option key={f} value={f}>{t(FORMAT_KEY[f])}</option>)}
         </select>
         <input
           value={filterTags}
@@ -518,7 +529,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
           className="flex-1 min-w-[200px] font-mono text-[0.65rem] border border-light rounded-md px-3 py-1.5 text-ink bg-white placeholder:text-muted/50 focus:outline-none focus:border-brand-orange"
         />
         <span className="font-mono text-[0.55rem] text-muted">
-          {filtered.length} image{filtered.length !== 1 ? "s" : ""}
+          {t(filtered.length === 1 ? "kImages.countOne" : "kImages.countMany", { count: filtered.length })}
         </span>
       </div>
 
@@ -531,7 +542,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         <div className="text-center py-12">
           <div className="text-2xl mb-2">🖼</div>
           <p className="text-[0.78rem] text-muted">
-            {images.length === 0 ? "No images uploaded yet. Drop some files above to get started." : "No images match your filters."}
+            {images.length === 0 ? t("kImages.emptyLibrary") : t("kImages.noFilterMatch")}
           </p>
         </div>
       ) : (
@@ -562,7 +573,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
             {t("images.untagged")} <span data-untagged-count>{untaggedHere}</span>
           </button>
           <span className="text-[13px] text-muted" data-shown-count>
-            {filtered.length} of {images.length} images
+            {t("images.shownOf", { shown: filtered.length, total: images.length })}
           </span>
         </div>
 
@@ -571,7 +582,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
             person does twice. */}
         {selected.size > 0 && (
           <div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-ink text-white">
-            <span className="text-[13px] font-bold">{selectionLabel(selected.size)}</span>
+            <span className="text-[13px] font-bold">{selectionLabel(selected.size, t)}</span>
             <div className="flex-1" />
             <button
               type="button"
@@ -611,7 +622,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); toggleSelect(img.id); }}
-                  aria-label={selected.has(img.id) ? `Deselect ${img.file_name}` : `Select ${img.file_name}`}
+                  aria-label={t(selected.has(img.id) ? "kImages.deselect" : "kImages.select", { name: img.file_name })}
                   aria-pressed={selected.has(img.id)}
                   className={`absolute top-1.5 left-1.5 z-10 grid place-items-center w-6 h-6 rounded-md border text-[12px] font-bold ${
                     selected.has(img.id)
@@ -647,7 +658,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                         onClick={() => copyUrl(srcOf(img))}
                         className="px-2 py-1 rounded bg-white/20 text-white font-mono text-[0.5rem] uppercase hover:bg-white/30"
                       >
-                        {copiedUrl === srcOf(img) ? "Copied ✓" : t("files.copyUrl")}
+                        {copiedUrl === srcOf(img) ? t("kImages.copiedCheck") : t("files.copyUrl")}
                       </button>
                       <button
                         onClick={() => startEditTags(img)}
@@ -686,10 +697,10 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                   <>
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="font-mono text-[0.5rem] uppercase tracking-wide text-brand-orange bg-brand-orange-pale border border-brand-orange-mid px-1 py-px rounded-[3px]">
-                        {img.category}
+                        {CATEGORY_KEY[img.category] ? t(CATEGORY_KEY[img.category]) : img.category}
                       </span>
                       <span className="font-mono text-[0.5rem] uppercase tracking-wide text-muted bg-pale border border-light px-1 py-px rounded-[3px]">
-                        {img.format}
+                        {FORMAT_KEY[img.format] ? t(FORMAT_KEY[img.format]) : img.format}
                       </span>
                     </div>
                     {img.tags.length > 0 && (
@@ -737,7 +748,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
                                 <button
                                   type="button"
                                   onClick={() => untag(img.id, prod.id)}
-                                  aria-label={`Remove ${prod.name} from ${img.file_name}`}
+                                  aria-label={t("images.removeFromFile", { name: prod.name, file_name: img.file_name })}
                                   title={t("images.removesLinkOnly")}
                                   className="text-muted hover:text-red-600 leading-none"
                                 >

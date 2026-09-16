@@ -17,6 +17,14 @@
  * Kept out of the component so the reporting can be tested: the runner strips
  * types but does not parse JSX.
  */
+import { translate, type StringKey, type Vars } from "./i18n/index.ts";
+
+/**
+ * A translator. Components pass `useT()`; everything else, tests included,
+ * gets English, so the English wording has one definition: the dictionary.
+ */
+type Tr = (key: StringKey, vars?: Vars) => string;
+const EN: Tr = (key, vars) => translate("en", key, vars);
 
 export type FailureKind = "storage" | "row" | "too-big";
 
@@ -31,17 +39,26 @@ export interface UploadFailure {
  * check-constraint violation names the constraint, which is the difference
  * between "it did not work" and a fixable report.
  */
-export function describeFailure(f: UploadFailure): string {
-  const name = f.fileName || "That file";
+export function describeFailure(f: UploadFailure, t: Tr = EN): string {
+  const name = f.fileName || t("files.upload.thatFile");
   switch (f.kind) {
     case "too-big":
-      return `${name} is over the size limit and was not uploaded.`;
+      return t("files.upload.tooBig", { name });
     case "storage":
-      return `${name} could not be stored${f.detail ? `: ${f.detail}` : "."}`;
+      return f.detail ? t("files.upload.storageDetail", { name, detail: f.detail }) : t("files.upload.storage", { name });
     case "row":
       // The bytes are in storage but nothing points at them, which is worse
       // than a plain failure: retrying leaves an orphan behind.
-      return `${name} was uploaded but could not be saved to the library${f.detail ? `: ${f.detail}` : "."}`;
+      return f.detail ? t("files.upload.rowDetail", { name, detail: f.detail }) : t("files.upload.row", { name });
+  }
+}
+
+/** The same failure with no file named, for a batch that shares one cause. */
+function describeCause(f: UploadFailure, t: Tr): string {
+  switch (f.kind) {
+    case "too-big": return t("files.upload.sameTooBig");
+    case "storage": return f.detail ? t("files.upload.sameStorageDetail", { detail: f.detail }) : t("files.upload.sameStorage");
+    case "row": return f.detail ? t("files.upload.sameRowDetail", { detail: f.detail }) : t("files.upload.sameRow");
   }
 }
 
@@ -49,18 +66,17 @@ export function describeFailure(f: UploadFailure): string {
  * The banner for a batch. Null means every file landed — the only case in
  * which saying nothing is correct.
  */
-export function summariseUpload(failures: UploadFailure[], attempted: number): string | null {
+export function summariseUpload(failures: UploadFailure[], attempted: number, t: Tr = EN): string | null {
   if (failures.length === 0) return null;
-  if (failures.length === 1) return describeFailure(failures[0]);
+  if (failures.length === 1) return describeFailure(failures[0], t);
 
   const kinds = new Set(failures.map((f) => f.kind));
-  const lead = `${failures.length} of ${attempted} files did not upload.`;
+  const lead = t("files.upload.lead", { failed: failures.length, attempted });
   if (kinds.size === 1) {
     // One cause, so name it once rather than repeating it per file.
-    const sample = describeFailure({ ...failures[0], fileName: "" }).replace(/^That file /, "");
-    return `${lead} ${sample}`;
+    return `${lead} ${describeCause(failures[0], t)}`;
   }
-  return `${lead} ${failures.map((f) => describeFailure(f)).join(" ")}`;
+  return `${lead} ${failures.map((f) => describeFailure(f, t)).join(" ")}`;
 }
 
 /**

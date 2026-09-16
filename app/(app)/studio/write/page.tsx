@@ -27,6 +27,7 @@ import {
 import s from "@/components/studio/write.module.css";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
+import type { StringKey } from "@/lib/i18n/index.ts";
 
 interface Product {
   id: string;
@@ -39,10 +40,10 @@ type Slot =
   | { state: "done"; draft: Draft }
   | { state: "failed"; reason: string };
 
-const LENGTHS: { id: Length; label: string }[] = [
-  { id: "short", label: "Short" },
-  { id: "medium", label: "Medium" },
-  { id: "long", label: "Long" },
+const LENGTHS: { id: Length; label: StringKey }[] = [
+  { id: "short", label: "wr.short" },
+  { id: "medium", label: "wr.medium" },
+  { id: "long", label: "wr.long" },
 ];
 
 export default function WritePage() {
@@ -104,7 +105,7 @@ export default function WritePage() {
       setSlots(Array.from({ length: howMany }, () => ({ state: "writing" }) as Slot));
       setRanAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
       setRanWith(
-        [format === "other" ? formatOther.trim() : def.label, productName].filter(Boolean).join(" · ")
+        [format === "other" ? formatOther.trim() : t(def.labelKey), productName].filter(Boolean).join(" · ")
       );
 
       try {
@@ -124,7 +125,7 @@ export default function WritePage() {
         const data = await res.json();
 
         if (!res.ok) {
-          const reason = typeof data?.error === "string" ? data.error : "That didn't work.";
+          const reason = typeof data?.error === "string" ? data.error : t("ci.didntWork");
           // The brief is never lost on a failure.
           setSlots(Array.from({ length: howMany }, () => ({ state: "failed", reason }) as Slot));
           return;
@@ -135,13 +136,13 @@ export default function WritePage() {
         setMissing(typeof data.missing === "string" ? data.missing : "");
         setSlots(returned.map((draft) => ({ state: "done", draft }) as Slot));
       } catch (err) {
-        const reason = err instanceof Error ? err.message : "That didn't work.";
+        const reason = err instanceof Error ? err.message : t("ci.didntWork");
         setSlots(Array.from({ length: howMany }, () => ({ state: "failed", reason }) as Slot));
       } finally {
         setGenerating(false);
       }
     },
-    [brandId, brief, canWrite, def.label, format, formatOther, generating, length, productId, productName]
+    [brandId, brief, canWrite, def.labelKey, format, formatOther, generating, length, productId, productName, t]
   );
 
   const copy = useCallback((text: string, i: number) => {
@@ -164,10 +165,7 @@ export default function WritePage() {
         <div>
           <div className={s.kick}>{t("nav.studio")}</div>
           <h1>{t("nav.studio.write")}</h1>
-          <p className={s.sub}>
-            Two answers and you have a draft. Everything it writes obeys your strategy, your tone of
-            voice and your real product facts.
-          </p>
+          <p className={s.sub}>{t("wr.lede")}</p>
         </div>
       </div>
 
@@ -176,7 +174,7 @@ export default function WritePage() {
         <aside className={s.brief}>
           <div className={s.step}>
             <span className={s.n}>1</span>
-            <h3>What are we writing?</h3>
+            <h3>{t("wr.whatAreWeWriting")}</h3>
           </div>
 
           <div className={s.fmts}>
@@ -205,7 +203,7 @@ export default function WritePage() {
                     <Icon name={f.icon as IconName} size={14} />
                   </span>
                 )}
-                <span className={s.t}>{f.label}</span>
+                <span className={s.t}>{t(f.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -216,48 +214,46 @@ export default function WritePage() {
               className={s.otherInput}
               value={formatOther}
               onChange={(e) => setFormatOther(e.target.value)}
-              placeholder="What are we writing? A press note, a video script…"
-              aria-label="What are we writing?"
+              placeholder={t("wr.whatPlaceholder")}
+              aria-label={t("wr.whatAreWeWriting")}
             />
           )}
 
           <div className={`${s.step} ${s.stepTop}`}>
             <span className={s.n}>2</span>
-            <h3>What&rsquo;s it about?</h3>
+            <h3>{t("wr.whatsItAbout")}</h3>
           </div>
           <textarea
             className={s.ta}
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
-            placeholder="One or two lines is enough. Say what happened and who it's for."
-            aria-label="What's it about?"
+            placeholder={t("wr.aboutHelp")}
+            aria-label={t("wr.whatsItAbout")}
           />
           <div className={s.egs}>
-            {def.examples.map((eg) => (
-              <button key={eg} type="button" className={s.eg} onClick={() => setBrief(eg)}>
-                {eg}
+            {def.exampleKeys.map((k) => (
+              <button key={k} type="button" className={s.eg} onClick={() => setBrief(t(k))}>
+                {t(k)}
               </button>
             ))}
           </div>
-          <p className={s.eghint}>
-            Tap an example to fill it in, then edit. These change with the format you picked.
-          </p>
+          <p className={s.eghint}>{t("wr.tapExample")}</p>
 
           <div className={`${s.step} ${s.stepTop}`}>
             <span className={s.n}>3</span>
-            <h3>Options</h3>
-            <span className={s.opt}>optional</span>
+            <h3>{t("wr.options")}</h3>
+            <span className={s.opt}>{t("write.optional")}</span>
           </div>
           <div className={s.opts}>
             <div className={s.orow}>
-              <span className={s.k}>About a product</span>
+              <span className={s.k}>{t("wr.aboutAProduct")}</span>
               <select
                 className={s.sel}
                 value={productId}
                 onChange={(e) => setProductId(e.target.value)}
-                aria-label="About a product"
+                aria-label={t("wr.aboutAProduct")}
               >
-                <option value="">No particular product</option>
+                <option value="">{t("wr.noParticularProduct")}</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -276,14 +272,14 @@ export default function WritePage() {
                     aria-pressed={length === l.id}
                     onClick={() => setLength(l.id)}
                   >
-                    {l.label}
+                    {t(l.label)}
                   </button>
                 ))}
               </div>
             </div>
             <div className={s.orow}>
-              <span className={s.k}>Drafts</span>
-              <div className={s.seg} role="group" aria-label="How many drafts">
+              <span className={s.k}>{t("wr.drafts")}</span>
+              <div className={s.seg} role="group" aria-label={t("wr.howManyDrafts")}>
                 {([1, 3] as const).map((c) => (
                   <button
                     key={c}
@@ -306,19 +302,28 @@ export default function WritePage() {
             onClick={() => generate(count)}
           >
             <Icon name="spark" size={17} />
-            {generating ? "Writing…" : "Write it"}
+            {generating ? t("wr.writing") : t("wr.writeIt")}
           </button>
 
           <div className={s.source}>
             <Icon name="book" size={14} />
             <div>
-              Writes from{" "}
-              <b>
-                your strategy, tone of voice, Boundaries and{" "}
-                {products.length === 1 ? "1 product record" : `${products.length} product records`}
-              </b>
-              . It won&rsquo;t invent a fact that isn&rsquo;t in there. If something&rsquo;s missing
-              it says so instead of guessing.
+              {/* One sentence, with the sources in bold where the translator
+                  put {sources}. Split, never assembled from pieces. */}
+              {(() => {
+                const [before, after = ""] = t("write.writesFrom").split("{sources}");
+                return (
+                  <>
+                    {before}
+                    <b>
+                      {products.length === 1
+                        ? t("write.sourcesOne")
+                        : t("write.sourcesMany", { count: products.length })}
+                    </b>
+                    {after}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </aside>
@@ -326,7 +331,7 @@ export default function WritePage() {
         {/* ═══════════ DRAFTS ═══════════ */}
         <main>
           <div className={s.outhead}>
-            <h2>Drafts</h2>
+            <h2>{t("wr.drafts")}</h2>
             {ranAt && <span className={s.meta}>{[ranWith, ranAt].filter(Boolean).join(" · ")}</span>}
             {hasOutput && (
               <button
@@ -336,13 +341,13 @@ export default function WritePage() {
                 onClick={() => generate(count)}
               >
                 <Icon name="redo" size={13} />
-                Write {count} more
+                {t("wr.writeMore", { count })}
               </button>
             )}
           </div>
 
           {!hasOutput && (
-            <div className={s.empty}>Pick a format and say what it&rsquo;s about.</div>
+            <div className={s.empty}>{t("wr.pickFormat")}</div>
           )}
 
           {slots.map((slot, i) => (
@@ -351,20 +356,20 @@ export default function WritePage() {
               className={[s.draft, slot.state === "failed" ? s.failed : ""].filter(Boolean).join(" ")}
             >
               <div className={s.dtop}>
-                <span className={s.dtag}>Draft {i + 1}</span>
+                <span className={s.dtag}>{t("write.draftN", { n: i + 1 })}</span>
                 <span className={s.dlen}>
                   {slot.state === "done"
-                    ? `${wordCount(slot.draft.body)} words`
+                    ? t("write.words", { count: wordCount(slot.draft.body) })
                     : slot.state === "writing"
-                      ? "writing…"
-                      : "didn't finish"}
+                      ? t("write.writingLower")
+                      : t("wr.didntFinish")}
                 </span>
                 <div className={s.dacts}>
                   {slot.state === "done" ? (
                     <>
                       <button type="button" className={s.act} onClick={() => copy(slot.draft.body, i)}>
                         <Icon name="copy" size={13} />
-                        {copied === i ? "Copied" : t("common.copy")}
+                        {copied === i ? t("wr.copied") : t("common.copy")}
                       </button>
                       <button
                         type="button"
@@ -410,26 +415,26 @@ export default function WritePage() {
               <div className={s.dfoot}>
                 {slot.state === "writing" && (
                   <span className={`${s.chipsrc} ${s.warn}`}>
-                    Checking every claim against your product records…
+                    {t("wr.checkingClaims")}
                   </span>
                 )}
                 {slot.state === "done" && (
                   <>
                     {tone ? (
-                      <span className={s.chipsrc}>Tone: {tone}</span>
+                      <span className={s.chipsrc}>{t("write.tone", { tone })}</span>
                     ) : (
                       <span className={`${s.chipsrc} ${s.warn}`}>
-                        No tone of voice yet, using plain, neutral copy.{" "}
-                        <Link href="/brand/tone-of-voice">Set one →</Link>
+                        {t("wr.noTone")}{" "}
+                        <Link href="/brand/tone-of-voice">{t("wr.setOne")}</Link>
                       </span>
                     )}
                     {slot.draft.provenance.map((p, j) => (
                       <span key={j} className={s.chipsrc}>
-                        Fact: {p.claim}, from {p.source}
+                        {t("wr.fact", { claim: p.claim, source: p.source })}
                       </span>
                     ))}
                     {isThinBrief(brief) && (
-                      <span className={`${s.chipsrc} ${s.warn}`}>A fuller brief gets better copy.</span>
+                      <span className={`${s.chipsrc} ${s.warn}`}>{t("write.thinBrief")}</span>
                     )}
                     {missing && <span className={`${s.chipsrc} ${s.warn}`}>{missing}</span>}
                   </>

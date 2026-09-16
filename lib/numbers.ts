@@ -11,6 +11,11 @@
  * Mixing them is how someone ends up subtracting rent from a unit price.
  */
 import type { StringKey } from "./i18n/en.ts";
+import { translate, type Vars } from "./i18n/index.ts";
+
+/** A translator. Defaults to English so tests and server code read as before. */
+export type Tr = (key: StringKey, vars?: Vars) => string;
+const EN: Tr = (key, vars) => translate("en", key, vars);
 
 /** Net of tax. Every margin calculation starts here. */
 export function netPrice(retailGross: number, taxRatePct: number): number {
@@ -110,11 +115,9 @@ export const DEFAULT_PROFILE: BusinessProfile = {
 
 /**
  * One cost line. `label` is its identity: the values map, the rate-line set
- * and anything saved are keyed on the English. `labelKey` is what renders,
- * and is absent where the dictionary has no key yet ("Hosting & infra",
- * "Support time", "Billing period"), in which case the English shows.
+ * and anything saved are keyed on the English. `labelKey` is what renders.
  */
-export interface CostLine { label: string; labelKey?: StringKey; from: string }
+export interface CostLine { label: string; labelKey: StringKey; from: string }
 
 /**
  * The cost lines a profile implies.
@@ -132,8 +135,8 @@ export function costLines(p: BusinessProfile): CostLine[] {
           { label: "Packaging", labelKey: "num.packaging", from: "base" },
         ]
       : [
-          { label: "Hosting & infra", from: "base" },
-          { label: "Support time", from: "base" },
+          { label: "Hosting & infra", labelKey: "num.hostingInfra", from: "base" },
+          { label: "Support time", labelKey: "num.supportTime", from: "base" },
         ];
 
   if (p.channels.includes("direct")) {
@@ -161,7 +164,7 @@ export function costLines(p: BusinessProfile): CostLine[] {
   }
   if (p.charges === "recurring") {
     lines.push(
-      { label: "Billing period", from: "recurring" },
+      { label: "Billing period", labelKey: "num.billingPeriod", from: "recurring" },
       { label: "Churn rate", labelKey: "num.churnRate", from: "recurring" },
       { label: "Cost to acquire", labelKey: "num.costToAcquire", from: "recurring" },
     );
@@ -170,28 +173,34 @@ export function costLines(p: BusinessProfile): CostLine[] {
 }
 
 /** Calculator 1 is named for the unit of analysis, which `sells` decides. */
-export function costCalculatorTitle(p: BusinessProfile): string {
-  return p.sells === "physical" ? "True cost per unit" : "Cost to serve one customer";
+export function costCalculatorTitle(p: BusinessProfile, t: Tr = EN): string {
+  return t(p.sells === "physical" ? "num.trueCostPerUnit" : "num.costToServeCustomer");
 }
 
-export function unitNoun(p: BusinessProfile, plural = true): string {
-  if (p.sells === "digital") return plural ? "customers" : "customer";
-  return plural ? "units" : "unit";
+/**
+ * How a count of the unit reads: "12 units / mo", "12 customers / mo". One
+ * key per whole phrase rather than a noun glued to a number, because Finnish
+ * inflects the noun after a numeral ("12 yksikköä") and the order can move.
+ */
+export function unitsPerMonth(p: BusinessProfile, count: number | string, t: Tr = EN): string {
+  return t(p.sells === "digital" ? "num.customersPerMonthShort" : "num.unitsPerMonthShort", { count });
 }
 
 /** The read-back sentence under the profile toggles. */
-export function profileSentence(p: BusinessProfile): string {
-  const what = p.sells === "physical" ? "physical goods" : "digital products and access";
-  const how = p.charges === "recurring" ? "on subscription" : "as one-off purchases";
-  const names: Record<Channel, string> = {
-    direct: "your own site",
-    trade: "wholesale",
-    store: "an app store",
+export function profileSentence(p: BusinessProfile, t: Tr = EN): string {
+  const what = t(p.sells === "physical" ? "profileLine.physical" : "profileLine.digital");
+  const how = t(p.charges === "recurring" ? "profileLine.subscription" : "profileLine.oneOff");
+  const names: Record<Channel, StringKey> = {
+    direct: "profileLine.ownSite",
+    trade: "profileLine.wholesale",
+    store: "profileLine.appStore",
   };
-  const where = p.channels.length
-    ? p.channels.map((c) => names[c]).join(", ").replace(/, ([^,]*)$/, " and $1")
-    : "nowhere selected yet";
-  return `You sell ${what} ${how} through ${where}.`;
+  if (!p.channels.length) return t("profileLine.sentenceNoChannel", { what, how });
+  const list = p.channels.map((c) => t(names[c]));
+  const where = list.length === 1
+    ? list[0]
+    : `${list.slice(0, -1).join(", ")} ${t("profileLine.and")} ${list[list.length - 1]}`;
+  return t("profileLine.sentence", { what, how, where });
 }
 
 /* ------------------------------------------------------------------ */
@@ -214,12 +223,13 @@ export const EMPTY_RUNNING_COSTS: RunningCosts = {
   other: null,
 };
 
-export const RUNNING_COST_LINES: { key: keyof RunningCosts; label: string }[] = [
-  { key: "rent", label: "Rent & premises" },
-  { key: "salaries", label: "Salaries" },
-  { key: "software", label: "Software & tools" },
-  { key: "marketing", label: "Marketing" },
-  { key: "other", label: "Other overheads" },
+/** `label` is the English and stays; `labelKey` is what renders. */
+export const RUNNING_COST_LINES: { key: keyof RunningCosts; label: string; labelKey: StringKey }[] = [
+  { key: "rent", label: "Rent & premises", labelKey: "num.run.rent" },
+  { key: "salaries", label: "Salaries", labelKey: "num.run.salaries" },
+  { key: "software", label: "Software & tools", labelKey: "num.run.software" },
+  { key: "marketing", label: "Marketing", labelKey: "num.run.marketing" },
+  { key: "other", label: "Other overheads", labelKey: "num.run.other" },
 ];
 
 export function totalRunningCosts(c: RunningCosts): number {

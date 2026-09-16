@@ -52,6 +52,15 @@ const SETUP_LABEL: Record<string, StringKey> = {
   'Just me': 'setup.justMe', 'Me + freelancer': 'setup.meFreelancer', 'Internal team': 'setup.internalTeam',
   Agency: 'setup.agency', 'Branditect produces it': 'setup.branditect',
 }
+// Stored as chosen, so the English is the value; ANTI_LABEL is what renders.
+const ANTI_LABEL: Record<string, StringKey> = {
+  'thirsty/desperate': 'channels.anti.thirsty',
+  'corporate/sterile': 'channels.anti.corporate',
+  'trend-chasing': 'channels.anti.trendChasing',
+  'preachy': 'channels.anti.preachy',
+  'self-congratulating': 'channels.anti.selfCongratulating',
+  'memey-for-the-sake-of-memes': 'channels.anti.memey',
+}
 const ANTI_CHIPS = [
   'thirsty/desperate',
   'corporate/sterile',
@@ -65,35 +74,35 @@ const QUESTIONS = [
   {
     key: 'channels' as const,
     field: 'channels',
-    eyebrow: 'Q1 · Channels',
+    eyebrow: 'channels.eyebrow1' as StringKey,
     title: 'channels.q1' as StringKey,
     why: 'channels.q1Why' as StringKey,
   },
   {
     key: 'goal' as const,
     field: 'primary_goal',
-    eyebrow: 'Q2 · Primary goal',
+    eyebrow: 'channels.eyebrow2' as StringKey,
     title: 'channels.q2' as StringKey,
     why: 'channels.q2Why' as StringKey,
   },
   {
     key: 'capacity' as const,
     field: 'capacity_volume',
-    eyebrow: 'Q3 · Realistic capacity',
+    eyebrow: 'channels.eyebrow3' as StringKey,
     title: 'channels.q3' as StringKey,
     why: 'channels.q3Why' as StringKey,
   },
   {
     key: 'refs' as const,
     field: 'reference_accounts',
-    eyebrow: 'Q4 · Reference accounts',
+    eyebrow: 'channels.eyebrow4' as StringKey,
     title: 'channels.q4' as StringKey,
     why: 'channels.q4Why' as StringKey,
   },
   {
     key: 'anti' as const,
     field: 'anti_patterns',
-    eyebrow: 'Q5 · Anti-brand',
+    eyebrow: 'channels.eyebrow5' as StringKey,
     title: 'channels.q5' as StringKey,
     why: 'channels.q5Why' as StringKey,
   },
@@ -314,7 +323,7 @@ export default function SocialStrategyPage() {
         // Pushback: 20+/week with "Just me"
         if (volume === '20+' && setup === 'Just me') {
           const ok = window.confirm(
-            "20+ posts a week with one person almost always means quality decay within 4 weeks. We'd rather propose 10–12 with a stronger format mix. Keep 20+?"
+            t('channels.pushback')
           )
           if (!ok) {
             setVolume('12–15')
@@ -385,14 +394,14 @@ export default function SocialStrategyPage() {
     return (
       <div className="max-w-3xl mx-auto px-8 py-12">
         <Link href="/home" className="text-sm text-muted hover:text-brand-orange transition-colors">
-          &larr; Back to Dashboard
+          {t('strategy.backToDashboard')}
         </Link>
         <div
           role="alert"
           data-channels-error
           className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[0.85rem] text-red-700"
         >
-          Channels could not load: {loadError}
+          {t('channels.couldNotLoad', { error: loadError })}
         </div>
       </div>
     )
@@ -414,13 +423,13 @@ export default function SocialStrategyPage() {
     return (
       <div className="max-w-3xl mx-auto px-8 py-12">
         <Link href="/home" className="text-sm text-muted hover:text-brand-orange transition-colors">
-          &larr; Back to Dashboard
+          {t('strategy.backToDashboard')}
         </Link>
         <div className="mt-8 inline-flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FFF2EE] text-[#ec5c36]">
           {t('channels.active')}
         </div>
         <h1 className="text-[2.4rem] font-semibold text-ink mt-4 mb-2 leading-tight">
-          {brandName}&apos;s social strategy
+          {t('channels.brandSocialStrategy', { brand: brandName })}
         </h1>
         <p className="text-[0.88rem] text-muted leading-relaxed mb-6">
           {t('channels.step2Ships')}
@@ -473,7 +482,7 @@ export default function SocialStrategyPage() {
     return (
       <div className="max-w-3xl mx-auto px-8 py-10">
         <Link href="/home" className="text-sm text-muted hover:text-brand-orange transition-colors">
-          &larr; Back to Dashboard
+          {t('strategy.backToDashboard')}
         </Link>
 
         <div className="mt-8">
@@ -534,7 +543,7 @@ export default function SocialStrategyPage() {
             <li>{t('channels.commitment')}</li>
             <li>{t('channels.primaryGoalIntro')}</li>
             <li>{t('channels.capacityIntro')}</li>
-            <li>3–5 reference accounts to benchmark</li>
+            <li>{t('channels.refsIntro')}</li>
             <li>{t('channels.antiBrand')}</li>
           </ol>
         </div>
@@ -559,7 +568,7 @@ export default function SocialStrategyPage() {
   return (
     <div className="max-w-3xl mx-auto px-8 py-10">
       <Link href="/home" className="text-sm text-muted hover:text-brand-orange transition-colors">
-        &larr; Back to Dashboard
+        {t('strategy.backToDashboard')}
       </Link>
 
       {/* Progress dots */}
@@ -578,7 +587,7 @@ export default function SocialStrategyPage() {
       </div>
 
       <div className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#ec5c36] mb-3">
-        {q.eyebrow}
+        {t(q.eyebrow)}
       </div>
       <h2 className="text-[1.7rem] font-semibold text-ink leading-tight mb-3">{t(q.title)}</h2>
       <p className="text-[0.85rem] text-muted leading-relaxed mb-8 max-w-[600px]">
@@ -748,7 +757,7 @@ export default function SocialStrategyPage() {
                         : 'bg-white border-outline-variant/15 text-dark hover:border-[#ec5c36]/40'
                     }`}
                   >
-                    {c}
+                    {t(ANTI_LABEL[c])}
                   </button>
                 )
               })}

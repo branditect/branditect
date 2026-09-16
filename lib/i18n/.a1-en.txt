@@ -1,0 +1,250 @@
+
+  // ══ APP, batch A ══ Home, all of Numbers, the entry flow, notes and the
+  // welcome modal. From spec/i18n-gap.md.
+  //
+  // NOT INCLUDED, and deliberately: 'DM Sans', sans-serif · 'Space Grotesk',
+  // sans-serif · background 0.15s · EUR · English · Suomi. Those are font
+  // stacks, a CSS transition, a currency code and two language names that must
+  // read the same in both. They are scanner catch, not copy.
+
+  // ── Home: the Studio row and the chat prompts ─────────────────────────────
+  "home.writeDesc": "On brand, on strategy, on the facts.",
+  "home.imagesDesc": "New images based on your products and style.",
+  "home.numbersTitle": "Do the numbers",
+  "home.numbersDesc": "Profitability, pricing structure and offers.",
+  "home.visualDesc": "Your logos, colors and typefaces.",
+  "home.prompt1": "What should I post about this week?",
+  "home.prompt2": "What's the deepest discount I can run?",
+  "home.prompt3": "What's missing from my brand?",
+
+  // ── Numbers: shared field labels ──────────────────────────────────────────
+  "num.productionCost": "Production cost",
+  "num.freightDuty": "Freight & duty",
+  "num.packaging": "Packaging",
+  "num.shipping": "Shipping",
+  "num.returnsRate": "Returns rate",
+  "num.refundRate": "Refund rate",
+  "num.churnRate": "Churn rate",
+  "num.paymentFees": "Payment fees",
+  "num.adCostPerSale": "Ad cost per sale",
+  "num.cartonPallet": "Carton / pallet",
+  "num.paymentTerms": "Payment terms",
+  "num.storeCommission": "Store commission %",
+  "num.resellerCommission": "Reseller commission",
+  "num.retailPrice": "Retail price",
+  "num.taxRate": "Tax rate",
+  "num.costPerUnit": "Cost per unit",
+  "num.targetMargin": "Target margin",
+  "num.minMargin": "Minimum margin",
+  "num.monthlyPrice": "Monthly price",
+  "num.costToAcquire": "Cost to acquire",
+
+  // ── Numbers: index ────────────────────────────────────────────────────────
+  "num.costLede": "Know what every sale really costs.",
+  "num.costSub":
+    "Everything it takes to put one unit in a customer's hands, and what happens when a cost moves.",
+  "num.priceLede": "Find the price that gives you the margin you want.",
+  "num.priceSub":
+    "Set a target margin and get the price to hit it, or type a price and see what you'd actually keep after tax and fees.",
+  "num.offersLede": "Know what you can give away before it hurts.",
+  "num.offersSub": "Model the offers you actually run, and find where each one stops being worth it.",
+  "num.recurringLede": "See what a customer is worth over time.",
+  "num.recurringSub":
+    "MRR, churn and lifetime value, and how long it takes to earn back what you spent acquiring someone.",
+  "num.discountCeiling": "Discount ceiling",
+  "num.freeShipThreshold": "Free-ship threshold",
+  "num.averageBasket": "Average basket",
+  "num.noLandedCost": "No landed cost recorded yet",
+  "num.noPrice": "No price recorded yet",
+  "num.usesPriceHere": "Uses the price you set in here",
+  "num.shownBecauseSubscription": "Shown because you charge a subscription",
+  "num.indexLede":
+    "Work out what you really make on every sale, set prices that hit your target margin, and build offers that don't quietly cost you money. Then",
+  "num.allCosted": "all costed",
+  "num.missingCosts": "{missing} missing costs",
+  "num.noCostedProducts": "no costed products",
+  "num.addRunningCostsInline": "add running costs",
+  "num.atYourBestMargin": "at your best margin",
+  "num.physicalGoods": "Physical goods",
+  "num.digitalAccess": "Digital & access",
+  "num.subscription": "Subscription",
+  "num.allThatApply": "all that apply",
+  "num.ownSite": "Own site",
+  "num.wholesale": "Wholesale",
+  "num.appStore": "App store",
+  "num.overheadExplainer":
+    "Rent, salaries, software and marketing don't care how much you sell. Add them up once, shared across every product, and Branditect works out the volume that covers them, and what your real floor price is.",
+  "num.addRunningCostsNote":
+    "Add your running costs and this becomes a real number. Without them the floor price is only half a floor.",
+  "num.noPricedProduct": "No product has both a price and a cost yet.",
+  "num.everySaleLoses":
+    "Every sale loses money at these prices, so no volume covers the overhead. Fix the price or the cost first.",
+  "num.addRunningCosts": "Add running costs",
+  "num.costOfEachSale": "cost of each sale",
+  "num.grossProfit": "gross profit",
+  "num.runningCosts": "running costs",
+  "num.operatingProfit": "operating profit",
+  "num.notAdvice":
+    "These are calculations from the figures you enter, not advice. Check them against your own accounts before you change a price. Tax treatment and platform fees vary by market and can move a margin by several points.",
+
+  // ── Numbers: cost ─────────────────────────────────────────────────────────
+  "num.cost.fromChannels":
+    "These lines come from how you said you sell. Highlighted ones were added by your channels, and you can change them in",
+  "num.cost.onNumbers": "on Numbers.",
+  "num.cost.sellingDirect": "selling direct",
+  "num.cost.addedBy": "added by {from}",
+  "num.cost.spreadAcross": "Spread across",
+  "num.cost.unitsInBatch": "units in the batch, if these are batch costs",
+  "num.cost.costToServeOne": "Cost to serve one",
+  "num.cost.fillLeft":
+    "Fill in the lines on the left. Rates are excluded from the total: they change what a sale costs, but they aren't a sum.",
+  "num.cost.entered":
+    "{filled} of {costable} cost lines entered. This is what to put in the product card's landed cost.",
+  "num.cost.landedNotFactory":
+    "Landed cost, not factory cost, is what margin is computed from. Factory cost alone overstates the margin by about five points, and a discount rule built on the wrong figure eats the difference on every promotion.",
+
+  // ── Numbers: pricing ──────────────────────────────────────────────────────
+  "num.price.haveAPrice": "I have a price",
+  "num.price.haveATarget": "I have a target margin",
+  "num.price.landedHint": "landed, not factory",
+  "num.price.taxHint": "left blank, retail is treated as net",
+  "num.price.grossHint": "gross, what the customer pays",
+  "num.price.marginAtPrice": "Margin at that price",
+  "num.price.enterCostPrice": "Enter a cost and a price.",
+  "num.price.losesMoney": "You lose money on every sale at this price.",
+  "num.price.priceForMargin": "Price for {tgt}% margin",
+  "num.price.enterCostTarget": "Enter a cost and a target margin.",
+  "num.price.netOfTax":
+    "Margin is always net of tax against landed cost. Comparing a gross price to a factory cost is the flattering version, and it is wrong by about five points.",
+
+  // ── Numbers: offers ───────────────────────────────────────────────────────
+  "num.offers.ceilingNote":
+    "Whatever ceiling you land on becomes the limit Studio writes inside. It will not promise a deeper discount than the product allows.",
+  "num.offers.lineYouWontCross": "the line you won't cross",
+  "num.offers.discountWanted": "Discount you want to run",
+  "num.offers.belowMinimum": "That is below your {mm}% minimum, so Studio would refuse to write this offer.",
+  "num.offers.clearsMinimum": "That clears your minimum.",
+  "num.offers.deepest": "Deepest discount you can run",
+  "num.offers.enterThree": "Enter a price, a cost and a minimum margin.",
+  "num.offers.alreadyAtFloor":
+    "At {currency} this product is already at its {mm}% floor. Any discount breaks it.",
+  "num.offers.perProduct":
+    "Guardrails are per product. A €6 clip cannot carry a €99 floor, so this ceiling belongs to this product alone, not to the brand.",
+
+  // ── Numbers: recurring ────────────────────────────────────────────────────
+  "num.rec.lede":
+    "One-off pricing asks what a sale is worth. Recurring asks what a customer is worth, and how long it takes to earn back what you spent getting them.",
+  "num.rec.revenuePerCustomer": "Revenue per customer",
+  "num.rec.perMonthNet": "per month, net of tax",
+  "num.rec.grossMargin": "Gross margin",
+  "num.rec.afterCostToServe": "on that revenue, after cost to serve",
+  "num.rec.monthlyChurn": "Monthly churn",
+  "num.rec.shareWhoLeave": "share who leave each month",
+  "num.rec.acquisitionHint": "marketing and sales, per customer",
+  "num.rec.ltv": "Lifetime value",
+  "num.rec.zeroChurn":
+    "At zero churn nobody ever leaves, so lifetime is infinite, which is not a number worth showing.",
+  "num.rec.fillFour": "Fill in all four fields.",
+  "num.rec.payback": "Payback",
+  "num.rec.noMargin": "There is no margin to pay back the acquisition cost.",
+  "num.rec.paybackNote":
+    "How long before a customer has repaid what you spent acquiring them. LTV is {ltvToCac}× acquisition cost.",
+  "num.rec.worthLess":
+    "Each customer is worth less than they cost to acquire. Growing faster makes this worse, not better: the fix is churn, margin or acquisition cost, not volume.",
+
+  // ── Numbers: running costs ────────────────────────────────────────────────
+  "num.run.couldNotSave": "Could not save",
+  "num.run.monthlyTotals":
+    "Monthly totals, not receipts. Shared across every product: rent is not a property of a hair dryer.",
+  "num.run.onePerLine":
+    "One figure per line. Leave a line blank if it doesn't apply: blank and zero mean different things here.",
+  "num.run.save": "Save running costs",
+  "num.run.onBusiness":
+    "Saved on the business, not on a product. Nothing here changes what Studio is allowed to write: guardrails live on each product card.",
+  "num.run.noProductsYet":
+    "No products yet, so there is no contribution to divide the overhead by. Your total above is still saved and will apply the moment you add one.",
+  "num.run.eachSaleLoses":
+    "Each sale loses money, so no volume covers the overhead. Fix the price or the cost before worrying about break-even.",
+  "num.run.setByMinMargin":
+    "Set by your {minMarginPct}% minimum margin. That test binds above the overhead one at this volume.",
+  "num.run.setByOverhead":
+    "Set by covering overhead at your expected volume, which binds above your minimum margin. Without running costs this would read lower and be only half a floor.",
+  "num.run.notFullyLoaded":
+    "divided across units. A “fully loaded” unit cost makes every product's margin depend on how many of everything else sold. Contribution plus break-even says the same thing without moving whenever an unrelated product has a good month.",
+
+  // ── Calculator shell and guardrails ───────────────────────────────────────
+  "calc.nothingSaved": "Nothing here is saved. These figures live on the product card, use",
+  "calc.pressSaveThere": "and press save there.",
+  "calc.pickToApply":
+    "Pick a product above to apply this. Without one this is a quick calculation: useful for pricing something you haven't added yet, and nothing is lost by staying here.",
+  "calc.prefillFrom": "Prefill from",
+  "calc.noProductsToPrefill":
+    "No products yet, so there is nothing to prefill from. This is a quick calculation, and that is a normal way to use it: work out the numbers first, add the product after.",
+  "guardrails.didNotSave": "That did not save.",
+  "guardrails.pickToSet":
+    "Pick a product to set its limits. They are per product on purpose: a six euro clip cannot carry a ninety-nine euro floor.",
+  "guardrails.floorPrice": "Floor price",
+  "guardrails.minMargin": "Min margin",
+  "guardrails.saveLimits": "Save limits",
+
+  // ── Notes ─────────────────────────────────────────────────────────────────
+  "notes.couldNotLoad": "Could not load your notes.",
+  "notes.couldNotOpen": "Could not open that note.",
+  "notes.someImagesFailed": "Some images could not be loaded.",
+  "notes.notSaved": "Not saved. Your changes are still on screen.",
+  "notes.couldNotCreate": "Could not make a note.",
+  "notes.pdfNotWired": "Download as PDF is built server-side, and is not wired up yet.",
+  "notes.nothingElseHere": "Nothing else lives here yet.",
+  "notes.new": "New note",
+  "notes.empty":
+    "Nothing here yet. A note is a scratchpad: anything you write in one reaches AI Chat.",
+  "notes.noMatch": "Nothing matches “{query}”.",
+  "notes.untitled": "Untitled",
+  "notes.emptyPreview": "Empty",
+  "notes.pickOne": "Pick a note, or start one.",
+  "notes.note": "Note",
+  "notes.title": "Note title",
+  "notes.image": "Image",
+  "notes.caption": "Caption",
+  "notes.imageCaption": "Image caption",
+  "notes.heading": "Heading",
+
+  // ── Start: the profile taps ───────────────────────────────────────────────
+  "profile.whatDoYouSell": "What do you sell?",
+  "profile.physicalProducts": "Physical products",
+  "profile.digitalProducts": "Digital products or software",
+  "profile.howDoTheyPay": "How do people pay?",
+  "profile.oneOff": "One-off purchases",
+  "profile.onSubscription": "On subscription",
+  "profile.whoDoesWork": "Who is doing the work?",
+  "profile.twoOrThree": "Two or three of us",
+  "profile.whatLanguage": "What language should we write in?",
+  "profile.gettingStarted": "Getting started",
+  "profile.getToKnow": "Let’s get to know your business",
+  "profile.fourTaps":
+    "Four quick taps, no typing. This sets the examples you’ll see, the language Studio writes in, and the profile your Numbers section needs.",
+
+  // ── Auth form ─────────────────────────────────────────────────────────────
+  "auth.createAccount": "Create your account",
+  "auth.welcomeBack": "Welcome back 👋",
+  "auth.startBuilding": "Start building your brand workspace",
+  "auth.logInToWorkspace": "Log in to your brand workspace",
+  "auth.orContinueEmail": "or continue with email",
+  "auth.password": "Password",
+  "auth.enterPassword": "Enter your password",
+  "auth.minChars": "At least {MIN_PASSWORD} characters",
+  "auth.creatingAccount": "Creating account…",
+  "auth.signingIn": "Signing in…",
+  "auth.createAccountBtn": "Create account",
+
+  // ── Welcome modal ─────────────────────────────────────────────────────────
+  "welcome.step1": "Step 1: Brand",
+  "welcome.step1Body": "Answer the strategy questionnaire and set your tone of voice.",
+  "welcome.step2": "Step 2: Knowledge",
+  "welcome.step2Body": "Upload the documents, images and links your brand should know.",
+  "welcome.step3": "Step 3: Studio",
+  "welcome.step3Body": "Write copy and create images from everything you just fed it.",
+  "welcome.step4": "Step 4: Numbers",
+  "welcome.step4Body": "Add costs and pricing so Studio never writes past your margins.",
+  "welcome.quote": "“They have a marketing team. You have Branditect.”",
+  "welcome.fourSteps": "4 steps",

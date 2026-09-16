@@ -85,8 +85,7 @@ export default function PricingCalculator() {
 
           {usingFactory && (
             <p className="mt-3 rounded-tile bg-amber-wash px-3 py-2.5 text-2xs font-medium leading-[1.5] text-amber">
-              {selected!.name} has no landed cost, so this prefilled from factory cost. The result
-              will read high until duty, freight and packaging are included.
+              {t("num.price.usingFactory", { name: selected!.name })}
             </p>
           )}
         </Panel>
@@ -100,16 +99,16 @@ export default function PricingCalculator() {
                 ? t("num.price.enterCostPrice")
                 : resultMargin < 0
                   ? t("num.price.losesMoney")
-                  : <>Net price {formatMoney(netPrice(p!, taxPct), currency)} after {taxPct}% tax, less cost {formatMoney(c!, currency)}. You keep {formatMoney(netPrice(p!, taxPct) - c!, currency)} per sale.</>}
+                  : t("num.price.youKeep", { net: formatMoney(netPrice(p!, taxPct), currency), tax: taxPct, cost: formatMoney(c!, currency), keep: formatMoney(netPrice(p!, taxPct) - c!, currency) })}
             />
           ) : (
             <Readout tone="lavender" label={t("num.price.priceForMargin", { tgt: tgt ?? "—" })}
               value={resultPrice == null ? "—" : formatMoney(resultPrice, currency)}
               sub={resultPrice == null
                 ? tgt != null && tgt >= 100
-                  ? "A 100% margin needs a zero cost — unreachable at any price."
+                  ? t("num.price.hundredUnreachable")
                   : t("num.price.enterCostTarget")
-                : <>Gross, so it&apos;s comparable to your retail price. Net of {taxPct}% tax that is {formatMoney(resultPrice / (1 + taxPct / 100), currency)}.</>}
+                : t("num.price.grossComparable", { tax: taxPct, net: formatMoney(resultPrice / (1 + taxPct / 100), currency) })}
             />
           )}
 

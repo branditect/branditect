@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useBrand } from '@/lib/useBrand'
 import { useBrandChat } from '@/lib/useBrandChat'
-import { useT } from '@/lib/i18n/use-t.tsx'
+import { useT, useLocale } from '@/lib/i18n/use-t.tsx'
 
 interface Msg { role: 'user' | 'assistant'; content: string }
 interface SavedNote { id: number; content: string; ts: string }
@@ -24,6 +24,7 @@ const BUBBLE = (
 
 export default function AndyPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT()
+  const locale = useLocale()
   const { brandName } = useBrand()
 
   const [tab, setTab] = useState<'chat' | 'saved'>('chat')
@@ -66,8 +67,8 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
   function saveConversation(msgs: Msg[], convId: string) {
     if (!msgs.length) return
     const firstUser = msgs.find(m => m.role === 'user')
-    const title = firstUser ? firstUser.content.slice(0, 45) : 'Conversation'
-    const conv: Conversation = { id: convId, title, messages: msgs, ts: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }
+    const title = firstUser ? firstUser.content.slice(0, 45) : t('andy.conversation')
+    const conv: Conversation = { id: convId, title, messages: msgs, ts: new Date().toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US', { month: 'short', day: 'numeric' }) }
     setConversations(prev => {
       const next = [conv, ...prev.filter(c => c.id !== convId)].slice(0, 20)
       localStorage.setItem('andy_convs', JSON.stringify(next))
@@ -114,7 +115,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
     })
   }
 
-  const convTitle = messages.find(m => m.role === 'user')?.content.slice(0, 40) || 'New conversation'
+  const convTitle = messages.find(m => m.role === 'user')?.content.slice(0, 40) || t('andy.newConversation')
 
   if (!open) return null
 
@@ -129,7 +130,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" opacity={0.4}><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={newChat} style={{ fontSize: 12, fontWeight: 500, color: C.sec, background: 'none', border: `1px solid ${C.bd}`, cursor: 'pointer', fontFamily: 'inherit', padding: '4px 10px', borderRadius: 6 }}>+ New</button>
+            <button onClick={newChat} style={{ fontSize: 12, fontWeight: 500, color: C.sec, background: 'none', border: `1px solid ${C.bd}`, cursor: 'pointer', fontFamily: 'inherit', padding: '4px 10px', borderRadius: 6 }}>{t('andy.newShort')}</button>
             <button onClick={onClose} style={{ fontSize: 16, color: C.mu, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>&times;</button>
           </div>
         </div>
@@ -155,13 +156,13 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
           <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{BUBBLE}</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.blk }}>{t('andy.name')}</div>
-            <div style={{ fontSize: 11, color: C.mu }}>{brandName ? `${brandName} workspace` : 'Branditect AI chat'}</div>
+            <div style={{ fontSize: 11, color: C.mu }}>{brandName ? t('andy.workspace', { brandName }) : t('andy.aiChat')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', background: '#F4F4F1', borderRadius: 9, padding: 3, gap: 2 }}>
           {(['chat', 'saved'] as const).map(tabId => (
             <button key={tabId} onClick={() => setTab(tabId)} style={{ fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 7, border: 'none', background: tab === tabId ? C.wh : 'transparent', color: tab === tabId ? C.blk : C.mu, cursor: 'pointer', fontFamily: 'inherit', boxShadow: tab === tabId ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
-              {tabId === 'chat' ? 'Chat' : t('common.saved')}
+              {tabId === 'chat' ? t('chat.title') : t('common.saved')}
             </button>
           ))}
         </div>
@@ -177,7 +178,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
               <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>{BUBBLE}</div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: C.blk, marginBottom: 3 }}>{t('andy.name')}</div>
-                <div style={{ fontSize: 14, lineHeight: 1.65, color: C.blk }}>Hi{brandName ? ` — welcome to the ${brandName} workspace` : ''}. How can I help?</div>
+                <div style={{ fontSize: 14, lineHeight: 1.65, color: C.blk }}>{brandName ? t('andy.greetingBrand', { brandName }) : t('andy.greeting')}</div>
               </div>
             </div>
 
@@ -192,7 +193,7 @@ export default function AndyPanel({ open, onClose }: { open: boolean; onClose: (
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: C.blk }}>{t('andy.name')}</span>
-                    <button onClick={() => saveNote(msg.content, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }} title={savedIds.has(i) ? t('common.saved') : 'Save to notes'}>
+                    <button onClick={() => saveNote(msg.content, i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }} title={savedIds.has(i) ? t('common.saved') : t('andy.saveToNotes')}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill={savedIds.has(i) ? C.or : 'none'} stroke={savedIds.has(i) ? C.or : '#CCC'} strokeWidth="2">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>

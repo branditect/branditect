@@ -6,6 +6,7 @@ import Logo from "@/components/logo";
 import PasswordField from "./password-field";
 import SsoButtons from "./sso-buttons";
 import { AUTH_COPY, MIN_PASSWORD, looksLikeEmail, type AuthError } from "@/lib/auth-errors";
+import type { StringKey } from "@/lib/i18n/index.ts";
 import s from "./auth.module.css";
 import { useT } from "@/lib/i18n/use-t.tsx";
 
@@ -35,12 +36,13 @@ export default function AuthForm({
   const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  // Keys from AUTH_COPY, translated where they render.
+  const [fieldErrors, setFieldErrors] = useState<{ email?: StringKey; password?: StringKey }>({});
 
   const isSignup = mode === "signup";
 
   function validate(): boolean {
-    const next: { email?: string; password?: string } = {};
+    const next: { email?: StringKey; password?: StringKey } = {};
 
     if (!email.trim()) next.email = AUTH_COPY.emptyEmail;
     else if (!looksLikeEmail(email)) next.email = AUTH_COPY.badEmail;
@@ -100,7 +102,7 @@ export default function AuthForm({
             </span>
           </div>
           {fieldErrors.email && (
-            <p className={s.fieldError} id="email-error" role="alert">{fieldErrors.email}</p>
+            <p className={s.fieldError} id="email-error" role="alert">{t(fieldErrors.email)}</p>
           )}
         </div>
 
@@ -115,7 +117,7 @@ export default function AuthForm({
           invalid={Boolean(fieldErrors.password)}
         />
         {fieldErrors.password && (
-          <p className={s.fieldError} id="password-error" role="alert">{fieldErrors.password}</p>
+          <p className={s.fieldError} id="password-error" role="alert">{t(fieldErrors.password)}</p>
         )}
 
         {/* Two controls from the reference are deliberately absent.
@@ -135,11 +137,11 @@ export default function AuthForm({
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m0 5a1.3 1.3 0 1 1 0 2.6A1.3 1.3 0 0 1 12 7m1.2 10.5h-2.4v-6h2.4z" />
             </svg>
             <span>
-              {error.message}
+              {t(error.message)}
               {error.linkHref && (
                 <>
                   {" "}
-                  <Link href={error.linkHref}>{error.linkLabel}</Link>
+                  <Link href={error.linkHref}>{error.linkLabel ? t(error.linkLabel) : null}</Link>
                 </>
               )}
             </span>

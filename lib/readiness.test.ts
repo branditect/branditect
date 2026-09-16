@@ -8,7 +8,16 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { computeReadiness, questionnairePassed, questionnaireDetail, type ReadinessInputs } from "./readiness.ts";
+import {
+  computeReadiness, questionnairePassed, questionnaireDetail, readinessHeadline, readinessCopy, BAND_KEY,
+  type ReadinessInputs,
+} from "./readiness.ts";
+import { translate } from "./i18n/index.ts";
+import type { Msg } from "./i18n/msg.ts";
+
+// Details and actions are keys since the Finnish pass. These read them in the
+// English the screen shows, so every assertion below still pins the words.
+const say = (m: Msg | undefined) => (m ? translate("en", m.key, m.vars) : undefined);
 
 describe("computeReadiness", () => {
   const base: ReadinessInputs = {
@@ -50,7 +59,7 @@ describe("computeReadiness", () => {
     const r = computeReadiness({ ...base, knowledgeFileCount: 5 });
     assert.equal(r.score, 50);
     assert.equal(
-      r.checks.find((c) => c.id === "knowledgeFiles")?.detail,
+      say(r.checks.find((c) => c.id === "knowledgeFiles")?.detail),
       "5 of 6 required",
     );
   });
@@ -185,31 +194,76 @@ describe("the questionnaire row says where they got to", () => {
 
   it("reads 'Not started' at zero, and offers Start", () => {
     const c = row(0, "not_started");
-    assert.equal(c.detail, "Not started");
-    assert.equal(c.action, "Start");
+    assert.equal(say(c.detail), "Not started");
+    assert.equal(translate("en", c.action!), "Start");
     assert.equal(c.href, "/start");
   });
 
   it("reads '7 of 20 answered' part way, and offers to continue", () => {
     const c = row(7, "partial");
-    assert.equal(c.detail, "7 of 20 answered");
-    assert.equal(c.action, "Continue");
+    assert.equal(say(c.detail), "7 of 20 answered");
+    assert.equal(translate("en", c.action!), "Continue");
     assert.equal(c.href, "/start");
   });
 
   /** The lie this replaces: at the gate the row claimed all questions were in. */
   it("does not claim all questions are answered at the gate", () => {
     const c = row(5, "gated_complete");
-    assert.equal(c.detail, "5 of 20 answered");
+    assert.equal(say(c.detail), "5 of 20 answered");
     assert.equal(c.passed, true);
     assert.equal(c.href, null);
     assert.equal(c.action, null);
   });
 
   it("says all 20 only when all 20 are in", () => {
-    assert.equal(questionnaireDetail(20), "All 20 answered");
-    assert.equal(questionnaireDetail(19), "19 of 20 answered");
-    assert.equal(questionnaireDetail(0), "Not started");
-    assert.equal(questionnaireDetail(-1), "Not started");
+    assert.equal(say(questionnaireDetail(20)), "All 20 answered");
+    assert.equal(say(questionnaireDetail(19)), "19 of 20 answered");
+    assert.equal(say(questionnaireDetail(0)), "Not started");
+    assert.equal(say(questionnaireDetail(-1)), "Not started");
+  });
+});
+
+/**
+ * The headline and the hero line used to be assembled from lowercased labels.
+ * They are whole-sentence keys now; in English they must read exactly as
+ * before, and in Finnish they must not be English.
+ */
+describe("the readiness sentences, in both languages", () => {
+  const fresh: ReadinessInputs = {
+    questionnaireComplete: false, questionnaireAnswered: 0,
+    knowledgeFileCount: 0, brandImageCount: 0, hasBrandGuideline: false,
+  };
+
+  it("reads the same English it always did", () => {
+    const r = computeReadiness(fresh);
+    assert.equal(say(readinessHeadline(r)), "4 checks left — start with your strategy questionnaire.");
+    assert.equal(readinessCopy(r).map(say).join(" "),
+      "Zero of 4 checks done. Your strategy questionnaire is the gap — closing it is what teaches Branditect the rest.");
+    const oneLeft = computeReadiness({ questionnaireComplete: true, knowledgeFileCount: 6, brandImageCount: 7, hasBrandGuideline: false });
+    assert.equal(say(readinessHeadline(oneLeft)), "One check left — upload your brand guideline to reach 100%.");
+    const partial = computeReadiness({ questionnaireComplete: false, questionnaireAnswered: 3, knowledgeFileCount: 6, brandImageCount: 7, hasBrandGuideline: true });
+    assert.equal(say(readinessHeadline(partial)), "One check left — continue your strategy questionnaire to reach 100%.");
+    const done = computeReadiness({ questionnaireComplete: true, knowledgeFileCount: 6, brandImageCount: 7, hasBrandGuideline: true });
+    assert.equal(say(readinessHeadline(done)), "Every check is done. Your brand brain is fully trained.");
+    assert.equal(translate("en", BAND_KEY[done.band]), "Complete");
+  });
+
+  it("reads Finnish in Finnish, for every branch", () => {
+    const cases: ReadinessInputs[] = [
+      fresh,
+      { ...fresh, questionnaireComplete: true, knowledgeFileCount: 6, brandImageCount: 7 },
+      { ...fresh, questionnaireAnswered: 3, knowledgeFileCount: 6, brandImageCount: 7, hasBrandGuideline: true },
+      { questionnaireComplete: true, knowledgeFileCount: 0, brandImageCount: 7, hasBrandGuideline: true },
+      { questionnaireComplete: true, knowledgeFileCount: 6, brandImageCount: 0, hasBrandGuideline: true },
+      { questionnaireComplete: true, knowledgeFileCount: 6, brandImageCount: 7, hasBrandGuideline: true },
+    ];
+    for (const input of cases) {
+      const r = computeReadiness(input);
+      for (const m of [readinessHeadline(r), ...readinessCopy(r), ...r.checks.map((c) => c.detail)]) {
+        const fi = translate("fi", m.key, m.vars);
+        assert.notEqual(fi, translate("en", m.key, m.vars), `${m.key} is English in Finnish`);
+        assert.ok(!/\{\w+\}/.test(fi), `${m.key} left a placeholder unfilled: ${fi}`);
+      }
+    }
   });
 });

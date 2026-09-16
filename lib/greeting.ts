@@ -13,15 +13,19 @@
  * The fix is in the page: the hour is read in an effect, so the server and the
  * first client render always agree. This module holds the rule and the
  * pre-mount text so both are testable.
+ *
+ * It returns dictionary keys, not words, so the page renders the greeting in
+ * the interface language. Two hours disagree exactly when their keys do.
  */
+import type { StringKey } from "./i18n/index.ts";
 
 /** What the server renders, and what the browser renders before it knows the hour. */
-export const GREETING_BEFORE_MOUNT = "Hello";
+export const GREETING_BEFORE_MOUNT: StringKey = "greeting.hello";
 
-export function greeting(hour: number): string {
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
+export function greeting(hour: number): StringKey {
+  if (hour < 12) return "greeting.morning";
+  if (hour < 18) return "greeting.afternoon";
+  return "greeting.evening";
 }
 
 /**

@@ -77,7 +77,7 @@ export default function HeroAuthCard({ tab, onTab, locale }: { tab: Tab; onTab: 
         <div style={{ padding: "10px 2px 6px" }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5 }}>{t("site.checkEmail")}</h2>
           <p style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, color: "#6f6f8a" }}>
-            {AUTH_COPY.confirmSent}
+            {t(AUTH_COPY.confirmSent)}
           </p>
           <p style={{ marginTop: 12, fontSize: 13, fontWeight: 700 }}>{confirmSentTo}</p>
           <Link href="/login" className={s.btn} style={{ marginTop: 18, width: "100%" }}>

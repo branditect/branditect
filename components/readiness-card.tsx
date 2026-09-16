@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Icon, { type IconName } from "@/components/icon";
-import { readinessCopy, type Readiness } from "@/lib/readiness";
+import { readinessCopy, BAND_KEY, type Readiness } from "@/lib/readiness";
 import type { KnowledgeCounts } from "@/lib/useReadiness";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
@@ -44,11 +44,9 @@ export default function ReadinessCard({ readiness, knowledge }: ReadinessCardPro
             it measured 87px inside an 89px tile, which is under 2px of
             clearance and would spill on a machine that renders wider. */}
         <div className="mt-[11px] text-[12px] font-bold leading-[13.5px] tracking-[-.4px] text-ink">
-          YOUR
-          <br />
-          BRAND
-          <br />
-          FOUNDATION
+          {t("readiness.tile").split("\n").map((line, i) => (
+            <span key={i}>{i > 0 && <br />}{line}</span>
+          ))}
         </div>
       </div>
 
@@ -58,13 +56,13 @@ export default function ReadinessCard({ readiness, knowledge }: ReadinessCardPro
         <div className="mt-2 flex items-center gap-3">
           <span className="text-score font-bold tabular-nums">{readiness.score}%</span>
           <span className="whitespace-nowrap rounded-pill border border-white/[.28] bg-white/[.22] px-3.5 py-[5px] text-sm font-bold backdrop-blur-[2px]">
-            {readiness.band}
+            {t(BAND_KEY[readiness.band])}
           </span>
         </div>
 
         {/* Right padding keeps the copy clear of the rotated tile above it. */}
         <p className="mt-2.5 max-w-[34em] pr-[136px] text-xs font-semibold leading-[1.5] text-white/[.94] stack:pr-0">
-          {readinessCopy(readiness)}
+          {readinessCopy(readiness).map((m) => t(m.key, m.vars)).join(" ")}
         </p>
 
         <div className="mb-[9px] mt-[18px] text-sm font-bold tracking-[-.1px]">{t("readiness.brandKnowledge")}</div>

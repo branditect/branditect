@@ -30,7 +30,7 @@ const STRATEGY_OPTIONS: { value: string; icon: string; title: StringKey; desc: C
     value: "questionnaire",
     icon: "✦",
     title: "onboarding.strategy.questionnaire",
-    desc: { en: "38 strategic questions that build your complete brand foundation. Takes 15-30 minutes." },
+    desc: "shell.onboarding.questionnaireDesc",
   },
   {
     value: "paste",
@@ -512,7 +512,7 @@ export default function OnboardingPage() {
             B
           </div>
           <h2 className="font-semibold text-2xl text-white mb-2">
-            Branditect for {brandName} is ready.
+            {t("shell.onboarding.ready", { brandName })}
           </h2>
           <p className="text-sm text-[#888]">{t("onboarding.done.title")}</p>
         </div>

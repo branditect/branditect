@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import Icon from "@/components/icon";
-import { DOC_TYPES, docTypeLabel, studioMayUse, CONTRACT_NOTE } from "@/lib/document-types";
+import { DOC_TYPES, docTypeLabel, studioMayUse } from "@/lib/document-types";
 import {
   type Batch, setBatchType, overrideType, overrideDescription, stillUploading,
 } from "@/lib/document-batch";
@@ -50,13 +50,11 @@ export default function AskPanel({
       <div className={p.head}>
         <div>
           <h2 className={p.title}>
-            Uploading {count} file{count === 1 ? "" : "s"}
+            {t(count === 1 ? "ask.uploadingOne" : "ask.uploadingMany", { count })}
           </h2>
           {/* The upload state is shown, not enforced. Save stays live. */}
           <p className={p.sub} data-uploading={inFlight ? "yes" : "no"}>
-            {inFlight
-              ? "Still uploading — you can answer now, it saves when they land."
-              : "All uploaded."}
+            {inFlight ? t("ask.stillUploading") : t("ask.allUploaded")}
           </p>
         </div>
         <div className={p.headActs}>
@@ -91,7 +89,7 @@ export default function AskPanel({
           aria-label={t("ask.documentType")}
         >
           {DOC_TYPES.map((dt) => (
-            <option key={dt.id} value={dt.id}>{dt.label}</option>
+            <option key={dt.id} value={dt.id}>{t(dt.labelKey)}</option>
           ))}
         </select>
         <span className={p.help}>{t("ask.titleFromFilename")}</span>
@@ -102,7 +100,7 @@ export default function AskPanel({
           choose, not afterwards. */}
       {contract && (
         <p className={p.contract}>
-          <strong>{t("ask.notUsedInContent")}</strong> {CONTRACT_NOTE.replace("Not used in generated content. ", "")}
+          <strong>{t("ask.notUsedInContent")}</strong> {t("documents.contractNoteRest")}
         </p>
       )}
 
@@ -115,7 +113,7 @@ export default function AskPanel({
             aria-expanded={expanded}
           >
             <Icon name={expanded ? "chevronLeft" : "chevronRight"} size={11} />
-            {expanded ? "Hide the files" : `Set one file differently (${count})`}
+            {expanded ? t("ask.hideFiles") : t("ask.setOneDifferently", { count })}
             {overridden && <span className={p.dot} aria-label={t("ask.someFilesDiffer")} />}
           </button>
 
@@ -128,20 +126,20 @@ export default function AskPanel({
                     className={p.fsel}
                     value={f.docTypeId ?? batch.docTypeId}
                     onChange={(e) => editFileType(f.tempId, e.target.value)}
-                    aria-label={`Type for ${f.name}`}
+                    aria-label={t("ask.typeFor", { name: f.name })}
                   >
                     {DOC_TYPES.map((dt) => (
-                      <option key={dt.id} value={dt.id}>{dt.label}</option>
+                      <option key={dt.id} value={dt.id}>{t(dt.labelKey)}</option>
                     ))}
                   </select>
                   <input
                     className={p.fdesc}
-                    placeholder={batch.description || "Same as above"}
+                    placeholder={batch.description || t("ask.sameAsAbove")}
                     value={f.description ?? ""}
                     onChange={(e) => onChange(overrideDescription(batch, f.tempId, e.target.value))}
-                    aria-label={`Description for ${f.name}`}
+                    aria-label={t("ask.descriptionFor", { name: f.name })}
                   />
-                  {!f.documentId && <span className={p.pending}>uploading</span>}
+                  {!f.documentId && <span className={p.pending}>{t("ask.uploadingTag")}</span>}
                 </li>
               ))}
             </ul>
@@ -150,8 +148,9 @@ export default function AskPanel({
       )}
 
       <p className={p.foot}>
-        Skip keeps the type above and no description. Files without one wait under{" "}
-        <strong>{t("ask.notDescribed")}</strong> until you add it.
+        {/* B carries its own leading space in English and a comma in Finnish,
+            so nothing goes between </strong> and it. */}
+        {t("ask.skipKeepsA")}{" "}<strong>{t("ask.notDescribed")}</strong>{t("ask.skipKeepsB")}
       </p>
       <span className={p.hiddenState} data-batch-type={batch.docTypeId}
             data-shown-label={docTypeLabel(batch.docTypeId)} />

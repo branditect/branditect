@@ -2,6 +2,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { en } from "./i18n/en.ts";
 import {
   buildImagePrompt, buildParts, productIdentity, decideProductAccess,
   briefBlocker, briefReady, isValidWhere, isValidFormat,
@@ -370,7 +371,9 @@ describe("the page names nothing it should not", () => {
   });
 
   it("calls the button Make the image", () => {
-    assert.ok(page.includes("Make the image"), "the button copy is missing");
+    // A key since 2026-09-14: the page renders it, and its English is the copy.
+    assert.ok(page.includes('t("createImages.makeImage")'), "the button copy is missing");
+    assert.equal(en["createImages.makeImage"], "Make the image");
     assert.ok(!/Generate Architect Vision/.test(page));
   });
 });

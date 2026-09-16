@@ -596,12 +596,14 @@ describe("the width toggle", () => {
    * against real rectangles. What is left here is the structure that makes it
    * possible, which a string search CAN answer honestly.
    */
-  it("no wrapper element sits between the body and its blocks", () => {
+  it("the figure is a direct child of the body, never inside a wrapper", () => {
+    // The wrapper that broke this was around the FIGURE: a float inside a
+    // wrapper cannot have the next block beside it. A wrapper around a TEXT
+    // block is fine, and since 2026-09-16 there is one, because a textarea
+    // sizes itself to about twenty characters and needs a block box around it.
     const page = readFileSync("app/(app)/studio/notes/page.tsx", "utf8");
-    assert.ok(!/<div key=\{b\.id \?\? i\}>/.test(page),
-      "each block is wrapped in a div again — a float inside a wrapper cannot " +
-      "have the next block beside it");
     assert.ok(/<figure\s+key=\{b\.id \?\? i\}/.test(page), "the figure is not keyed directly");
+    assert.ok(!/<div[^>]*>\s*<figure/.test(page), "the figure is wrapped again");
   });
 
   it("the body is not a flex container, because floats do not apply to flex items", () => {
@@ -612,10 +614,17 @@ describe("the width toggle", () => {
   });
 
   it("a text block establishes its own formatting context, or it overlaps the float", () => {
+    // The box that must start a formatting context is the WRAPPER now. A
+    // plain full-width box slides under a float; one that starts a BFC is
+    // shortened by it. The textarea inside fills that box, which is what
+    // stops the text running in a thin column down the left.
     const css = readFileSync("app/(app)/studio/notes/notes.module.css", "utf8");
-    const block = css.slice(css.indexOf(".block {"), css.indexOf("}", css.indexOf(".block {")));
-    assert.ok(!/width:\s*100%/.test(block),
+    const wrap = css.slice(css.indexOf(".blockWrap {"), css.indexOf("}", css.indexOf(".blockWrap {")));
+    assert.match(wrap, /display:\s*flow-root/, "the block box does not start a formatting context");
+    assert.ok(!/width:\s*100%/.test(wrap),
       "a full-width block box overlaps a float rather than sitting beside it");
+    const block = css.slice(css.indexOf(".block {"), css.indexOf("}", css.indexOf(".block {")));
+    assert.match(block, /width:\s*100%/, "the textarea is back to its own intrinsic width");
     assert.match(block, /overflow:\s*hidden/);
   });
 

@@ -434,8 +434,16 @@ export default function NotesPage() {
                       />
                     </figure>
                   ) : (
+                    /* The wrapper is the block box, not the textarea: a
+                       textarea with width:auto is its own intrinsic ~20
+                       characters wide, which is why the text ran in a thin
+                       column down the left. This div establishes a formatting
+                       context, so it fills the note, or shrinks beside a
+                       floated half-width image, and the textarea fills it.
+                       The FIGURE is still keyed directly: wrapping that is
+                       what stopped text running beside an image before. */
+                    <div key={b.id ?? i} className={s.blockWrap}>
                     <AutoTextarea
-                      key={b.id ?? i}
                       className={`${s.block} ${b.kind === "heading" ? s.heading : ""} ${b.kind === "list" ? s.list : ""}`}
                       value={b.body ?? ""}
                       onChange={(e) => editBlock(i, e.target.value)}
@@ -445,6 +453,7 @@ export default function NotesPage() {
                       onKeyDown={(e) => onBlockKeyDown(e, i)}
                       onFocus={() => setFocused(i)}
                     />
+                    </div>
                   ),
               )}
 

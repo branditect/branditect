@@ -55,6 +55,35 @@ try {
     const m = await page.eval(`(() => { const el = ${ta}; const r = el.getBoundingClientRect(); const pane = el.closest('[class*="right"]') ?? document.scrollingElement;
       return { h: Math.round(r.height), scrollH: el.scrollHeight, clipped: el.scrollHeight > Math.ceil(r.height) + 2, chars: el.value.length, paneScrolls: pane.scrollHeight > pane.clientHeight }; })()`);
     m.clipped ? bad("note text is clipped", JSON.stringify(m)) : ok("the note grows to fit what you type", JSON.stringify(m));
+
+    // "It still aligns very thin on the left side." A textarea sizes itself to
+    // about twenty characters, so the width is measured against the note body.
+    const w = await page.eval(`(() => { const el = ${ta}; const body = el.closest('[class*="body"]');
+      const e = el.getBoundingClientRect(), b = body.getBoundingClientRect();
+      return { block: Math.round(e.width), body: Math.round(b.width), left: Math.round(e.left - b.left) }; })()`);
+    w.block >= w.body - 2 && w.left <= 2
+      ? ok("the text fills the note, left to right", `${w.block}px of ${w.body}px`)
+      : bad("the text is a narrow column", JSON.stringify(w));
+
+    // And it must still shrink beside a floated half-width image rather than
+    // slide under it: a real figure is put in front of it and measured.
+    const beside = await page.eval(`(() => {
+      const el = ${ta}; const wrap = el.parentElement; const body = el.closest('[class*="body"]');
+      const fig = document.createElement("figure");
+      fig.className = [...document.querySelectorAll('[class*="imageBlock"]')].map(x=>x.className)[0] ??
+        wrap.className.replace(/blockWrap\\S*/, "");
+      fig.style.cssText = "float:left;width:250px;height:120px;margin:0 14px 10px 0;background:#ddd";
+      body.insertBefore(fig, wrap);
+      const r = el.getBoundingClientRect(), f = fig.getBoundingClientRect();
+      const out = { textLeft: Math.round(r.left), textWidth: Math.round(r.width), figRight: Math.round(f.right) };
+      fig.remove();
+      return out;
+    })()`);
+    beside.textLeft >= beside.figRight - 2
+      ? ok("and shrinks beside a half-width image instead of sliding under it", JSON.stringify(beside))
+      : bad("the text runs under a floated image", JSON.stringify(beside));
+    const png = await page.send("Page.captureScreenshot", { format: "png" });
+    if (process.env.SHOTS) (await import("node:fs")).writeFileSync(`${process.env.SHOTS}/note-editor.png`, Buffer.from(png.data, "base64"));
   }
 
   // ── chat rail: copy + save as note ───────────────────────────────────────

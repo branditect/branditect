@@ -66,17 +66,25 @@
  * styled. Spacing is margin now, because gap needs a flex or grid container. */
 .body { display: block; max-width: 760px; }
 .body::after { content: ""; display: block; clear: both; }
-/* width:auto + its own formatting context, so a block sits BESIDE a floated
- * image rather than under it. A full-width block box overlaps a float — only
- * line boxes shorten around one — which is why width:100% put every paragraph
- * below the picture however the figure was styled. */
-.block { box-sizing: border-box; display: block; width: auto; overflow: hidden;
-  margin: 0 0 14px; resize: none; border: none; padding: 0;
+/* THE WRAPPER IS THE BLOCK BOX. It establishes its own formatting context, so
+ * it sits BESIDE a floated image rather than under it: a block box that starts
+ * a BFC is shortened by the float instead of overlapping it, where a plain
+ * full-width box would slide under the picture.
+ *
+ * The textarea then fills the wrapper. It cannot do this job itself: a
+ * textarea is a replaced element, so width:auto is its own intrinsic width,
+ * about twenty characters — which is exactly what "the text aligns very thin
+ * on the left side" was. */
+.blockWrap { display: flow-root; margin: 0 0 14px; }
+.block { box-sizing: border-box; display: block; width: 100%; overflow: hidden;
+  margin: 0; resize: none; border: none; padding: 0;
   font-size: 15px; font-weight: 400; line-height: 1.7;
   color: theme('colors.ink.DEFAULT'); background: transparent; font-family: inherit; }
 .block:focus { outline: none; }
 .heading { font-size: 17px; font-weight: 800; letter-spacing: -.3px;
-  margin-top: 26px; line-height: 1.35; }
+  line-height: 1.35; }
+/* The gap above a heading belongs to the block box, not the field inside it. */
+.blockWrap:has(.heading) { margin-top: 26px; }
 .list { white-space: pre-wrap; }
 
 .missing { font-size: theme('fontSize.2xs[0]'); font-weight: 600; color: var(--v-amber-ink);

@@ -124,6 +124,97 @@ export function AddLogo({
   );
 }
 
+/**
+ * Replacing the file in one slot, and removing it.
+ *
+ * AddLogo asks which slot; these two already know, because they sit on the
+ * plate for that slot. Replacing is the same upload — the endpoint upserts on
+ * (brand_id, slot) — so the file in the plate changes and nothing is orphaned.
+ */
+export function ReplaceLogo({
+  brandId, slot, onDone,
+}: { brandId: string; slot: string; onDone: () => void }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function send(files: FileList | null) {
+    if (!files?.[0]) return;
+    setBusy(true); setError(null);
+    const fd = new FormData();
+    fd.append("file", files[0]);
+    fd.append("brandId", brandId);
+    fd.append("uploadType", logoUploadType(slot));
+    try {
+      const res = await authedFetch("/api/brand-assets/upload", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        setError(json.error ?? t("uploads.uploadFailedStatus", { status: res.status }));
+      } else {
+        onDone();
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("docs.uploadFailed"));
+    }
+    setBusy(false);
+  }
+
+  return (
+    <>
+      <button type="button" className={u.plateAct} disabled={busy} onClick={() => fileRef.current?.click()}>
+        <Icon name="upload" size={11} /> {busy ? t("vi.uploading") : t("vupload.replaceLogo")}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,.svg"
+        className={u.hidden}
+        onChange={(e) => { send(e.target.files); e.target.value = ""; }}
+      />
+      {error && <span className={u.err} role="alert">{error}</span>}
+    </>
+  );
+}
+
+export function DeleteLogo({
+  brandId, slot, onDone,
+}: { brandId: string; slot: string; onDone: () => void }) {
+  const t = useT();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    setBusy(true); setError(null);
+    const res = await authedJson("/api/brand-assets/logo", "DELETE", { brandId, slot });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
+    setConfirm(false);
+    onDone();
+  }
+
+  if (!confirm) {
+    return (
+      <button type="button" className={u.plateAct} onClick={() => setConfirm(true)}>
+        <Icon name="trash" size={11} /> {t("common.delete")}
+      </button>
+    );
+  }
+  return (
+    <>
+      <button type="button" className={`${u.plateAct} ${u.plateDanger}`} disabled={busy} onClick={remove}>
+        {busy ? t("settings.saving") : t("vupload.deleteLogoConfirm")}
+      </button>
+      <button type="button" className={u.plateAct} disabled={busy} onClick={() => setConfirm(false)}>
+        {t("common.cancel")}
+      </button>
+      {error && <span className={u.err} role="alert">{error}</span>}
+    </>
+  );
+}
+
 /* ── colour ────────────────────────────────────────────────────────────── */
 
 export function AddColour({
@@ -143,7 +234,10 @@ export function AddColour({
     if (!parsed) { setError(t("uploads.notHex")); return; }
     setBusy(true); setError(null);
     const res = await authedJson("/api/brand-book/color", "POST", {
-      brandId, hex: parsed, name: name.trim() || "Untitled",
+      // A blank name is stored blank. The swatch renders an unnamed colour in
+      // the interface language already, so writing an English placeholder into
+      // the database gives a Finnish palette one English word in it.
+      brandId, hex: parsed, name: name.trim(),
     });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
@@ -261,7 +355,7 @@ export function EditColour({
     if (!parsed) { setError(t("uploads.notHex")); return; }
     setBusy(true); setError(null);
     const res = await authedJson("/api/brand-book/color", "PATCH", {
-      // An emptied name is stored empty, not as the English word "Untitled":
+      // An emptied name is stored empty rather than as an English placeholder:
       // the page already renders a blank name in the interface language.
       id: colour.id, brandId, hex: parsed, name: name.trim(),
     });

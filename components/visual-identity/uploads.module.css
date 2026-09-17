@@ -110,3 +110,14 @@
   justify-content: center; gap: 6px; flex: 1; padding: 9px 12px; border-radius: 10px;
   background: var(--v-red-ink); color: #fff; font-size: theme('fontSize.2xs[0]'); font-weight: 800; }
 .danger[disabled] { opacity: .5; cursor: default; }
+
+/* The two controls under a logo plate. Smaller than a section action: they
+   belong to one card, and there are two of them on every card. */
+.plateAct { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; gap: 5px; border: 1px solid theme('colors.rule.2'); border-radius: 9px;
+  padding: 6px 10px; font-size: theme('fontSize.2xs[0]'); font-weight: 700;
+  color: theme('colors.ink.2'); background: #fff; }
+.plateAct:hover { border-color: theme('colors.accent.line'); color: theme('colors.accent.dark'); }
+.plateAct[disabled] { opacity: .5; cursor: default; }
+.plateDanger { background: var(--v-red-ink); border-color: var(--v-red-ink); color: #fff; }
+.plateDanger:hover { color: #fff; }

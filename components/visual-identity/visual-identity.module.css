@@ -86,7 +86,23 @@
 .lcU { font-size: theme('fontSize.2xs[0]'); font-weight: 500; color: theme('colors.muted.2'); margin-top: 2px; line-height: 1.4; }
 .plate { height: 112px; display: grid; place-items: center; position: relative; padding: 14px;
   border-top: 1px solid theme('colors.rule.DEFAULT'); border-bottom: 1px solid theme('colors.rule.DEFAULT'); }
-.plate img { max-height: 100%; max-width: 100%; object-fit: contain; }
+/* The plate is a fixed frame and the logo has to fit INSIDE it, whatever it
+   is. max-width/max-height alone was not enough: an SVG with only a viewBox
+   and no width/height has no intrinsic size, so it was laid out at its default
+   300x150 and stretched past the frame — reported as "in Sorbify brand mark,
+   the brand mark stretches over the frame". Giving the box the plate's own
+   size and letting object-fit letterbox the artwork inside it holds for a PNG,
+   an SVG with a viewBox, and an SVG with a huge fixed width alike. */
+/* The box is pinned to the frame, and object-fit letterboxes the artwork
+   inside it. `height: 100%` does not work here: the plate centres its item, so
+   the percentage has no definite height to resolve against and the image keeps
+   its intrinsic size — a 120x900 SVG rendered 1178px tall inside an 84px
+   frame. An absolutely positioned REPLACED element does not stretch to its
+   insets either — it keeps its intrinsic size and the leftover space is just
+   distributed — so the width and height are given outright, against the
+   plate's own fixed height. */
+.plate img { position: absolute; inset: 14px; width: calc(100% - 28px); height: calc(100% - 28px);
+  object-fit: contain; object-position: center; display: block; }
 .light { background: #fff; }
 .dark { background: #15151b; }
 /* The checkerboard is how you see whether a transparent PNG really is. */
@@ -94,7 +110,7 @@
   background-image: linear-gradient(45deg, #eeedec 25%, transparent 25%), linear-gradient(-45deg, #eeedec 25%, transparent 25%),
                     linear-gradient(45deg, transparent 75%, #eeedec 75%), linear-gradient(-45deg, transparent 75%, #eeedec 75%);
   background-size: 14px 14px; background-position: 0 0, 0 7px, 7px -7px, -7px 0; }
-.tag { position: absolute; top: 8px; right: 9px; font-size: 9px; font-weight: 800; letter-spacing: .7px;
+.tag { position: absolute; z-index: 2; top: 8px; right: 9px; font-size: 9px; font-weight: 800; letter-spacing: .7px;
   text-transform: uppercase; color: theme('colors.faint.DEFAULT'); background: rgba(255, 255, 255, .9);
   border-radius: 4px; padding: 2px 5px; }
 .dark .tag { color: rgba(255, 255, 255, .6); background: rgba(255, 255, 255, .12); }
@@ -280,3 +296,6 @@
 .swatchWrap:hover .swatchEdit, .swatchEdit:focus-within { opacity: 1; }
 /* Touch has no hover: there, it is always visible. */
 @media (hover: none) { .swatchEdit { opacity: 1; } }
+
+/* Under the download button on a logo card. */
+.plateActs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }

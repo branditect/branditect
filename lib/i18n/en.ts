@@ -2885,6 +2885,12 @@ export const en = {
   "visual.toast.guidelineRemoved": "Brand guideline removed",
   "visual.toast.colourSaved": "Colour saved",
   "visual.toast.colourRemoved": "Colour removed",
+
+  // ── A logo can be replaced or deleted ── 2026-09-17, Finnish mine.
+  "vupload.replaceLogo": "Replace",
+  "vupload.deleteLogoConfirm": "Yes, delete it",
+  "visual.toast.logoReplaced": "Logo replaced",
+  "visual.toast.logoDeleted": "Logo deleted",
 } as const;
 
 export type StringKey = keyof typeof en;

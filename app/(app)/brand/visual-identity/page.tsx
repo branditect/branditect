@@ -25,6 +25,7 @@ import { SLOTS, USE_CASES, canonicalSlot, formatOf } from "@/lib/logo-slots";
 import s from "@/components/visual-identity/visual-identity.module.css";
 import {
   AddLogo, AddColour, AddTypeface, EditColour, UploadGuideline, RemoveGuideline,
+  ReplaceLogo, DeleteLogo,
 } from "@/components/visual-identity/uploads";
 import u from "@/components/visual-identity/uploads.module.css";
 import { useT } from "@/lib/i18n/use-t.tsx";
@@ -392,6 +393,20 @@ export default function VisualIdentityPage() {
                             <Icon name="upload" size={12} />
                             {t("common.download")}
                           </button>
+                        </div>
+                        {/* Replace and delete belong to this plate, so they
+                            know their slot and never ask for it. */}
+                        <div className={s.plateActs}>
+                          <ReplaceLogo
+                            brandId={brandId}
+                            slot={def.slot}
+                            onDone={() => { reload(); flash(t("visual.toast.logoReplaced")); }}
+                          />
+                          <DeleteLogo
+                            brandId={brandId}
+                            slot={def.slot}
+                            onDone={() => { reload(); flash(t("visual.toast.logoDeleted")); }}
+                          />
                         </div>
                       </div>
                     </div>

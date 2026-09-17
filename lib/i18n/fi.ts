@@ -2941,4 +2941,10 @@ export const fi: Record<StringKey, string> = {
   "visual.toast.guidelineRemoved": "Brändiohjeisto poistettu",
   "visual.toast.colourSaved": "Väri tallennettu",
   "visual.toast.colourRemoved": "Väri poistettu",
+
+  // ── A logo can be replaced or deleted ── 2026-09-17, Finnish mine.
+  "vupload.replaceLogo": "Vaihda",
+  "vupload.deleteLogoConfirm": "Kyllä, poista",
+  "visual.toast.logoReplaced": "Logo vaihdettu",
+  "visual.toast.logoDeleted": "Logo poistettu",
 };

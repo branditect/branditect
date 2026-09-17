@@ -25,10 +25,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Headings INHERIT their colour. They used to be pinned to #15151b, which
+     beats the white a dark panel passes down — inheritance loses to any rule
+     that names the element. That is why the violet Visual identity header and
+     the navy "The full brand guideline" box had near-black headlines on them,
+     and why the old orange strategy hero did too. Body colour is #15151b, so
+     on every light surface nothing changes. */
   h1, h2, h3, h4 {
     font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
     font-weight: 700;
-    color: #15151b;
+    color: inherit;
   }
 
   /* Inputs — surface-container-low bg, border-2 transparent, 2xl radius */

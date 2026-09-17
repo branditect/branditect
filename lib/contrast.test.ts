@@ -1,6 +1,7 @@
 /** Run with: npm test */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   parseHex, relativeLuminance, contrastRatio, levelFor, contrastOnWhite, readableInkOn,
 } from "./contrast.ts";
@@ -126,5 +127,20 @@ describe("readableInkOn", () => {
 
   it("falls back to ink rather than throwing on a gradient", () => {
     assert.equal(readableInkOn("linear-gradient(90deg,#fff,#000)"), "#15151b");
+  });
+});
+
+describe("headings take the colour of what they sit on", () => {
+  it("globals.css does not pin a colour on h1-h4", () => {
+    // The base layer set `h1,h2,h3,h4 { color: #15151b }`. A rule that names
+    // the element beats a colour inherited from an ancestor, so every dark
+    // panel in the app had near-black headings on it: the violet Visual
+    // identity header, the navy "The full guidelines" box, and the orange
+    // strategy hero while it existed. Body colour is the same #15151b, so
+    // inheriting changes nothing on a light surface.
+    const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+    const rule = css.slice(css.indexOf("h1, h2, h3, h4 {"));
+    const block = rule.slice(0, rule.indexOf("}"));
+    assert.match(block, /color:\s*inherit/, "headings are pinned to a colour again");
   });
 });

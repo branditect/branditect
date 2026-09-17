@@ -8,9 +8,11 @@
   --st-diff: #6a4fb0;
   --st-pillar-ico: #7b5ea7;
   --st-bnd-bg: #fbfafa;
-  --st-core-a: #fef1ec;
-  --st-core-b: #fde5dc;
-  --st-quad-rule: rgba(240, 86, 42, .16);
+  /* 01 Brand core is the orange card now, the same gradient as the readiness
+     card on Home (backgroundImage.grad-hero in tailwind.config.ts). It is the
+     four answers everything else is built on, so it carries the weight the
+     removed hero used to. Everything inside it goes white. */
+  --st-quad-rule: rgba(255, 255, 255, .26);
   max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px;
 }
 
@@ -65,13 +67,18 @@
 .empty .v { font-size: theme('fontSize.xs[0]'); font-weight: 500; color: theme('colors.ink.2'); margin-top: 4px; line-height: 1.5; }
 
 /* 01 brand core */
-.core { background: linear-gradient(140deg, var(--st-core-a) 0%, var(--st-core-b) 100%); border-color: theme('colors.tint.4'); }
+.core { background: theme('backgroundImage.grad-hero'); border-color: transparent;
+  color: #fff; filter: theme('dropShadow.hero'); }
 .core .grid2 { gap: 0; }
 .quad { display: flex; gap: 14px; padding: 16px 18px; }
 .quad:nth-child(1), .quad:nth-child(2) { border-bottom: 1px solid var(--st-quad-rule); }
 .quad:nth-child(odd) { border-right: 1px solid var(--st-quad-rule); }
 .qico { width: 44px; height: 44px; flex: none; border-radius: 50%; background: #fff;
   display: grid; place-items: center; color: theme('colors.accent.DEFAULT'); }
+/* On the orange, the white circle is the only white shape that stays white:
+   the words above and below it invert. */
+.core .quad .t { color: #fff; }
+.core .quad .v { color: rgba(255, 255, 255, .92); }
 .qico svg { width: 21px; height: 21px; fill: currentColor; }
 .quad .t { font-size: theme('fontSize.sm[0]'); font-weight: 700; color: theme('colors.ink.DEFAULT'); }
 .quad .v { font-size: theme('fontSize.sm[0]'); font-weight: 500; color: theme('colors.ink.2'); margin-top: 4px; line-height: 1.5; }

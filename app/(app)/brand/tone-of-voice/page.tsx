@@ -7,6 +7,11 @@ import { supabase } from "@/lib/supabase";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
+// The strategy document's stylesheet, used as-is. Tone of voice is the same
+// document in a different chapter, and a second copy of these rules is how
+// two pages that should look identical stop looking identical.
+import s from "@/components/strategy/strategy.module.css";
+import { I, Ico } from "@/components/strategy/icons";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -73,6 +78,9 @@ const DEFAULT_CHECKLIST = [
   "Would our audience feel spoken to, not at?",
   "Is the message concise and purposeful?",
 ];
+
+/** The five parts that hold content. The checklist has a default and is not one. */
+const TONE_PARTS = 5;
 
 const EMPTY_TONE: ToneData = {
   brand_id: "default",
@@ -366,19 +374,6 @@ export default function ToneOfVoicePage() {
   /*  Render helpers                                                   */
   /* ---------------------------------------------------------------- */
 
-  const placeholder = (text: string) => (
-    <span className="text-outline italic text-sm">{text}</span>
-  );
-
-  const editBtn = (section: EditingSection) => (
-    <button
-      onClick={() => openEdit(section)}
-      className="absolute top-4 right-4 bg-surface-container-low hover:bg-light text-on-surface text-xs font-mono px-3 py-1.5 rounded-lg transition-colors"
-    >
-      {t("common.edit")}
-    </button>
-  );
-
   /* ---------------------------------------------------------------- */
   /*  LOADING                                                          */
   /* ---------------------------------------------------------------- */
@@ -507,85 +502,111 @@ export default function ToneOfVoicePage() {
   const touchpoints: Touchpoint[] = td.touchpoints || [];
   const checklist: string[] = td.checklist || DEFAULT_CHECKLIST;
 
+  // The same thing the strategy's chip says: how much of this document
+  // exists. Five parts, not six — the checklist ships with a default, so
+  // counting it would report a page as written that has nothing in it.
+  const definedCount = [
+    td.expression_label || td.expression_text,
+    pillars.length,
+    dos.length || donts.length,
+    vocabYes.length || vocabNo.length,
+    touchpoints.length,
+  ].filter(Boolean).length;
+
   return (
     <>
-      <div className="max-w-4xl mx-auto pb-24">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/brand/visual-identity"
-            className="text-outline hover:text-on-surface text-sm font-mono transition-colors"
-          >
-            {t("tone.brandLibrary")}
-          </Link>
-          <h1 className="font-headline font-extrabold text-3xl text-on-surface tracking-tight mt-3">{t("tone.title")}</h1>
-          <p className="text-outline text-sm mt-1">{brandName}</p>
-        </div>
+      {/* The page reads as the same document as Brand ▸ Strategy: the same
+          header, the same numbered sections with a why-line under the title,
+          the same panels, and the expression on the same orange card that
+          carries Brand core. It renders from the strategy's own stylesheet so
+          the two cannot drift — one file, both documents. */}
+      <div className={s.wrap}>
+        <header className={s.top}>
+          <div>
+            <div className={s.topTitle}>{t("tone.title")}</div>
+            <div className={s.metarow}>
+              <span className={s.chip}><Ico d={I.brain} size={12} /> {brandName}</span>
+              <span className={s.chip}><Ico d={I.check} size={12} /> {t("tone.definedCount", { filled: definedCount, total: TONE_PARTS })}</span>
+            </div>
+          </div>
+          <div className={s.hbtns}>
+            <Link href="/brand/strategy" className={`${s.hbtn} ${s.ghost}`}>
+              <Ico d={I.arr} size={15} /> {t("tone.seeStrategy")}
+            </Link>
+          </div>
+        </header>
 
-        {/* Section 1: Expression */}
-        <section className="bg-surface-container-lowest rounded-2xl p-8 mb-8 shadow-sm border border-outline-variant/10">
-          <p className="font-body text-primary text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.expression")}
-          </p>
-          <h2
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={e => {
-              const val = e.currentTarget.textContent || '';
-              if (val !== td.expression_label) {
-                saveTone({ ...toneData!, expression_label: val });
-              }
-            }}
-            className="font-headline font-extrabold italic text-3xl mb-4 text-on-surface outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1 transition-colors"
-          >
-            {td.expression_label || t("tone.expressionPlaceholder")}
-          </h2>
-          <p
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={e => {
-              const val = e.currentTarget.textContent || '';
-              if (val !== td.expression_text) {
-                saveTone({ ...toneData!, expression_text: val });
-              }
-            }}
-            className="text-on-surface-variant text-sm leading-relaxed max-w-xl outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1 transition-colors"
-          >
-            {td.expression_text || t("tone.expressionTextPlaceholder")}
-          </p>
+        {/* 01 — the expression. The orange card, for the same reason Brand core
+            is: it is the thing itself, and everything below is how to do it. */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>01</span>
+            <h2>{t("tone.sec.expression")}</h2>
+            <span className={s.why}>{t("tone.why.expression")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("expression")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
+          </div>
+          <div className={`${s.panel} ${s.core} ${s.expr}`}>
+            <h3
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={e => {
+                const val = e.currentTarget.textContent || '';
+                if (val !== td.expression_label) saveTone({ ...toneData!, expression_label: val });
+              }}
+            >
+              {td.expression_label || t("tone.expressionPlaceholder")}
+            </h3>
+            <p
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={e => {
+                const val = e.currentTarget.textContent || '';
+                if (val !== td.expression_text) saveTone({ ...toneData!, expression_text: val });
+              }}
+            >
+              {td.expression_text || t("tone.expressionTextPlaceholder")}
+            </p>
+          </div>
         </section>
 
-        {/* Section 2: Tone Pillars */}
-        <section className="relative mb-8">
-          <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.pillars")}
-          </p>
+        {/* 02 — the pillars, as the strategy's pillar cards. */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>02</span>
+            <h2>{t("tone.sec.pillars")}</h2>
+            <span className={s.why}>{t("tone.why.pillars")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("pillars")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
+          </div>
           {pillars.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={s.grid3}>
               {pillars.map((p, i) => (
-                <div key={i} className="bg-surface-container-lowest rounded-2xl shadow-sm p-6 border border-outline-variant/10">
-                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center mb-4 text-xs font-headline font-extrabold text-primary">{p.name?.[0] || 'P'}</div>
-                  <h3
+                <div key={i} className={`${s.panel} ${s.pil}`}>
+                  <span className={s.pico}><Ico d={I.spark} size={19} /></span>
+                  <div
+                    className={s.t}
                     contentEditable suppressContentEditableWarning
                     onBlur={e => {
                       const newPillars = [...pillars]; newPillars[i] = { ...newPillars[i], name: e.currentTarget.textContent || '' };
                       saveTone({ ...toneData!, pillars: newPillars });
                     }}
-                    className="font-headline font-bold text-on-surface text-base outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1"
-                  >{p.name}</h3>
-                  <p
+                  >{p.name}</div>
+                  <div
+                    className={s.v}
                     contentEditable suppressContentEditableWarning
                     onBlur={e => {
                       const newPillars = [...pillars]; newPillars[i] = { ...newPillars[i], desc: e.currentTarget.textContent || '' };
                       saveTone({ ...toneData!, pillars: newPillars });
                     }}
-                    className="text-on-surface-variant text-xs mt-2 mb-4 outline-none focus:bg-surface-container-low/50 rounded-lg px-1 -mx-1"
-                  >{p.desc}</p>
+                  >{p.desc}</div>
                   {p.bullets?.length > 0 && (
-                    <ul className="space-y-2">
+                    <ul className={s.pbul}>
                       {p.bullets.map((b, j) => (
-                        <li key={j} className="text-sm text-on-surface flex items-start gap-2">
-                          <span className="text-primary mt-0.5 text-xs">&#x2022;</span>
+                        <li key={j}>
+                          <span>&#x2022;</span>
                           <span
                             contentEditable suppressContentEditableWarning
                             onBlur={e => {
@@ -593,7 +614,6 @@ export default function ToneOfVoicePage() {
                               newPillars[i] = { ...newPillars[i], bullets: newBullets };
                               saveTone({ ...toneData!, pillars: newPillars });
                             }}
-                            className="outline-none focus:bg-surface-container-low/50 rounded px-0.5 -mx-0.5 flex-1"
                           >{b}</span>
                         </li>
                       ))}
@@ -603,176 +623,137 @@ export default function ToneOfVoicePage() {
               ))}
             </div>
           ) : (
-            <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-8 text-center">
-              {placeholder(t("tone.noPillars"))}
+            <div className={`${s.panel} ${s.empty}`}>
+              <div className={s.t}>{t("tone.sec.pillars")}</div>
+              <div className={s.v}>{t("tone.noPillars")}</div>
             </div>
           )}
-          {editBtn("pillars")}
         </section>
 
-        {/* Section 3: Do & Don't */}
-        <section className="relative mb-8">
-          <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.doAndDont")}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Dos */}
-            <div className="relative bg-green-50 border border-green-200 rounded-xl p-5">
-              <h3 className="font-semibold text-green-800 text-sm mb-3">{t("tone.do")}</h3>
+        {/* 03 — do and don't, in the boundaries columns. */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>03</span>
+            <h2>{t("tone.doAndDont")}</h2>
+            <span className={s.why}>{t("tone.why.doAndDont")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("dos")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
+          </div>
+          <div className={`${s.panel} ${s.bnd} ${s.grid2}`}>
+            <div className={`${s.bcol} ${s.bcolYes}`}>
+              <div className={s.k}><Ico d={I.check} size={14} /> {t("tone.do")}
+                <button type="button" className={s.colEdit} onClick={() => openEdit("dos")}>
+                  <Ico d={I.pen} size={12} /> {t("common.edit")}
+                </button>
+              </div>
               {dos.length > 0 ? (
-                <ul className="space-y-2">
-                  {dos.map((d, i) => (
-                    <li key={i} className="text-xs text-green-800 flex items-start gap-2">
-                      <span className="text-green-500 mt-0.5">&#10003;</span> {d}
-                    </li>
-                  ))}
-                </ul>
+                <ul>{dos.map((d, i) => (<li key={i}><span>&#10003;</span>{d}</li>))}</ul>
               ) : (
-                placeholder(t("tone.noItems"))
+                <ul><li><span>—</span>{t("tone.noItems")}</li></ul>
               )}
-              <button
-                onClick={() => openEdit("dos")}
-                className="absolute top-3 right-3 bg-green-100 hover:bg-green-200 text-green-800 text-xs font-mono px-2.5 py-1 rounded-lg transition-colors"
-              >
-                {t("common.edit")}
-              </button>
             </div>
-            {/* Donts */}
-            <div className="relative bg-red-50 border border-red-200 rounded-xl p-5">
-              <h3 className="font-semibold text-red-700 text-sm mb-3">{t("tone.dont")}</h3>
+            <div className={`${s.bcol} ${s.bcolNo}`}>
+              <div className={s.k}><Ico d={I.x} size={14} /> {t("tone.dont")}
+                <button type="button" className={s.colEdit} onClick={() => openEdit("donts")}>
+                  <Ico d={I.pen} size={12} /> {t("common.edit")}
+                </button>
+              </div>
               {donts.length > 0 ? (
-                <ul className="space-y-2">
-                  {donts.map((d, i) => (
-                    <li key={i} className="text-xs text-red-700 flex items-start gap-2">
-                      <span className="text-red-400 mt-0.5">&#10007;</span> {d}
-                    </li>
-                  ))}
-                </ul>
+                <ul>{donts.map((d, i) => (<li key={i}><span>&#10007;</span>{d}</li>))}</ul>
               ) : (
-                placeholder(t("tone.noItems"))
+                <ul><li><span>—</span>{t("tone.noItems")}</li></ul>
               )}
-              <button
-                onClick={() => openEdit("donts")}
-                className="absolute top-3 right-3 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-mono px-2.5 py-1 rounded-lg transition-colors"
-              >
-                {t("common.edit")}
-              </button>
             </div>
           </div>
         </section>
 
-        {/* Section 4: Brand Vocabulary */}
-        <section className="relative mb-8">
-          <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.vocabulary")}
-          </p>
-          <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-6 space-y-5">
-            <div>
-              <p className="text-xs font-semibold text-green-700 mb-2">{t("tone.alwaysUse")}</p>
-              {vocabYes.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {vocabYes.map((w, i) => (
-                    <span
-                      key={i}
-                      className="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1 rounded-full"
-                    >
-                      {w}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                placeholder(t("tone.noWords"))
-              )}
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-red-600 mb-2">{t("tone.neverUse")}</p>
-              {vocabNo.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {vocabNo.map((w, i) => (
-                    <span
-                      key={i}
-                      className="bg-red-50 text-red-600 border border-red-200 text-xs px-3 py-1 rounded-full"
-                    >
-                      {w}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                placeholder(t("tone.noWords"))
-              )}
-            </div>
+        {/* 04 — the words, as the strategy's word chips: struck through is the
+            fastest way to read "never this". */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>04</span>
+            <h2>{t("tone.sec.vocab")}</h2>
+            <span className={s.why}>{t("tone.why.vocab")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("vocab")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
           </div>
-          {editBtn("vocab")}
+          <div className={s.panel}>
+            <div className={s.vocabk}>{t("tone.alwaysUse")}</div>
+            {vocabYes.length > 0 ? (
+              <div className={s.words}>{vocabYes.map((w, i) => (<span key={i} className={`${s.w} ${s.wOk}`}>{w}</span>))}</div>
+            ) : <p className={s.none}>{t("tone.noWords")}</p>}
+            <div className={`${s.vocabk} ${s.vocabkNo}`}>{t("tone.neverUse")}</div>
+            {vocabNo.length > 0 ? (
+              <div className={s.words}>{vocabNo.map((w, i) => (<span key={i} className={`${s.w} ${s.wNo}`}>{w}</span>))}</div>
+            ) : <p className={s.none}>{t("tone.noWords")}</p>}
+          </div>
         </section>
 
-        {/* Section 5: Touchpoints */}
-        <section className="relative mb-8">
-          <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.touchpoints")}
-          </p>
+        {/* 05 — the same line in each channel, wrong beside right. */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>05</span>
+            <h2>{t("tone.sec.touchpoints")}</h2>
+            <span className={s.why}>{t("tone.why.touchpoints")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("touchpoints")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
+          </div>
           {touchpoints.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={s.grid2}>
               {touchpoints.map((tp, i) => (
-                <div key={i} className="bg-surface-container-lowest rounded-2xl shadow-sm p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-md bg-surface-container-high flex items-center justify-center text-[10px] font-headline font-bold text-on-surface-variant">{tp.name?.[0] || 'T'}</div>
-                    <h3 className="font-headline font-bold text-on-surface text-sm">{tp.name}</h3>
-                    <span className="ml-auto bg-primary-fixed text-primary text-[0.6rem] font-mono px-2 py-0.5 rounded-full">
-                      {tp.badge}
-                    </span>
+                <div key={i} className={`${s.panel} ${s.tp}`}>
+                  <div className={s.tphead}>
+                    <span className={s.tpico}><Ico d={I.chat} size={15} /></span>
+                    <span className={s.tpname}>{tp.name}</span>
+                    {tp.badge && <span className={s.tpbadge}>{tp.badge}</span>}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-[0.6rem] font-mono text-red-500 mb-1">&#10060; {t("tone.wrong")}</p>
-                      <p className="text-xs text-red-600/80 italic">{tp.bad}</p>
+                  <div className={s.tprow}>
+                    <div className={s.tpNo}>
+                      <div className={s.k}>{t("tone.wrong")}</div>
+                      <p>{tp.bad}</p>
                     </div>
-                    <div>
-                      <p className="text-[0.6rem] font-mono text-green-600 mb-1">&#9989; {t("tone.right")}</p>
-                      <p className="text-xs text-green-700/80 italic">{tp.good}</p>
+                    <div className={s.tpYes}>
+                      <div className={s.k}>{t("tone.right")}</div>
+                      <p>{tp.good}</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-8 text-center">
-              {placeholder(t("tone.noTouchpoints"))}
+            <div className={`${s.panel} ${s.empty}`}>
+              <div className={s.t}>{t("tone.sec.touchpoints")}</div>
+              <div className={s.v}>{t("tone.noTouchpoints")}</div>
             </div>
           )}
-          {editBtn("touchpoints")}
         </section>
 
-        {/* Section 6: Quick Checklist */}
-        <section className="relative mb-8">
-          <p className="font-body text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase mb-4">
-            {t("tone.checklist")}
-          </p>
-          <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-6">
-            <ul className="space-y-3">
-              {checklist.map((item, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <button
-                    onClick={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
-                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                      checked[i]
-                        ? "bg-brand-orange border-primary text-white"
-                        : "border-light hover:border-brand-orange-mid"
-                    }`}
-                  >
-                    {checked[i] && (
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-                  <span className={`text-sm ${checked[i] ? "text-outline line-through" : "text-on-surface"}`}>
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        {/* 06 — the checklist, ticked in the browser and never stored: it is a
+            question to ask before sending, not a record of anything. */}
+        <section className={s.sec}>
+          <div className={s.sechead}>
+            <span className={s.secno}>06</span>
+            <h2>{t("tone.sec.checklist")}</h2>
+            <span className={s.why}>{t("tone.why.checklist")}</span>
+            <button type="button" className={s.edit} onClick={() => openEdit("checklist")}>
+              <Ico d={I.pen} size={13} /> {t("common.edit")}
+            </button>
           </div>
-          {editBtn("checklist")}
+          <div className={s.panel}>
+            {checklist.map((item, i) => (
+              <label key={i} className={s.check}>
+                <input
+                  type="checkbox"
+                  checked={!!checked[i]}
+                  onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
+                />
+                <span className={checked[i] ? s.checkDone : undefined}>{item}</span>
+              </label>
+            ))}
+          </div>
         </section>
       </div>
 

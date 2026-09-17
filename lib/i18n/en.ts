@@ -468,7 +468,7 @@ export const en = {
   "tone.manualHelp": "Define each aspect of your tone step by step.",
   "tone.expression": "YOUR BRAND EXPRESSION",
   "tone.pillars": "TONE PILLARS",
-  "tone.doAndDont": "DO & DON'T",
+  "tone.doAndDont": "Do and don't",
   "tone.dont": "Don't",
   "tone.vocabulary": "BRAND VOCABULARY",
   "tone.alwaysUse": "Always use",
@@ -2555,13 +2555,13 @@ export const en = {
   "tone.right": "Right",
   "tone.noTouchpoints": "No touchpoints defined yet — click edit to add",
   "tone.editTitle": "Edit — {section}",
-  "tone.sec.expression": "Brand Expression",
-  "tone.sec.pillars": "Tone Pillars",
-  "tone.sec.dos": "Do's",
-  "tone.sec.donts": "Don'ts",
-  "tone.sec.vocab": "Brand Vocabulary",
-  "tone.sec.touchpoints": "Channel Touchpoints",
-  "tone.sec.checklist": "Quick Checklist",
+  "tone.sec.expression": "Brand expression",
+  "tone.sec.pillars": "Tone pillars",
+  "tone.sec.dos": "Do",
+  "tone.sec.donts": "Don't",
+  "tone.sec.vocab": "Brand vocabulary",
+  "tone.sec.touchpoints": "Channel touchpoints",
+  "tone.sec.checklist": "Quick checklist",
   "tone.addPillar": "+ Add pillar",
   "tone.dosPlaceholder": "Use active voice\nBe specific\n...",
   "tone.dontsPlaceholder": "Don't use passive voice\nDon't be vague\n...",
@@ -2840,6 +2840,16 @@ export const en = {
   "strategy.regenerate": "Rewrite the strategy",
   "strategy.regenerateWhy":
     "Rewrites the whole document from your current answers. The one on screen is replaced.",
+
+  // ── Tone of voice reads as the strategy document ── 2026-09-17, Finnish mine.
+  "tone.why.expression": "How this brand sounds, in one line and one paragraph",
+  "tone.why.pillars": "The two or three qualities every sentence should carry",
+  "tone.why.doAndDont": "Named habits, so the AI and a new writer can follow them",
+  "tone.why.vocab": "The words this brand uses, and the ones it never does",
+  "tone.why.touchpoints": "The same message in each channel, wrong beside right",
+  "tone.why.checklist": "Read before you send. Ticks are not saved anywhere",
+  "tone.definedCount": "{filled} of {total} parts written",
+  "tone.seeStrategy": "Brand strategy",
 } as const;
 
 export type StringKey = keyof typeof en;

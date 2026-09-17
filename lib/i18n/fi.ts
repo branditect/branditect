@@ -2894,4 +2894,16 @@ export const fi: Record<StringKey, string> = {
   "strategy.regenerate": "Kirjoita strategia uudelleen",
   "strategy.regenerateWhy":
     "Kirjoittaa koko dokumentin uudelleen nykyisistä vastauksistasi. Näytöllä oleva korvataan.",
+
+  // ── Tone of voice reads as the strategy document ── 2026-09-17, Finnish mine.
+  "tone.why.expression": "Miltä brändi kuulostaa, yhtenä lauseena ja yhtenä kappaleena",
+  "tone.why.pillars":
+    "Ne kaksi tai kolme ominaisuutta, jotka jokaisessa lauseessa pitää kuulua",
+  "tone.why.doAndDont":
+    "Nimetyt tavat, jotta tekoäly ja uusi kirjoittaja voivat noudattaa niitä",
+  "tone.why.vocab": "Sanat joita brändi käyttää, ja ne joita se ei koskaan käytä",
+  "tone.why.touchpoints": "Sama viesti joka kanavassa, väärin vierekkäin oikein",
+  "tone.why.checklist": "Lue ennen lähettämistä. Rasteja ei tallenneta mihinkään",
+  "tone.definedCount": "{filled}/{total} osaa kirjoitettu",
+  "tone.seeStrategy": "Brändistrategia",
 };

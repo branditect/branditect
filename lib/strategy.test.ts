@@ -626,3 +626,29 @@ describe("a reason reads as part of the sentence around it", () => {
     assert.equal(midSentence("EU rules say so"), "EU rules say so");
   });
 });
+
+describe("the document's styles actually reach the document", () => {
+  it("never writes a CSS-module class as a bare string", () => {
+    // `className="k"` matched nothing: CSS modules hash every class, so the
+    // rule `.bcol .k` compiles to `.strategy_bcol__x .strategy_k__y` and a
+    // literal "k" in the markup is a class that does not exist. Every nested
+    // rule in strategy.module.css was dead for months — the boundaries icons
+    // sat above their labels instead of beside them. It must be {s.k}.
+    for (const f of ["components/strategy/strategy-document.tsx",
+                     "app/(app)/brand/tone-of-voice/page.tsx"]) {
+      const bare = [...code(f).matchAll(/className="([a-z][a-zA-Z0-9]{0,6})"/g)].map((m) => m[1]);
+      assert.deepEqual(bare, [], `${f} writes module classes as strings: ${bare.join(", ")}`);
+    }
+  });
+
+  it("renders tone of voice from the strategy's own stylesheet", () => {
+    // Same document, different chapter. Two copies of these rules is how two
+    // pages that must look identical stop looking identical.
+    const tone = code("app/(app)/brand/tone-of-voice/page.tsx");
+    assert.match(tone, /from "@\/components\/strategy\/strategy\.module\.css"/,
+      "tone of voice has its own styles again");
+    for (const n of ["01", "02", "03", "04", "05", "06"]) {
+      assert.ok(tone.includes(`{s.secno}>${n}<`), `tone of voice has no section ${n}`);
+    }
+  });
+});

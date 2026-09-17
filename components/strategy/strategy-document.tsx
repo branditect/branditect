@@ -40,8 +40,8 @@ function Empty({ what, example }: { what: StringKey; example: StringKey }) {
   const t = useT();
   return (
     <div className={s.empty}>
-      <div className="t">{t(what)}</div>
-      <div className="v">{t("strategyDoc.forExample", { example: t(example) })}</div>
+      <div className={s.t}>{t(what)}</div>
+      <div className={s.v}>{t("strategyDoc.forExample", { example: t(example) })}</div>
     </div>
   );
 }
@@ -73,12 +73,12 @@ function FromDocument({ def }: { def: SectionDef }) {
 
   return (
     <div className={s.sourced}>
-      <div className="lab">{t("strategyDoc.fromYourDocument")}</div>
+      <div className={s.lab}>{t("strategyDoc.fromYourDocument")}</div>
       <ul>
         {quotes.map((q) => (
           <li key={q.n}>
             <q>{q.quote}</q>
-            {q.page !== null && <span className="pg">{t("strategyDoc.page", { page: q.page })}</span>}
+            {q.page !== null && <span className={s.pg}>{t("strategyDoc.page", { page: q.page })}</span>}
           </li>
         ))}
       </ul>
@@ -106,15 +106,15 @@ function NotAnswered({ def, empty }: { def: SectionDef; empty: boolean }) {
 
   return (
     <div className={s.notAnswered}>
-      <div className="lab">{empty ? t("strategyDoc.notInDocument") : t("strategyDoc.stillOpen")}</div>
-      <p className="int">{t("strategyDoc.answerToFill")}</p>
+      <div className={s.lab}>{empty ? t("strategyDoc.notInDocument") : t("strategyDoc.stillOpen")}</div>
+      <p className={s.int}>{t("strategyDoc.answerToFill")}</p>
       <ul>
         {missing.map((n) => {
           const q = forLocale(n, track, locale);
           return q ? <li key={n}>{q.q}</li> : null;
         })}
       </ul>
-      <Link href={`/start/q/${missing[0]}`} className="go">{t("strategyDoc.answerThese")} →</Link>
+      <Link href={`/start/q/${missing[0]}`} className={s.go}>{t("strategyDoc.answerThese")} →</Link>
     </div>
   );
 }
@@ -184,8 +184,8 @@ export default function StrategyDocument({
               <div key={k} className={s.quad}>
                 <span className={s.qico}><Ico d={icon} size={21} /></span>
                 <div>
-                  <div className="t">{t(k)}</div>
-                  <div className="v">{v || t("strategyDoc.notAnsweredYet")}</div>
+                  <div className={s.t}>{t(k)}</div>
+                  <div className={s.v}>{v || t("strategyDoc.notAnsweredYet")}</div>
                 </div>
               </div>
             ))}
@@ -200,23 +200,23 @@ export default function StrategyDocument({
             {([["strategyDoc.weAre", strategy.positioning.weAre], ["strategyDoc.for", strategy.positioning.forWhom],
                ["strategyDoc.unlike", strategy.positioning.unlike], ["strategyDoc.because", strategy.positioning.because]] as const).map(([k, v]) => (
               <div key={k} className={s.pcol}>
-                <div className="k">{t(k)}</div>
-                <div className="v">{v || "—"}</div>
+                <div className={s.k}>{t(k)}</div>
+                <div className={s.v}>{v || "—"}</div>
               </div>
             ))}
           </div>
           <div className={s.diff}>
             <div>
-              <div className="k">{t("sdoc.different")}</div>
-              <div className="v">{strategy.positioning.difference || t("strategyDoc.notDefinedYet")}</div>
+              <div className={s.k}>{t("sdoc.different")}</div>
+              <div className={s.v}>{strategy.positioning.difference || t("strategyDoc.notDefinedYet")}</div>
             </div>
           </div>
           {/* Without an exclusion this is a description, not a position. */}
           <div className={s.notfor}>
             <Ico d={I.ban} size={16} />
             <div>
-              <div className="k">{t("sdoc.notFor")}</div>
-              <div className="v">
+              <div className={s.k}>{t("sdoc.notFor")}</div>
+              <div className={s.v}>
                 {strategy.positioning.notFor ||
                   t("strategyDoc.nobodyExcluded")}
               </div>
@@ -258,12 +258,12 @@ export default function StrategyDocument({
                   </div>
                   <div className={s.wf}>
                     <div>
-                      <div className="k">{t("sdoc.theyWant")}</div>
-                      <div className="v">{seg.wants || "—"}</div>
+                      <div className={s.k}>{t("sdoc.theyWant")}</div>
+                      <div className={s.v}>{seg.wants || "—"}</div>
                     </div>
                     <div>
                       <div className={`k ${s.kb}`}>{t("sdoc.frustratedBy")}</div>
-                      <div className="v">{seg.frustratedBy || "—"}</div>
+                      <div className={s.v}>{seg.frustratedBy || "—"}</div>
                     </div>
                   </div>
                   {seg.channels.length > 0 && (
@@ -339,8 +339,8 @@ export default function StrategyDocument({
             {strategy.pillars.map((p, i) => (
               <div key={p.title + i} className={`${s.panel} ${s.pil}`}>
                 <span className={s.pico}><Ico d={I.spark} size={19} /></span>
-                <div className="t">{p.title}</div>
-                <div className="v">{p.body}</div>
+                <div className={s.t}>{p.title}</div>
+                <div className={s.v}>{p.body}</div>
                 <div className={s.proof}>
                   <div className={s.proofk}>{t("sdoc.proof")}</div>
                   {p.proof ? (
@@ -384,13 +384,13 @@ export default function StrategyDocument({
           {(strategy.voice.doSay.length > 0 || strategy.voice.dontSay.length > 0) && (
             <div className={s.grid2}>
               <div className={`${s.bcol} ${s.bcolYes}`}>
-                <div className="k"><Ico d={I.check} size={14} /> {t("strategyDoc.voice.doSay")}</div>
+                <div className={s.k}><Ico d={I.check} size={14} /> {t("strategyDoc.voice.doSay")}</div>
                 <ul>{strategy.voice.doSay.map((v, i) => (
                   <li key={i}><span>✓</span><span style={{ fontWeight: 500 }}>{v}</span></li>
                 ))}</ul>
               </div>
               <div className={`${s.bcol} ${s.bcolNo}`}>
-                <div className="k"><Ico d={I.x} size={14} /> {t("strategyDoc.voice.dontSay")}</div>
+                <div className={s.k}><Ico d={I.x} size={14} /> {t("strategyDoc.voice.dontSay")}</div>
                 <ul>{strategy.voice.dontSay.map((v, i) => (
                   <li key={i}><span>✕</span><span style={{ fontWeight: 500 }}>{v}</span></li>
                 ))}</ul>
@@ -407,10 +407,10 @@ export default function StrategyDocument({
             <Empty what="strategyDoc.noPrinciples" example="strategyDoc.exPrinciple" />
           ) : strategy.principles.map((p, i) => (
             <div key={p.title + i} className={s.prin}>
-              <span className="n">{String(i + 1).padStart(2, "0")}</span>
+              <span className={s.n}>{String(i + 1).padStart(2, "0")}</span>
               <div>
-                <div className="t">{p.title}</div>
-                <div className="v">{p.body}</div>
+                <div className={s.t}>{p.title}</div>
+                <div className={s.v}>{p.body}</div>
               </div>
             </div>
           ))}
@@ -422,7 +422,7 @@ export default function StrategyDocument({
         <div className={`${s.panel} ${s.bnd}`}>
           <div className={s.grid2}>
             <div className={`${s.bcol} ${s.bcolNo}`}>
-              <div className="k"><Ico d={I.x} size={14} /> {t("sdoc.weNever")}</div>
+              <div className={s.k}><Ico d={I.x} size={14} /> {t("sdoc.weNever")}</div>
               {strategy.boundaries.never.length === 0 ? (
                 <ul><li><span>—</span>{t("sdoc.nothingNamedHelp")}</li></ul>
               ) : (
@@ -433,7 +433,7 @@ export default function StrategyDocument({
               )}
             </div>
             <div className={`${s.bcol} ${s.bcolYes}`}>
-              <div className="k"><Ico d={I.check} size={14} /> {t("sdoc.weAlways")}</div>
+              <div className={s.k}><Ico d={I.check} size={14} /> {t("sdoc.weAlways")}</div>
               {strategy.boundaries.always.length === 0 ? (
                 <ul><li><span>—</span>{t("sdoc.nothingNamed")}</li></ul>
               ) : (
@@ -459,8 +459,8 @@ export default function StrategyDocument({
             <div className={s.goal}>
               <span className={s.gico}><Ico d={I.flag} size={22} /></span>
               <div>
-                <div className="k">{t("sdoc.brandGoal")}</div>
-                <div className="v">{strategy.focus.goal}</div>
+                <div className={s.k}>{t("sdoc.brandGoal")}</div>
+                <div className={s.v}>{strategy.focus.goal}</div>
               </div>
             </div>
           ) : (
@@ -537,8 +537,8 @@ export default function StrategyDocument({
           <div className={`${s.panel} ${s.bnd}`}>
             {strategy.analysis.unresolved.map((u, i) => (
               <div key={i} className={s.prin}>
-                <span className="n">?</span>
-                <div><div className="v">{u}</div></div>
+                <span className={s.n}>?</span>
+                <div><div className={s.v}>{u}</div></div>
               </div>
             ))}
           </div>
@@ -556,10 +556,10 @@ export default function StrategyDocument({
               <Link key={href} href={href} className={s.ncard}>
                 <span className={`${s.nico} ${cls}`}><Ico d={icon} size={19} /></span>
                 <div>
-                  <div className="t">{t(titleKey)}</div>
-                  <div className="v">{t(v)}</div>
+                  <div className={s.t}>{t(titleKey)}</div>
+                  <div className={s.v}>{t(v)}</div>
                 </div>
-                <span className="ar"><Ico d={I.arr} size={16} /></span>
+                <span className={s.ar}><Ico d={I.arr} size={16} /></span>
               </Link>
             ))}
         </div>
@@ -567,8 +567,8 @@ export default function StrategyDocument({
         <div className={s.usedby}>
           <span className={s.usedbyIc}><Ico d={I.brain} size={19} /></span>
           <div>
-            <div className="t">{t("sdoc.whereUsed")}</div>
-            <div className="v">
+            <div className={s.t}>{t("sdoc.whereUsed")}</div>
+            <div className={s.v}>
               {t("strategyDoc.usedByBody")}
             </div>
           </div>

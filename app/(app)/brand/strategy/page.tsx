@@ -1306,7 +1306,6 @@ export default function BrandStrategyPage() {
             strategy={strategyDoc}
             onEdit={openQuestionnaire}
             onExport={() => window.print()}
-            onRegenerate={() => setStrategyDoc((v) => ({ ...v }))}
             origin={origin}
             track={track}
             /* Under the strategy, not next to Save. It writes nothing: both

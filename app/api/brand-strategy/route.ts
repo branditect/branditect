@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       // No "complete", and no "create". Asking for a complete strategy is
       // asking for the missing two thirds to be written, which is exactly what
       // this mode exists to prevent.
-      ? "\nRestructure ONLY what is above into the JSON object. Leave every field the input does not support empty: \"\" for a string, [] for a list. Do not add personas, competitors, pillars or taglines that are not in the input. Return ONLY the JSON object."
+      ? "\nRestructure ONLY what is above into the JSON object. Leave every field the input does not support empty: \"\" for a string, [] for a list. Do not add an audience, a competitor, a pillar, a principle, a boundary or a tagline that is not in the input. Leave \"analysis\" empty as well: the working-out belongs to a strategy you wrote, not to one you are reading. Return ONLY the JSON object."
       : "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
 
     contentBlocks.push({ type: "text", text: userText });

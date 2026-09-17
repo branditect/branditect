@@ -4,8 +4,8 @@ import { isFromDocument } from "@/lib/strategy-intake";
 import { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import {
-  SECTIONS, EMPTY_STRATEGY, completeness, derivePyramid, firstIncompleteSection,
-  generateSummary, primarySegment, oneLine, midSentence, splitHeadline, hasUsableMap,
+  SECTIONS, EMPTY_STRATEGY, completeness, firstIncompleteSection,
+  primarySegment, midSentence, hasUsableMap,
   anyPrices, ladder, missingQuestionsFor, quotesFor,
   type BrandStrategy, type SectionDef, type StrategyOrigin,
 } from "@/lib/strategy";
@@ -141,12 +141,11 @@ const STAGE_LABEL: Record<string, StringKey> = {
 };
 
 export default function StrategyDocument({
-  strategy, onEdit, onExport, onRegenerate, origin = null, track = "physical", footer,
+  strategy, onEdit, onExport, origin = null, track = "physical", footer,
 }: {
   strategy: BrandStrategy;
   onEdit: (sectionId: string) => void;
   onExport: () => void;
-  onRegenerate: () => void;
   /** Where this strategy came from. Null renders exactly as it always has. */
   origin?: StrategyOrigin | null;
   track?: Track;
@@ -156,11 +155,8 @@ export default function StrategyDocument({
   const t = useT();
   const [activeSeg, setActiveSeg] = useState(0);
   const c = completeness(strategy);
-  const pyr = derivePyramid(strategy);
-  const summary = generateSummary(strategy, t);
   const firstGap = firstIncompleteSection(strategy);
   const seg = strategy.audience[activeSeg] ?? primarySegment(strategy);
-  const headline = splitHeadline(strategy.positioning.difference);
   const rows = ladder(strategy.competitors);
   const showPrices = anyPrices(strategy.competitors);
   const showMap = hasUsableMap(strategy.competitors);
@@ -490,77 +486,35 @@ export default function StrategyDocument({
       {isFromDocument(origin?.source) && (
         <p className={s.readFrom}>{t("strategyDoc.readFromDocument")}</p>
       )}
-      {/* ============ HERO ============ */}
-      <section className={s.hero}>
-        <span className={s.arc} aria-hidden="true" />
+      {/* ============ HEADER ============
+          Was an orange hero — the difference statement as a display headline,
+          the brand pyramid beside it — and under it the whole strategy
+          rewritten as a paragraph. Both went: the headline was truncated
+          mid-word, the pyramid tiers read "—" until late in the questionnaire,
+          and the paragraph repeated sections 01 and 02 a few centimetres above
+          them. What was doing work is kept: when it was updated, how much of
+          it is written, that it feeds the tools, and the two things you do
+          from here. */}
+      <header className={s.top}>
         <div>
-          <div className={s.kicker}>{t("sdoc.title")}</div>
-          {/* The difference statement headlines, not the page title — it is what
-              a new team member needs and what the AI cites most. */}
-          {/* Capped rather than shrunk — the remainder moves into the sub. */}
-          <h1 className={s.heroHeadline}>
-            {headline.head || t("strategyDoc.positioningPlaceholder")}
-          </h1>
-          {strategy.core.promise && <div className={s.heroLine}>{strategy.core.promise}</div>}
-          {(headline.rest || strategy.core.whyWeExist) && (
-            <p className={s.heroSub}>{headline.rest || strategy.core.whyWeExist}</p>
-          )}
-
+          <div className={s.topTitle}>{t("sdoc.title")}</div>
           <div className={s.metarow}>
             <span className={s.chip}><Ico d={I.clock} size={12} /> {t("strategyDoc.updated", { date: updated })}</span>
             {/* Counts sections. Never a percentage, and unrelated to Brand Readiness. */}
             <span className={s.chip}><Ico d={I.check} size={12} /> {t("strategyDoc.sectionsComplete", { filled: c.filled, total: c.total })}</span>
             <span className={s.chip}><Ico d={I.brain} size={12} /> {t("sdoc.feeding")}</span>
           </div>
-
-          <div className={s.hbtns}>
-            <button type="button" className={s.hbtn} onClick={() => onEdit(firstGap?.id ?? "core")}>
-              <Ico d={I.pen} size={15} />
-              {firstGap ? t("strategyDoc.finish", { section: t(firstGap.titleKey) }) : t("strategyDoc.editStrategy")}
-            </button>
-            <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={onExport}>
-              <Ico d={I.dl} size={15} /> {t("sdoc.export")}
-            </button>
-          </div>
         </div>
-
-        {/* The narrowing is the argument: many attributes, one idea. */}
-        <div>
-          <div className={s.pyr}>
-            {/* Each tier is capped to about one line. The narrowing is the
-                argument, and a four-line Benefits block under a two-word
-                Essence inverts it. Full text stays available on hover. */}
-            {([["strategyDoc.essence", pyr.essence, s.t1, 34],
-               ["strategyDoc.personality", pyr.personality.join(" · "), s.t2, 40],
-               ["strategyDoc.benefits", pyr.benefits, s.t3, 52],
-               ["strategyDoc.attributes", pyr.attributes.join(" · "), s.t4, 64]] as const).map(
-              ([label, value, cls, cap]) => (
-                <div key={label} className={`${s.tier} ${cls}`}>
-                  <div className="t">{t(label)}</div>
-                  <div className="v" title={value || undefined}>{value ? oneLine(value, cap) : "—"}</div>
-                </div>
-              ))}
-          </div>
-          <div className={s.pyrcap}>{t("sdoc.derived")}</div>
+        <div className={s.hbtns}>
+          <button type="button" className={s.hbtn} onClick={() => onEdit(firstGap?.id ?? "core")}>
+            <Ico d={I.pen} size={15} />
+            {firstGap ? t("strategyDoc.finish", { section: t(firstGap.titleKey) }) : t("strategyDoc.editStrategy")}
+          </button>
+          <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={onExport}>
+            <Ico d={I.dl} size={15} /> {t("sdoc.export")}
+          </button>
         </div>
-      </section>
-
-      {/* ============ SUMMARY ============ */}
-      {summary.length > 0 && (
-        <section className={s.summary}>
-          <div className={s.summaryLab}>
-            <Ico d={I.spark} size={14} /> {t("sdoc.inAParagraph")}
-            <button type="button" onClick={onRegenerate}>
-              <Ico d={I.spark} size={12} /> {t("common.regenerate")}
-            </button>
-          </div>
-          <p>{summary.map((p, i) => (p.strong ? <b key={i}>{p.text}</b> : <span key={i}>{p.text}</span>))}</p>
-          <div className={s.summaryFoot}>
-            <Ico d={I.brain} size={13} />
-            {t("sdoc.neverStored")}
-          </div>
-        </section>
-      )}
+      </header>
 
       {/* Every section, in the list's order and numbering. */}
       {SECTIONS.map((def) => (

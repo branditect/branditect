@@ -302,11 +302,18 @@ describe("social_strategy: the table Channels reads", () => {
   });
 
   it("the columns match what the route is allowed to write", () => {
+    // Two of them arrived later, in supabase/social-media.sql: the pillars and
+    // audience brainstorms. A field the route will write and no migration
+    // creates is a request that fails with PGRST204 at the moment someone
+    // answers question four.
+    const later = readFileSync("supabase/social-media.sql", "utf8");
     const route = readFileSync("app/api/social-strategy/route.ts", "utf8");
     const allowed = (route.match(/ALLOWED_FIELDS = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? "")
-      .split(",").map((x) => x.trim().replace(/['"]/g, "")).filter(Boolean);
+      .split(/[,\n]/).map((x) => x.trim().replace(/['"]/g, "")).filter((x) => x && !x.startsWith("//"));
     assert.ok(allowed.length >= 7, `only ${allowed.length} editable fields found`);
-    for (const f of allowed) assert.ok(sql.includes(f), `${f} is editable but not a column`);
+    for (const f of allowed) {
+      assert.ok(sql.includes(f) || later.includes(f), `${f} is editable but not a column`);
+    }
   });
 
   it("the page reports a failed read instead of showing an empty state", () => {

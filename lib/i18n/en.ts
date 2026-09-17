@@ -749,20 +749,21 @@ export const en = {
   "setup.branditect": "Branditect produces it",
 
   // ── Channels ▸ the five questions ─────────────────────────────────────────
-  "channels.q1": "Which platforms are you committing to for the next 90 days?",
-  "channels.q1Why": "Strategy is platform-shaped. No TikTok scripts if you're not on TikTok.",
+  "channels.q1": "Which two platforms are you committing to?",
+  "channels.q1Why":
+    "Two at most. Posting three times a week across five platforms reaches each one every other week, which is the same as not being there.",
   "channels.q2": "What is social actually doing for the business right now?",
   "channels.q2Why":
     "The same brand produces very different content if the goal shifts. Awareness content ≠ sales content.",
-  "channels.q3": "How much can you actually produce per week — and who's behind it?",
+  "channels.q3": "How often can you really post?",
   "channels.q3Why":
-    "Quality decay is the #1 reason social strategies fail. We won't propose 15 reels a week if one person on a laptop is making them.",
-  "channels.q4": "Name 3–5 accounts whose social you admire — in your space or adjacent.",
+    "The honest number, not the ambitious one. A plan you cannot keep is why the last one stopped after three weeks.",
+  "channels.q4": "What are your content pillars?",
   "channels.q4Why":
-    "Branditect studies their cadence, format mix, and topic patterns. Not to copy, to benchmark what good looks like in this category.",
-  "channels.q5": "What do you NOT want to look or sound like on social?",
+    "The three or four things this brand talks about, over and over. These come from your strategy — change them, remove them, add your own.",
+  "channels.q5": "Who are we trying to reach?",
   "channels.q5Why":
-    "Knowing what to avoid is half of staying on-brand. This becomes a negative constraint the AI checks every social output against, forever.",
+    "From your brand strategy's audience. Add anyone it does not cover — a mini profile is enough.",
   "channels.antiExample": "fake-vulnerable founder posts\nLinkedIn-bait listicles",
 
   // ── Channels ▸ validation ─────────────────────────────────────────────────
@@ -2575,9 +2576,9 @@ export const en = {
   "channels.anti.memey": "memey-for-the-sake-of-memes",
   "channels.eyebrow1": "Q1 · Channels",
   "channels.eyebrow2": "Q2 · Primary goal",
-  "channels.eyebrow3": "Q3 · Realistic capacity",
-  "channels.eyebrow4": "Q4 · Reference accounts",
-  "channels.eyebrow5": "Q5 · Anti-brand",
+  "channels.eyebrow3": "Q3 · How often",
+  "channels.eyebrow4": "Q4 · Content pillars",
+  "channels.eyebrow5": "Q5 · The people",
   "channels.pushback": "20+ posts a week with one person almost always means quality decay within 4 weeks. We'd rather propose 10–12 with a stronger format mix. Keep 20+?",
   "channels.couldNotLoad": "Channels could not load: {error}",
   "channels.brandSocialStrategy": "{brand}'s social strategy",
@@ -2891,6 +2892,62 @@ export const en = {
   "vupload.deleteLogoConfirm": "Yes, delete it",
   "visual.toast.logoReplaced": "Logo replaced",
   "visual.toast.logoDeleted": "Logo deleted",
+
+  // ── Social media: five questions that produce a week ── 2026-09-17, Finnish mine.
+  "channels.maxTwo": "Two at most — {count} chosen",
+  "social.cadence.1": "Once a week",
+  "social.cadence.2to3": "Two or three times a week",
+  "social.cadence.4to5": "Four or five times a week",
+  "social.cadence.daily": "Every day",
+  "social.pillarsFromStrategy": "Suggested from your brand strategy",
+  "social.addPillar": "Add a pillar",
+  "social.pillarName": "The pillar, in two or three words",
+  "social.pillarWhy": "Why this brand can hold it",
+  "social.addSubject": "Add a subject",
+  "social.subjectPlaceholder": "A subject to post about",
+  "social.noPillarsYet":
+    "No pillars yet. Write your brand strategy first and these fill themselves in.",
+  "social.audienceFromStrategy": "From your brand strategy",
+  "social.addPerson": "Add someone",
+  "social.personName": "Name",
+  "social.personRole": "Their job or situation",
+  "social.personWants": "What they want",
+  "social.personWhere": "Where they already are",
+  "social.remove": "Remove",
+  "social.needStrategy": "Write your brand strategy first",
+  "social.needStrategyBody":
+    "This plan is built from your positioning, your voice and the people you named there. Answer the questionnaire or upload the strategy you already have, and come back — it takes about ten minutes.",
+  "social.toStrategy": "Go to brand strategy",
+  "social.planTitle": "Your week",
+  "social.planWhy": "What to post, on which channel, and why that one",
+  "social.theMix": "The mix",
+  "social.regenerate": "Write a different week",
+  "social.regenerating": "Writing your week…",
+  "social.copyPost": "Copy",
+  "social.copied": "Copied",
+  "social.hook": "Hook",
+  "social.avoidThisWeek": "Stop doing this",
+  "social.editAnswers": "Change the answers",
+  "social.generatedOn": "Written {date}",
+  "social.planFailed": "The week could not be written. Try again.",
+  "social.needChannels": "Choose at least one channel first.",
+  "social.needPillars": "Add at least one content pillar first.",
+  "social.needWeek": "That week is not a date.",
+  "social.migrationMissing":
+    "The social tables are missing. Run supabase/social-media.sql in the Supabase SQL editor.",
+  "social.metricsTitle": "How last week went",
+  "social.metricsWhy":
+    "Type in what the platforms told you. Next phase we fetch these and watch them for you — the numbers worth watching do not change when they start arriving on their own.",
+  "social.weekOf": "Week of {date}",
+  "social.posts": "Posts",
+  "social.followers": "Followers",
+  "social.reach": "Reach",
+  "social.engagements": "Engagements",
+  "social.metricsNote": "Anything the numbers do not say",
+  "social.saveWeek": "Save this week",
+  "social.weekSaved": "Saved",
+  "social.noWeeksYet": "Nothing entered yet.",
+  "social.vsLastWeek": "vs last week",
 } as const;
 
 export type StringKey = keyof typeof en;

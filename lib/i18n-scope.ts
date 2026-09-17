@@ -149,7 +149,8 @@ export const EXTRACTED = [
 
 /** [file, distinct literals found] on 2026-09-16, after the complete Finnish pass. 98 strings across 19 files. */
 export const OUTSTANDING: [string, number][] = [
-  ["app/(app)/brand/channels/page.tsx", 18],
+  // Six goal values, stored in English and compared as stored.
+  ["app/(app)/brand/channels/page.tsx", 6],
   ["app/(app)/brand/visual-identity/page.tsx", 3],
   ["app/(app)/knowledge/links/page.tsx", 9],
   ["app/(app)/knowledge/products/import/page.tsx", 8],

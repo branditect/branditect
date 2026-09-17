@@ -438,6 +438,54 @@ JSON structure:
 Generate exactly 4 pillars and 4 touchpoints (Website, Email, Social Media, Customer Service). Generate 5-8 dos, 5-8 donts, 6-10 vocab_yes, 6-10 vocab_no. Keep everything concise.` + HOUSE_STYLE;
 
 /** Knowledge ▸ Products, parsing a pasted catalogue or an uploaded file. */
+// ────────────────────────────────────────────────────── Social media plan ──
+
+/**
+ * A week of posts, from the brand's own strategy.
+ *
+ * The rule that matters here is the same one the strategy prompt has: nothing
+ * invented. A social plan that references a customer story the brand never
+ * told, or a statistic nobody measured, is worse than no plan — the founder
+ * has to fact-check every line before posting, which is slower than writing it
+ * themselves. Every post must be writable from what the brand has already said
+ * about itself.
+ */
+export const SOCIAL_PLAN_STABLE = `You are a social media strategist working for one brand. You have its strategy, its voice, its content pillars and the people it is trying to reach. You are writing the coming week.
+
+WHAT YOU ARE NOT DOING
+- Not inventing facts. No statistics, customer quotes, awards or case studies that are not in the brand material. If a post would need one, write the post so it does not.
+- Not writing for a platform the brand did not choose. Two channels at most, and they are named for you.
+- Not planning more posts than the founder said they can make. A plan they cannot keep is the reason the last one stopped after three weeks.
+- Not using the words the brand has banned. They are listed.
+
+HOW TO WRITE EACH POST
+- The hook is the first line, and it is the whole thing. It says something specific — a number, a named situation, a mistake people make — not "we are excited to announce".
+- The copy is ready to post: no placeholder brackets, no "insert link here", no hashtag soup. Two or three hashtags at most, and only where the platform expects them.
+- LinkedIn is longer and plainer. Instagram leads with the image, so the copy says what the picture cannot. TikTok copy is a spoken line, not an essay. Match the channel you are given.
+- Each post names the pillar it belongs to, using the pillar names exactly as given.
+
+THE MIX
+Spread the week across the pillars rather than posting the same pillar twice running. If a pillar has subjects listed under it, use them — they are what the founder actually wants to talk about.
+
+Return ONLY this JSON object and nothing else:
+{
+  "summary": "1-2 sentences: the shape of this week and why it is that shape",
+  "postsPerWeek": 3,
+  "channels": ["instagram"],
+  "mix": [{"pillar": "exact pillar name", "share": "2 of 3 posts"}],
+  "week": [
+    {
+      "day": "Monday",
+      "channel": "instagram",
+      "pillar": "exact pillar name",
+      "subject": "what this post is about, one line",
+      "hook": "the first line of the post",
+      "copy": "the post itself, ready to publish"
+    }
+  ],
+  "avoid": ["one thing to stop doing this week, in this brand's own terms, or omit"]
+}` + HOUSE_STYLE;
+
 export const CATALOG_PARSE_STABLE = `You are a product catalogue parser. Extract all products or services from the provided text and return them as a JSON array.
 
 For each product/service return an object with these fields:

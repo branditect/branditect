@@ -57,18 +57,14 @@ CREATE INDEX IF NOT EXISTS social_metrics_brand_week
 
 ALTER TABLE social_metrics ENABLE ROW LEVEL SECURITY;
 
--- Drop by discovery, not by name: a policy created under a name this file does
--- not know is a policy that survives a re-run. That is how nine world-open
--- policies survived the first RLS sweep.
-DO $$
-DECLARE r record;
-BEGIN
-  FOR r IN SELECT policyname FROM pg_policies
-           WHERE schemaname = 'public' AND tablename = 'social_metrics'
-  LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON public.social_metrics', r.policyname);
-  END LOOP;
-END $$;
+-- NO `DO $$ ... $$` BLOCKS IN THIS FILE, deliberately. The Supabase SQL
+-- editor splits a script on semicolons before sending it, and a DO body
+-- contains its own — the block arrives cut in half and fails with
+-- "syntax error at end of input". The first version of this file used one to
+-- drop policies by discovery; it is dropped by name here instead, and the
+-- query at the foot of this file finds any that were created under another.
+
+DROP POLICY IF EXISTS social_metrics_own_brand ON social_metrics;
 
 CREATE POLICY social_metrics_own_brand ON social_metrics
   FOR ALL
@@ -79,17 +75,17 @@ CREATE POLICY social_metrics_own_brand ON social_metrics
 -- brand content and must not be readable by another signed-in user either.
 ALTER TABLE social_strategy ENABLE ROW LEVEL SECURITY;
 
-DO $$
-DECLARE r record;
-BEGIN
-  FOR r IN SELECT policyname FROM pg_policies
-           WHERE schemaname = 'public' AND tablename = 'social_strategy'
-  LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON public.social_strategy', r.policyname);
-  END LOOP;
-END $$;
+DROP POLICY IF EXISTS social_strategy_own_brand ON social_strategy;
 
 CREATE POLICY social_strategy_own_brand ON social_strategy
   FOR ALL
   USING      (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()))
   WITH CHECK (brand_id IN (SELECT brand_id FROM brands WHERE user_id = auth.uid()));
+
+-- Run this after the rest, and read what comes back. PERMISSIVE policies are
+-- OR'd together, so one older policy with `true` in its qual defeats every
+-- scoped policy beside it — which is how nine world-open policies survived the
+-- first RLS sweep in this project.
+--
+--   SELECT tablename, policyname, qual FROM pg_policies
+--    WHERE tablename IN ('social_strategy', 'social_metrics');

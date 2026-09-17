@@ -6,7 +6,7 @@ Inbox entry 3 says the dictionary was derived from the real strings in these
 files. Measured against them, most of the interface is not in it: the strings
 below appear on screen and match no value in `lib/i18n/en.ts`.
 
-**47 distinct strings across 16 files.** A further 51 already
+**41 distinct strings across 16 files.** A further 51 already
 match a key and were extracted or are ready to be.
 
 Nothing here is truncated. A list that stopped at the first hundred would read
@@ -27,12 +27,6 @@ decision.
 
 ## app/(app)/brand/tone-of-voice/page.tsx
 
-- Does it sound like us?
-- Would we say this out loud?
-- Is it clear without jargon?
-- Does it match our pillar guidelines?
-- Would our audience feel spoken to, not at?
-- Is the message concise and purposeful?
 - No stream
 
 ## app/(app)/brand/visual-identity/page.tsx

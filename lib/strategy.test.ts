@@ -651,4 +651,35 @@ describe("the document's styles actually reach the document", () => {
       assert.ok(tone.includes(`{s.secno}>${n}<`), `tone of voice has no section ${n}`);
     }
   });
+
+  it("ends with the two ways to start over, not a checklist", () => {
+    // 06 was six default questions to ask yourself — the same six for every
+    // brand, read by nothing. What belongs at the foot is what the strategy
+    // has there: write it again, or clear it.
+    const tone = code("app/(app)/brand/tone-of-voice/page.tsx");
+    assert.ok(tone.includes('t("tone.regenerate")'), "no way to rewrite it from the strategy");
+    assert.ok(tone.includes("handlePullFromStrategy"), "the rewrite is not wired to the strategy");
+    assert.ok(tone.includes('t("tone.empty")'), "no way to empty it");
+    assert.ok(!tone.includes("DEFAULT_CHECKLIST"), "the checklist is still there");
+  });
+
+  it("writes itself from the strategy rather than asking how to start", () => {
+    // The questionnaire does not write a tone row — different table, and the
+    // mapping belongs to this page. A brand with a strategy and no tone gets
+    // the page built from the strategy instead of an entry modal.
+    const tone = code("app/(app)/brand/tone-of-voice/page.tsx");
+    const noTone = tone.slice(tone.indexOf("if (json.tone && json.tone.setup_complete)"));
+    assert.ok(noTone.includes('from("brand_strategies")'),
+      "an empty tone never looks for the strategy that could fill it");
+    assert.ok(noTone.includes("pullFromStrategy()"),
+      "it finds the strategy and still does nothing with it");
+  });
+
+  it("asks twice before emptying, and never through a browser dialog", () => {
+    // A blocking confirm() freezes the page for a browser harness and reads
+    // like a system error to everyone else. The second button is the confirm.
+    const tone = code("app/(app)/brand/tone-of-voice/page.tsx");
+    assert.ok(tone.includes("confirmEmpty"), "emptying takes one click");
+    assert.ok(!/window\.confirm|[^.]\bconfirm\(/.test(tone), "it uses a browser dialog");
+  });
 });

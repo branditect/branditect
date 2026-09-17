@@ -275,6 +275,22 @@
 .check input { width: 17px; height: 17px; flex: none; accent-color: theme('colors.accent.DEFAULT'); }
 .checkDone { color: theme('colors.muted.2'); text-decoration: line-through; }
 
+/* A save that did not happen, said where the thing being saved is. */
+.saveError { margin-top: 14px; border: 1px solid theme('colors.accent.line');
+  background: theme('colors.tint.1'); border-radius: theme('borderRadius.tile');
+  padding: 11px 13px; font-size: theme('fontSize.sm[0]'); font-weight: 600;
+  color: theme('colors.accent.dark'); }
+
+/* The foot of tone of voice: rewrite it, or empty it. Two columns, because
+   they are alternatives, not a sequence. */
+.again { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.againT { font-size: theme('fontSize.base[0]'); font-weight: 700; letter-spacing: -.2px; }
+.againV { font-size: theme('fontSize.sm[0]'); font-weight: 500; line-height: 1.55;
+  color: theme('colors.ink.2'); margin: 6px 0 12px; max-width: 46ch; }
+.againRow { display: flex; flex-wrap: wrap; gap: 8px; }
+.danger { background: var(--st-red); color: #fff; }
+.hbtn:disabled { opacity: .5; cursor: not-allowed; }
+
 /* ---- where this goes next / used by ---- */
 .next { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 12px; }
 .ncard { display: flex; align-items: center; gap: 12px; background: theme('colors.card');

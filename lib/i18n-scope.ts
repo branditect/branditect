@@ -144,12 +144,12 @@ export const EXTRACTED = [
   "components/readiness-card.tsx",
   "components/start/shell.tsx",
   "components/strategy/strategy-document.tsx",
+  "app/(app)/brand/tone-of-voice/page.tsx",
 ];
 
 /** [file, distinct literals found] on 2026-09-16, after the complete Finnish pass. 98 strings across 19 files. */
 export const OUTSTANDING: [string, number][] = [
   ["app/(app)/brand/channels/page.tsx", 18],
-  ["app/(app)/brand/tone-of-voice/page.tsx", 8],
   ["app/(app)/brand/visual-identity/page.tsx", 3],
   ["app/(app)/knowledge/links/page.tsx", 9],
   ["app/(app)/knowledge/products/import/page.tsx", 8],

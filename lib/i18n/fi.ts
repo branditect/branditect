@@ -2906,4 +2906,17 @@ export const fi: Record<StringKey, string> = {
   "tone.why.checklist": "Lue ennen lähettämistä. Rasteja ei tallenneta mihinkään",
   "tone.definedCount": "{filled}/{total} osaa kirjoitettu",
   "tone.seeStrategy": "Brändistrategia",
+
+  // ── Tone of voice: the foot of the page ── 2026-09-17, Finnish mine.
+  "tone.sec.again": "Aloita tämä sivu alusta",
+  "tone.why.again": "Molemmat kirjoittavat yli sen, mitä sivulla nyt on",
+  "tone.regenerate": "Kirjoita uudelleen strategiastasi",
+  "tone.regenerateWhy":
+    "Lukee nykyisen brändistrategiasi ja kirjoittaa tämän sivun sen pohjalta: ilmaisun, pilarit, tee ja älä tee -listat sekä sanat. Kaikki tänne käsin muokattu korvataan.",
+  "tone.empty": "Tyhjennä tämä sivu",
+  "tone.emptyWhy":
+    "Tyhjentää jokaisen osion ja jättää sivun tyhjäksi käsin kirjoitettavaksi. Brändistrategiaasi ei kosketa.",
+  "tone.emptyConfirm": "Kyllä, tyhjennä",
+  "tone.saveFailed":
+    "Ei tallennettu: {message}. Viimeisin muokkauksesi näkyy ruudulla mutta sitä ei ole tallennettu.",
 };

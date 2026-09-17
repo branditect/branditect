@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useBrand } from "@/lib/useBrand";
 import { supabase } from "@/lib/supabase";
@@ -44,6 +44,8 @@ interface ToneData {
   vocab_yes: string[];
   vocab_no: string[];
   touchpoints: Touchpoint[];
+  /* The column still exists and old rows still have six default questions in
+     it. Nothing reads it since the checklist left the page on 2026-09-17. */
   checklist?: string[];
 }
 
@@ -54,8 +56,7 @@ type EditingSection =
   | "dos"
   | "donts"
   | "vocab"
-  | "touchpoints"
-  | "checklist";
+  | "touchpoints";
 
 /** The edit modal's title per section. The section ids stay the identity. */
 const EDIT_TITLE: Record<Exclude<EditingSection, null>, StringKey> = {
@@ -65,21 +66,9 @@ const EDIT_TITLE: Record<Exclude<EditingSection, null>, StringKey> = {
   donts: "tone.sec.donts",
   vocab: "tone.sec.vocab",
   touchpoints: "tone.sec.touchpoints",
-  checklist: "tone.sec.checklist",
 };
 
-/* Stored with the brand's tone as data, so it stays English: it is the
-   brand's checklist once saved, not interface copy. */
-const DEFAULT_CHECKLIST = [
-  "Does it sound like us?",
-  "Would we say this out loud?",
-  "Is it clear without jargon?",
-  "Does it match our pillar guidelines?",
-  "Would our audience feel spoken to, not at?",
-  "Is the message concise and purposeful?",
-];
-
-/** The five parts that hold content. The checklist has a default and is not one. */
+/** The five parts that hold content. Section 06 is actions, and not one. */
 const TONE_PARTS = 5;
 
 const EMPTY_TONE: ToneData = {
@@ -93,7 +82,6 @@ const EMPTY_TONE: ToneData = {
   vocab_yes: [],
   vocab_no: [],
   touchpoints: [],
-  checklist: DEFAULT_CHECKLIST,
 };
 
 /* ------------------------------------------------------------------ */
@@ -118,12 +106,18 @@ export default function ToneOfVoicePage() {
   // Edit form drafts
   const [draft, setDraft] = useState<Partial<ToneData>>({});
 
-  // Checked items for checklist (client-only visual)
-  const [checked, setChecked] = useState<Record<number, boolean>>({});
+  /** Said on the page, not only in the console: a lost edit must be visible. */
+  const [saveError, setSaveError] = useState("");
+  /** Second click on "Empty tone of voice". Resets whenever the page does. */
+  const [confirmEmpty, setConfirmEmpty] = useState(false);
 
   /* ---------------------------------------------------------------- */
   /*  Fetch on mount                                                   */
   /* ---------------------------------------------------------------- */
+
+  /** Set below, read here: fetchTone runs before the puller is declared. */
+  const pullRef = useRef<() => Promise<void>>(async () => {});
+  const pullFromStrategy = () => pullRef.current();
 
   const fetchTone = useCallback(async () => {
     setLoading(true);
@@ -134,7 +128,23 @@ export default function ToneOfVoicePage() {
         setToneData(json.tone as ToneData);
         setShowEntry(false);
       } else {
-        setShowEntry(true);
+        /**
+         * No tone yet. If the questionnaire has been answered there is already
+         * a strategy saying how this brand writes — the voice question feeds
+         * it — so write the page from that instead of asking how to start.
+         *
+         * The questionnaire does not produce a tone row itself: the two live
+         * in different tables and the mapping is this page's. This is where
+         * the two meet, and it only ever runs when there is nothing to lose.
+         */
+        const { data: strategy } = await supabase
+          .from("brand_strategies").select("id").eq("brand_id", brandId).limit(1);
+        if (strategy && strategy.length > 0) {
+          setShowEntry(false);
+          await pullFromStrategy();
+        } else {
+          setShowEntry(true);
+        }
       }
     } catch {
       setShowEntry(true);
@@ -162,13 +172,19 @@ export default function ToneOfVoicePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand_id: brandId, ...safeFields }),
       });
+      // A failed save used to go to the console and nowhere else: the edit
+      // stayed on screen, looking saved, and was gone on the next load.
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Save failed" }));
+        const err = await res.json().catch(() => ({}));
         console.error("Tone save failed:", err);
+        setSaveError(t("tone.saveFailed", { message: err?.error ?? String(res.status) }));
+        return;
       }
+      setSaveError("");
       setToneData((prev) => (prev ? { ...prev, ...fields } : { ...EMPTY_TONE, ...fields }));
     } catch (err) {
       console.error("Tone save error:", err);
+      setSaveError(t("tone.saveFailed", { message: err instanceof Error ? err.message : String(err) }));
     } finally {
       setSaving(false);
       setEditing(null);
@@ -190,7 +206,7 @@ export default function ToneOfVoicePage() {
         body: JSON.stringify({ pastedText }),
       });
 
-      if (!res.body) throw new Error("No stream");
+      if (!res.body) throw new Error(t("tone.progress.failed"));
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -229,8 +245,7 @@ export default function ToneOfVoicePage() {
           ...EMPTY_TONE,
           ...finalTone,
           setup_complete: true,
-          checklist: DEFAULT_CHECKLIST,
-        };
+          };
         await saveTone(full);
         setToneData(full);
         setShowEntry(false);
@@ -250,6 +265,20 @@ export default function ToneOfVoicePage() {
     await saveTone(EMPTY_TONE);
     setToneData({ ...EMPTY_TONE });
     setShowEntry(false);
+  };
+
+  /**
+   * Empty it, and stay on the page.
+   *
+   * Not the same as "build manually", which is an entry choice for a brand
+   * that has no tone yet. This one throws away a tone that exists, so it is
+   * behind a second click and it leaves the page standing — an empty document
+   * that says what is missing, not a modal asking how to start.
+   */
+  const emptyTone = async () => {
+    setConfirmEmpty(false);
+    await saveTone({ ...EMPTY_TONE, brand_id: brandId ?? "default" });
+    setToneData({ ...EMPTY_TONE, brand_id: brandId ?? "default" });
   };
 
   /* ---------------------------------------------------------------- */
@@ -323,7 +352,6 @@ export default function ToneOfVoicePage() {
         vocab_yes: ((boundaries.wordsUsed ?? strategy.alwaysUse) as string[]) || [],
         vocab_no: ((boundaries.wordsAvoided ?? strategy.neverUse) as string[]) || [],
         touchpoints: [],
-        checklist: DEFAULT_CHECKLIST,
       };
 
       setGenProgress(t("tone.progress.pulling"));
@@ -337,6 +365,8 @@ export default function ToneOfVoicePage() {
       setGenerating(false);
     }
   };
+
+  pullRef.current = handlePullFromStrategy;
 
   /* ---------------------------------------------------------------- */
   /*  Open edit modal                                                  */
@@ -362,9 +392,6 @@ export default function ToneOfVoicePage() {
         break;
       case "touchpoints":
         setDraft({ touchpoints: toneData.touchpoints?.length ? JSON.parse(JSON.stringify(toneData.touchpoints)) : [{ icon: "", name: "", badge: "", bad: "", good: "" }] });
-        break;
-      case "checklist":
-        setDraft({ checklist: [...(toneData.checklist || DEFAULT_CHECKLIST)] });
         break;
     }
     setEditing(section);
@@ -500,11 +527,9 @@ export default function ToneOfVoicePage() {
   const vocabYes: string[] = td.vocab_yes || [];
   const vocabNo: string[] = td.vocab_no || [];
   const touchpoints: Touchpoint[] = td.touchpoints || [];
-  const checklist: string[] = td.checklist || DEFAULT_CHECKLIST;
 
   // The same thing the strategy's chip says: how much of this document
-  // exists. Five parts, not six — the checklist ships with a default, so
-  // counting it would report a page as written that has nothing in it.
+  // exists. Five, because section 06 is the two ways to start over.
   const definedCount = [
     td.expression_label || td.expression_text,
     pillars.length,
@@ -535,6 +560,8 @@ export default function ToneOfVoicePage() {
             </Link>
           </div>
         </header>
+
+        {saveError && <p className={s.saveError}>{saveError}</p>}
 
         {/* 01 — the expression. The orange card, for the same reason Brand core
             is: it is the thing itself, and everything below is how to do it. */}
@@ -731,28 +758,54 @@ export default function ToneOfVoicePage() {
           )}
         </section>
 
-        {/* 06 — the checklist, ticked in the browser and never stored: it is a
-            question to ask before sending, not a record of anything. */}
+        {/* 06 — the two ways to start this page over.
+            Was a six-line checklist of questions to ask yourself, which is
+            advice, not the brand's tone: it shipped with the same six default
+            lines for everybody and nothing read it. What belongs at the foot
+            of the page is what the strategy page has there — the way to write
+            it again, and the way to clear it. */}
         <section className={s.sec}>
           <div className={s.sechead}>
             <span className={s.secno}>06</span>
-            <h2>{t("tone.sec.checklist")}</h2>
-            <span className={s.why}>{t("tone.why.checklist")}</span>
-            <button type="button" className={s.edit} onClick={() => openEdit("checklist")}>
-              <Ico d={I.pen} size={13} /> {t("common.edit")}
-            </button>
+            <h2>{t("tone.sec.again")}</h2>
+            <span className={s.why}>{t("tone.why.again")}</span>
           </div>
-          <div className={s.panel}>
-            {checklist.map((item, i) => (
-              <label key={i} className={s.check}>
-                <input
-                  type="checkbox"
-                  checked={!!checked[i]}
-                  onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
-                />
-                <span className={checked[i] ? s.checkDone : undefined}>{item}</span>
-              </label>
-            ))}
+          <div className={`${s.panel} ${s.again}`}>
+            <div>
+              <div className={s.againT}>{t("tone.regenerate")}</div>
+              <p className={s.againV}>{t("tone.regenerateWhy")}</p>
+              <button
+                type="button"
+                className={s.hbtn}
+                onClick={handlePullFromStrategy}
+                disabled={generating}
+              >
+                <Ico d={I.spark} size={15} />
+                {generating ? t("tone.generatingEllipsis") : t("tone.regenerate")}
+              </button>
+              {generating && genProgress && <p className={s.againV}>{genProgress}</p>}
+            </div>
+
+            <div>
+              <div className={s.againT}>{t("tone.empty")}</div>
+              <p className={s.againV}>{t("tone.emptyWhy")}</p>
+              {/* Two clicks, no browser dialog: the second button is the
+                  confirmation, and it says what it will do. */}
+              {confirmEmpty ? (
+                <div className={s.againRow}>
+                  <button type="button" className={`${s.hbtn} ${s.danger}`} onClick={emptyTone}>
+                    <Ico d={I.x} size={15} /> {t("tone.emptyConfirm")}
+                  </button>
+                  <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={() => setConfirmEmpty(false)}>
+                    {t("common.cancel")}
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className={`${s.hbtn} ${s.ghost}`} onClick={() => setConfirmEmpty(true)}>
+                  <Ico d={I.x} size={15} /> {t("tone.empty")}
+                </button>
+              )}
+            </div>
           </div>
         </section>
       </div>
@@ -999,20 +1052,6 @@ export default function ToneOfVoicePage() {
               </div>
             )}
 
-            {/* ---- Checklist ---- */}
-            {editing === "checklist" && (
-              <div className="space-y-3">
-                <label className="text-xs font-mono text-outline">{t("tone.oneItemPerLine")}</label>
-                <textarea
-                  value={(draft.checklist || []).join("\n")}
-                  onChange={(e) => setDraft((d) => ({ ...d, checklist: e.target.value.split("\n") }))}
-                  rows={8}
-                  placeholder={t("tone.checklistPlaceholder")}
-                  className="w-full border border-outline-variant/15 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-brand-orange/40 resize-none"
-                />
-              </div>
-            )}
-
             {/* ---- Modal footer ---- */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-light">
               <button
@@ -1027,7 +1066,6 @@ export default function ToneOfVoicePage() {
                   const cleaned: Partial<ToneData> = { ...draft };
                   if (cleaned.dos) cleaned.dos = cleaned.dos.filter((s) => s.trim());
                   if (cleaned.donts) cleaned.donts = cleaned.donts.filter((s) => s.trim());
-                  if (cleaned.checklist) cleaned.checklist = cleaned.checklist.filter((s) => s.trim());
                   if (cleaned.pillars) {
                     cleaned.pillars = cleaned.pillars.map((p) => ({
                       ...p,

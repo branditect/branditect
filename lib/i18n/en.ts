@@ -2850,6 +2850,19 @@ export const en = {
   "tone.why.checklist": "Read before you send. Ticks are not saved anywhere",
   "tone.definedCount": "{filled} of {total} parts written",
   "tone.seeStrategy": "Brand strategy",
+
+  // ── Tone of voice: the foot of the page ── 2026-09-17, Finnish mine.
+  "tone.sec.again": "Start this page again",
+  "tone.why.again": "Both of these write over what is on the page now",
+  "tone.regenerate": "Rewrite from your strategy",
+  "tone.regenerateWhy":
+    "Reads your current brand strategy and writes this page from it: the expression, the pillars, the do and don't, and the words. Anything you edited here by hand is replaced.",
+  "tone.empty": "Empty this page",
+  "tone.emptyWhy":
+    "Clears every section and leaves the page blank, ready to write by hand. Your brand strategy is not touched.",
+  "tone.emptyConfirm": "Yes, empty it",
+  "tone.saveFailed":
+    "Not saved: {message}. Your last edit is still on screen but is not stored.",
 } as const;
 
 export type StringKey = keyof typeof en;

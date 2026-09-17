@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   CHANNELS, CADENCES, MAX_CHANNELS, isChannel, channelLabel, postsPerWeek,
-  suggestPillars, suggestAudience, parsePlan, planIsUsable, weekStart, weekOnWeek,
+  suggestPillars, suggestAudience, parsePlan, planIsUsable, weekStart, weekOnWeek, showHook,
 } from "./social.ts";
 import { EMPTY_STRATEGY } from "./strategy.ts";
 
@@ -208,5 +208,22 @@ describe("the page produces a week rather than promising one", () => {
     for (const f of ["app/api/social-strategy/route.ts", "app/api/social-metrics/route.ts"]) {
       assert.ok(read(f).includes("supabase/social-media.sql"), `${f} does not name the migration`);
     }
+  });
+});
+
+describe("the hook is not printed twice", () => {
+  it("is hidden when the post already opens with it", () => {
+    // The hook IS the first line of the post. A plan that fills both fields
+    // rendered the same sentence twice, once labelled and once not.
+    assert.equal(showHook("1.2 litres per kilo.", "1.2 litres per kilo. That is what it takes on."), false);
+    assert.equal(showHook("  Two liquids cause most slips. ", "two liquids cause most slips. Here is why."), false);
+  });
+
+  it("is shown when the post starts somewhere else", () => {
+    assert.equal(showHook("Two liquids cause most slips.", "Oil. Coolant. The two liquids."), true);
+  });
+
+  it("is never shown when there is no hook", () => {
+    assert.equal(showHook("", "Anything at all."), false);
   });
 });

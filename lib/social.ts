@@ -222,6 +222,20 @@ export function parsePlan(raw: string | null | undefined): SocialPlan | null {
   };
 }
 
+/**
+ * Whether to print the hook on its own line above the post.
+ *
+ * The hook IS the first line of the post — that is what a hook is — so a plan
+ * that writes it into both fields renders the same sentence twice, once
+ * labelled and once not. Shown only when the copy does not already open with
+ * it, because when it does not, the hook is the thing worth seeing first.
+ */
+export function showHook(hook: string, copy: string): boolean {
+  const h = hook.trim().toLowerCase();
+  if (!h) return false;
+  return !copy.trim().toLowerCase().startsWith(h);
+}
+
 /** Enough of a plan to show. An empty week is a failed generation, not a plan. */
 export function planIsUsable(plan: SocialPlan | null): boolean {
   return Boolean(plan && plan.week.length > 0);

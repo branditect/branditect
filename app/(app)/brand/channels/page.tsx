@@ -22,7 +22,7 @@ import { authedFetch } from "@/lib/authed-fetch";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 import {
-  CHANNELS, CADENCES, MAX_CHANNELS, channelLabel, weekStart, weekOnWeek,
+  CHANNELS, CADENCES, MAX_CHANNELS, channelLabel, weekStart, weekOnWeek, showHook,
   type Pillar, type AudienceProfile, type SocialPlan, type WeekMetrics,
 } from "@/lib/social";
 
@@ -341,7 +341,7 @@ export default function SocialStrategyPage() {
                 </button>
               </div>
               {p.subject && <h3 className="mt-2 text-[1.05rem] font-semibold text-ink">{p.subject}</h3>}
-              {p.hook && (
+              {showHook(p.hook, p.copy) && (
                 <p className="mt-2 text-sm font-semibold text-dark">
                   <span className="text-[0.65rem] font-mono uppercase tracking-wider text-muted mr-2">{t('social.hook')}</span>
                   {p.hook}

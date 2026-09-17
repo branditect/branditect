@@ -30,6 +30,14 @@ let fails = 0;
 const ok = (m, d = "") => console.log(`PASS  ${m}${d ? " — " + d : ""}`);
 const bad = (m, d = "") => { fails++; console.log(`FAIL  ${m}${d ? " — " + d : ""}`); };
 const text = (page) => page.eval(`document.querySelector("main")?.innerText.replace(/\\s+/g," ") ?? ""`);
+/** Wait for the page to actually be on the step before reading it. */
+const waitFor = async (page, re, ms = 12000) => {
+  for (let i = 0; i < ms / 300; i++) {
+    if (re.test(await text(page))) return true;
+    await page.sleep(300);
+  }
+  return false;
+};
 const clickText = (page, re) => page.eval(`(() => {
   const b = [...document.querySelectorAll("button,a")].find(x => ${re}.test(x.textContent.trim()));
   if (!b) return "not found";
@@ -101,12 +109,14 @@ try {
   await clickText(page, "/continue|jatka/i"); await page.sleep(1800);
   // Q3 — cadence
   await clickText(page, "/two or three times|kaksi tai kolme/i"); await page.sleep(400);
-  await clickText(page, "/continue|jatka/i"); await page.sleep(2500);
+  await clickText(page, "/continue|jatka/i");
+  await waitFor(page, /Q4|K4/);
+  await page.sleep(1500);
 
   // Q4 — pillars, suggested from the strategy
-  const q4 = await text(page);
+  const q4 = await page.eval(`JSON.stringify([...document.querySelectorAll("input")].map(i => i.value).filter(Boolean))`);
   /tested/i.test(q4)
-    ? ok("the pillars are suggested from the strategy", q4.match(/Tested[^·]{0,40}/)?.[0] ?? "")
+    ? ok("the pillars are suggested from the strategy", q4.slice(0, 120))
     : bad("question four opens blank", q4.slice(0, 200));
   writeFileSync(`${S}/social-pillars.png`, Buffer.from((await page.send("Page.captureScreenshot", { format: "png" })).data, "base64"));
 
@@ -134,14 +144,18 @@ try {
     ? ok("a founder can add their own pillar")
     : bad("adding a pillar did nothing", added.slice(0, 200));
 
-  await clickText(page, "/continue|jatka/i"); await page.sleep(2000);
+  await clickText(page, "/continue|jatka/i");
+  await waitFor(page, /Q5|K5/);
+  await page.sleep(1200);
 
   // Q5 — the people, from the strategy
-  const q5 = await text(page);
-  /jari/i.test(q5) ? ok("the people come from the strategy's audience") : bad("question five opens blank", q5.slice(0, 200));
+  const q5 = await page.eval(`JSON.stringify([...document.querySelectorAll("input")].map(i => i.value).filter(Boolean))`);
+  /jari/i.test(q5)
+    ? ok("the people come from the strategy's audience", q5.slice(0, 120))
+    : bad("question five opens blank", q5.slice(0, 200));
 
   // Finish: this writes the week.
-  console.log("generate:", await clickText(page, "/generate|luo|kirjoita/i"));
+  console.log("generate:", await clickText(page, "/generate strategy|luo strategia|kirjoita/i"));
   let plan = null;
   for (let i = 0; i < 90; i++) {
     await page.sleep(1000);

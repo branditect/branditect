@@ -271,3 +271,12 @@
   .type { grid-template-columns: 1fr; }
   .hero { grid-template-columns: 1fr; }
 }
+
+/* A swatch you can change. The pencil overlays the chip rather than sitting
+   beside it: the palette is a grid, and a second control per cell would
+   double the row height for something used once. */
+.swatchWrap { position: relative; }
+.swatchEdit { position: absolute; top: 8px; right: 8px; z-index: 3; opacity: 0; transition: opacity .12s; }
+.swatchWrap:hover .swatchEdit, .swatchEdit:focus-within { opacity: 1; }
+/* Touch has no hover: there, it is always visible. */
+@media (hover: none) { .swatchEdit { opacity: 1; } }

@@ -232,6 +232,226 @@ export function AddColour({
   );
 }
 
+/**
+ * Changing a colour that is already there, or taking it out.
+ *
+ * A swatch was read-only: a hex typed one digit wrong had to be deleted and
+ * added again, which put it at the end of the palette. Name, hex and role are
+ * editable in place; removing asks twice, in the panel, rather than through a
+ * browser dialog that blocks the page.
+ */
+export function EditColour({
+  brandId, colour, onDone,
+}: {
+  brandId: string;
+  colour: { id: string | number; hex: string | null; name: string | null; role?: string | null };
+  onDone: () => void;
+}) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const [hex, setHex] = useState(colour.hex ?? "");
+  const [name, setName] = useState(colour.name ?? "");
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const parsed = normaliseHex(hex);
+
+  async function save() {
+    if (!parsed) { setError(t("uploads.notHex")); return; }
+    setBusy(true); setError(null);
+    const res = await authedJson("/api/brand-book/color", "PATCH", {
+      // An emptied name is stored empty, not as the English word "Untitled":
+      // the page already renders a blank name in the interface language.
+      id: colour.id, brandId, hex: parsed, name: name.trim(),
+    });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
+    setOpen(false);
+    onDone();
+  }
+
+  async function remove() {
+    setBusy(true); setError(null);
+    const res = await authedJson("/api/brand-book/delete", "DELETE", {
+      id: colour.id, table: "brand_book_colors", brandId,
+    });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
+    setConfirmRemove(false);
+    setOpen(false);
+    onDone();
+  }
+
+  return (
+    <div className={u.wrap}>
+      <button
+        type="button"
+        className={u.editDot}
+        onClick={() => { setOpen((v) => !v); setConfirmRemove(false); }}
+        aria-label={t("uploads.editColour", { name: colour.name ?? "" })}
+      >
+        <Icon name="pen" size={11} />
+      </button>
+
+      {open && (
+        <Panel onClose={() => setOpen(false)}>
+          <div className={u.plab}>{t("uploads.editColour", { name: colour.name ?? "" })}</div>
+          <div className={u.row}>
+            <span
+              className={u.preview}
+              style={parsed ? { backgroundColor: parsed } : undefined}
+              aria-hidden="true"
+            />
+            <input
+              className={u.input}
+              placeholder="#1a1a1a"
+              value={hex}
+              onChange={(e) => setHex(e.target.value)}
+              aria-label={t("vupload.hex")}
+            />
+          </div>
+          <input
+            className={u.input}
+            placeholder={t("vupload.colourName")}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-label={t("vupload.colourName")}
+          />
+          <button type="button" className={u.go} disabled={busy || !parsed} onClick={save}>
+            {busy ? t("settings.saving") : t("uploads.saveColour")}
+          </button>
+
+          {confirmRemove ? (
+            <div className={u.confirmRow}>
+              <button type="button" className={u.danger} disabled={busy} onClick={remove}>
+                {t("uploads.removeConfirm")}
+              </button>
+              <button type="button" className={u.ghost} disabled={busy} onClick={() => setConfirmRemove(false)}>
+                {t("common.cancel")}
+              </button>
+            </div>
+          ) : (
+            <button type="button" className={u.ghost} disabled={busy} onClick={() => setConfirmRemove(true)}>
+              <Icon name="trash" size={12} /> {t("uploads.removeColour")}
+            </button>
+          )}
+
+          {error && <div className={u.err}>{error}</div>}
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+/* ── brand guideline ───────────────────────────────────────────────────── */
+
+/**
+ * The brand guideline PDF: the one asset the app asked for and could not take.
+ *
+ * Home's fourth readiness check is "upload your brand guideline" and it links
+ * here, where there was nothing to press — `brand_visual.guideline_url` was
+ * read in three places and written in none. Uploading also reads the palette
+ * out of the file, because a guideline prints its colours with the hex codes
+ * beside them, and typing those in again by hand is the thing being asked for.
+ */
+export function UploadGuideline({
+  brandId, onDone, variant = "act", replace = false,
+}: {
+  brandId: string;
+  onDone: (result: { colorsAdded: number }) => void;
+  variant?: "act" | "empty";
+  replace?: boolean;
+}) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function send(files: FileList | null) {
+    if (!files?.[0]) return;
+    setBusy(true); setError(null);
+    const fd = new FormData();
+    fd.append("file", files[0]);
+    fd.append("brandId", brandId);
+    try {
+      const res = await authedFetch("/api/visual/guideline", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        setError(json.error ?? t("uploads.uploadFailedStatus", { status: res.status }));
+      } else {
+        onDone({ colorsAdded: json.colorsAdded ?? 0 });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("docs.uploadFailed"));
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className={u.wrap}>
+      <button
+        type="button"
+        className={variant === "empty" ? u.emptyBtn : u.trigger}
+        disabled={busy}
+        onClick={() => fileRef.current?.click()}
+      >
+        <Icon name="upload" size={variant === "empty" ? 14 : 12} />
+        {busy
+          ? t("vupload.readingGuideline")
+          : replace ? t("vupload.replaceGuideline") : t("vupload.uploadGuideline")}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/pdf,image/*"
+        hidden
+        onChange={(e) => send(e.target.files)}
+      />
+      {error && <div className={u.err}>{error}</div>}
+    </div>
+  );
+}
+
+/** Taking the guideline away. Asks twice, in place, and never with a dialog. */
+export function RemoveGuideline({ brandId, onDone }: { brandId: string; onDone: () => void }) {
+  const t = useT();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    setBusy(true); setError(null);
+    const res = await authedJson("/api/visual/guideline", "DELETE", { brandId });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) { setError(json.error ?? t("uploads.couldNotSaveStatus", { status: res.status })); return; }
+    setConfirm(false);
+    onDone();
+  }
+
+  if (!confirm) {
+    return (
+      <button type="button" className={u.trigger} onClick={() => setConfirm(true)}>
+        <Icon name="trash" size={12} /> {t("vupload.removeGuideline")}
+      </button>
+    );
+  }
+  return (
+    <div className={u.confirmRow}>
+      <button type="button" className={u.danger} disabled={busy} onClick={remove}>
+        {busy ? t("settings.saving") : t("vupload.removeGuidelineConfirm")}
+      </button>
+      <button type="button" className={u.trigger} disabled={busy} onClick={() => setConfirm(false)}>
+        {t("common.cancel")}
+      </button>
+      {error && <div className={u.err}>{error}</div>}
+    </div>
+  );
+}
+
 /* ── typefaces ─────────────────────────────────────────────────────────── */
 
 export function AddTypeface({

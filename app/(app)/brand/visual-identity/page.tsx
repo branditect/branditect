@@ -23,7 +23,9 @@ import ChatRail from "@/components/chat-rail";
 import { contrastOnWhite, readableInkOn } from "@/lib/contrast";
 import { SLOTS, USE_CASES, canonicalSlot, formatOf } from "@/lib/logo-slots";
 import s from "@/components/visual-identity/visual-identity.module.css";
-import { AddLogo, AddColour, AddTypeface } from "@/components/visual-identity/uploads";
+import {
+  AddLogo, AddColour, AddTypeface, EditColour, UploadGuideline, RemoveGuideline,
+} from "@/components/visual-identity/uploads";
 import u from "@/components/visual-identity/uploads.module.css";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
@@ -465,8 +467,19 @@ export default function VisualIdentityPage() {
                         const value = isGradient ? (c.css_value ?? c.hex ?? "") : (c.hex ?? "");
                         const contrast = isGradient ? null : contrastOnWhite(value);
                         return (
+                          <div key={String(c.id)} className={s.swatchWrap}>
+                            {/* The pencil sits on the swatch. The swatch itself
+                                still copies: that is what it is for. */}
+                            {!isGradient && (
+                              <span className={s.swatchEdit}>
+                                <EditColour
+                                  brandId={brandId}
+                                  colour={{ id: c.id, hex: c.hex, name: c.name, role: c.role }}
+                                  onDone={() => { reload(); flash(t("visual.toast.colourSaved")); }}
+                                />
+                              </span>
+                            )}
                           <button
-                            key={String(c.id)}
                             type="button"
                             className={s.swatch}
                             onClick={() => copy(value, isGradient ? t("visual.toast.cssCopied") : t("visual.toast.valueCopied", { value }))}
@@ -499,6 +512,7 @@ export default function VisualIdentityPage() {
                               )}
                             </span>
                           </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -689,6 +703,20 @@ export default function VisualIdentityPage() {
                 </div>
               </div>
               <div className={s.gacts}>
+                <UploadGuideline
+                  brandId={brandId}
+                  replace
+                  onDone={({ colorsAdded }) => {
+                    reload();
+                    flash(colorsAdded
+                      ? t("visual.toast.guidelineColours", { count: colorsAdded })
+                      : t("visual.toast.guidelineUploaded"));
+                  }}
+                />
+                <RemoveGuideline
+                  brandId={brandId}
+                  onDone={() => { reload(); flash(t("visual.toast.guidelineRemoved")); }}
+                />
                 <a className={s.act} href={visual.guideline_url} target="_blank" rel="noopener noreferrer">
                   <Icon name="doc" size={12} />
                   {t("visual.readHere")}
@@ -701,6 +729,28 @@ export default function VisualIdentityPage() {
                   <Icon name="upload" size={12} />
                   {t("common.download")}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* No guideline: the thing Home has been asking for, with somewhere
+              to put it. This box used to render only when the column was set,
+              and nothing ever set it. */}
+          {!loading && !visual?.guideline_url && (
+            <div className={s.sec}>
+              <div className={s.empty}>
+                <h3>{t("vi.noGuideline")}</h3>
+                <p>{t("vi.noGuidelineBody")}</p>
+                <UploadGuideline
+                  brandId={brandId}
+                  variant="empty"
+                  onDone={({ colorsAdded }) => {
+                    reload();
+                    flash(colorsAdded
+                      ? t("visual.toast.guidelineColours", { count: colorsAdded })
+                      : t("visual.toast.guidelineUploaded"));
+                  }}
+                />
               </div>
             </div>
           )}

@@ -1,85 +1,27 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { colorMediaType } from "@/lib/brand-colors";
+import { extractColors } from "@/lib/brand-colors-server";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const COLOR_PROMPT = `Analyze this document/image and extract ALL brand colors you can find. For each color return:
-- hex: the hex color code (e.g. "#E8562A")
-- name: a descriptive color name (e.g. "Brand Orange")
-- usage: how this color is used in the brand (e.g. "Primary accent, CTAs, headings")
-
-Return ONLY a JSON array, no other text. Example:
-[{"hex":"#E8562A","name":"Brand Orange","usage":"Primary accent color"},{"hex":"#1A1A1A","name":"Ink Black","usage":"Body text"}]
-
-If you cannot find any colors, return an empty array: []`;
+/**
+ * Colours out of a file the caller holds, without saving anything.
+ *
+ * The extraction itself lives in lib/brand-colors.ts because the guideline
+ * upload needs the same thing — it used to be written out twice, once here and
+ * once inside /api/brand-assets/upload, with two prompts that had drifted.
+ */
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const type = formData.get("type") as string; // "pdf" or "image"
+    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
+    const type = formData.get("type") as string | null;
+    const mediaType = type === "pdf" ? "application/pdf" : colorMediaType(file.name, file.type);
+    if (!mediaType) return NextResponse.json({ error: "Not a readable file" }, { status: 400 });
 
-    const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString("base64");
-
-    let mediaType: "image/png" | "image/jpeg" | "image/gif" | "image/webp" | "application/pdf";
-    if (type === "pdf") {
-      mediaType = "application/pdf";
-    } else {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (ext === "png") mediaType = "image/png";
-      else if (ext === "jpg" || ext === "jpeg") mediaType = "image/jpeg";
-      else if (ext === "webp") mediaType = "image/webp";
-      else mediaType = "image/png";
-    }
-
-    const content: Anthropic.Messages.ContentBlockParam[] = [];
-
-    if (type === "pdf") {
-      content.push({
-        type: "document",
-        source: {
-          type: "base64",
-          media_type: "application/pdf",
-          data: base64,
-        },
-      });
-    } else {
-      content.push({
-        type: "image",
-        source: {
-          type: "base64",
-          media_type: mediaType as "image/png" | "image/jpeg" | "image/gif" | "image/webp",
-          data: base64,
-        },
-      });
-    }
-
-    content.push({ type: "text", text: COLOR_PROMPT });
-
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-5",
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
-      thinking: { type: "disabled" },
-      max_tokens: 2048,
-      messages: [{ role: "user", content }],
-    });
-
-    const textBlock = message.content.find((b) => b.type === "text");
-    const responseText = textBlock && "text" in textBlock ? textBlock.text : "[]";
-
-    // Extract JSON from response (handle markdown code blocks)
-    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-    const colors = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-
+    const colors = await extractColors(Buffer.from(await file.arrayBuffer()), mediaType);
     return NextResponse.json({ colors });
   } catch (error) {
     console.error("Color extraction error:", error);

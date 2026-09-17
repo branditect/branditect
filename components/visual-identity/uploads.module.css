@@ -95,3 +95,18 @@
 
 /* The section headers put the trigger beside the heading. */
 .headActions { display: flex; gap: 8px; margin-left: auto; flex: none; }
+
+/* Editing a colour that is already on the page. The dot sits on the swatch,
+   so the thing you press is the thing you are changing. */
+.editDot { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255, 255, 255, .92); color: theme('colors.ink.2');
+  box-shadow: 0 1px 4px rgba(21, 21, 27, .18); }
+.editDot:hover { color: theme('colors.accent.dark'); }
+.editDot:focus-visible { box-shadow: 0 0 0 3px theme('colors.tint.1'); }
+.confirmRow { display: flex; gap: 6px; }
+/* Removing is not the same weight as saving: it says what it will do, once. */
+.danger { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center;
+  justify-content: center; gap: 6px; flex: 1; padding: 9px 12px; border-radius: 10px;
+  background: var(--v-red-ink); color: #fff; font-size: theme('fontSize.2xs[0]'); font-weight: 800; }
+.danger[disabled] { opacity: .5; cursor: default; }

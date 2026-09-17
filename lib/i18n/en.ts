@@ -2863,6 +2863,28 @@ export const en = {
   "tone.emptyConfirm": "Yes, empty it",
   "tone.saveFailed":
     "Not saved: {message}. Your last edit is still on screen but is not stored.",
+
+  // ── A colour can be changed, not only added ── 2026-09-17, Finnish mine.
+  "uploads.editColour": "Edit {name}",
+  "uploads.saveColour": "Save this colour",
+  "uploads.removeColour": "Remove this colour",
+  "uploads.removeConfirm": "Yes, remove it",
+
+  // ── The brand guideline can be uploaded at last ── 2026-09-17, Finnish mine.
+  "vupload.uploadGuideline": "Upload brand guideline",
+  "vupload.replaceGuideline": "Upload a new one",
+  "vupload.removeGuideline": "Remove",
+  "vupload.removeGuidelineConfirm": "Yes, remove it",
+  "vupload.readingGuideline": "Reading it…",
+  "vupload.noFile": "No file was chosen.",
+  "vi.noGuideline": "No brand guideline yet",
+  "vi.noGuidelineBody":
+    "Upload the PDF and it lives here, where the whole team can read it. Its colours are read straight out of the file and added below — you do not have to type them in.",
+  "visual.toast.guidelineUploaded": "Brand guideline uploaded",
+  "visual.toast.guidelineColours": "Brand guideline uploaded · {count} colours read from it",
+  "visual.toast.guidelineRemoved": "Brand guideline removed",
+  "visual.toast.colourSaved": "Colour saved",
+  "visual.toast.colourRemoved": "Colour removed",
 } as const;
 
 export type StringKey = keyof typeof en;

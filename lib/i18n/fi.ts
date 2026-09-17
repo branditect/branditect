@@ -2919,4 +2919,26 @@ export const fi: Record<StringKey, string> = {
   "tone.emptyConfirm": "Kyllä, tyhjennä",
   "tone.saveFailed":
     "Ei tallennettu: {message}. Viimeisin muokkauksesi näkyy ruudulla mutta sitä ei ole tallennettu.",
+
+  // ── A colour can be changed, not only added ── 2026-09-17, Finnish mine.
+  "uploads.editColour": "Muokkaa: {name}",
+  "uploads.saveColour": "Tallenna tämä väri",
+  "uploads.removeColour": "Poista tämä väri",
+  "uploads.removeConfirm": "Kyllä, poista",
+
+  // ── The brand guideline can be uploaded at last ── 2026-09-17, Finnish mine.
+  "vupload.uploadGuideline": "Lataa brändiohjeisto",
+  "vupload.replaceGuideline": "Lataa uusi",
+  "vupload.removeGuideline": "Poista",
+  "vupload.removeGuidelineConfirm": "Kyllä, poista",
+  "vupload.readingGuideline": "Luetaan…",
+  "vupload.noFile": "Tiedostoa ei valittu.",
+  "vi.noGuideline": "Ei vielä brändiohjeistoa",
+  "vi.noGuidelineBody":
+    "Lataa PDF, niin se on täällä koko tiimin luettavissa. Värit luetaan suoraan tiedostosta ja lisätään alle — niitä ei tarvitse kirjoittaa käsin.",
+  "visual.toast.guidelineUploaded": "Brändiohjeisto ladattu",
+  "visual.toast.guidelineColours": "Brändiohjeisto ladattu · {count} väriä luettu siitä",
+  "visual.toast.guidelineRemoved": "Brändiohjeisto poistettu",
+  "visual.toast.colourSaved": "Väri tallennettu",
+  "visual.toast.colourRemoved": "Väri poistettu",
 };

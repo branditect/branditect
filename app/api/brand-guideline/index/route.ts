@@ -52,7 +52,6 @@ Rules:
 type Body = {
   brandId: string;
   storagePath?: string;
-  bucket?: string;
   documentId?: string;
   sourceName?: string;
   images?: { data: string; type: string }[];
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest) {
     const auth = await resolveBrand(req, brandId);
     if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
     brandId = auth.brandId;
-    const { storagePath, bucket, documentId, sourceName, images } = body;
+    const { storagePath, documentId, sourceName, images } = body;
 
     if (!brandId) {
       return NextResponse.json({ error: "brandId is required" }, { status: 400 });
@@ -78,13 +77,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /*
+      A caller-supplied path is not permission to read it.
+
+      `storagePath` and `bucket` both came off the body and were handed
+      straight to the service-role client, which bypasses RLS — so any signed-in
+      user could name any path in any bucket and have this route download it
+      and hand back its contents as an indexed guideline. That is every other
+      customer's brand book, and it needed nothing but a path.
+
+      app/api/vault/extract/route.ts is the sibling that got this right: the
+      path is only honoured once the row that owns it is proven to belong to
+      the caller's brand. Same rule here. The bucket is no longer negotiable
+      either — guidelines live in brand-documents.
+    */
+    if (storagePath) {
+      const { data: owned } = await supabase
+        .from("brand_documents")
+        .select("id")
+        .eq("brand_id", auth.brandId)
+        .eq("storage_path", storagePath)
+        .maybeSingle();
+
+      if (!owned) {
+        // Same answer whether the path is someone else's or does not exist:
+        // a different reply would confirm which paths are real.
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+    }
+
     const content: Anthropic.Messages.ContentBlockParam[] = [];
     let sourceType: "pdf" | "images";
     let pageCount: number | null = null;
 
     if (storagePath) {
       const { data: blob, error: dlErr } = await supabase.storage
-        .from(bucket || "brand-documents")
+        .from("brand-documents")
         .download(storagePath);
 
       if (dlErr || !blob) {

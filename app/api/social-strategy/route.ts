@@ -197,10 +197,16 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
+    // Scoped by brand as well as by id. `id` comes from the body and this
+    // client is service-role, so RLS does not cover for a missing filter:
+    // without .eq('brand_id') any signed-in user could patch any brand's row
+    // by guessing its id. The 'generate' action below always had this; these
+    // two did not.
     const { error } = await supabase
       .from('social_strategy')
       .update(patch)
       .eq('id', id)
+      .eq('brand_id', auth.brandId)
 
     if (error) {
       return migrationMissing(error)
@@ -213,7 +219,11 @@ export async function POST(req: NextRequest) {
   if (action === 'reset') {
     const { id } = body
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
-    const { error } = await supabase.from('social_strategy').delete().eq('id', id)
+    const { error } = await supabase
+      .from('social_strategy')
+      .delete()
+      .eq('id', id)
+      .eq('brand_id', auth.brandId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true })
   }

@@ -79,12 +79,21 @@ export async function POST(req: NextRequest) {
     const format = isValidFormat(brief.format) ? brief.format : "1:1";
     const productId = typeof brief.productId === "string" && brief.productId ? brief.productId : null;
 
+    /*
+      Sign-in is not conditional on what you asked for.
+
+      This route only authenticated inside `if (productId)`, so leaving the
+      product out turned it into an open image-generation endpoint: no account,
+      no brand, someone else's model budget. Authenticate first, then decide
+      what the request may touch.
+    */
+    const requested = typeof body.brandId === "string" && body.brandId !== "default" ? body.brandId : null;
+    const auth = await resolveBrand(req, requested);
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
+    const brandId = auth.brandId;
+
     let product: ProductIdentity | null = null;
     if (productId) {
-      const requested = typeof body.brandId === "string" && body.brandId !== "default" ? body.brandId : null;
-      const auth = await resolveBrand(req, requested);
-      if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
-      const brandId = auth.brandId;
       if (!brandId) {
         return NextResponse.json({ error: "forbidden", message: "That product is not available." }, { status: 403 });
       }

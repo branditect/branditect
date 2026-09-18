@@ -31,7 +31,8 @@
     "strategy:e2e": "node scripts/strategy-from-questionnaire-e2e.mjs",
     "money:ui": "node scripts/money-input-ui.mjs",
     "tag:ui": "node scripts/tag-images-ui.mjs",
-    "placeholder:ui": "node scripts/brand-placeholder-ui.mjs"
+    "placeholder:ui": "node scripts/brand-placeholder-ui.mjs",
+    "storage:probe": "node scripts/storage-probe.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.81.0",

@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
 
 // Delete template
 export async function DELETE(req: NextRequest) {
-  const { id, thumbnail_path } = await req.json()
+  const { id } = await req.json()
   const auth = await resolveBrand(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
@@ -60,15 +60,27 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
 
-  if (thumbnail_path) {
-    await supabase.storage.from('brand-assets').remove([thumbnail_path])
-  }
+  /*
+    The row first, then its file — and the path comes from the row, never from
+    the caller.
 
-  const { error } = await supabase
+    `thumbnail_path` used to be taken straight off the body and removed from
+    storage before any ownership check ran, so a signed-in user could delete
+    any object in brand-assets by naming its path: someone else's logo, every
+    page of someone else's brand book. The row delete underneath was correctly
+    scoped the whole time, which is what made the gap easy to miss.
+  */
+  const { data: row, error } = await supabase
     .from('brand_templates')
     .delete()
     .eq('id', id)
     .eq('brand_id', auth.brandId)
+    .select('thumbnail_path')
+    .maybeSingle()
+
+  if (row?.thumbnail_path) {
+    await supabase.storage.from('brand-assets').remove([row.thumbnail_path])
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })

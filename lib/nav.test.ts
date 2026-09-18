@@ -2,7 +2,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { NAV } from "./nav.ts";
+import { NAV, visibleChildren } from "./nav.ts";
 
 /**
  * nav.ts promises "no dead entries" in its own header comment. A comment does
@@ -80,7 +80,7 @@ describe("the nav table in CLAUDE.md matches lib/nav.ts", () => {
     });
   }
 
-  for (const item of NAV.filter((i) => i.children?.length)) {
+  for (const item of NAV.filter((i) => visibleChildren(i).length)) {
     it(`${item.label} lists exactly its real children`, () => {
       const row = rowFor(item.label)!;
       // Exact set equality, not "contains". Checking only for missing names let
@@ -88,7 +88,9 @@ describe("the nav table in CLAUDE.md matches lib/nav.ts", () => {
       // survived in the Studio row that way, and a stale name in this table is
       // an instruction to rebuild something that was removed on purpose.
       const listed = row.split(" · ").slice(1).map((x) => x.trim()).filter(Boolean);
-      const real = item.children!.map((c) => c.label);
+      // Visible children only: a parked entry (hidden: true) is not in the
+      // sidebar, so the table must not advertise it either.
+      const real = visibleChildren(item).map((c) => c.label);
       assert.deepEqual(listed, real,
         `${item.label} row lists ${JSON.stringify(listed)} but lib/nav.ts has ${JSON.stringify(real)}`);
     });
@@ -113,5 +115,43 @@ describe("the nav table in CLAUDE.md matches lib/nav.ts", () => {
       assert.ok(existsSync(`app/(app)/numbers/${r}/page.tsx`),
         `the row names ${r}, but app/(app)/numbers/${r}/page.tsx does not exist`);
     }
+  });
+});
+
+/**
+ * Parking a screen.
+ *
+ * `hidden: true` takes a page out of the sidebar without deleting it. Two
+ * things have to stay true or parking becomes a way to lose work: the route
+ * must still exist (so the page can be finished), and the sidebar must not
+ * render it (so nobody finds a half-thought screen through the menu).
+ */
+describe("parked nav entries", () => {
+  const parked = NAV.flatMap((i) => (i.children ?? []).filter((c) => c.hidden));
+
+  it("the sidebar renders visibleChildren, not children", () => {
+    const sidebar = readFileSync("components/sidebar.tsx", "utf8");
+    assert.ok(sidebar.includes("visibleChildren"), "sidebar does not filter parked entries");
+    assert.ok(
+      !/item\.children\.map/.test(sidebar),
+      "sidebar still maps over item.children, so parked entries would render",
+    );
+  });
+
+  for (const child of parked) {
+    it(`${child.href} is parked but still built`, () => {
+      assert.ok(
+        existsSync(`app/(app)${child.href}/page.tsx`),
+        `${child.href} is parked but the page is gone — delete the nav entry instead`,
+      );
+    });
+  }
+
+  it("Channels is the one parked entry, and it is parked", () => {
+    // If this fails because Channels came back, delete this test with it.
+    const brand = NAV.find((i) => i.label === "Brand")!;
+    const channels = brand.children!.find((c) => c.label === "Channels");
+    assert.ok(channels, "Channels left lib/nav.ts entirely");
+    assert.equal(channels!.hidden, true, "Channels is no longer parked — update CLAUDE.md too");
   });
 });

@@ -10,13 +10,20 @@ Every screen belongs to exactly one of those. Anything that belongs to none of t
 
 ```
 Home        the landing screen: readiness, then what to make
-Brand       define · Strategy · Tone of voice · Visual identity · Channels
+Brand       define · Strategy · Tone of voice · Visual identity
 Knowledge   feed   · Products · Documents · Images · Presentations · Links
 Studio      make   · Write · Create images · Notes
 Numbers     define · one landing page; cost, pricing, offers, recurring and running costs
                      are routes beneath it, not nav children
 AI Chat     the brand-trained assistant
 ```
+
+**Parked entries.** A nav child may carry `hidden: true` (`lib/nav.ts`). The
+page stays built and reachable by URL; the sidebar does not list it, and the
+table above does not either. Today that is **Brand ▸ Channels**, parked
+2026-09-18 until the social-media strategy work is finished. Parking is not a
+soft delete — a screen that is genuinely gone leaves `lib/nav.ts` entirely,
+because a list of ghosts is the thing this file exists to prevent.
 
 Rules that hold across changes:
 

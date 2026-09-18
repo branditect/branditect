@@ -11,7 +11,7 @@ import AccountMenu from "@/components/account-menu";
 import LanguageSwitch from "@/components/language-switch";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n/use-t.tsx";
-import { NAV, sectionFor, type NavItem } from "@/lib/nav";
+import { NAV, sectionFor, visibleChildren, type NavItem } from "@/lib/nav";
 
 function NavRow({
   item,
@@ -24,6 +24,15 @@ function NavRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  /*
+    A parked child is still part of the section, just not in the menu.
+
+    `item.children` is what the section contains; `shown` is what the sidebar
+    lists. Active state still comes from the section, so standing on a parked
+    page keeps Brand highlighted even though no row matches it.
+  */
+  const shown = visibleChildren(item);
+
   const isActive = item.children
     ? pathname.startsWith(item.href)
     : pathname === item.href;
@@ -34,7 +43,7 @@ function NavRow({
     isActive ? "bg-tint-1 text-accent" : "text-ink-2 hover:bg-tile"
   }`;
 
-  if (!item.children) {
+  if (shown.length === 0) {
     return (
       <Link
         href={item.href}
@@ -68,7 +77,7 @@ function NavRow({
 
       {expanded && (
         <div className="flex flex-col pb-[5px] pl-[38px] pt-px">
-          {item.children.map((child) => {
+          {shown.map((child) => {
             const childActive = pathname === child.href;
             return (
               <Link

@@ -19,6 +19,15 @@ export interface NavChild {
   label: string;
   key: StringKey;
   href: string;
+  /**
+   * Parked: the page exists and works, but is not in the sidebar yet.
+   *
+   * This is for a screen that is built but not finished being *thought* about
+   * — the route stays reachable so work can continue on it, and bringing it
+   * back is deleting one word rather than rebuilding an entry from memory.
+   * It is not a soft delete: a screen that is genuinely gone leaves this file.
+   */
+  hidden?: boolean;
 }
 
 export interface NavItem {
@@ -27,6 +36,11 @@ export interface NavItem {
   href: string;
   icon: IconName;
   children?: NavChild[];
+}
+
+/** What the sidebar shows — everything except parked entries. */
+export function visibleChildren(item: NavItem): NavChild[] {
+  return (item.children ?? []).filter((c) => !c.hidden);
 }
 
 export const NAV: NavItem[] = [
@@ -40,7 +54,10 @@ export const NAV: NavItem[] = [
       { label: "Strategy", key: "nav.brand.strategy", href: "/brand/strategy" },
       { label: "Tone of voice", key: "nav.brand.tone", href: "/brand/tone-of-voice" },
       { label: "Visual identity", key: "nav.brand.visual", href: "/brand/visual-identity" },
-      { label: "Channels", key: "nav.brand.channels", href: "/brand/channels" },
+      // Parked 2026-09-18 until the social-media strategy work is done. The
+      // page and its questionnaire are finished and reachable at the URL; what
+      // is unfinished is the thinking about what the section should promise.
+      { label: "Channels", key: "nav.brand.channels", href: "/brand/channels", hidden: true },
     ],
   },
   {

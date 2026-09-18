@@ -200,7 +200,7 @@ export default function ToneOfVoicePage() {
     setGenerating(true);
     setGenProgress(t("tone.progress.analysing"));
     try {
-      const res = await fetch("/api/tone/generate", {
+      const res = await authedFetch("/api/tone/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pastedText }),

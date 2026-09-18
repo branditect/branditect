@@ -38,6 +38,34 @@ export type AuthSuccess = { ok: true; userId: string; brandId: string };
 export type AuthResult = AuthSuccess | AuthFailure;
 
 /**
+ * Just: is this a real signed-in person?
+ *
+ * For routes that touch no brand data and only spend money — the model calls.
+ * branditect-ui/spec/security-hardening.md waved these through as "no brand
+ * data at all, no change needed", which is true about leaking and wrong about
+ * cost: an unauthenticated route that calls Anthropic is an open tab on the
+ * company card for anyone who finds the URL.
+ *
+ * Deliberately not resolveBrand. These run during onboarding and on a brand
+ * new account, and requiring a brand row would fail a person whose brand is
+ * still being bootstrapped — a 403 on the first screen they ever see.
+ */
+export async function requireUser(req: Request): Promise<{ ok: true; userId: string } | AuthFailure> {
+  const token = bearerToken(req);
+  if (!token) return { ok: false, status: 401, message: "Not signed in" };
+
+  const asCaller = createClient(
+    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    { global: { headers: { Authorization: `Bearer ${token}` } } },
+  );
+
+  const { data: { user }, error } = await asCaller.auth.getUser();
+  if (error || !user) return { ok: false, status: 401, message: "Not signed in" };
+  return { ok: true, userId: user.id };
+}
+
+/**
  * Identify the caller and resolve the brand they own.
  *
  * `requested` is checked against the owned brand rather than trusted. Routes

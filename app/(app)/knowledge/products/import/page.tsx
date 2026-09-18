@@ -310,9 +310,9 @@ function ImportModal({ onAdd, onClose }: { onAdd: (products: Product[]) => void;
       if (tab === "file" && file) {
         const form = new FormData();
         form.append("file", file);
-        res = await fetch("/api/catalog/parse", { method: "POST", body: form });
+        res = await authedFetch("/api/catalog/parse", { method: "POST", body: form });
       } else {
-        res = await fetch("/api/catalog/parse", {
+        res = await authedFetch("/api/catalog/parse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),

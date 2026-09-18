@@ -507,7 +507,7 @@ export default function BrandGuidelineClient() {
     setEditLoading(true)
     try {
       const sectionData = bd[editSection as keyof BrandData]
-      const res = await fetch('/api/brand-guideline/edit', {
+      const res = await authedFetch('/api/brand-guideline/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -550,7 +550,7 @@ export default function BrandGuidelineClient() {
     if (!guidelineImgs.length) return
     setExtractLoading(true)
     try {
-      const res = await fetch('/api/brand-guideline/extract', {
+      const res = await authedFetch('/api/brand-guideline/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images: guidelineImgs.map(i => ({ data: i.data, type: i.type })) }),

@@ -257,7 +257,10 @@ export default function BrandBookClient() {
     setAddColorOpen(false)
 
     try {
-      const res = await fetch('/api/brand-book/color', {
+      // authedFetch, not fetch: this route resolves the caller's brand from
+      // the token, so a call without one is a 401 and the colour silently
+      // never saves.
+      const res = await authedFetch('/api/brand-book/color', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brandId, hex, name }),
@@ -295,7 +298,7 @@ export default function BrandBookClient() {
     setChatLoading(true)
 
     try {
-      const res = await fetch('/api/brand-book/chat', {
+      const res = await authedFetch('/api/brand-book/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -317,7 +320,7 @@ export default function BrandBookClient() {
             setColors(prev => [...prev, ...toAdd])
             // Save extracted colors to Supabase
             for (const c of toAdd) {
-              fetch('/api/brand-book/color', {
+              authedFetch('/api/brand-book/color', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ brandId, hex: c.hex, name: c.name }),

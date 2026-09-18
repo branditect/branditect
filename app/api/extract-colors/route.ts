@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { colorMediaType } from "@/lib/brand-colors";
 import { extractColors } from "@/lib/brand-colors-server";
+import { requireUser } from '@/lib/api-auth'
 
 /**
  * Colours out of a file the caller holds, without saving anything.
@@ -12,6 +13,16 @@ import { extractColors } from "@/lib/brand-colors-server";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  /*
+    Signed in, or nothing happens.
+
+    This route spends money on every call. Left open it is an uncapped model
+    bill for anyone who finds the URL, and nothing about it would look wrong —
+    no data leaves, the graph just climbs.
+  */
+  const auth = await requireUser(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

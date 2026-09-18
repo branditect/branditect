@@ -1,6 +1,6 @@
 "use client";
 
-import { authedJson } from "@/lib/authed-fetch";
+import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -506,7 +506,7 @@ export default function BrandStrategyPage() {
         }));
       }
 
-      const res = await fetch("/api/brand-strategy", {
+      const res = await authedFetch("/api/brand-strategy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { TONE_STABLE } from "@/lib/prompts";
+import { requireUser } from '@/lib/api-auth'
 
 export const maxDuration = 60;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
+  /*
+    Signed in, or nothing happens.
+
+    This route spends money on every call. Left open it is an uncapped model
+    bill for anyone who finds the URL, and nothing about it would look wrong —
+    no data leaves, the graph just climbs.
+  */
+  const auth = await requireUser(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+
   try {
     const { pastedText } = await req.json();
 

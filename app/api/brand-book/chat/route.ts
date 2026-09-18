@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { requireUser } from '@/lib/api-auth'
 
 export const maxDuration = 30
 
@@ -8,6 +9,16 @@ const anthropic = new Anthropic({
 })
 
 export async function POST(req: NextRequest) {
+  /*
+    Signed in, or nothing happens.
+
+    This route spends money on every call. Left open it is an uncapped model
+    bill for anyone who finds the URL, and nothing about it would look wrong —
+    no data leaves, the graph just climbs.
+  */
+  const auth = await requireUser(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+
   const { message, pageUrls } = await req.json()
 
   if (!message) {
@@ -16,19 +27,36 @@ export async function POST(req: NextRequest) {
 
   const contentBlocks: Anthropic.MessageCreateParams['messages'][0]['content'] = []
 
-  // Send up to 8 pages as images for context
-  if (pageUrls && pageUrls.length > 0) {
-    for (const url of pageUrls.slice(0, 8)) {
-      contentBlocks.push({
-        type: 'image',
-        source: { type: 'url', url }
-      })
-    }
+  /*
+    Only our own storage, and only https.
+
+    `pageUrls` comes from the body and was handed to Anthropic as image URLs
+    for it to fetch. That made this route a way to have someone else's
+    infrastructure request an arbitrary address on the caller's behalf, and to
+    pay for the tokens it produced. Brand book pages live in this project's
+    Supabase storage and nowhere else, so that is the whole allowlist.
+  */
+  const STORAGE_PREFIX = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''}/storage/v1/object/`
+
+  const allowed = (u: unknown): u is string =>
+    typeof u === 'string' && STORAGE_PREFIX.length > '/storage/v1/object/'.length && u.startsWith(STORAGE_PREFIX)
+
+  const pages: string[] = Array.isArray(pageUrls) ? pageUrls.filter(allowed).slice(0, 8) : []
+
+  if (Array.isArray(pageUrls) && pageUrls.length > 0 && pages.length === 0) {
+    return NextResponse.json(
+      { error: 'Brand book pages must be files stored in this workspace.' },
+      { status: 400 },
+    )
+  }
+
+  for (const url of pages) {
+    contentBlocks.push({ type: 'image', source: { type: 'url', url } })
   }
 
   contentBlocks.push({
     type: 'text',
-    text: pageUrls && pageUrls.length > 0
+    text: pages.length > 0
       ? `The images above are pages from a brand guideline. Answer this question based on what you see: "${message}"\n\nBe specific and practical. Extract exact hex codes, font names, or rules where visible.`
       : message
   })

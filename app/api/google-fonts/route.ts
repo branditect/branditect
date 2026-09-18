@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from '@/lib/api-auth'
 
 const POPULAR_FONTS = [
   "Inter", "Roboto", "Open Sans", "Montserrat", "Lato", "Poppins",
@@ -13,6 +14,16 @@ const POPULAR_FONTS = [
 ];
 
 export async function GET(req: NextRequest) {
+  /*
+    Signed in, or nothing happens.
+
+    This route spends money on every call. Left open it is an uncapped model
+    bill for anyone who finds the URL, and nothing about it would look wrong —
+    no data leaves, the graph just climbs.
+  */
+  const auth = await requireUser(req)
+  if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+
   const query = req.nextUrl.searchParams.get("q")?.toLowerCase() || "";
 
   const filtered = query

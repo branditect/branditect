@@ -11,10 +11,17 @@
 import { spawn } from "node:child_process";
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-export async function launch({ port = 9444, profile = "/tmp/cdp-default", tz = null } = {}) {
+/**
+ * `args` adds Chrome flags for one harness without changing the default launch.
+ * Its first use is a fake microphone — a recorder can only be tested by
+ * recording, and a real one would need a human in the room:
+ *
+ *   args: ["--use-fake-device-for-media-capture", "--use-fake-ui-for-media-stream"]
+ */
+export async function launch({ port = 9444, profile = "/tmp/cdp-default", tz = null, args = [] } = {}) {
   const chrome = spawn(CHROME, [
     `--remote-debugging-port=${port}`, "--headless=new", "--no-first-run",
-    `--user-data-dir=${profile}`, "--window-size=1440,900", "about:blank",
+    `--user-data-dir=${profile}`, "--window-size=1440,900", ...args, "about:blank",
   ], { stdio: "ignore", env: tz ? { ...process.env, TZ: tz } : process.env });
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

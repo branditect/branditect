@@ -13,7 +13,7 @@
 import { readdirSync, statSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { findAllLiterals } from "../lib/i18n-scan.ts";
-import { SCOPE, OUT_OF_SCOPE, LIB_COPY } from "../lib/i18n-scope.ts";
+import { SCOPE, OUT_OF_SCOPE, LIB_COPY, SAME_IN_EVERY_LANGUAGE, IGNORE } from "../lib/i18n-scope.ts";
 import { en } from "../lib/i18n/en.ts";
 
 function walk(dir) {
@@ -44,6 +44,10 @@ for (const f of files) {
     if (seen.has(t)) continue;
     seen.add(t);
     if (known.has(t)) { keyed++; continue; }
+    // A name is a name in every language, and a per-file ignore carries its
+    // own reason in lib/i18n-scope.ts.
+    if (SAME_IN_EVERY_LANGUAGE.has(t)) continue;
+    if ((IGNORE[f] ?? []).some((re) => re.test(t))) continue;
     rows.push(t);
     strings++;
   }
@@ -82,7 +86,8 @@ for (const f of LIB_COPY) {
   const rows = [];
   for (const l of findAllLiterals(readFileSync(f, "utf8"))) {
     const t = norm(l.text);
-    if (seen.has(t) || known.has(t)) continue;
+    if (seen.has(t) || known.has(t) || SAME_IN_EVERY_LANGUAGE.has(t)) continue;
+    if ((IGNORE[f] ?? []).some((re) => re.test(t))) continue;
     seen.add(t);
     rows.push(t);
     libStrings++;

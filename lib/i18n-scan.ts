@@ -163,6 +163,18 @@ export function findLiterals(src: string): Literal[] {
 const NON_COPY_CONTEXT =
   /\b(className|class|href|src|id|key|type|name|htmlFor|role|style|variant|icon|rel|target|method|encType|autoComplete|inputMode|accept|as|slot|form|ref|locale|data-[\w-]+)\s*=\s*$/;
 
+/**
+ * The same names as object properties, not JSX attributes.
+ *
+ * `{ key: "images", icon: "IMG", accept: ".mp4" }` in lib/media-categories.ts
+ * and the product-import kinds: the copy in those objects is already keys
+ * (`labelKey`, `descKey`), and what is left is identity. The attribute rule
+ * above could not see them because there is a colon where it expects an
+ * equals sign, so IMG, VID, SND, PHY and SRV read as words on a screen.
+ */
+const NON_COPY_PROPERTY =
+  /\b(icon|key|kind|category|accept|previewType|variant|id|name|slug|type|field|column|event|status)\s*:\s*$/;
+
 const NON_COPY_CALL = /\.(from|select|eq|order|match|includes|startsWith|endsWith|getItem|setItem|removeItem)\($|console\.\w+\($|require\($|import\($|new RegExp\($/;
 
 /** Shapes that are configuration, protocol or data, never interface copy. */
@@ -188,6 +200,38 @@ export const TECHNICAL_SHAPES: [RegExp, string][] = [
   [/^(EUR|USD|GBP|SEK|NOK|DKK)$/, "a currency code"],
   // `padding: "0 auto 34px"` in a style object: lengths and auto, nothing else.
   [/^(-?[\d.]+(px|rem|em|%|vh|vw)?|auto)(\s+(-?[\d.]+(px|rem|em|%|vh|vw)?|auto))+$/, "a CSS length list"],
+
+  // Batch B, 2026-09-21. Each of these was in the gap report as if it were
+  // copy. None of them is a word anybody would translate.
+
+  // `border: "1px solid #EDEBE8"`, `outline: "2px solid transparent"`.
+  [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9A-Fa-f]{3,8}|transparent|currentColor|[a-z]+)$/,
+   "a CSS border shorthand"],
+
+  // `gridTemplateColumns: "64px 1fr auto"`. The fr unit is the giveaway:
+  // it exists nowhere except a grid template.
+  [/^(-?[\d.]+(px|rem|em|%|fr|vh|vw)|auto|min-content|max-content|minmax\([^)]*\))(\s+(-?[\d.]+(px|rem|em|%|fr|vh|vw)|auto|min-content|max-content|minmax\([^)]*\)))+$/,
+   "a CSS grid template"],
+
+  // "120px / 32mm" under a logo specimen: the same two numbers in two units.
+  // It renders on screen, and it reads identically in every language.
+  [/^[\d.]+(px|pt|mm|cm|in|rem)\s*\/\s*[\d.]+(px|pt|mm|cm|in|rem)$/, "a measurement pair"],
+
+  // "MP4, MOV, WEBM, AVI" under an upload box. Format names are not words.
+  [/^[A-Z][A-Z0-9]{1,5}(,\s*[A-Z][A-Z0-9]{1,5})+$/, "a list of file formats"],
+
+  // "AA", "AAA" beside a contrast ratio: WCAG conformance levels, which are
+  // the same letters in every language because the standard says so.
+  [/^AAA?$/, "a WCAG conformance level"],
+
+  // "SIGNED_OUT" compared against a Supabase auth event.
+  [/^[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$/, "a SCREAMING_CASE constant"],
+
+  // `analyses: Record` — the tail of a TypeScript annotation, reaching here
+  // because `Record<string, string>` looks enough like a tag to be read as
+  // one. A filter rather than a scanner fix: the mis-parse is harmless
+  // everywhere else, and a shape with a reason is cheaper than a new parser.
+  [/^\w+:\s*(Record|Array|Map|Set|Partial|Promise|Readonly)$/, "a TypeScript type annotation"],
 ];
 
 /**
@@ -202,7 +246,9 @@ export function isClassList(text: string): boolean {
   // Arbitrary values are part of a class: bg-[#FFF2EE], drop-shadow-[0_5px_10px_rgba(232,73,32,.3)],
   // border-outline-variant/15. The charset has to allow them or half the class
   // lists in this codebase read as copy.
-  if (!tokens.every((w) => /^[A-Za-z0-9:[\]#()/,._%!-]+$/.test(w))) return false;
+  // Heittomerkit ovat osa luokkaa: `after:content-['']` on Tailwindia, ei
+  // tekstiä. Ilman niitä koko lista luettiin kopioksi yhden tokenin takia.
+  if (!tokens.every((w) => /^[A-Za-z0-9:[\]#()/,._%!'"-]+$/.test(w))) return false;
   const TAILWIND = /^(bg|text|px|py|pt|pb|pl|pr|mx|my|mt|mb|ml|mr|rounded|flex|grid|gap|w|h|min|max|border|shadow|drop|font|leading|tracking|opacity|z|top|left|right|bottom|absolute|relative|hover|focus|items|justify|overflow|space|inline|block|hidden|sr)[-:]/;
   // Two conditions, and the second is what stops a sentence being read as a
   // class list. "One check left: upload your brand guideline." passes the
@@ -316,7 +362,7 @@ export function findAllLiterals(src: string): Literal[] {
     if (!looksLikeCopy(text)) continue;
     if (isTechnical(text)) continue;
     const before = stripped.slice(Math.max(0, m.index - 40), m.index);
-    if (NON_COPY_CONTEXT.test(before) || NON_COPY_CALL.test(before)) continue;
+    if ((NON_COPY_CONTEXT.test(before) || NON_COPY_PROPERTY.test(before)) || NON_COPY_CALL.test(before)) continue;
     if (KEY_NAMES.has(text.trim()) && COMPARISON.test(before)) continue;
     const line = stripped.slice(0, m.index).split("\n").length;
     const clean = text.trim().replace(/\s+/g, " ");
@@ -344,7 +390,7 @@ export function findAllLiterals(src: string): Literal[] {
     // A CSS value with a colour interpolated: `1px solid ${bd}`.
     if (/^[\d.]+(px|rem|em)\s+(solid|dashed|dotted|double)\s*$/.test(bare)) continue;
     const before = stripped.slice(Math.max(0, m.index - 40), m.index);
-    if (NON_COPY_CONTEXT.test(before) || NON_COPY_CALL.test(before)) continue;
+    if ((NON_COPY_CONTEXT.test(before) || NON_COPY_PROPERTY.test(before)) || NON_COPY_CALL.test(before)) continue;
     const clean = body
       .replace(/\$\{([^}]*)\}/g, (_w, expr: string) => `{${placeholderName(expr)}}`)
       .replace(/\\u([0-9a-fA-F]{4})/g, (_w, hex: string) => String.fromCharCode(parseInt(hex, 16)))

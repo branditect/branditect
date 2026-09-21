@@ -10,7 +10,7 @@ import {
   LOCALES, DEFAULT_LOCALE, LOCALE_NAME,
 } from "./i18n/index.ts";
 import { findAllLiterals, isTechnical, isClassList, isPathData, isSourceFragment, looksLikeCopy } from "./i18n-scan.ts";
-import { SCOPE, OUT_OF_SCOPE, IGNORE, EXTRACTED, OUTSTANDING } from "./i18n-scope.ts";
+import { SCOPE, OUT_OF_SCOPE, IGNORE, EXTRACTED, OUTSTANDING, SAME_IN_EVERY_LANGUAGE } from "./i18n-scope.ts";
 import { forLocale, sectionTitleFor, allForLocale } from "./onboarding-locale.ts";
 import { languageDirective, outputLanguageFor } from "./output-language.ts";
 import { copyStable, copyPerRequest, andyStable } from "./prompts.ts";
@@ -253,7 +253,11 @@ describe("the extraction, both sides of it", () => {
   const files = SCOPE.flatMap(tsxUnder);
   const literalsIn = (f: string) =>
     findAllLiterals(readFileSync(f, "utf8"))
-      .filter((l) => !(IGNORE[f] ?? []).some((rx) => rx.test(l.text)));
+      .filter((l) => !(IGNORE[f] ?? []).some((rx) => rx.test(l.text)))
+      // Same rule as the gap report: a product name is not a translation.
+      // Two filters that disagree would let a string be done on one side and
+      // outstanding on the other, which is the drift this file exists to stop.
+      .filter((l) => !SAME_IN_EVERY_LANGUAGE.has(l.text.trim()));
 
   it("is looking at the app at all", () => {
     assert.ok(files.length > 60, `only ${files.length} files in scope`);
@@ -416,7 +420,11 @@ describe("source code cannot reach the work list", () => {
     const fresh = new Set<string>();
     for (const f of SCOPE.flatMap(tsxUnder)) {
       const lits = findAllLiterals(readFileSync(f, "utf8"))
-        .filter((l) => !(IGNORE[f] ?? []).some((rx) => rx.test(l.text)));
+        .filter((l) => !(IGNORE[f] ?? []).some((rx) => rx.test(l.text)))
+      // Same rule as the gap report: a product name is not a translation.
+      // Two filters that disagree would let a string be done on one side and
+      // outstanding on the other, which is the drift this file exists to stop.
+      .filter((l) => !SAME_IN_EVERY_LANGUAGE.has(l.text.trim()));
       for (const l of lits) { const t = norm(l.text); if (!known.has(t)) fresh.add(t); }
     }
     const missing = [...fresh].filter((t) => !entries.includes(t.replace(/\|/g, "\\|")));

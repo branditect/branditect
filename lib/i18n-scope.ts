@@ -27,7 +27,23 @@ export const SCOPE = [
  * a key per fragment. Found 2026-09-14 while wiring Home.
  */
 export const LIB_COPY = ["lib/greeting.ts", "lib/readiness.ts", "lib/auth-errors.ts", "lib/numbers.ts",
-  "lib/media-categories.ts", "lib/studio-write.ts"];
+  "lib/media-categories.ts"];
+
+/*
+  lib/studio-write.ts was on that list and is not any more.
+  
+  Its strings are what the model is asked to produce — "an email: a subject
+  line, then the body, then a sign-off", "120 to 180 words" — and the file
+  says so in its own field comments: `deliverable` is "What the model is
+  asked to produce", and the interface reads `labelKey` instead. None of it
+  renders.
+  
+  It belongs to a different mechanism. branditect-ui/spec/finnish.md splits
+  output language from interface language into two columns precisely because
+  they are different questions; prompt text follows `output_language`, not
+  the dictionary. Keeping it here put 21 model instructions on a translator's
+  work list, which is 21 wrong answers waiting to be given.
+*/
 
 /**
  * NOT in scope: app/(site), the marketing site, about 70 strings. English for
@@ -68,7 +84,33 @@ export const SITE_SAME_IN_EVERY_LANGUAGE = new Set([
  * An entry that no longer matches anything is a failure, not a tidy-up: a
  * stale ignore is how a real literal gets waved through later.
  */
-export const IGNORE: Record<string, RegExp[]> = {};
+export const SAME_IN_EVERY_LANGUAGE = new Set([
+  "Branditect",     // the product name, in the logo and the start rail
+  "BRANDITECT",     // the same name, set in caps in the chat rail
+  "Canva",          // a product name, in the links picker
+  "Google Slides",  // a product name, in the links picker
+  "Google",         // the identity providers on the sign-in buttons
+  "Microsoft",
+  "Apple",
+  "DM Sans",        // a typeface name; renaming it would name a different font
+  "Ag",             // the two letters every type specimen shows
+  "SND",            // the placeholder glyph standing in for a sound file
+]);
+
+/**
+ * Per-file exceptions, each with its reason.
+ *
+ * An entry that no longer matches anything is a failure, not a tidy-up: a
+ * stale ignore is how a real literal gets waved through later.
+ */
+export const IGNORE: Record<string, RegExp[]> = {
+  // Labels handed to withTimeout(), which names the call in an AuthTimeout.
+  // lib/auth-timeout.ts maps every thrown error to AUTH_COPY before it
+  // reaches a screen — "Raw driver strings never reach the user" — so these
+  // two words are diagnostics and are never read by anybody.
+  "app/login/page.tsx": [/^Routing$/],
+  "app/signup/page.tsx": [/^Brand setup$/],
+};
 
 /**
  * The extraction, as a manifest of what is done and what is not.
@@ -90,6 +132,16 @@ export const IGNORE: Record<string, RegExp[]> = {};
  * below is the size of the job the design side is being asked to translate.
  */
 export const EXTRACTED = [
+  "app/(app)/brand/visual-identity/page.tsx",
+  "app/login/page.tsx",
+  "app/signup/page.tsx",
+  "components/auth/sso-buttons.tsx",
+  "components/chat-rail.tsx",
+  "components/file-library.tsx",
+  "components/logo.tsx",
+  "components/onboarding-strip.tsx",
+  "components/start/rail.tsx",
+  "components/visual-identity/uploads.tsx",
   "components/sidebar.tsx",
   "components/account-menu.tsx",
   "components/language-switch.tsx",
@@ -151,21 +203,11 @@ export const EXTRACTED = [
 export const OUTSTANDING: [string, number][] = [
   // Six goal values, stored in English and compared as stored.
   ["app/(app)/brand/channels/page.tsx", 6],
-  ["app/(app)/brand/visual-identity/page.tsx", 3],
-  ["app/(app)/knowledge/links/page.tsx", 9],
-  ["app/(app)/knowledge/products/import/page.tsx", 8],
+  ["app/(app)/knowledge/links/page.tsx", 1],
+  ["app/(app)/knowledge/products/import/page.tsx", 4],
   ["app/(app)/numbers/cost/page.tsx", 8],
   ["app/(app)/studio/brand-bases/page.tsx", 4],
-  ["app/(app)/studio/brand-guideline/BrandGuidelineClient.tsx", 19],
-  ["app/login/page.tsx", 1],
+  ["app/(app)/studio/brand-guideline/BrandGuidelineClient.tsx", 13],
   ["app/onboarding/page.tsx", 4],
-  ["app/signup/page.tsx", 1],
-  ["components/auth/sso-buttons.tsx", 3],
-  ["components/chat-rail.tsx", 1],
-  ["components/file-library.tsx", 1],
-  ["components/logo.tsx", 1],
-  ["components/onboarding-strip.tsx", 1],
-  ["components/products/product-drawer.tsx", 6],
-  ["components/start/rail.tsx", 1],
-  ["components/visual-identity/uploads.tsx", 1],
+  ["components/products/product-drawer.tsx", 5],
 ];

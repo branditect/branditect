@@ -22,7 +22,18 @@ import { archiveAndInsert, supabaseStrategyStore } from "@/lib/strategy-versions
 import { forLocale } from "@/lib/onboarding-locale";
 import type { Track } from "@/lib/onboarding-questions";
 
-export const maxDuration = 60;
+/*
+  300, not 60.
+
+  A 60s ceiling produced "your answers are saved, but the strategy could not
+  be built: 504" — the platform cutting the function off mid-generation, which
+  reaches the person as a bare status code. Measured with
+  scripts/strategy-timing-probe.mjs on 20 real answers: 33s to a complete
+  reply, 3.4k output tokens. That fits inside 60s on a good run and does not
+  on a slow one, which is exactly the shape of a failure that comes back
+  intermittently. The heavy extraction routes already sit at 300.
+*/
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

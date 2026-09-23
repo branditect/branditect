@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
+import { uploadBlocker } from "@/lib/upload-preflight";
 import { askedFields, DOC_TYPES } from "@/lib/document-types";
 import {
   makeBatch, attachDocument, saveUpdates, undescribedFirst, type Batch,
@@ -298,6 +299,14 @@ export default function KnowledgeVaultPage() {
   // Upload files
   async function uploadFiles(files: File[], tempIds?: string[]) {
     setError(null);
+
+    /* A tab opened before the account had a brand still holds brandId
+       "default". Nobody owns "default", so storage takes the bytes and the
+       row insert comes back as 'new row violates row-level security policy
+       for table "brand_documents"' — the database naming its rule at someone
+       who only wanted to add a file. Same guard as the image library. */
+    const blocked = await uploadBlocker(brandId);
+    if (blocked) { setError(t(blocked.key)); return; }
     for (let index = 0; index < files.length; index++) {
       const file = files[index];
       if (file.size > MAX_BYTES) {
@@ -399,6 +408,8 @@ export default function KnowledgeVaultPage() {
   // Save text entry
   async function saveTextEntry() {
     setTextError(null);
+    const blockedText = await uploadBlocker(brandId);
+    if (blockedText) { setTextError(t(blockedText.key)); return; }
     if (!textTitle.trim()) { setTextError(t("docs.needTitle")); return; }
     if (!textContent.trim()) { setTextError(t("docs.needContent")); return; }
     setTextSaving(true);

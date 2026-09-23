@@ -6,6 +6,7 @@ import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
 import { storagePathFromUrl } from "@/lib/storage-paths";
 import { signedUrls } from "@/lib/signed-url";
 import { summariseUpload, anyLanded, type UploadFailure } from "@/lib/upload-report";
+import { explainStorageDetail, uploadBlocker } from "@/lib/upload-preflight";
 import { useT } from "@/lib/i18n/use-t.tsx";
 import type { StringKey } from "@/lib/i18n/index.ts";
 
@@ -94,6 +95,11 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
     setUploadError(null);
     if (all.length === 0) return;
 
+    // Same guard as the image library: a dead session or an unresolved brand
+    // otherwise fails every file with storage's "row-level security" sentence.
+    const blocked = await uploadBlocker(BRAND_ID);
+    if (blocked) { setUploadError(t(blocked.key)); return; }
+
     setUploading(true);
     for (const file of valid) {
       const ext = file.name.split(".").pop()?.toLowerCase();
@@ -104,7 +110,7 @@ export default function FileLibrary({ category, accept, acceptLabel, maxSize, ic
         .from("brand-images").upload(path, file, { upsert: true });
       if (storageError) {
         // Was a bare `continue`, which skipped the file without a word.
-        failures.push({ fileName: file.name, kind: "storage", detail: storageError.message });
+        failures.push({ fileName: file.name, kind: "storage", detail: explainStorageDetail(storageError.message, t) });
         continue;
       }
 

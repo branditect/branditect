@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from
 import { supabase } from "@/lib/supabase";
 import { IMAGE_BUCKET } from "@/lib/brand-image-upload";
 import { summariseUpload, type UploadFailure } from "@/lib/upload-report";
+import { explainStorageDetail, uploadBlocker } from "@/lib/upload-preflight";
 import { storagePathFromUrl } from "@/lib/storage-paths";
 import { signedUrls } from "@/lib/signed-url";
 import { imageMatches } from "@/lib/product-attachments";
@@ -212,6 +213,14 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
 
   const confirmUpload = useCallback(async () => {
     if (pendingUploads.length === 0) return;
+
+    /* Ask before sending, not after. A dead session or an unresolved brand
+       makes every file fail with storage's own "row-level security" sentence,
+       which names the rule and not the fix. Nothing is uploaded and nothing
+       is dropped from the list. */
+    const blocked = await uploadBlocker(BRAND_ID);
+    if (blocked) { setUploadError(t(blocked.key)); return; }
+
     setUploading(true);
     setUploadError(null);
     const failures: UploadFailure[] = [];
@@ -231,7 +240,13 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
         // Was a bare `continue`: the file vanished from the pending list and
         // nothing on screen ever said why. The same fix file-library already
         // carries.
-        failures.push({ fileName: item.file.name, kind: "storage", detail: storageError.message });
+        failures.push({
+          fileName: item.file.name,
+          kind: "storage",
+          // Preflight already ruled out "signed out" and "no brand", so a
+          // rights refusal here means the folder is another account's.
+          detail: explainStorageDetail(storageError.message, t),
+        });
         continue;
       }
 
@@ -273,7 +288,7 @@ export default function ImageLibrary({ brandId = DEFAULT_BRAND_ID }: { brandId?:
     fetchImages();
     // BRAND_ID again: without it an upload writes brand_id "default", which
     // under RLS nobody can read back, so the file uploads and then vanishes.
-  }, [pendingUploads, fetchImages, BRAND_ID]);
+  }, [pendingUploads, fetchImages, BRAND_ID, t]);
 
   /* ---- Actions ---- */
 

@@ -105,7 +105,9 @@ describe("picking images is not saving them, and a failed upload says so", () =>
     // so a rejected file left the pending list looking exactly like a saved
     // one. Reported for months as "images are not saving at all".
     assert.ok(!/if \(storageError\) continue;/.test(body), "the bare continue is back");
-    assert.match(body, /failures\.push\(\{ fileName: item\.file\.name, kind: "storage"/);
+    // The push is multi-line now that the detail is explained; what matters
+    // is that a storage failure is still recorded rather than skipped.
+    assert.match(body, /failures\.push\(\{[\s\S]{0,120}kind: "storage"/);
     assert.match(body, /const \{ error: insertError \} = await supabase\.from\("brand_images"\)\.insert/);
     assert.match(body, /failures\.push\(\{ fileName: item\.file\.name, kind: "row"/);
     assert.match(body, /summariseUpload\(failures, attempted, t\)/);

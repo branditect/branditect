@@ -41,9 +41,9 @@ const brandId = `zz-strat-${stamp}`;
    there is to read, so a three-word answer per question would pass here and
    still time out for a real founder. */
 const ANSWER =
-  "We keep the knowledge that normally lives in one person's head: manuals, wiring, " +
-  "renovation photos and receipts for a cabin or a boat, so the next owner is not " +
-  "left guessing. Our customers are ordinary families, not professionals.";
+  "Omistajatieto on paikka, johon omaisuuden tärkeä tieto kuuluu: mökin ja veneen " +
+  "ohjeet, kytkennät, remonttikuvat ja kuitit, jotta ne eivät jää vain yhden " +
+  "ihmisen muistiin. Asiakkaamme ovat tavallisia perheitä, eivät ammattilaisia.";
 const answers = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [String(i + 1), `${ANSWER} (${i + 1})`]));
 
 try {
@@ -104,6 +104,15 @@ try {
 
   const filled = row && (row.generated_strategy || row.section_positioning);
   filled ? ok("the strategy has content, not just a row") : bad("the row is empty", JSON.stringify(row ?? {}).slice(0, 200));
+
+  /* The answers above are Finnish, so the strategy has to be. Reported
+     2026-09-23: everything answered in Finnish, strategy came back English. */
+  const written = JSON.stringify(row ?? {});
+  const fiMarkers = (written.match(/[äö]|\b(ja|ei|että|asiakkaat|omistaja|tieto)\b/gi) ?? []).length;
+  const enMarkers = (written.match(/\b(the|and|customers|owner|brand is)\b/gi) ?? []).length;
+  fiMarkers > enMarkers
+    ? ok("the strategy is in the language the answers were given in", `fi ${fiMarkers} / en ${enMarkers}`)
+    : bad("THE STRATEGY CAME BACK IN THE WRONG LANGUAGE", `fi ${fiMarkers} / en ${enMarkers} — ${written.slice(0, 200)}`);
 } catch (e) {
   bad("check crashed", e instanceof Error ? e.message : String(e));
 } finally {

@@ -20,6 +20,7 @@ import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { STRATEGY_STABLE } from "@/lib/prompts";
 import { archiveAndInsert, supabaseStrategyStore } from "@/lib/strategy-versions";
 import { forLocale } from "@/lib/onboarding-locale";
+import { answerLanguageDirective, guessLanguage } from "@/lib/answer-language";
 import type { Track } from "@/lib/onboarding-questions";
 
 /*
@@ -71,18 +72,31 @@ export async function POST(req: NextRequest) {
   const track = ((onboarding?.profile as { track?: Track } | null)?.track ?? "physical") as Track;
   const voice = (onboarding?.voice as { primary?: string; secondary?: string } | null) ?? null;
 
+  /*
+    The strategy comes back in the language the founder wrote in.
+
+    Reported: every answer given in Finnish, strategy produced in English.
+    `output_language` is not the column for this — that one decides what her
+    customers read (lib/output-language.ts) and defaults to 'en', so most
+    brands never chose it. A strategy is built out of the founder's own
+    sentences, so those sentences decide.
+  */
+  const { language } = guessLanguage(answered.map(([, a]) => a));
+
   // The model reads the question with its answer: "→ 12 words" is not an
-  // answer to anything on its own.
+  // answer to anything on its own. The question comes in the same language as
+  // the answer, so a Finnish answer is not filed under an English question.
   let userText = "QUESTIONNAIRE ANSWERS:\n\n";
   for (const [key, answer] of answered) {
     const n = Number(key);
-    const q = Number.isFinite(n) ? forLocale(n, track, "en") : null;
+    const q = Number.isFinite(n) ? forLocale(n, track, language) : null;
     userText += `[Q${key}] ${q?.q ?? key}\n→ ${answer}\n\n`;
   }
   if (voice?.primary) {
     userText += `VOICE ARCHETYPE: ${voice.primary}${voice.secondary ? ` with ${voice.secondary}` : ""}\n\n`;
   }
   userText += "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
+  userText += answerLanguageDirective(language);
 
   let text = "";
   try {

@@ -17,6 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import { launch } from "./cdp.mjs";
 
 const BASE = process.env.BASE ?? "https://www.branditect.io";
 
@@ -33,6 +34,7 @@ const bad = (m, d = "") => { fails++; console.log(`FAIL  ${m}${d ? " — " + d :
 
 const stamp = Date.now().toString(36);
 let userId = null;
+let page = null;
 const brandId = `zz-strat-${stamp}`;
 
 /* Twenty answers of realistic length: the build time depends on how much
@@ -61,22 +63,39 @@ try {
   const { data: session, error: se } = await c.auth.signInWithPassword({ email, password });
   if (se) throw se;
 
-  const t0 = Date.now();
-  const res = await fetch(`${BASE}/api/strategy-generate`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${session.session.access_token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  const seconds = ((Date.now() - t0) / 1000).toFixed(1);
-  const body = await res.text();
+  /* The call is made from inside a real page, not with node's fetch: the
+     project has Vercel's Security Checkpoint switched on, which answers a
+     plain script with a 403 challenge page. A browser clears the challenge
+     once and every later request from that tab carries the cookie — which is
+     also what the person's own browser does, so this is the honest path. */
+  page = await launch({ port: 9663, profile: `/tmp/cdp-bt-strat-${stamp}` });
+  await page.setViewport(1280, 900);
+  await page.go(`${BASE}/login`, 9000);
+  // The checkpoint serves its own page first and reloads into the app; waiting
+  // for the real form is what proves the challenge is behind us.
+  await page.waitForHydration("form", 30000);
 
-  res.status === 200
+  const t0 = Date.now();
+  const result = await page.eval(`(async () => {
+    const r = await fetch(${JSON.stringify(`${BASE}/api/strategy-generate`)}, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + ${JSON.stringify(session.session.access_token)},
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    return { status: r.status, body: (await r.text()).slice(0, 300) };
+  })()`);
+  const seconds = ((Date.now() - t0) / 1000).toFixed(1);
+
+  result.status === 200
     ? ok("the endpoint builds a strategy", `${seconds}s`)
-    : bad(`the endpoint answered ${res.status}`, `${seconds}s — ${body.slice(0, 200)}`);
+    : bad(`the endpoint answered ${result.status}`, `${seconds}s — ${result.body}`);
 
   // 504 is the one to name: it is what the person saw, and it comes back as
   // HTML from the platform rather than as the route's own JSON.
-  if (res.status === 504) bad("still hitting the platform timeout", "maxDuration is not taking effect");
+  if (result.status === 504) bad("still hitting the platform timeout", "maxDuration is not taking effect");
 
   const { data: rows } = await svc
     .from("brand_strategies").select("generated_strategy, section_positioning, status").eq("brand_id", brandId);
@@ -88,6 +107,7 @@ try {
 } catch (e) {
   bad("check crashed", e instanceof Error ? e.message : String(e));
 } finally {
+  page?.close();
   await svc.from("brand_strategies").delete().eq("brand_id", brandId);
   await svc.from("onboarding").delete().eq("brand_id", brandId);
   await svc.from("brands").delete().eq("brand_id", brandId);

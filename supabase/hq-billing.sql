@@ -199,7 +199,7 @@ grant usage, select on sequence hq_audit_id_seq to service_role;
 create or replace function budget_tier_caps(p_tier text)
 returns table (credits_cap int, cost_cap_cents int, period text)
 language sql immutable as $fn$
-  select * from (values
+  select t.credits_cap, t.cost_cap_cents, t.period from (values
     ('free',        100,   220, 'once'),
     ('pro',         350,  1100, 'month'),
     ('pro_plus',    600,  1800, 'month'),
@@ -268,17 +268,8 @@ begin
 
   perform budget_ensure(p_brand);
 
-  -- Platform first. Past the hard stop every paid route is refused (criterion 8).
-  insert into platform_budget (day) values (current_date) on conflict (day) do nothing;
-  update platform_budget
-     set spend_cents = spend_cents + p_estimate_cents
-   where day = current_date
-     and spend_cents + p_estimate_cents <= hard_stop_cents
-  returning spend_cents - p_estimate_cents, soft_alert_cents into v_prev_spend, v_soft;
-  if not found then
-    return jsonb_build_object('ok', false, 'reason', 'platform');
-  end if;
-
+  -- The account first, so a refusal names the account's own limit ("this
+  -- document needs about N credits") rather than blaming the platform.
   update brand_budget
      set cost_used_cents = cost_used_cents + p_estimate_cents,
          credits_used    = credits_used + p_credits,
@@ -289,8 +280,6 @@ begin
   returning * into v_budget;
 
   if not found then
-    -- Give the platform its money back; same transaction, so nobody saw it.
-    update platform_budget set spend_cents = spend_cents - p_estimate_cents where day = current_date;
     select * into v_budget from brand_budget where brand_id = p_brand;
     return jsonb_build_object(
       'ok', false,
@@ -298,6 +287,24 @@ begin
       'remaining_cents', v_budget.cost_cap_cents - v_budget.cost_used_cents,
       'remaining_credits', v_budget.credits_cap - v_budget.credits_used
     );
+  end if;
+
+  -- Then the platform. Past the hard stop every paid route is refused
+  -- (criterion 8), and the account's debit above is given back in the same
+  -- transaction, so nobody ever saw it.
+  insert into platform_budget (day) values (current_date) on conflict (day) do nothing;
+  update platform_budget
+     set spend_cents = spend_cents + p_estimate_cents
+   where day = current_date
+     and spend_cents + p_estimate_cents <= hard_stop_cents
+  returning spend_cents - p_estimate_cents, soft_alert_cents into v_prev_spend, v_soft;
+  if not found then
+    update brand_budget
+       set cost_used_cents = cost_used_cents - p_estimate_cents,
+           credits_used    = credits_used - p_credits,
+           updated_at      = now()
+     where brand_id = p_brand;
+    return jsonb_build_object('ok', false, 'reason', 'platform');
   end if;
 
   insert into budget_reservations (brand_id, user_id, kind, route, estimate_cents, credits)

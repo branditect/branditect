@@ -2,7 +2,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseExtractedColors, colorMediaType, storagePathFromUrl } from "./brand-colors.ts";
+import { parseExtractedColors, colorMediaType, storagePathFromUrl, hexCodesInText, colorTextPrompt, COLOR_TEXT_MAX_CHARS, MIN_HEX_FOR_TEXT_PATH } from "./brand-colors.ts";
 
 describe("reading a palette out of what a model answered", () => {
   it("takes the array out of prose around it", () => {
@@ -98,5 +98,43 @@ describe("the columns these writes name", () => {
     for (const column of ["guideline_storage_path", "assets_updated_at", "guideline_name"]) {
       assert.ok(!new RegExp(`${column}:`).test(src), `it writes ${column}, which the table does not have`);
     }
+  });
+});
+
+describe("a guideline that prints its palette is read as text", () => {
+  it("counts distinct codes in every printed form", () => {
+    assert.equal(hexCodesInText("HEX: #15181CHEX: #29323ACarbon Black"), 2);
+    assert.equal(hexCodesInText("Primary #E8562A, again #e8562a"), 1);
+    assert.equal(hexCodesInText("HEX 15181C and hex: 29323a"), 2);
+    assert.equal(hexCodesInText("#FFF on #000"), 2);
+  });
+  it("does not count words, ids or colour-less text", () => {
+    assert.equal(hexCodesInText("RGB: 25, 25, 24 CMYK: 0, 0, 4, 90"), 0);
+    assert.equal(hexCodesInText("Order 1234567 and heading #1"), 0);
+    assert.equal(hexCodesInText("decade facade"), 0);
+  });
+  it("needs two codes to call it a palette", () => {
+    assert.equal(MIN_HEX_FOR_TEXT_PATH, 2);
+  });
+  it("the text prompt asks the same question over the text, capped", () => {
+    const p = colorTextPrompt("x".repeat(COLOR_TEXT_MAX_CHARS + 500));
+    assert.match(p, /extracted from a brand guideline PDF/);
+    assert.match(p, /Return ONLY a JSON array/);
+    assert.ok(p.length < COLOR_TEXT_MAX_CHARS + 1500);
+  });
+});
+
+describe("visual/guideline spends once per file", () => {
+  const src = readFileSync("app/api/visual/guideline/route.ts", "utf8");
+  it("names the file by its content, and skips colours for the same file", () => {
+    assert.match(src, /const path = `\$\{brandId\}\/brand-guideline\/\$\{sha\}-/);
+    assert.match(src, /if \(sameFile\) \{/);
+    assert.ok(src.indexOf("if (sameFile)") < src.indexOf("await meter("));
+  });
+  it("tries the text before sending the file", () => {
+    assert.ok(src.indexOf("pdfPages(") < src.indexOf("await meter("));
+  });
+  it("removes the guideline it replaces", () => {
+    assert.match(src, /previousPath && !sameFile/);
   });
 });

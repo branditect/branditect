@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { COLOR_PROMPT, parseExtractedColors, type ColorMediaType, type ExtractedColor } from "./brand-colors.ts";
+import { COLOR_PROMPT, colorTextPrompt, parseExtractedColors, type ColorMediaType, type ExtractedColor } from "./brand-colors.ts";
 import type { Attempt } from "./metering.ts";
 import { anthropicCostCents, estimateCents, pdfPageCount } from "./usage-cost.ts";
 
@@ -56,6 +56,33 @@ export async function extractColors(
     messages: [{ role: "user", content: [source, { type: "text", text: COLOR_PROMPT }] }],
   });
 
+  const block = message.content.find((b) => b.type === "text");
+  return {
+    value: parseExtractedColors(block && "text" in block ? block.text : "[]", already),
+    model: MODEL,
+    costCents: anthropicCostCents(MODEL, message.usage),
+    inputTokens: message.usage.input_tokens,
+    outputTokens: message.usage.output_tokens,
+  };
+}
+
+/** Upper-bound cost of one extractColorsFromText() call. */
+export function colorTextEstimateCents(text: string): number {
+  return estimateCents({ model: MODEL, inputChars: colorTextPrompt(text).length, maxOutputTokens: MAX_TOKENS });
+}
+
+/** The same question over a guideline's extracted text instead of its pages.
+ *  See HEX_IN_TEXT in brand-colors.ts for when a caller should use it. */
+export async function extractColorsFromText(
+  text: string,
+  already: string[] = [],
+): Promise<Attempt<ExtractedColor[]>> {
+  const message = await anthropic.messages.create({
+    model: MODEL,
+    thinking: { type: "disabled" },
+    max_tokens: MAX_TOKENS,
+    messages: [{ role: "user", content: colorTextPrompt(text) }],
+  });
   const block = message.content.find((b) => b.type === "text");
   return {
     value: parseExtractedColors(block && "text" in block ? block.text : "[]", already),

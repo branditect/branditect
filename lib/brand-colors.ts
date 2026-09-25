@@ -25,6 +25,40 @@ Return ONLY a JSON array, no other text. Example:
 
 If you cannot find any colors, return an empty array: []`;
 
+/**
+ * A guideline's own text, when it prints its palette.
+ *
+ * Guidelines print the hex beside each swatch. When the PDF's text layer
+ * carries those codes, the model reads a few thousand characters of text
+ * instead of every page as an image — a 60-page guideline is ~100k tokens as
+ * a document and ~4k as text. No codes in the text means the colours are only
+ * drawn, and the caller sends the file as before.
+ */
+// No \b at the end: PDF text runs labels together, and the Sorbify guideline
+// reads "HEX: #15181CHEX: #29323ACarbon Black" — the C of Carbon is a hex
+// digit. Six digits are taken as they come; only the short form must stand
+// alone. It only picks which of the two paths runs; the model reads the codes.
+export const HEX_IN_TEXT = /(?:#|\bhex\s*:?\s*#?)([0-9a-f]{6}|[0-9a-f]{3}(?![0-9a-f]))/gi;
+
+/** Distinct codes printed in the text: "#15181C", "HEX: #15181C", "HEX 15181C". */
+export function hexCodesInText(text: string): number {
+  return new Set(Array.from(text.matchAll(HEX_IN_TEXT), (m) => m[1].toLowerCase())).size;
+}
+
+/** Two codes make a palette; one is as likely a stray link colour. */
+export const MIN_HEX_FOR_TEXT_PATH = 2;
+
+/** Enough text to hold any palette page; a guideline's text is rarely longer. */
+export const COLOR_TEXT_MAX_CHARS = 60000;
+
+export function colorTextPrompt(text: string): string {
+  return `The text below is extracted from a brand guideline PDF. ${COLOR_PROMPT.replace("Analyze this document/image and", "From it,")}
+
+<guideline>
+${text.slice(0, COLOR_TEXT_MAX_CHARS)}
+</guideline>`;
+}
+
 export type ColorMediaType =
   | "application/pdf" | "image/png" | "image/jpeg" | "image/gif" | "image/webp";
 

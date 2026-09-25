@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
-import { colorMediaType, storagePathFromUrl } from "@/lib/brand-colors";
-import { extractColors, colorEstimateCents } from "@/lib/brand-colors-server";
+import { createHash } from "node:crypto";
+import { colorMediaType, storagePathFromUrl, hexCodesInText, MIN_HEX_FOR_TEXT_PATH } from "@/lib/brand-colors";
+import { extractColors, colorEstimateCents, extractColorsFromText, colorTextEstimateCents } from "@/lib/brand-colors-server";
+import { pdfPages } from "@/lib/local-extract";
 import { meter, requestLocale } from "@/lib/metering";
 
 /**
@@ -37,8 +39,17 @@ export async function POST(req: NextRequest) {
   // ends up in a URL.
   const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
   const stem = file.name.replace(/\.[^.]*$/, "").replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "guideline";
-  const path = `${brandId}/brand-guideline/${Date.now()}-${stem}.${ext}`;
   const bytes = Buffer.from(await file.arrayBuffer());
+  // The content hash leads the name, so the same file uploaded again lands on
+  // the same path and is recognised below: its colours were read the first
+  // time, and reading them again was a full-price call for nothing.
+  const sha = createHash("sha256").update(bytes).digest("hex").slice(0, 16);
+  const path = `${brandId}/brand-guideline/${sha}-${stem}.${ext}`;
+
+  const { data: before } = await supabase
+    .from("brand_visual").select("guideline_url").eq("brand_id", brandId).maybeSingle();
+  const previousPath = storagePathFromUrl(before?.guideline_url ?? null);
+  const sameFile = previousPath === path;
 
   const { error: uploadError } = await supabase.storage
     .from("brand-assets")
@@ -73,11 +84,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: saveError.message }, { status: 500 });
   }
 
-  // Colours, unless the caller said not to. A failure here is not a failed
-  // upload — the guideline is saved either way.
+  // The guideline it replaces. Best effort, after the row points at the new
+  // one: each re-upload used to leave the old file behind for good.
+  if (previousPath && !sameFile) {
+    const { error: rmError } = await supabase.storage.from("brand-assets").remove([previousPath]);
+    if (rmError) console.error("previous guideline not removed:", rmError.message);
+  }
+
+  // Colours, unless the caller said not to, or this exact file was read
+  // already. A failure here is not a failed upload — the guideline is saved
+  // either way.
   let added = 0;
   let colorError: string | null = null;
-  if (formData.get("extractColors") !== "false") {
+  if (sameFile) {
+    console.log(`[visual/guideline] ${brandId}: same file as the current guideline, colours not re-read`);
+  } else if (formData.get("extractColors") !== "false") {
     const mediaType = colorMediaType(file.name, file.type);
     if (!mediaType) {
       colorError = "unsupported";
@@ -89,16 +110,29 @@ export async function POST(req: NextRequest) {
         // Metered, and indexing: a refusal lands in colorError with the
         // "this document needs about N credits" wording, and the guideline
         // itself stays saved.
+        // A PDF whose text prints its palette is read as text: a few thousand
+        // tokens instead of every page as an image. No codes in the text —
+        // a scan, or swatches without labels — and the file goes as before.
+        let text: string | null = null;
+        if (mediaType === "application/pdf") {
+          try {
+            const t = (await pdfPages(new Uint8Array(bytes))).join("\n\n");
+            if (hexCodesInText(t) >= MIN_HEX_FOR_TEXT_PATH) text = t;
+          } catch (e) {
+            console.error("[visual/guideline] text read failed, sending the file:", e instanceof Error ? e.message : e);
+          }
+        }
+        console.log(`[visual/guideline] ${brandId}: colours from ${text ? `text (${text.length} chars)` : "the file"}`);
         const found = await meter(
           {
             route: "visual/guideline",
             brandId,
             userId: auth.userId,
-            estimateCents: colorEstimateCents(bytes, mediaType),
+            estimateCents: text ? colorTextEstimateCents(text) : colorEstimateCents(bytes, mediaType),
             locale: requestLocale(req),
             refusalKind: "document",
           },
-          () => extractColors(bytes, mediaType, already),
+          () => (text ? extractColorsFromText(text, already) : extractColors(bytes, mediaType, already)),
         );
         if (found.length) {
           // hex and name only. supabase/*.sql also declares role, grouping and

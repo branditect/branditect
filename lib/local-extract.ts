@@ -39,14 +39,21 @@ export function pdfTextIsEnough(pages: string[]): boolean {
 }
 
 export async function extractPdfText(bytes: Uint8Array): Promise<LocalText | null> {
+  const pages = await pdfPages(bytes);
+  if (!pdfTextIsEnough(pages)) return null;
+  return { text: pages.filter(Boolean).join("\n\n"), pages: pages.length, via: "pdf-text" };
+}
+
+/** Every page's text layer, however little there is. Callers that only need
+ *  part of the text (a palette's hex codes) use this rather than the
+ *  whole-document test above. */
+export async function pdfPages(bytes: Uint8Array): Promise<string[]> {
   const { getDocumentProxy, extractText } = await import("unpdf");
   // pdf.js detaches the buffer it is handed; the caller still needs its copy.
   const pdf = await getDocumentProxy(bytes.slice());
   try {
-    const { totalPages, text } = await extractText(pdf, { mergePages: false });
-    const pages = text.map(tidy);
-    if (!pdfTextIsEnough(pages)) return null;
-    return { text: pages.filter(Boolean).join("\n\n"), pages: totalPages, via: "pdf-text" };
+    const { text } = await extractText(pdf, { mergePages: false });
+    return text.map(tidy);
   } finally {
     // unpdf's serverless pdf.js build may not expose destroy(); nothing leaks without it.
     const d = (pdf as { destroy?: () => Promise<void> }).destroy;

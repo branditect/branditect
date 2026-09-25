@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Download file from Supabase Storage
+    const t0 = Date.now();
     const { data: fileBlob, error: downloadError } = await supabase.storage
       .from("brand-documents")
       .download(storagePath);
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = await fileBlob.arrayBuffer();
+    const downloadMs = Date.now() - t0;
     const base64 = Buffer.from(buffer).toString("base64");
     const lower = storagePath.toLowerCase();
 
@@ -148,6 +150,7 @@ export async function POST(req: NextRequest) {
     */
     const office = officeKind(lower);
     let local: LocalText | null = null;
+    const t1 = Date.now();
     try {
       if (isPdf) local = await extractPdfText(new Uint8Array(buffer));
       else if (office) local = extractOffice(new Uint8Array(buffer), office);
@@ -155,7 +158,7 @@ export async function POST(req: NextRequest) {
       console.error(`[vault/extract] ${documentId}: local read failed, falling back:`, err instanceof Error ? err.message : err);
     }
     if (local) {
-      console.log(`[vault/extract] ${documentId}: read locally (${local.via}, ${local.pages} pages, ${local.text.length} chars), no provider call`);
+      console.log(`[vault/extract] ${documentId}: read locally (${local.via}, ${local.pages} pages, ${local.text.length} chars; download ${downloadMs} ms, read ${Date.now() - t1} ms), no provider call`);
       extractedText = local.text;
       pagesCount = local.pages;
       indexed = true;

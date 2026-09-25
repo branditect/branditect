@@ -141,7 +141,9 @@ describe("the spend ceiling covers every provider call", () => {
   const spenders = files.filter((f) => SPENDS.test(code(f))).map(routeKey);
 
   it("finds the spending routes, so this cannot pass vacuously", () => {
-    assert.ok(spenders.length >= 20, `only ${spenders.length} spending routes found: ${spenders.join(", ")}`);
+    // 18 since 2026-09-25: extract-colors, brand/analyse-images and
+    // brand/generate-prompt were deleted — no screen had ever called them.
+    assert.ok(spenders.length >= 18, `only ${spenders.length} spending routes found: ${spenders.join(", ")}`);
   });
 
   it("ROUTE_PLAN names no route that does not spend", () => {

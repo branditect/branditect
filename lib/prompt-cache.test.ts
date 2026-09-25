@@ -227,8 +227,9 @@ describe("no route sends a system prompt as a plain string", () => {
     // from the questionnaire.
     // 8 since 2026-09-16: strategy-extract reads a strategy the founder brought.
     // 10 since 2026-09-17: social-strategy, which writes the week to post.
-    assert.equal(senders.length, 10,
-      `expected 10 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
+    // 9 since 2026-09-25: brand/generate-prompt deleted, never called.
+    assert.equal(senders.length, 9,
+      `expected 9 routes sending a system prompt, found ${senders.length}: ${senders.map(name).join(", ")}`);
   });
 
   for (const file of senders) {

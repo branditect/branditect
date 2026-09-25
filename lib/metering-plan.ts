@@ -40,15 +40,12 @@ export const ROUTE_PLAN = {
   "brand-assets/upload": { kind: "index", credits: 0 },
   "catalog/parse": { kind: "index", credits: 0 },
   "strategy-extract": { kind: "index", credits: 0 },
-  "extract-colors": { kind: "index", credits: 0 },
   "visual/guideline": { kind: "index", credits: 0 },
 
   // Define — setup and analysis. Free to the customer.
   "strategy-generate": { kind: "analyse", credits: 0 },
   "brand-strategy": { kind: "analyse", credits: 0 },
   "tone/generate": { kind: "analyse", credits: 0 },
-  "brand/analyse-images": { kind: "analyse", credits: 0 },
-  "brand/generate-prompt": { kind: "analyse", credits: 0 },
 } as const satisfies Record<string, RoutePlan>;
 
 export type MeteredRoute = keyof typeof ROUTE_PLAN;

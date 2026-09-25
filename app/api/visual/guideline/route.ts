@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
 import { colorMediaType, storagePathFromUrl } from "@/lib/brand-colors";
-import { extractColors } from "@/lib/brand-colors-server";
+import { extractColors, colorEstimateCents } from "@/lib/brand-colors-server";
+import { meter, requestLocale } from "@/lib/metering";
 
 /**
  * The brand guideline: uploading one, and taking it away again.
@@ -85,7 +86,20 @@ export async function POST(req: NextRequest) {
         const { data: current } = await supabase
           .from("brand_book_colors").select("hex").eq("brand_id", brandId);
         const already = (current ?? []).map((c) => String(c.hex ?? ""));
-        const found = await extractColors(bytes, mediaType, already);
+        // Metered, and indexing: a refusal lands in colorError with the
+        // "this document needs about N credits" wording, and the guideline
+        // itself stays saved.
+        const found = await meter(
+          {
+            route: "visual/guideline",
+            brandId,
+            userId: auth.userId,
+            estimateCents: colorEstimateCents(bytes, mediaType),
+            locale: requestLocale(req),
+            refusalKind: "document",
+          },
+          () => extractColors(bytes, mediaType, already),
+        );
         if (found.length) {
           // hex and name only. supabase/*.sql also declares role, grouping and
           // css_value on this table and the live database has none of them —

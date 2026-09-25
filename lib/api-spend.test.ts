@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { ROUTE_PLAN } from "./metering-plan.ts";
 
 /**
  * No route calls a paid model without a signed-in caller.
@@ -32,11 +33,36 @@ function routeFiles(dir = API): string[] {
   });
 }
 
-/** Comments stripped, so a route name inside prose cannot satisfy a check. */
+/** Comments stripped, so a route name inside prose cannot satisfy a check.
+ *  A `//` straight after a colon is a URL, not a comment: stripping it hid
+ *  `fetch("https://api.anthropic.com/...")` from every check in this file. */
 const code = (p: string) =>
-  readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-const SPENDS = /anthropic\.messages\.create|openai|generativelanguage|\.messages\.stream/;
+/*
+  Every way this codebase reaches a paid model. It used to be
+  `anthropic.messages.create`, which missed a client named `client`, the two
+  routes that fetch api.anthropic.com by hand, and the extractColors() helper
+  in lib/brand-colors-server.ts — six spending routes this file never saw.
+*/
+const SPENDS = /\.messages\.create\(|\.messages\.stream\(|api\.anthropic\.com|generativelanguage|openai|\bextractColors\(/;
+
+/** Route key as ROUTE_PLAN spells it: the path under app/api, minus route.ts. */
+const routeKey = (f: string) => f.slice(API.length + 1).replace(/\/route\.ts$/, "");
+
+/** The argument text of every `new Anthropic(...)` in a source. */
+function anthropicClients(src: string): string[] {
+  const out: string[] = [];
+  const re = /new Anthropic\(/g;
+  for (let m = re.exec(src); m; m = re.exec(src)) {
+    let depth = 0;
+    for (let i = m.index + "new Anthropic".length; i < src.length; i++) {
+      if (src[i] === "(") depth++;
+      else if (src[i] === ")" && --depth === 0) { out.push(src.slice(m.index, i + 1)); break; }
+    }
+  }
+  return out;
+}
 
 describe("every route that spends money checks the caller first", () => {
   const files = routeFiles();
@@ -79,6 +105,80 @@ describe("every route that spends money checks the caller first", () => {
         const guard = body.search(/requireUser\(req\)|resolveBrand\(req/);
         assert.ok(guard !== -1 && guard < spend,
           `${handlers[i][1]} in ${f} calls the model before checking the caller`);
+      }
+    });
+
+    /*
+      The spend ceiling (branditect-ui/spec/hq-accounts.md Part 1). A route
+      that calls a provider without a reservation is a hole in the guarantee
+      "usage never exceeds the cap", and nothing about it would look wrong.
+    */
+    it(`${f.slice(API.length + 1)} spends through the meter`, () => {
+      assert.match(src, /\b(meter|reserveMeter)\(/,
+        `${f} calls a paid model without meter() / reserveMeter() from lib/metering.ts`);
+    });
+
+    it(`${f.slice(API.length + 1)} has a row in ROUTE_PLAN`, () => {
+      const key = routeKey(f);
+      assert.ok(Object.hasOwn(ROUTE_PLAN, key),
+        `"${key}" is not in lib/metering-plan.ts ROUTE_PLAN, so it has no kind and no credit price`);
+      assert.match(src, new RegExp(`route:\\s*["']${key.replace(/[/-]/g, "\\$&")}["']`),
+        `${f} does not meter under its own key "${key}"`);
+    });
+
+    it(`${f.slice(API.length + 1)} leaves retrying to the meter`, () => {
+      // The SDK retries twice by default; with meter()'s one retry that is up
+      // to six attempts inside one reservation (criterion 7).
+      for (const call of anthropicClients(src)) {
+        assert.match(call, /maxRetries:\s*0\b/, `${f}: ${call.replace(/\s+/g, " ")} does not pass maxRetries: 0`);
+      }
+    });
+  }
+});
+
+describe("the spend ceiling covers every provider call", () => {
+  const files = routeFiles();
+  const spenders = files.filter((f) => SPENDS.test(code(f))).map(routeKey);
+
+  it("finds the spending routes, so this cannot pass vacuously", () => {
+    assert.ok(spenders.length >= 20, `only ${spenders.length} spending routes found: ${spenders.join(", ")}`);
+  });
+
+  it("ROUTE_PLAN names no route that does not spend", () => {
+    // A stale row is harmless on its own, but it is also how a renamed route
+    // quietly loses its price: the new path has no row and the old one still does.
+    const stale = Object.keys(ROUTE_PLAN).filter((k) => !spenders.includes(k));
+    assert.deepEqual(stale, [], `ROUTE_PLAN rows with no spending route: ${stale.join(", ")}`);
+  });
+
+  /*
+    A provider call can hide in lib/ too. The only one allowed is a helper
+    that returns a meter() attempt, so a route cannot call it without a
+    reservation — and that helper, like every route, leaves retries to meter().
+  */
+  const METERED_HELPERS = ["lib/brand-colors-server.ts"];
+
+  function libFiles(dir = "lib"): string[] {
+    return readdirSync(dir).flatMap((entry) => {
+      const full = join(dir, entry);
+      if (statSync(full).isDirectory()) return libFiles(full);
+      return /\.tsx?$/.test(entry) && !/\.test\.ts$/.test(entry) ? [full] : [];
+    });
+  }
+
+  it("no lib module calls a provider except the metered helpers", () => {
+    const direct = /\.messages\.create\(|\.messages\.stream\(|api\.anthropic\.com|generativelanguage/;
+    const found = libFiles().filter((f) => direct.test(code(f)));
+    assert.deepEqual(found.sort(), [...METERED_HELPERS].sort(),
+      `unexpected provider calls in lib: ${found.filter((f) => !METERED_HELPERS.includes(f)).join(", ")}`);
+  });
+
+  for (const h of METERED_HELPERS) {
+    it(`${h} returns an attempt for meter() and leaves retrying to it`, () => {
+      const src = code(h);
+      assert.match(src, /Promise<Attempt</, `${h} does not return a meter() Attempt`);
+      for (const call of anthropicClients(src)) {
+        assert.match(call, /maxRetries:\s*0\b/, `${h}: ${call.replace(/\s+/g, " ")} does not pass maxRetries: 0`);
       }
     });
   }

@@ -22,6 +22,8 @@ import { archiveAndInsert, supabaseStrategyStore } from "@/lib/strategy-versions
 import { forLocale } from "@/lib/onboarding-locale";
 import { answerLanguageDirective, guessLanguage } from "@/lib/answer-language";
 import type { Track } from "@/lib/onboarding-questions";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 /*
   300, not 60.
@@ -37,7 +39,11 @@ import type { Track } from "@/lib/onboarding-questions";
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 });
+
+const MODEL = "claude-sonnet-5";
+const MAX_TOKENS = 6000;
 
 /** The JSON the model returns, fished out of whatever it wrapped it in. */
 function parseStrategyJson(text: string): Record<string, unknown> | null {
@@ -99,19 +105,39 @@ export async function POST(req: NextRequest) {
   userText += answerLanguageDirective(language);
 
   let text = "";
+  const params: Anthropic.MessageCreateParamsNonStreaming = {
+    model: MODEL,
+    // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+    // max_tokens caps thinking and reply together: this would truncate.
+    thinking: { type: "disabled" },
+    max_tokens: MAX_TOKENS,
+    system: cachedSystem(STRATEGY_STABLE),
+    messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
+  };
   try {
-    const message = await client.messages.create({
-      model: "claude-sonnet-5",
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking and reply together: this would truncate.
-      thinking: { type: "disabled" },
-      max_tokens: 6000,
-      system: cachedSystem(STRATEGY_STABLE),
-      messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
-    });
+    const message = await meter(
+      {
+        route: "strategy-generate",
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.system, params.messages), maxOutputTokens: MAX_TOKENS }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const m = await client.messages.create(params);
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        };
+      },
+    );
     logCacheUsage("strategy-generate", message.usage);
     text = message.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
   } catch (e) {
+    if (e instanceof BudgetRefused) return NextResponse.json(refusalBody(e), { status: e.status });
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Generation failed", errorKey: "strategy.buildFailed" },
       { status: 502 },

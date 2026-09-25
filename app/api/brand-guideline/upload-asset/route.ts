@@ -2,20 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
+import { meter, BudgetRefused, requestLocale, type MeterOptions } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
 
-async function detectLogoType(base64: string, mediaType: string): Promise<{ logoType: string; description: string }> {
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 200
+
+const FALLBACK = { logoType: 'combination mark', description: 'Brand logo' }
+
+/**
+ * Metered like every paid call. A refusal skips the analysis and keeps the
+ * upload: storing a logo costs no model call, and the fallback is what a
+ * failed analysis already returned.
+ */
+async function detectLogoType(
+  base64: string,
+  mediaType: string,
+  metering: Pick<MeterOptions, 'brandId' | 'userId' | 'locale'>,
+): Promise<{ logoType: string; description: string }> {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
       // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
       // max_tokens caps thinking + text together — these calls would
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
-      max_tokens: 200,
+      max_tokens: MAX_TOKENS,
       messages: [
         {
           role: 'user',
@@ -31,12 +48,30 @@ async function detectLogoType(base64: string, mediaType: string): Promise<{ logo
           ],
         },
       ],
-    })
+    }
+    const response = await meter(
+      {
+        route: 'brand-guideline/upload-asset',
+        ...metering,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.messages), images: 1, maxOutputTokens: MAX_TOKENS }),
+      },
+      async () => {
+        const m = await anthropic.messages.create(params)
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
     const text = response.content.filter(c => c.type === 'text').map(c => (c as Anthropic.TextBlock).text).join('')
     const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
     return JSON.parse(clean)
-  } catch {
-    return { logoType: 'combination mark', description: 'Brand logo' }
+  } catch (err) {
+    if (err instanceof BudgetRefused) console.warn('[upload-asset] logo analysis skipped:', err.message)
+    return FALLBACK
   }
 }
 
@@ -73,7 +108,11 @@ export async function POST(req: NextRequest) {
 
     let analysis: Record<string, string> = {}
     if (category === 'logo' && analyze) {
-      analysis = await detectLogoType(buffer.toString('base64'), file.type)
+      analysis = await detectLogoType(buffer.toString('base64'), file.type, {
+        brandId,
+        userId: auth.userId,
+        locale: requestLocale(req),
+      })
     }
 
     const meta: Record<string, string> = { ...analysis }

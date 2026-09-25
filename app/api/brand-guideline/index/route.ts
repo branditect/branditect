@@ -4,12 +4,19 @@ import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
 import { HOUSE_STYLE } from "@/lib/house-style";
 import { sanitiseOutput } from "@/lib/sanitise-output";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars, pdfPageCount } from "@/lib/usage-cost";
+import { sha256Hex, isMissingHashColumn, warnNoHashColumn } from "@/lib/index-once";
 
 // Image-heavy guideline PDFs are slow: a 40-page one measured 104s. 300 is the
 // Vercel Pro ceiling; on Hobby this is capped at 60 and large PDFs will fail.
 export const maxDuration = 300;
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 });
+
+const MODEL = "claude-sonnet-5";
+const MAX_TOKENS = 16000;
 
 // Anthropic caps a request at 32MB. Base64 inflates by ~37%, so the real
 // ceiling on the file itself is ~23MB — check before spending 100s on a
@@ -109,6 +116,10 @@ export async function POST(req: NextRequest) {
     const content: Anthropic.Messages.ContentBlockParam[] = [];
     let sourceType: "pdf" | "images";
     let pageCount: number | null = null;
+    // What the estimate is built from, and what the index-once hash is of.
+    let pdfPages = 0;
+    let imageCount = 0;
+    let contentHash: string;
 
     if (storagePath) {
       const { data: blob, error: dlErr } = await supabase.storage
@@ -129,8 +140,11 @@ export async function POST(req: NextRequest) {
       const base64 = Buffer.from(buf).toString("base64");
       const isPdf = blob.type?.includes("pdf") || storagePath.toLowerCase().endsWith(".pdf");
 
+      contentHash = sha256Hex(buf);
+
       if (isPdf) {
         sourceType = "pdf";
+        pdfPages = pdfPageCount(new Uint8Array(buf));
         content.push({
           type: "document",
           source: { type: "base64", media_type: "application/pdf", data: base64 },
@@ -138,6 +152,7 @@ export async function POST(req: NextRequest) {
       } else {
         sourceType = "images";
         pageCount = 1;
+        imageCount = 1;
         const mt = (blob.type || "image/png") as ImageType;
         content.push({
           type: "image",
@@ -151,6 +166,8 @@ export async function POST(req: NextRequest) {
     } else {
       sourceType = "images";
       pageCount = images!.length;
+      imageCount = images!.length;
+      contentHash = sha256Hex(...images!.map((img) => Buffer.from(img.data, "base64")));
       for (const img of images!) {
         const mt = img.type as ImageType;
         content.push({
@@ -164,16 +181,88 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    /*
+      Index once (hq-accounts.md criterion 5). The guideline is one row per
+      brand; when it is already indexed from these exact bytes, hand back what
+      is stored and make no provider call. A row without a summary is not an
+      index and is never reused.
+    */
+    let hashColumn = true;
+    {
+      const { data: existing, error: existingErr } = await supabase
+        .from("brand_guideline")
+        .select("status, content_sha256, colors, typography, logo, voice, summary")
+        .eq("brand_id", brandId)
+        .maybeSingle();
+      if (existingErr) {
+        if (isMissingHashColumn(existingErr)) { hashColumn = false; warnNoHashColumn("brand-guideline/index"); }
+        else console.error("[brand-guideline/index] dedupe lookup failed:", existingErr.message);
+      } else if (
+        existing &&
+        existing.status === "ready" &&
+        existing.content_sha256 === contentHash &&
+        typeof existing.summary === "string" &&
+        existing.summary.trim()
+      ) {
+        if (documentId) {
+          await supabase
+            .from("brand_documents")
+            .update({ status: "ready", extracted_text: existing.summary })
+            .eq("id", documentId)
+            .eq("brand_id", brandId);
+        }
+        console.log(`[brand-guideline/index] ${brandId}: same bytes as the indexed guideline, reused without a provider call`);
+        return NextResponse.json({
+          success: true,
+          colors: existing.colors ?? [],
+          typography: existing.typography ?? null,
+          logo: existing.logo ?? null,
+          voice: existing.voice ?? null,
+          summaryChars: existing.summary.length,
+          reused: true,
+        });
+      }
+    }
+
     content.push({ type: "text", text: PROMPT });
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-5",
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
       // The digest is long by design; this is the one extraction route where a
       // tight cap would truncate the thing we are trying to store.
       thinking: { type: "disabled" },
-      max_tokens: 16000,
+      max_tokens: MAX_TOKENS,
       messages: [{ role: "user", content }],
-    });
+    };
+
+    // One call reads the whole guideline, so one estimate covers every page:
+    // a 64-page PDF is refused here, before page one (criterion 4).
+    const response = await meter(
+      {
+        route: "brand-guideline/index",
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({
+          model: MODEL,
+          inputChars: promptChars(params.messages),
+          images: imageCount,
+          pdfPages,
+          maxOutputTokens: MAX_TOKENS,
+        }),
+        locale: requestLocale(req),
+        refusalKind: "document",
+      },
+      async () => {
+        const m = await anthropic.messages.create(params);
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        };
+      },
+    );
 
     const text = response.content
       .filter((b) => b.type === "text")
@@ -222,6 +311,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: upsertErr.message }, { status: 500 });
     }
 
+    // Remember the bytes, so the same guideline is never read twice. Separate
+    // from the upsert above so a missing column cannot fail the index itself.
+    if (hashColumn) {
+      const { error: hashErr } = await supabase
+        .from("brand_guideline")
+        .update({ content_sha256: contentHash })
+        .eq("brand_id", brandId);
+      if (hashErr) {
+        if (isMissingHashColumn(hashErr)) warnNoHashColumn("brand-guideline/index");
+        else console.error("[brand-guideline/index] could not store content hash:", hashErr.message);
+      }
+    }
+
     // If the guideline also lives in the vault, give that row the digest too,
     // so the document list stops showing it as unreadable.
     if (documentId) {
@@ -246,6 +348,11 @@ export async function POST(req: NextRequest) {
       summaryChars: summary.length,
     });
   } catch (err) {
+    // Refused before any provider call: the guideline already on file (if
+    // any) is untouched, and the refusal says why.
+    if (err instanceof BudgetRefused) {
+      return NextResponse.json(refusalBody(err), { status: err.status });
+    }
     const message = err instanceof Error ? err.message : "Indexing failed";
     console.error("[brand-guideline/index]", message);
     // Record the failure so the UI can show it rather than sitting on a spinner.

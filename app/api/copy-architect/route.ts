@@ -7,13 +7,20 @@ import { cachedSystem, logCacheUsage } from '@/lib/prompt-cache'
 import { copyStable, copyPerRequest } from '@/lib/prompts'
 import { outputLanguageFor, type BrandReader } from '@/lib/output-language'
 import { findFormat, normaliseDraft, isThinBrief, type Draft, type Length } from '@/lib/studio-write'
+import { meter, BudgetRefused, refusalBody, requestLocale } from '@/lib/metering'
+import { estimateCents, anthropicCostCents, promptChars } from '@/lib/usage-cost'
 
 // Three drafts of a long email is a real amount of generation.
 export const maxDuration = 120
 
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  maxRetries: 0,
 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 4000
 
 const LENGTHS: Length[] = ['short', 'medium', 'long']
 
@@ -123,18 +130,38 @@ export async function POST(req: NextRequest) {
 
 Write the ${count} draft${count > 1 ? 's' : ''} now. Return only the JSON.`
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
       // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
       // max_tokens caps thinking + text together — these calls would truncate.
       thinking: { type: 'disabled' },
-      max_tokens: 4000,
+      max_tokens: MAX_TOKENS,
       system: cachedSystem(
         copyStable({ brandName: facts.brandName, context: facts.context, language }),
         copyPerRequest({ deliverable, wordTarget: def.words[len], count, product: facts.product }),
       ),
       messages: [{ role: 'user', content: userPrompt }],
-    })
+    }
+
+    const response = await meter(
+      {
+        route: 'copy-architect',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.system, params.messages), maxOutputTokens: MAX_TOKENS }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const m = await anthropic.messages.create(params)
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
 
     logCacheUsage('copy-architect', response.usage)
 
@@ -167,6 +194,7 @@ Write the ${count} draft${count > 1 ? 's' : ''} now. Return only the JSON.`
       missing: typeof parsed.missing === 'string' ? parsed.missing.trim() : '',
     })
   } catch (err) {
+    if (err instanceof BudgetRefused) return NextResponse.json(refusalBody(err), { status: err.status })
     console.error('[copy-architect] Error:', err)
     const message = err instanceof Error ? err.message : 'Unexpected error'
     return NextResponse.json({ error: message }, { status: 500 })

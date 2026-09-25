@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 2000
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,17 +40,10 @@ export async function POST(req: NextRequest) {
     if (strategy) contextParts.push(`Brand Strategy:\n${JSON.stringify(strategy, null, 2)}`)
     if (visualDna) contextParts.push(`Brand Visual DNA:\n${JSON.stringify(visualDna, null, 2)}`)
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
-      thinking: { type: 'disabled' },
-      max_tokens: 2000,
-      messages: [
-        {
-          role: 'user',
-          content: `Based on this brand data, write rich editorial copy for each brand guideline section. Return ONLY a valid JSON object with these exact keys (no markdown, no explanation):
+    const messages: Anthropic.MessageParam[] = [
+      {
+        role: 'user',
+        content: `Based on this brand data, write rich editorial copy for each brand guideline section. Return ONLY a valid JSON object with these exact keys (no markdown, no explanation):
 
 {
   "tagline": "Brand tagline or positioning line (1 sentence)",
@@ -67,9 +66,36 @@ export async function POST(req: NextRequest) {
 
 Brand data:
 ${contextParts.join('\n\n')}`,
-        },
-      ],
-    })
+      },
+    ]
+
+    const response = await meter(
+      {
+        route: 'brand-guideline/brand-text',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(messages), maxOutputTokens: MAX_TOKENS }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const m = await anthropic.messages.create({
+          model: MODEL,
+          // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+          // max_tokens caps thinking + text together — these calls would
+          // truncate. None of them need reasoning tokens.
+          thinking: { type: 'disabled' },
+          max_tokens: MAX_TOKENS,
+          messages,
+        })
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
 
     const text = response.content.filter(c => c.type === 'text').map(c => (c as Anthropic.TextBlock).text).join('')
     const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
@@ -86,6 +112,7 @@ ${contextParts.join('\n\n')}`,
       return NextResponse.json({ success: false, error: 'Could not parse response' }, { status: 422 })
     }
   } catch (err) {
+    if (err instanceof BudgetRefused) return NextResponse.json({ success: false, ...refusalBody(err) }, { status: err.status })
     console.error('[brand-text]', err)
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : 'Failed' },

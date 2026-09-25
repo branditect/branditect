@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 500
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,13 +71,13 @@ export async function POST(req: NextRequest) {
         const base64 = buffer.toString('base64')
         const mime = file.type as 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'
 
-        const response = await anthropic.messages.create({
-          model: 'claude-sonnet-5',
+        const params: Anthropic.MessageCreateParamsNonStreaming = {
+          model: MODEL,
           // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
           // max_tokens caps thinking + text together — these calls would
           // truncate. None of them need reasoning tokens.
           thinking: { type: 'disabled' },
-          max_tokens: 500,
+          max_tokens: MAX_TOKENS,
           messages: [{
             role: 'user',
             content: [
@@ -86,7 +92,27 @@ Extract every color swatch you can see with its exact hex code. If you see label
               }
             ]
           }]
-        })
+        }
+
+        const response = await meter(
+          {
+            route: 'brand-assets/upload',
+            brandId,
+            userId: auth.userId,
+            estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.messages), images: 1, maxOutputTokens: MAX_TOKENS }),
+            locale: requestLocale(req),
+          },
+          async () => {
+            const m = await anthropic.messages.create(params)
+            return {
+              value: m,
+              model: MODEL,
+              costCents: anthropicCostCents(MODEL, m.usage),
+              inputTokens: m.usage.input_tokens,
+              outputTokens: m.usage.output_tokens,
+            }
+          },
+        )
 
         const txt = response.content.map(c => c.type === 'text' ? c.text : '').join('')
         const clean = txt.replace(/```json|```/g, '').trim()
@@ -100,7 +126,12 @@ Extract every color swatch you can see with its exact hex code. If you see label
         }
 
         return NextResponse.json({ success: true, url: publicUrl, colors: extractedColors })
-      } catch {
+      } catch (err) {
+        // The file is stored; reading colours off it was refused, and the
+        // page shows why rather than "no colours found".
+        if (err instanceof BudgetRefused) {
+          return NextResponse.json({ ...refusalBody(err), url: publicUrl }, { status: err.status })
+        }
         return NextResponse.json({ success: true, url: publicUrl, colors: [] })
       }
     }

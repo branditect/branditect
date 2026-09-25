@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { HOUSE_STYLE } from '@/lib/house-style'
 import { requireUser } from '@/lib/api-auth'
+import { meter, brandOfUser, BudgetRefused, refusalBody, requestLocale } from '@/lib/metering'
+import { estimateCents, anthropicCostCents, promptChars } from '@/lib/usage-cost'
 
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 3000
 
 const SCHEMA = {
   meta: {
@@ -74,6 +80,8 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
 
   try {
     const { images } = await req.json() as { images: { data: string; type: string }[] }
@@ -82,13 +90,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No images provided' }, { status: 400 })
     }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
       // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
       // max_tokens caps thinking + text together — these calls would
       // truncate. None of them need reasoning tokens.
       thinking: { type: 'disabled' },
-      max_tokens: 3000,
+      max_tokens: MAX_TOKENS,
       messages: [
         {
           role: 'user',
@@ -118,7 +126,34 @@ ${JSON.stringify(SCHEMA, null, 2)}` + HOUSE_STYLE,
           ],
         },
       ],
-    })
+    }
+
+    // Every page is in this one call, so one estimate covers them all.
+    const response = await meter(
+      {
+        route: 'brand-guideline/extract',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({
+          model: MODEL,
+          inputChars: promptChars(params.messages),
+          images: images.length,
+          maxOutputTokens: MAX_TOKENS,
+        }),
+        locale: requestLocale(req),
+        refusalKind: 'document',
+      },
+      async () => {
+        const m = await anthropic.messages.create(params)
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
 
     const text = response.content
       .filter(c => c.type === 'text')
@@ -138,6 +173,7 @@ ${JSON.stringify(SCHEMA, null, 2)}` + HOUSE_STYLE,
       return NextResponse.json({ success: false, error: 'Could not parse response' }, { status: 422 })
     }
   } catch (err) {
+    if (err instanceof BudgetRefused) return NextResponse.json({ success: false, ...refusalBody(err) }, { status: err.status })
     console.error('[brand-guideline/extract]', err)
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : 'Extract failed' },

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from '@/lib/api-auth'
+import { meter, brandOfUser, BudgetRefused, ProviderError, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 60;
+
+const MODEL = "claude-sonnet-5";
+const MAX_TOKENS = 2000;
 
 const PROMPT = `Analyse these brand images as a world-class creative director and photo editor. Extract exactly 30 visual datapoints. Return ONLY valid JSON, no markdown, no explanation.
 
@@ -23,6 +28,15 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
+
+  // No key is a pre-flight failure: checked before anything is reserved.
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error("analyse-images: ANTHROPIC_API_KEY is not set");
+    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+  }
 
   try {
     const { images } = await req.json();
@@ -46,31 +60,61 @@ export async function POST(req: NextRequest) {
 
     content.push({ type: "text", text: PROMPT });
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY || "",
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-5",
-        // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-        // max_tokens caps thinking + text together — these calls would
-        // truncate. None of them need reasoning tokens.
-        thinking: { type: "disabled" },
-        max_tokens: 2000,
-        messages: [{ role: "user", content }],
-      }),
-    });
+    const request = {
+      model: MODEL,
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+      // max_tokens caps thinking + text together — these calls would
+      // truncate. None of them need reasoning tokens.
+      thinking: { type: "disabled" },
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content }],
+    };
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("Anthropic error:", err);
-      return NextResponse.json({ error: `Analysis failed: ${err.slice(0, 200)}` }, { status: 500 });
+    let data;
+    try {
+      data = await meter(
+        {
+          route: "brand/analyse-images",
+          brandId,
+          userId: auth.userId,
+          estimateCents: estimateCents({
+            model: MODEL,
+            inputChars: promptChars(request.messages),
+            images: content.length - 1,
+            maxOutputTokens: MAX_TOKENS,
+          }),
+          locale: requestLocale(req),
+        },
+        async () => {
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify(request),
+          });
+          if (!response.ok) {
+            const err = await response.text();
+            console.error("Anthropic error:", err);
+            throw new ProviderError(`Analysis failed: ${err.slice(0, 200)}`, response.status);
+          }
+          const body = await response.json();
+          return {
+            value: body,
+            model: MODEL,
+            costCents: anthropicCostCents(MODEL, body.usage),
+            inputTokens: body.usage?.input_tokens,
+            outputTokens: body.usage?.output_tokens,
+          };
+        },
+      );
+    } catch (e) {
+      if (e instanceof BudgetRefused) return NextResponse.json(refusalBody(e), { status: e.status });
+      if (e instanceof ProviderError) return NextResponse.json({ error: e.message }, { status: 500 });
+      throw e;
     }
-
-    const data = await response.json();
     const textBlock = data.content?.find((b: { type: string }) => b.type === "text");
     const raw = textBlock?.text || "{}";
 

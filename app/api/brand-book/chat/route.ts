@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireUser } from '@/lib/api-auth'
+import { meter, brandOfUser, BudgetRefused, refusalBody, requestLocale } from '@/lib/metering'
+import { estimateCents, anthropicCostCents, promptChars } from '@/lib/usage-cost'
 
 export const maxDuration = 30
 
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  maxRetries: 0,
 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 700
 
 export async function POST(req: NextRequest) {
   /*
@@ -18,6 +25,8 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
 
   const { message, pageUrls } = await req.json()
 
@@ -61,16 +70,41 @@ export async function POST(req: NextRequest) {
       : message
   })
 
+  const messages: Anthropic.MessageParam[] = [{ role: 'user', content: contentBlocks }]
+
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
-      thinking: { type: 'disabled' },
-      max_tokens: 700,
-      messages: [{ role: 'user', content: contentBlocks }]
-    })
+    const response = await meter(
+      {
+        route: 'brand-book/chat',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({
+          model: MODEL,
+          inputChars: promptChars(messages),
+          images: pages.length,
+          maxOutputTokens: MAX_TOKENS,
+        }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const m = await anthropic.messages.create({
+          model: MODEL,
+          // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+          // max_tokens caps thinking + text together — these calls would
+          // truncate. None of them need reasoning tokens.
+          thinking: { type: 'disabled' },
+          max_tokens: MAX_TOKENS,
+          messages,
+        })
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
 
     const reply = response.content
       .map(c => c.type === 'text' ? c.text : '')
@@ -79,6 +113,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ reply })
   } catch (err: unknown) {
+    if (err instanceof BudgetRefused) return NextResponse.json(refusalBody(err), { status: err.status })
     const message = err instanceof Error ? err.message : 'API error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

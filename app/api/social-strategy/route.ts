@@ -10,10 +10,16 @@ import {
   channelLabel, isChannel, MAX_CHANNELS,
   type Pillar, type AudienceProfile,
 } from "@/lib/social";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 60
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 4000
 
 /**
  * The four columns supabase/social-media.sql adds.
@@ -304,19 +310,39 @@ export async function POST(req: NextRequest) {
     userText += `\nWrite the coming week. Return ONLY the JSON object.`
 
     let text = ''
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+      // max_tokens caps thinking and reply together: this would truncate.
+      thinking: { type: 'disabled' },
+      max_tokens: MAX_TOKENS,
+      system: cachedSystem(SOCIAL_PLAN_STABLE),
+      messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
+    }
     try {
-      const message = await client.messages.create({
-        model: 'claude-sonnet-5',
-        // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-        // max_tokens caps thinking and reply together: this would truncate.
-        thinking: { type: 'disabled' },
-        max_tokens: 4000,
-        system: cachedSystem(SOCIAL_PLAN_STABLE),
-        messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
-      })
+      const message = await meter(
+        {
+          route: 'social-strategy',
+          brandId,
+          userId: auth.userId,
+          estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.system, params.messages), maxOutputTokens: MAX_TOKENS }),
+          locale: requestLocale(req),
+        },
+        async () => {
+          const m = await client.messages.create(params)
+          return {
+            value: m,
+            model: MODEL,
+            costCents: anthropicCostCents(MODEL, m.usage),
+            inputTokens: m.usage.input_tokens,
+            outputTokens: m.usage.output_tokens,
+          }
+        },
+      )
       logCacheUsage('social-plan', message.usage)
       text = message.content.filter((b) => b.type === 'text').map((b) => (b as { text: string }).text).join('')
     } catch (e) {
+      if (e instanceof BudgetRefused) return NextResponse.json(refusalBody(e), { status: e.status })
       return NextResponse.json(
         { error: e instanceof Error ? e.message : 'Generation failed', errorKey: 'social.planFailed' },
         { status: 502 },

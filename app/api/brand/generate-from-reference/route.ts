@@ -7,8 +7,17 @@ import {
   isValidFormat, isValidWhere, PRODUCT_FIELDS,
   type Brief, type ProductIdentity,
 } from "@/lib/image-brief";
+import { meter, BudgetRefused, ProviderError, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, geminiCostCents, GEMINI_IMAGE_OUTPUT_TOKENS } from "@/lib/usage-cost";
 
 export const maxDuration = 60;
+
+const MODEL = "gemini-2.5-flash-image";
+/** One image back, plus room for the text part the IMAGE+TEXT modality may add. */
+const MAX_OUTPUT_TOKENS = GEMINI_IMAGE_OUTPUT_TOKENS + 1000;
+
+/** What the route answers when the provider was paid but no image came back. */
+type Declined = { status: number; body: Record<string, string> };
 
 interface RequestBody {
   brandId?: string;
@@ -115,61 +124,118 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "api_error", message: "Image generation is not configured." }, { status: 500 });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ["IMAGE", "TEXT"] } }),
-      },
-    );
+    /*
+      Metered: 5 credits for an image, and the cost ceiling on every attempt.
+      A reply that carries no image (flagged, declined, empty, unreadable) is a
+      failed generation — the provider was paid, the customer gets their
+      credits back — so it is thrown as a non-retryable ProviderError carrying
+      what it cost, and `declined` remembers what to tell the person.
+    */
+    let declined: Declined | null = null;
+    const decline = (d: Declined, costCents: number): never => {
+      declined = d;
+      throw new ProviderError(d.body.error, 400, costCents);
+    };
 
-    const responseText = await response.text();
-    if (!response.ok) {
-      console.error("[generate-from-reference] upstream error:", responseText.slice(0, 300));
-      return NextResponse.json({ error: "api_error", message: "The image service returned an error. Try again." }, { status: 502 });
-    }
-
-    let data;
+    let generated: { imageData: string; mimeType: string };
     try {
-      data = JSON.parse(responseText);
-    } catch {
-      console.error("[generate-from-reference] non-JSON response:", responseText.slice(0, 300));
-      return NextResponse.json({ error: "api_error", message: "The image service returned something unreadable." }, { status: 502 });
-    }
+      generated = await meter(
+        {
+          route: "brand/generate-from-reference",
+          brandId,
+          userId: auth.userId,
+          estimateCents: estimateCents({
+            model: MODEL,
+            inputChars: prompt.length,
+            images: images.length,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
+          }),
+          locale: requestLocale(req),
+        },
+        async () => {
+          declined = null;
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ["IMAGE", "TEXT"] } }),
+            },
+          );
 
-    const candidate = data.candidates?.[0];
-    const finishReason = candidate?.finishReason;
-    if (finishReason === "SAFETY" || finishReason === "BLOCKED") {
-      return NextResponse.json({
-        error: "safety_block",
-        message: "That request was flagged. Try a simpler description or a different reference.",
-      }, { status: 400 });
-    }
-    // The upstream declines some briefs — usually a description that does not
-    // fit the references attached to it. It says so, and the card should
-    // repeat that rather than "no image came back", which sounds like a fault
-    // at our end and gives nobody anything to change.
-    if (finishReason === "IMAGE_OTHER" || finishReason === "PROHIBITED_CONTENT") {
-      return NextResponse.json({
-        error: "not_generated",
-        message: "That description and those references did not go together. Try rewording it, or pick a reference closer to what you want.",
-      }, { status: 400 });
-    }
+          const responseText = await response.text();
+          if (!response.ok) {
+            console.error("[generate-from-reference] upstream error:", responseText.slice(0, 300));
+            // 429 / 5xx are retried once by meter(); anything else is final.
+            throw new ProviderError("upstream_error", response.status);
+          }
 
-    const candidateParts = data.candidates?.[0]?.content?.parts || [];
-    const imagePart = candidateParts.find(
-      (p: { inlineData?: { data: string; mimeType: string }; inline_data?: { data: string; mime_type: string } }) =>
-        p.inlineData || p.inline_data,
-    );
-    // The API answers in camelCase or snake_case depending on the path.
-    const imageData = imagePart?.inlineData?.data || imagePart?.inline_data?.data;
-    const mimeType = imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || "image/png";
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch {
+            console.error("[generate-from-reference] non-JSON response:", responseText.slice(0, 300));
+            // Unknown cost: meter() keeps the estimate on the budget.
+            return decline({ status: 502, body: { error: "api_error", message: "The image service returned something unreadable." } }, 0);
+          }
 
-    if (!imageData) {
-      console.error("[generate-from-reference] no image in response:", JSON.stringify(data).slice(0, 400));
-      return NextResponse.json({ error: "no_image", message: "No image came back. Try again." }, { status: 502 });
+          const candidateParts = data.candidates?.[0]?.content?.parts || [];
+          const imageParts = candidateParts.filter(
+            (p: { inlineData?: unknown; inline_data?: unknown }) => p.inlineData || p.inline_data,
+          );
+          const cost = geminiCostCents(MODEL, data.usageMetadata, Math.max(1, imageParts.length));
+
+          const candidate = data.candidates?.[0];
+          const finishReason = candidate?.finishReason;
+          if (finishReason === "SAFETY" || finishReason === "BLOCKED") {
+            return decline({ status: 400, body: {
+              error: "safety_block",
+              message: "That request was flagged. Try a simpler description or a different reference.",
+            } }, cost);
+          }
+          // The upstream declines some briefs — usually a description that does not
+          // fit the references attached to it. It says so, and the card should
+          // repeat that rather than "no image came back", which sounds like a fault
+          // at our end and gives nobody anything to change.
+          if (finishReason === "IMAGE_OTHER" || finishReason === "PROHIBITED_CONTENT") {
+            return decline({ status: 400, body: {
+              error: "not_generated",
+              message: "That description and those references did not go together. Try rewording it, or pick a reference closer to what you want.",
+            } }, cost);
+          }
+
+          const imagePart = imageParts[0] as
+            | { inlineData?: { data: string; mimeType: string }; inline_data?: { data: string; mime_type: string } }
+            | undefined;
+          // The API answers in camelCase or snake_case depending on the path.
+          const imageData = imagePart?.inlineData?.data || imagePart?.inline_data?.data;
+          const mimeType = imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || "image/png";
+
+          if (!imageData) {
+            console.error("[generate-from-reference] no image in response:", JSON.stringify(data).slice(0, 400));
+            return decline({ status: 502, body: { error: "no_image", message: "No image came back. Try again." } }, cost);
+          }
+
+          return {
+            value: { imageData, mimeType },
+            model: MODEL,
+            costCents: cost,
+            units: imageParts.length,
+            inputTokens: data.usageMetadata?.promptTokenCount,
+            outputTokens: data.usageMetadata?.candidatesTokenCount,
+          };
+        },
+      );
+    } catch (e) {
+      if (e instanceof BudgetRefused) return NextResponse.json(refusalBody(e), { status: e.status });
+      const d = declined as Declined | null;
+      if (d) return NextResponse.json(d.body, { status: d.status });
+      if (e instanceof ProviderError) {
+        return NextResponse.json({ error: "api_error", message: "The image service returned an error. Try again." }, { status: 502 });
+      }
+      throw e;
     }
+    const { imageData, mimeType } = generated;
 
     return NextResponse.json({
       imageBase64: imageData,

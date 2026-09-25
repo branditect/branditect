@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { HOUSE_STYLE } from '@/lib/house-style'
 import { requireUser } from '@/lib/api-auth'
+import { meter, brandOfUser, BudgetRefused, refusalBody, requestLocale } from '@/lib/metering'
+import { estimateCents, anthropicCostCents, promptChars } from '@/lib/usage-cost'
 
 export const maxDuration = 30
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 1000
 
 export async function POST(req: NextRequest) {
   /*
@@ -17,6 +23,8 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
 
   try {
     const body = await req.json() as {
@@ -55,15 +63,39 @@ ${imageBase64 ? 'A reference image has been uploaded — use it to inform the ch
 Return ONLY a valid JSON object with the updated fields for this section, using the exact same structure as the current data. No explanation, no markdown, no code blocks.` + HOUSE_STYLE,
     })
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-5',
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
-      thinking: { type: 'disabled' },
-      max_tokens: 1000,
-      messages: [{ role: 'user', content }],
-    })
+    const messages: Anthropic.MessageParam[] = [{ role: 'user', content }]
+    const response = await meter(
+      {
+        route: 'brand-guideline/edit',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({
+          model: MODEL,
+          inputChars: promptChars(messages),
+          images: imageBase64 ? 1 : 0,
+          maxOutputTokens: MAX_TOKENS,
+        }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const m = await client.messages.create({
+          model: MODEL,
+          // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+          // max_tokens caps thinking + text together — these calls would
+          // truncate. None of them need reasoning tokens.
+          thinking: { type: 'disabled' },
+          max_tokens: MAX_TOKENS,
+          messages,
+        })
+        return {
+          value: m,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, m.usage),
+          inputTokens: m.usage.input_tokens,
+          outputTokens: m.usage.output_tokens,
+        }
+      },
+    )
 
     const text = response.content
       .filter((c) => c.type === 'text')
@@ -84,6 +116,7 @@ Return ONLY a valid JSON object with the updated fields for this section, using 
       return NextResponse.json({ success: false, error: 'Could not parse response' }, { status: 422 })
     }
   } catch (err) {
+    if (err instanceof BudgetRefused) return NextResponse.json({ success: false, ...refusalBody(err) }, { status: err.status })
     console.error('[brand-guideline/edit]', err)
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : 'Edit failed' },

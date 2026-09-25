@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { colorMediaType } from "@/lib/brand-colors";
-import { extractColors } from "@/lib/brand-colors-server";
+import { extractColors, colorEstimateCents } from "@/lib/brand-colors-server";
 import { requireUser } from '@/lib/api-auth'
+import { meter, brandOfUser, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
 
 /**
  * Colours out of a file the caller holds, without saving anything.
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
 
   try {
     const formData = await req.formData();
@@ -32,9 +35,20 @@ export async function POST(req: NextRequest) {
     const mediaType = type === "pdf" ? "application/pdf" : colorMediaType(file.name, file.type);
     if (!mediaType) return NextResponse.json({ error: "Not a readable file" }, { status: 400 });
 
-    const colors = await extractColors(Buffer.from(await file.arrayBuffer()), mediaType);
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const colors = await meter(
+      {
+        route: "extract-colors",
+        brandId,
+        userId: auth.userId,
+        estimateCents: colorEstimateCents(bytes, mediaType),
+        locale: requestLocale(req),
+      },
+      () => extractColors(bytes, mediaType),
+    );
     return NextResponse.json({ colors });
   } catch (error) {
+    if (error instanceof BudgetRefused) return NextResponse.json(refusalBody(error), { status: error.status });
     console.error("Color extraction error:", error);
     const message = error instanceof Error ? error.message : "Extraction failed";
     return NextResponse.json({ error: message }, { status: 500 });

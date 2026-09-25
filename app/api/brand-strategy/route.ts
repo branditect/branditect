@@ -4,13 +4,22 @@ import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { STRATEGY_STABLE, STRATEGY_FROM_DOCUMENT_STABLE } from "@/lib/prompts";
 import { NextResponse } from 'next/server'
 import { requireUser } from '@/lib/api-auth'
+import { reserveMeter, brandOfUser, BudgetRefused, ProviderError, refusalBody, requestLocale, type Lease } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 // Analysis plus a full strategy is a real amount of generation, and this is
 // the worst place in the product to time out: the founder has answered
 // twenty questions to get here. copy-architect already takes 120 for less.
 export const maxDuration = 120;
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 });
+
+const MODEL = "claude-sonnet-5";
+// The analysis block is new output, not free. 6000 truncated the JSON
+// once the method was added, and a truncated object fails to parse and
+// is thrown away whole.
+const MAX_TOKENS = 12000;
 
 export async function POST(req: NextRequest) {
   /*
@@ -22,6 +31,8 @@ export async function POST(req: NextRequest) {
   */
   const auth = await requireUser(req)
   if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+  // The budget belongs to a brand; no brand, nothing to charge it to.
+  const brandId = await brandOfUser(auth.userId)
 
   try {
     const body = await req.json();
@@ -84,39 +95,79 @@ export async function POST(req: NextRequest) {
 
     contentBlocks.push({ type: "text", text: userText });
 
-    // Use streaming to avoid Vercel timeout
-    const stream = await client.messages.stream({
-      model: "claude-sonnet-5",
+    const params: Anthropic.MessageCreateParamsNonStreaming = {
+      model: MODEL,
       // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
       // max_tokens caps thinking + text together — these calls would
       // truncate. None of them need reasoning tokens.
       thinking: { type: "disabled" },
-      // The analysis block is new output, not free. 6000 truncated the JSON
-      // once the method was added, and a truncated object fails to parse and
-      // is thrown away whole.
-      max_tokens: 12000,
+      max_tokens: MAX_TOKENS,
       system: cachedSystem(fromDocument ? STRATEGY_FROM_DOCUMENT_STABLE : STRATEGY_STABLE),
       messages: [{ role: "user", content: contentBlocks }],
-    });
+    };
 
+    /*
+      Reserve before the response starts, so a refusal is a real 402 and not a
+      message inside a 200 stream. The lease is spent inside the stream and
+      settled when it ends, against the usage the final message reports.
+    */
+    let lease: Lease;
+    try {
+      lease = await reserveMeter({
+        route: "brand-strategy",
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.system, params.messages), maxOutputTokens: MAX_TOKENS }),
+        locale: requestLocale(req),
+      });
+    } catch (e) {
+      if (e instanceof BudgetRefused) {
+        return new Response(JSON.stringify(refusalBody(e)), {
+          status: e.status,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw e;
+    }
+
+    // Use streaming to avoid Vercel timeout.
     // Create a readable stream that sends chunks to the client
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          let fullText = "";
-
-          for await (const event of stream) {
-            // message_start is where a streamed call reports its cache numbers.
-            if (event.type === "message_start") {
-              logCacheUsage(fromDocument ? "brand-strategy-document" : "brand-strategy", event.message.usage);
+          const fullText = await lease.run(async () => {
+            // Once a byte has reached the browser a retry cannot un-send it:
+            // from then on a failure is final (400 is never retried).
+            let sent = false;
+            try {
+              const stream = client.messages.stream(params);
+              let text = "";
+              for await (const event of stream) {
+                // message_start is where a streamed call reports its cache numbers.
+                if (event.type === "message_start") {
+                  logCacheUsage(fromDocument ? "brand-strategy-document" : "brand-strategy", event.message.usage);
+                }
+                if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+                  text += event.delta.text;
+                  // Send each chunk as a SSE-style message
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: event.delta.text })}\n\n`));
+                  sent = true;
+                }
+              }
+              const final = await stream.finalMessage();
+              return {
+                value: text,
+                model: MODEL,
+                costCents: anthropicCostCents(MODEL, final.usage),
+                inputTokens: final.usage.input_tokens,
+                outputTokens: final.usage.output_tokens,
+              };
+            } catch (err) {
+              if (sent) throw new ProviderError(err instanceof Error ? err.message : "Stream error", 400);
+              throw err;
             }
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              fullText += event.delta.text;
-              // Send each chunk as a SSE-style message
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: event.delta.text })}\n\n`));
-            }
-          }
+          });
 
           // Send the final complete message
           // Extract JSON from full text

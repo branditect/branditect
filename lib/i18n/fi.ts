@@ -3009,4 +3009,9 @@ export const fi: Record<StringKey, string> = {
   "social.weekSaved": "Tallennettu",
   "social.noWeeksYet": "Ei vielä merkintöjä.",
   "social.vsLastWeek": "vs. viime viikko",
+  // Kulukatto (lib/metering.ts). hq-accounts.md osa 1.
+  "budget.credits": "Tähän tarvitaan {need} krediittiä, ja sinulla on {left} jäljellä.",
+  "budget.document": "Tämän dokumentin käsittelyyn tarvitaan noin {need} krediittiä, ja sinulla on {left} jäljellä. Lataa se, kun krediittisi uusiutuvat, tai päivitä tilauksesi.",
+  "budget.cost": "Tilisi on saavuttanut tämän jakson käsittelyrajan. Kaikki tekemäsi on yhä tallessa.",
+  "budget.platform": "Sisällön luonti ei ole juuri nyt käytettävissä. Yritä hetken päästä uudelleen.",
 };

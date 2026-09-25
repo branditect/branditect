@@ -8,10 +8,16 @@ import { andyStable } from "@/lib/prompts";
 import { outputLanguageFor, type BrandReader } from "@/lib/output-language";
 import { sanitiseOutput } from "@/lib/sanitise-output";
 import { findFormat } from "@/lib/studio-write";
+import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
+import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
 
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
+
+const MODEL = 'claude-sonnet-5'
+const MAX_TOKENS = 1000
 
 async function getBrandContext(brandId: string): Promise<string> {
   const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes, answersRes, imagesRes, guidelineRes] = await Promise.all([
@@ -269,20 +275,40 @@ export async function POST(req: NextRequest) {
   // up. The row is narrowed inside that function rather than trusted here.
   const language = await outputLanguageFor(supabase as unknown as BrandReader, brandId)
 
+  const params: Anthropic.MessageCreateParamsNonStreaming = {
+    model: MODEL,
+    // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
+    // max_tokens caps thinking + text together — these calls would
+    // truncate. None of them need reasoning tokens.
+    thinking: { type: 'disabled' },
+    max_tokens: MAX_TOKENS,
+    system: cachedSystem(andyStable(brandContext, language)),
+    messages: messages.map((m: { role: string; content: string }) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    })),
+  }
+
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-5',
-      // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and
-      // max_tokens caps thinking + text together — these calls would
-      // truncate. None of them need reasoning tokens.
-      thinking: { type: 'disabled' },
-      max_tokens: 1000,
-      system: cachedSystem(andyStable(brandContext, language)),
-      messages: messages.map((m: { role: string; content: string }) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
-    })
+    const response = await meter(
+      {
+        route: 'andy',
+        brandId,
+        userId: auth.userId,
+        estimateCents: estimateCents({ model: MODEL, inputChars: promptChars(params.system, params.messages), maxOutputTokens: MAX_TOKENS }),
+        locale: requestLocale(req),
+      },
+      async () => {
+        const r = await anthropic.messages.create(params)
+        return {
+          value: r,
+          model: MODEL,
+          costCents: anthropicCostCents(MODEL, r.usage),
+          inputTokens: r.usage.input_tokens,
+          outputTokens: r.usage.output_tokens,
+        }
+      },
+    )
 
     logCacheUsage("andy", response.usage);
 
@@ -308,6 +334,7 @@ export async function POST(req: NextRequest) {
       handoff,
     })
   } catch (err: unknown) {
+    if (err instanceof BudgetRefused) return NextResponse.json(refusalBody(err), { status: err.status })
     const message = err instanceof Error ? err.message : 'AI error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

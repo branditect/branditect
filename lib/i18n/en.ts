@@ -2954,6 +2954,11 @@ export const en = {
   "social.weekSaved": "Saved",
   "social.noWeeksYet": "Nothing entered yet.",
   "social.vsLastWeek": "vs last week",
+  // Spend ceiling (lib/metering.ts). hq-accounts.md Part 1.
+  "budget.credits": "This needs {need} credits and you have {left} left.",
+  "budget.document": "This document needs about {need} credits of processing and you have {left} left. Upload it after your credits reset, or upgrade.",
+  "budget.cost": "Your account has reached its processing limit for this period. Everything you have made is still here.",
+  "budget.platform": "Generating is temporarily unavailable. Please try again a little later.",
 } as const;
 
 export type StringKey = keyof typeof en;

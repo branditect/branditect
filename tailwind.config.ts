@@ -52,6 +52,11 @@ const config: Config = {
         // how `bg-violet-50` ends up rendering nothing. lib/tokens.test.ts
         // fails on any class that relies on the shadowed scale.
         violet: { DEFAULT: "#6b53ac", 2: "#9b83d8", ink: "#4a3d73" },
+        // HQ plan tiers (branditect-ui/spec/hq-accounts.md "Colour"). Pro is
+        // accent, Pro Plus is violet; Enterprise is the third validated hue —
+        // accent · violet · #2b8fb0 pass all six validate_palette.js checks.
+        // Free is faint-2 on purpose: "no plan" reads as the absence of colour.
+        "tier-ent": "#2b8fb0",
         "green-wash": "#e8f6ee",
         "green-ink": "#1c7a48",
         "blue-wash": "#e8effd",
@@ -108,6 +113,10 @@ const config: Config = {
         "grad-more": "linear-gradient(120deg, rgb(253,243,240) 18%, rgb(251,224,217) 92%)",
         "grad-chat": "linear-gradient(180deg, #fdf6f7 0%, #f5f1fc 100%)",
         "grad-violet": "linear-gradient(150deg, #9b83d8, #6b53ac)",
+        // HQ's rail. Violet travelling into a deep indigo so white type holds
+        // contrast all the way down; deliberately not the customer app's chrome,
+        // so one glance says "you are not in the product" (hq-accounts.md).
+        "grad-rail": "linear-gradient(168deg, #6b53ac 0%, #4a3585 52%, #2f2159 100%)",
         // The Settings hero. Two stops, not three — #8a5fb0 was a midpoint
         // picked to smooth the run, and a gradient stop is not a colour
         // anyone names. accent to violet interpolates it on its own.

@@ -55,6 +55,10 @@ export const OUT_OF_SCOPE = [
   // Marketing components, rendered only by app/(site). They live under
   // components/ for import reasons and are not part of the app shell.
   "components/site",
+  // HQ, the operator dashboard (branditect-ui/spec/hq.md). Its one user is the
+  // operator, not a customer; it is English by design, like the specs it is
+  // built from. Listed so nobody mistakes it for a gap.
+  "app/(hq)",
 ];
 
 /**

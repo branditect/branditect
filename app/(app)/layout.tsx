@@ -1,6 +1,7 @@
 import Sidebar from "@/components/sidebar";
 import Localised from "@/lib/i18n/server.tsx";
 import LocaleSync from "@/components/locale-sync";
+import Presence from "@/components/presence";
 import WelcomeModal from "@/components/welcome-modal";
 
 // One navigation. The top bar was removed — every destination it held is in
@@ -17,6 +18,7 @@ export default function DashboardLayout({
         <main className="flex-1 overflow-y-auto">{children}</main>
         <WelcomeModal />
         <LocaleSync />
+        <Presence />
       </div>
     </Localised>
   );

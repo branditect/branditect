@@ -75,6 +75,7 @@
   --violet:     #6b53ac;  /* the anchor: labels, meters, section tiles */
   --violet-2:   #9b83d8;  /* the light end, for gradients and edges     */
   --violet-ink: #4a3d73;  /* text on lavender, contrast-safe            */
+  --tier-ent:   #2b8fb0;  /* HQ: Enterprise tier, third validated hue   */
 
   /* ---- gradients ------------------------------------------ */
   --grad-hero:    linear-gradient(92.52deg, #f16d2c 11.42%, #fe4401 29.59%);

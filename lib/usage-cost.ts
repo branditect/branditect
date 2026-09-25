@@ -10,6 +10,7 @@
  */
 
 /** Prices in USD per million tokens. Sources, checked 2026-09-25:
+ *  - Anthropic: claude-haiku-4-5-20251001 $1 in / $5 out (logo type only).
  *  - Anthropic: claude-sonnet-5 $2 in / $10 out; cache write 1.25x input,
  *    cache read 0.1x input. PDF and image blocks bill as input tokens.
  *  - Google: gemini-2.5-flash-image $0.30 in; one 1024px image = 1290 output
@@ -18,6 +19,7 @@
  *  expensive known rate rather than at zero (see priceFor). */
 export const PRICES_USD_PER_MTOK: Record<string, { input: number; output: number; cacheWrite: number; cacheRead: number }> = {
   "claude-sonnet-5": { input: 2, output: 10, cacheWrite: 2.5, cacheRead: 0.2 },
+  "claude-haiku-4-5-20251001": { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 },
   "gemini-2.5-flash-image": { input: 0.3, output: 30, cacheWrite: 0.3, cacheRead: 0.3 },
 };
 

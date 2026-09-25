@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
   anthropicCostCents,
@@ -73,4 +74,11 @@ test("promptChars counts system and message text, not base64 payloads", () => {
     { role: "assistant", content: "xyz" },
   ];
   assert.equal(promptChars(system, messages), 12);
+});
+
+test("Haiku is priced at its own rate, not at the dearest known one", () => {
+  const usage = { input_tokens: 1_000_000, output_tokens: 0 };
+  assert.ok(anthropicCostCents("claude-haiku-4-5-20251001", usage) < anthropicCostCents("claude-sonnet-5", usage));
+  const route = readFileSync("app/api/brand-guideline/upload-asset/route.ts", "utf8");
+  assert.match(route, /const MODEL = 'claude-haiku-4-5-20251001'/);
 });

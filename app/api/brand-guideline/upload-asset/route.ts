@@ -10,7 +10,12 @@ export const maxDuration = 60
 // maxRetries: 0 — meter() owns the one retry (hq-accounts.md criterion 7).
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 })
 
-const MODEL = 'claude-sonnet-5'
+// Haiku, not Sonnet: naming a logo's type is a five-way label. Compared on
+// 2026-09-25 against the six logos in brand_logos, Haiku 4.5 gave the same
+// answer as Sonnet 5 every time, at a fifth to a third of the cost. The two
+// other simple jobs tried — palette hex codes and catalogue parsing — stay on
+// Sonnet: Haiku misread hex values and dropped sizes from product names.
+const MODEL = 'claude-haiku-4-5-20251001'
 const MAX_TOKENS = 200
 
 const FALLBACK = { logoType: 'combination mark', description: 'Brand logo' }

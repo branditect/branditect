@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  costRatio, filterAccounts, needsAttention, sortAccounts, toCsv, toView, TIER_LABEL, STATUS_LABEL,
+  costRatio, filterAccounts, isTestAccount, needsAttention, sortAccounts, toCsv, toView, TIER_LABEL, STATUS_LABEL,
   type AccountRow,
 } from "./hq-view.ts";
 import { TIER_CAPS } from "./plans.ts";
@@ -123,5 +123,16 @@ describe("filters and attention", () => {
     assert.match(text, /Loss cost €14\.00 this month on a €10\.00 account/);
     assert.match(text, /Trial trial ends in 2 days/);
     assert.match(text, /signups? older than 7 days never cleared the questionnaire gate/);
+  });
+});
+
+describe("test accounts", () => {
+  it("harness accounts and plus-addressed test sign-ups are tests; customers are not", () => {
+    assert.equal(isTestAccount({ brand_id: "zz-doc-mtlhlj17", owner_email: "zz-doc-1@branditect-test.invalid" }), true);
+    assert.equal(isTestAccount({ brand_id: "zz-bg-x", owner_email: null }), true);
+    assert.equal(isTestAccount({ brand_id: "any", owner_email: "a@b.invalid" }), true);
+    assert.equal(isTestAccount({ brand_id: "saara-s-salama-testi1-bgzr", owner_email: "saara.s.salama+testi1@gmail.com" }), true);
+    assert.equal(isTestAccount({ brand_id: "sorbify-13t9", owner_email: "saara@cgl.agency" }), false);
+    assert.equal(isTestAccount({ brand_id: "nitroco-bsqy", owner_email: "hello@nitroco.shop" }), false);
   });
 });

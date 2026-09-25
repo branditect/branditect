@@ -49,6 +49,16 @@ export interface AccountRow {
   cost_month_cents: number | string;
 }
 
+/**
+ * A test account: the ones the harnesses create (brand id "zz-…", address on a
+ * .invalid domain) and plus-addressed test sign-ups ("+test", "+testi").
+ * Hidden from HQ by default so the numbers are about customers.
+ */
+export function isTestAccount(r: Pick<AccountRow, "brand_id" | "owner_email">): boolean {
+  const email = (r.owner_email ?? "").toLowerCase();
+  return /^zz-/i.test(r.brand_id) || /\.invalid$/.test(email) || /\+test/.test(email);
+}
+
 export type Tone = "ok" | "warn" | "bad" | "none";
 
 export const TIER_LABEL: Record<Tier, string> = {

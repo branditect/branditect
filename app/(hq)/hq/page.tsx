@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authedFetch, authedJson } from "@/lib/authed-fetch";
 import {
-  bytes, euros, filterAccounts, needsAttention, sortAccounts, toCsv, toView,
+  bytes, euros, filterAccounts, isTestAccount, needsAttention, sortAccounts, toCsv, toView,
   type AccountRow, type AccountView, type SortKey, type Tone,
 } from "@/lib/hq-view";
 import type { PlanStatus, Tier } from "@/lib/plans";
@@ -48,6 +48,7 @@ export default function HqAccountsPage() {
   const [status, setStatus] = useState<PlanStatus | "any">("any");
   const [sort, setSort] = useState<{ key: SortKey; dir: "desc" | "asc" }>({ key: "ratio", dir: "desc" });
   const [page, setPage] = useState(0);
+  const [showTests, setShowTests] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -64,23 +65,30 @@ export default function HqAccountsPage() {
     return () => { alive = false; };
   }, []);
 
-  const views = useMemo(() => (load.state === "ready" ? load.rows.map((r) => toView(r)) : []), [load]);
+  // Test accounts are left out unless asked for — of the table AND the tiles,
+  // so every number on the screen is about customers.
+  const realRows = useMemo(
+    () => (load.state === "ready" ? load.rows.filter((r) => showTests || !isTestAccount(r)) : []),
+    [load, showTests],
+  );
+  const testCount = load.state === "ready" ? load.rows.filter((r) => isTestAccount(r)).length : 0;
+  const views = useMemo(() => realRows.map((r) => toView(r)), [realRows]);
   const shown = useMemo(
     () => sortAccounts(filterAccounts(views, q, tier, status), sort.key, sort.dir),
     [views, q, tier, status, sort],
   );
-  useEffect(() => setPage(0), [q, tier, status, sort]);
+  useEffect(() => setPage(0), [q, tier, status, sort, showTests]);
 
   if (load.state === "loading") return <p className="text-[13px] text-muted py-10">Loading accounts…</p>;
   if (load.state === "missing") return <p className="text-[13px] text-muted py-10">Not found.</p>;
   if (load.state === "error") return <Notice tone="bad" text={`Could not load accounts: ${load.message}`} />;
   if (load.state === "notInstalled") return <Notice tone="warn" text={load.message} />;
 
-  const t = load.totals;
+  const t = { ...load.totals, ...tilesFrom(realRows) };
   const costMonth = Number(t.cost_month_cents) || 0;
   const costLast = Number(t.cost_last_month_cents) || 0;
   const margin = t.mrr_cents > 0 ? Math.round(((t.mrr_cents - costMonth) / t.mrr_cents) * 100) : null;
-  const attention = needsAttention(views, load.rows);
+  const attention = needsAttention(views, realRows);
   const pageRows = shown.slice(page * PAGE, page * PAGE + PAGE);
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
   const plat = t.platform_today;
@@ -169,10 +177,14 @@ export default function HqAccountsPage() {
           onChange={(v) => setStatus(v as PlanStatus | "any")}
           options={[["any", "Any status"], ["trialing", "Trialing"], ["past_due", "Past due"], ["cancelled", "Cancelled"]]}
         />
+        <label className="ml-auto flex items-center gap-1.5 text-[12px] font-bold text-muted cursor-pointer">
+          <input type="checkbox" checked={showTests} onChange={(e) => setShowTests(e.target.checked)} />
+          Show test accounts ({testCount})
+        </label>
         <button
           type="button"
           onClick={() => void exportCsv()}
-          className="ml-auto border border-rule-2 bg-card rounded-full px-[15px] py-2 text-[12.5px] font-bold text-ink-2 hover:border-accent-line hover:text-accent-dark"
+          className=" border border-rule-2 bg-card rounded-full px-[15px] py-2 text-[12.5px] font-bold text-ink-2 hover:border-accent-line hover:text-accent-dark"
         >
           Export CSV
         </button>
@@ -246,6 +258,21 @@ export default function HqAccountsPage() {
       </p>
     </div>
   );
+}
+
+/** The tiles, from the rows on screen: test accounts excluded unless shown. */
+function tilesFrom(rows: AccountRow[]) {
+  const now = Date.now();
+  const week = 7 * 86_400_000;
+  return {
+    accounts: rows.length,
+    new_7d: rows.filter((r) => r.signed_up_at && now - Date.parse(r.signed_up_at) < week).length,
+    active_7d: rows.filter((r) => r.last_active_at && now - Date.parse(r.last_active_at) < week).length,
+    mrr_cents: rows.filter((r) => r.status === "active" || r.status === "past_due").reduce((s, r) => s + (Number(r.mrr_cents) || 0), 0),
+    cost_month_cents: rows.reduce((s, r) => s + (Number(r.cost_month_cents) || 0), 0),
+    trials_ending_7d: rows.filter((r) => r.status === "trialing" && r.trial_ends_at
+      && Date.parse(r.trial_ends_at) - now < week && Date.parse(r.trial_ends_at) >= now).length,
+  };
 }
 
 function delta(cents: number, suffix: string): string {

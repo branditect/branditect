@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { authedJson } from "@/lib/authed-fetch";
 import { supabase } from "@/lib/supabase";
 import { useBrand } from "@/lib/useBrand";
 import Icon from "@/components/icon";
@@ -167,6 +168,18 @@ export default function VisualIdentityPage() {
     reload(() => alive);
     return () => { alive = false; };
   }, [brandLoading, reload]);
+
+  /* The guideline's index is what Andy reads as the brand's rulebook
+     (/api/brand-guideline/index). Asked for whenever the guideline changes,
+     including on load: the route answers at once, with no download and no
+     model call, when this exact file is already indexed — so a guideline
+     uploaded before this was wired back up gets indexed on the next visit.
+     Fire and forget: the page shows nothing of it. */
+  const guidelineUrl = visual?.guideline_url ?? null;
+  useEffect(() => {
+    if (!brandId || !guidelineUrl) return;
+    void authedJson("/api/brand-guideline/index", "POST", { brandId, source: "visual" }).catch(() => undefined);
+  }, [brandId, guidelineUrl]);
 
   /* The specimen must render in the actual font. A specimen set in the wrong
      typeface is worse than no specimen. */

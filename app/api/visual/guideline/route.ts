@@ -177,5 +177,8 @@ export async function DELETE(req: NextRequest) {
   // a row pointing at a deleted file is a broken download.
   const path = storagePathFromUrl(row?.guideline_url ?? null);
   if (path) await supabase.storage.from("brand-assets").remove([path]);
+  // Its index too: Andy treats brand_guideline as the authoritative rulebook,
+  // and a removed guideline must stop answering questions.
+  if (path) await supabase.from("brand_guideline").delete().eq("brand_id", brandId).eq("storage_path", path);
   return NextResponse.json({ success: true });
 }

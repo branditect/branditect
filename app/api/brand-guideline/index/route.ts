@@ -7,6 +7,8 @@ import { sanitiseOutput } from "@/lib/sanitise-output";
 import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
 import { estimateCents, anthropicCostCents, promptChars, pdfPageCount } from "@/lib/usage-cost";
 import { sha256Hex, isMissingHashColumn, warnNoHashColumn } from "@/lib/index-once";
+import { extractPdfText } from "@/lib/local-extract";
+import { storagePathFromUrl } from "@/lib/brand-colors";
 
 // Image-heavy guideline PDFs are slow: a 40-page one measured 104s. 300 is the
 // Vercel Pro ceiling; on Hobby this is capped at 60 and large PDFs will fail.
@@ -16,7 +18,13 @@ export const maxDuration = 300;
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 0 });
 
 const MODEL = "claude-sonnet-5";
-const MAX_TOKENS = 16000;
+// Output is most of what this call costs. 8000 holds the JSON and a
+// ~2,000-word digest; the old 16000 paid for length nobody asked for.
+const MAX_TOKENS = 8000;
+
+// A guideline with a text layer is sent as its text, not its pages (lib/local-extract).
+// 150k characters is a very long guideline; the Sorbify one is 15.7k.
+const MAX_TEXT_CHARS = 150000;
 
 // Anthropic caps a request at 32MB. Base64 inflates by ~37%, so the real
 // ceiling on the file itself is ~23MB — check before spending 100s on a
@@ -54,7 +62,7 @@ Rules:
 - Copy text VERBATIM wherever the guideline states a rule. Do not paraphrase rules.
 - Read hex codes off the colour swatches exactly. If a swatch shows CMYK or Pantone only, convert and mark it in "usage".
 - If a section genuinely is not in the document, use null (or an empty array). NEVER invent a rule, a hex code or a font name.
-- "summary" is what the assistant reads to answer questions. Include everything of substance: positioning, mission, tone, colour rules, typography, logo usage, imagery, packaging, social. Prefer the guideline's own wording. Long is fine.` + HOUSE_STYLE;
+- "summary" is what the assistant reads to answer questions. Include everything of substance: positioning, mission, tone, colour rules, typography, logo usage, imagery, packaging, social. Prefer the guideline's own wording. Aim for at most about 2,000 words: the assistant reads it with every question, so every word is paid for again.` + HOUSE_STYLE;
 
 type Body = {
   brandId: string;
@@ -62,6 +70,9 @@ type Body = {
   documentId?: string;
   sourceName?: string;
   images?: { data: string; type: string }[];
+  /** "visual": index the brand's current guideline from Visual identity.
+   *  The path is read from brand_visual on the server, never from the body. */
+  source?: "visual";
 };
 
 export async function POST(req: NextRequest) {
@@ -72,7 +83,34 @@ export async function POST(req: NextRequest) {
     const auth = await resolveBrand(req, brandId);
     if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status });
     brandId = auth.brandId;
-    const { storagePath, documentId, sourceName, images } = body;
+    const { documentId, images } = body;
+    let { storagePath, sourceName } = body;
+    let bucket: "brand-documents" | "brand-assets" = "brand-documents";
+
+    /*
+      The guideline uploaded on Visual identity. That upload stopped calling
+      this route in the 2026-08-29 rebuild, so from then on no guideline was
+      indexed and Andy had no rulebook. The path comes from the brand's own
+      brand_visual row; when that exact file is already indexed this returns
+      before downloading anything, so the page can ask on every load.
+    */
+    let fromVisual = false;
+    if (body.source === "visual") {
+      const { data: vis } = await supabase
+        .from("brand_visual").select("guideline_url").eq("brand_id", auth.brandId).maybeSingle();
+      const path = storagePathFromUrl(vis?.guideline_url ?? null);
+      if (!path) return NextResponse.json({ error: "No guideline" }, { status: 404 });
+      const { data: current } = await supabase
+        .from("brand_guideline").select("status, storage_path").eq("brand_id", auth.brandId).maybeSingle();
+      if (current?.status === "ready" && current.storage_path === path) {
+        return NextResponse.json({ success: true, reused: true, alreadyIndexed: true });
+      }
+      fromVisual = true;
+      bucket = "brand-assets";
+      storagePath = path;
+      // "<16 hex of content>-<name>.pdf" since c3a0c8f, "<ms>-<name>.pdf" before.
+      sourceName = path.split("/").pop()!.replace(/^[0-9a-f]{16}-|^\d{13}-/, "");
+    }
 
     if (!brandId) {
       return NextResponse.json({ error: "brandId is required" }, { status: 400 });
@@ -98,7 +136,7 @@ export async function POST(req: NextRequest) {
       the caller's brand. Same rule here. The bucket is no longer negotiable
       either — guidelines live in brand-documents.
     */
-    if (storagePath) {
+    if (storagePath && !fromVisual) {
       const { data: owned } = await supabase
         .from("brand_documents")
         .select("id")
@@ -123,7 +161,7 @@ export async function POST(req: NextRequest) {
 
     if (storagePath) {
       const { data: blob, error: dlErr } = await supabase.storage
-        .from("brand-documents")
+        .from(bucket)
         .download(storagePath);
 
       if (dlErr || !blob) {
@@ -142,7 +180,22 @@ export async function POST(req: NextRequest) {
 
       contentHash = sha256Hex(buf);
 
+      // A PDF with a real text layer goes as text: a few thousand tokens
+      // instead of every page as an image. A scan still goes as the file.
+      let local: Awaited<ReturnType<typeof extractPdfText>> = null;
       if (isPdf) {
+        try { local = await extractPdfText(new Uint8Array(buf)); }
+        catch (e) { console.error("[brand-guideline/index] text read failed, sending the file:", e instanceof Error ? e.message : e); }
+      }
+      if (isPdf && local) {
+        sourceType = "pdf";
+        pageCount = local.pages;
+        content.push({
+          type: "text",
+          text: `The text layer of the brand guideline PDF (${local.pages} pages):\n\n<guideline>\n${local.text.slice(0, MAX_TEXT_CHARS)}\n</guideline>`,
+        });
+        console.log(`[brand-guideline/index] ${brandId}: sending text (${local.text.length} chars, ${local.pages} pages), not the file`);
+      } else if (isPdf) {
         sourceType = "pdf";
         pdfPages = pdfPageCount(new Uint8Array(buf));
         content.push({
@@ -210,6 +263,12 @@ export async function POST(req: NextRequest) {
             .update({ status: "ready", extracted_text: existing.summary })
             .eq("id", documentId)
             .eq("brand_id", brandId);
+        }
+        // Same bytes at a new path (a re-upload, or the pre-hash file name):
+        // point the row at it, so the page's path check short-circuits next
+        // time instead of downloading the file again to hash it.
+        if (storagePath && fromVisual) {
+          await supabase.from("brand_guideline").update({ storage_path: storagePath }).eq("brand_id", brandId);
         }
         console.log(`[brand-guideline/index] ${brandId}: same bytes as the indexed guideline, reused without a provider call`);
         return NextResponse.json({

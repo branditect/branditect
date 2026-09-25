@@ -3,6 +3,10 @@ const nextConfig = {
   experimental: {
     // Runs instrumentation.ts at server start for the env check.
     instrumentationHook: true,
+    // Loaded from node_modules at run time, not bundled: pdf.js is the kind of
+    // library webpack rewrites into something that fails only in production.
+    // lib/local-extract.test.ts exercises exactly this copy.
+    serverComponentsExternalPackages: ['unpdf'],
     serverActions: {
       bodySizeLimit: '10mb',
     },

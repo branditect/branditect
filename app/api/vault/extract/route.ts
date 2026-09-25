@@ -7,6 +7,7 @@ import { VAULT_EXTRACT_STABLE } from "@/lib/prompts";
 import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
 import { estimateCents, anthropicCostCents, promptChars, pdfPageCount } from "@/lib/usage-cost";
 import { sha256Hex, isMissingHashColumn, warnNoHashColumn } from "@/lib/index-once";
+import { extractPdfText, extractOffice, officeKind, type LocalText } from "@/lib/local-extract";
 
 // A 40-page image-heavy guideline PDF measured 104s. At the old 60s the
 // function was killed mid-flight, so the row below stayed "processing" with
@@ -135,11 +136,35 @@ export async function POST(req: NextRequest) {
       /\.(png|jpg|jpeg|webp|gif)$/i.test(lower);
 
     let extractedText = "";
-    // True only when the model actually read the file; the placeholder text
-    // below is not an index and must not be reused by hash.
+    // True only when the file was actually read (here or by the model); the
+    // placeholder text below is not an index and must not be reused by hash.
     let indexed = false;
+    let pagesCount = 0;
 
+    /*
+      Read it here first (lib/local-extract.ts). A PDF with a text layer and
+      every DOCX/PPTX/XLSX carry their text as data: free, complete, and not
+      cut off at max_tokens. Only images and scanned PDFs go to the model.
+    */
+    const office = officeKind(lower);
+    let local: LocalText | null = null;
     try {
+      if (isPdf) local = await extractPdfText(new Uint8Array(buffer));
+      else if (office) local = extractOffice(new Uint8Array(buffer), office);
+    } catch (err) {
+      console.error(`[vault/extract] ${documentId}: local read failed, falling back:`, err instanceof Error ? err.message : err);
+    }
+    if (local) {
+      console.log(`[vault/extract] ${documentId}: read locally (${local.via}, ${local.pages} pages, ${local.text.length} chars), no provider call`);
+      extractedText = local.text;
+      pagesCount = local.pages;
+      indexed = true;
+    } else if (office) {
+      // Nothing to read in it, or not a valid Office file. The API cannot read
+      // these formats, so sending it there only spends money on a refusal.
+      const fileName = storagePath.split("/").pop() || storagePath;
+      extractedText = `[File: ${fileName}]\nDocument stored in vault. No text could be read from it — for automatic text extraction, please upload a PDF version of this document.`;
+    } else try {
       let messageContent: Anthropic.MessageParam["content"];
 
       if (isPdf) {
@@ -164,14 +189,8 @@ export async function POST(req: NextRequest) {
           { type: "text", text: "Extract all text content visible in this image." },
         ];
       } else {
-        // DOCX / PPTX / XLSX — attempt Claude document block; graceful fallback
-        messageContent = [
-          {
-            type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: base64 },
-          } as Anthropic.DocumentBlockParam,
-          { type: "text", text: "Extract all text content from this document." },
-        ];
+        // Neither a PDF, an image nor an Office file: nothing the model can read.
+        throw new Error("Unsupported file type");
       }
 
       const params: Anthropic.MessageCreateParamsNonStreaming = {
@@ -263,7 +282,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pagesCount = Math.max(1, Math.ceil(extractedText.length / 3000));
+    if (!pagesCount) pagesCount = Math.max(1, Math.ceil(extractedText.length / 3000));
 
     // Report rows affected. This used to log the error and return success
     // regardless, so a write that never landed looked identical to one that

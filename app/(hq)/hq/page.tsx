@@ -139,7 +139,7 @@ export default function HqAccountsPage() {
                 <span className="sr-only">{a.tone === "bad" ? "Problem:" : "Warning:"}</span>
                 <span>{a.text}</span>
                 {a.brandId && (
-                  <Link href={`/hq/accounts/${encodeURIComponent(a.brandId)}`} className="ml-auto text-[11.5px] font-extrabold text-accent-dark whitespace-nowrap">
+                  <Link prefetch={false} href={`/hq/accounts/${encodeURIComponent(a.brandId)}`} className="ml-auto text-[11.5px] font-extrabold text-accent-dark whitespace-nowrap">
                     Open account →
                   </Link>
                 )}
@@ -351,7 +351,7 @@ function Row({ v, onOpen }: { v: AccountView; onOpen: () => void }) {
             {v.initials}
           </span>
           <span className="min-w-0 max-w-[150px]">
-            <Link href={`/hq/accounts/${encodeURIComponent(v.brandId)}`} onClick={(e) => e.stopPropagation()} className="font-extrabold leading-tight block truncate">
+            <Link prefetch={false} href={`/hq/accounts/${encodeURIComponent(v.brandId)}`} onClick={(e) => e.stopPropagation()} className="font-extrabold leading-tight block truncate">
               {v.name}
             </Link>
             <span className="text-[11.5px] text-muted-2 leading-tight block truncate">{v.email || "no owner email"}</span>

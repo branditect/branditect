@@ -1069,9 +1069,12 @@ export const fi: Record<StringKey, string> = {
   "plan.pro.f6": "Brändipakettisi linkki freelancereille ja painoille",
   "plan.pro.f7": "1 brändi, 1 käyttäjä, 5 Gt",
 
+  // A plan name, like "sidebar.pro": the same in both languages.
+  "plan.proplus.name": "Pro Plus",
   "plan.proplus.who": "Toimistoille ja kaikille, jotka pyörittävät useampaa kuin yhtä brändiä.",
   "plan.proplus.credits": "600 krediittiä",
 
+  "plan.ent.name": "Enterprise",
   "plan.ent.who": "Brändiportfolioille ja isommille tiimeille.",
   "plan.ent.vatLine": "Hinta sen mukaan mitä tarvitset",
   "plan.ent.credits": "Sovitaan",

@@ -13,7 +13,7 @@
  * the current numbers. Adopting the recommendation is a one-line change here.
  */
 
-import { translate, type Locale, type StringKey } from "./i18n/index.ts";
+import { translate, type Locale, type StringKey, type Vars } from "./i18n/index.ts";
 
 export interface Plan {
   id: "free" | "pro" | "proplus" | "enterprise";
@@ -44,8 +44,9 @@ export const VAT_RATE = "25.5%";
  * (`npm run i18n:gap:site`) lists it. When its key lands, the wrapper becomes
  * the key and nothing else changes.
  */
-type Copy = StringKey | { en: string };
-const text = (locale: Locale, c: Copy) => (typeof c === "string" ? translate(locale, c) : c.en);
+type Copy = StringKey | { key: StringKey; vars: Vars } | { en: string };
+const text = (locale: Locale, c: Copy) =>
+  typeof c === "string" ? translate(locale, c) : "key" in c ? translate(locale, c.key, c.vars) : c.en;
 
 /**
  * A euro amount the way each language writes it.
@@ -77,7 +78,7 @@ interface PlanCopy {
   features: Copy[];
 }
 
-const VAT_INCLUDED: Copy = { en: `Incl. VAT ${VAT_RATE}` };
+const VAT_INCLUDED: Copy = { key: "site.pricing.vatLine", vars: { VAT_RATE } };
 
 const PLAN_COPY: PlanCopy[] = [
   {
@@ -112,7 +113,7 @@ const PLAN_COPY: PlanCopy[] = [
   },
   {
     id: "proplus",
-    name: { en: "Pro Plus" },
+    name: "plan.proplus.name",
     who: "plan.proplus.who",
     monthly: 45.9,
     yearlyMonthly: 38.25,
@@ -124,16 +125,16 @@ const PLAN_COPY: PlanCopy[] = [
     cta: "plan.pro.cta",
     href: "/signup",
     features: [
-      { en: "Everything in Pro, plus" },
-      { en: "3 brands, each with its own truth. They never bleed into each other" },
-      { en: "3 seats, so your team writes from the same brain" },
-      { en: "20 GB" },
-      { en: "Priority support" },
+      "plan.everythingInPro",
+      "plan.proplus.f1",
+      "plan.proplus.f2",
+      "plan.proplus.f3",
+      "plan.proplus.f4",
     ],
   },
   {
     id: "enterprise",
-    name: { en: "Enterprise" },
+    name: "plan.ent.name",
     who: "plan.ent.who",
     monthly: null,
     yearlyMonthly: null,
@@ -180,7 +181,7 @@ const COMPARISON_COPY: Row[] = [
   { label: "cmp.credits", values: { free: "cmp.onceOnly", pro: "cmp.perMonth350", proplus: "cmp.perMonth600", enterprise: "cmp.agreed" } },
   { label: "cmp.brands", values: { free: { en: "1" }, pro: { en: "1" }, proplus: { en: "3" }, enterprise: "cmp.unlimited" } },
   { label: "cmp.seats", values: { free: { en: "1" }, pro: { en: "1" }, proplus: { en: "3" }, enterprise: "cmp.agreed" } },
-  { label: "cmp.storage", values: { free: { en: "200 MB" }, pro: { en: "5 GB" }, proplus: { en: "20 GB" }, enterprise: "cmp.agreed" } },
+  { label: "cmp.storage", values: { free: "plan.storage200mb", pro: "plan.storage5gb", proplus: "plan.storage20gb", enterprise: "cmp.agreed" } },
   { label: "cmp.kitLink", values: { free: "cmp.no", pro: "cmp.yes", proplus: "cmp.yes", enterprise: "cmp.yes" } },
   { label: "cmp.support", values: { free: "cmp.docs", pro: "cmp.email", proplus: "cmp.emailPriority", enterprise: "cmp.namedContact" } },
 ];

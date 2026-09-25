@@ -38,32 +38,30 @@ export default function PricingClient({ locale }: { locale: Locale }) {
             {h1Words.slice(0, h1Break).join(" ")}<br />{h1Words.slice(h1Break).join(" ")}{" "}
             <em>{t("site.pricing.freeToBuild")}</em>
           </h1>
-          <p className={s.lede}>
-            Branditect turns your scattered files, decisions and numbers into one knowledge layer
-            that knows your strategy, your products and your margins. Build the whole thing for
-            nothing. Pay when you want it working for you.
-          </p>
+          <p className={s.lede}>{t("site.pricing.lede")}</p>
 
-          <div className={s.toggle} role="group" aria-label="Billing period">
+          <div className={s.toggle} role="group" aria-label={t("site.pricing.billingPeriod")}>
             <button type="button" className={yearly ? undefined : s.on}
               aria-pressed={!yearly} onClick={() => setYearly(false)}>
               {t("site.pricing.monthly")}
             </button>
             <button type="button" className={yearly ? s.on : undefined}
               aria-pressed={yearly} onClick={() => setYearly(true)}>
-              {t("site.pricing.yearly")}<span className={s.save}>2 months free</span>
+              {t("site.pricing.yearly")}<span className={s.save}>{t("site.pricing.twoMonthsFree")}</span>
             </button>
           </div>
         </section>
 
-        <section className={s.plans} aria-label="Plans">
+        <section className={s.plans} aria-label={t("site.pricing.plans")}>
           {PLANS.map((plan) => {
             const amount = plan.monthly === null
               ? null
               : yearly ? plan.yearlyMonthly : plan.monthly;
             const vat = plan.monthly === null || plan.id === "free"
               ? plan.vatLine
-              : yearly ? `Incl. VAT, billed ${plan.yearlyTotal} yearly` : `Incl. VAT ${VAT_RATE}`;
+              : yearly
+                ? translate(locale, "site.pricing.vatYearly", { yearlyTotal: plan.yearlyTotal! })
+                : translate(locale, "site.pricing.vatLine", { VAT_RATE });
             return (
               <div key={plan.id} className={`${s.plan} ${plan.featured ? s.featured : ""}`}>
                 {plan.featured && <span className={s.flag}>{t("site.mostPopular")}</span>}
@@ -71,9 +69,9 @@ export default function PricingClient({ locale }: { locale: Locale }) {
                 <p className={s.who}>{plan.who}</p>
                 <div className={s.price}>
                   <span className={s.priceN} style={amount === null ? { fontSize: 30 } : undefined}>
-                    {amount ?? "Let’s talk"}
+                    {amount ?? t("site.pricing.letsTalk")}
                   </span>
-                  {amount !== null && plan.id !== "free" && <span className={s.per}>/month</span>}
+                  {amount !== null && plan.id !== "free" && <span className={s.per}>{t("site.perMonth")}</span>}
                 </div>
                 <div className={s.vatline}>{vat}</div>
                 <div className={s.planCta}>
@@ -98,10 +96,7 @@ export default function PricingClient({ locale }: { locale: Locale }) {
         <section className={s.sec}>
           <div className={s.sechead}>
             <h2>{t("site.pricing.whatIsCredit")}</h2>
-            <p>
-              One unit of work the brain does for you. Reading and indexing whatever you upload is
-              always free, because a brain that charges you to learn is the wrong shape.
-            </p>
+            <p>{t("site.pricing.creditIs")}</p>
           </div>
           <div className={s.tableWrap}>
             <table>
@@ -145,20 +140,13 @@ export default function PricingClient({ locale }: { locale: Locale }) {
         <section className={s.sec} style={{ paddingTop: 0 }}>
           <div className={s.sechead}>
             <h2>{t("site.notAGenerator")}</h2>
-            <p>
-              This is your Home screen on the free plan. Brand Readiness on the left, what the
-              brain has read on the right, and what you can make with it underneath.
-            </p>
+            <p>{t("site.pricing.freeHomeCaption")}</p>
           </div>
           <div className={s.shot}>
             <Image src="/login/dashboard.webp" width={1010} height={552} priority
-              alt="The Branditect Home screen for a brand called Ruffle Studio: a Brand Readiness score with its four checks, counts of the documents and images the brain has read, and a row of Studio tools." />
+              alt={t("site.pricing.altHome")} />
           </div>
-          <p className={s.caption}>
-            Brand Readiness is four checks, each worth a quarter. It says what is missing rather
-            than congratulating you, because a score you can predict is worth more than one that
-            looks precise.
-          </p>
+          <p className={s.caption}>{t("site.pricing.readinessIs")}</p>
         </section>
 
         <section className={s.sec} style={{ paddingTop: 0 }}>

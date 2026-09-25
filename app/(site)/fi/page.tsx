@@ -13,19 +13,15 @@ import { translate } from "@/lib/i18n/index.ts";
  * that has a `site.*` key comes from lib/i18n/fi.ts. The body copy that has
  * no key yet is still English, which is why this stays `noindex` until
  * `FI_COPY_READY` is true: see lib/site-locale.ts.
- *
- * The description is English for the same reason: it has no key.
  */
 export const metadata: Metadata = {
   title: translate("fi", "site.home.metaTitle"),
-  description:
-    "One place that holds your strategy, your product truth and your margins, so everything you publish is on brand, accurate and profitable. Build it free.",
+  description: translate("fi", "site.home.metaDesc"),
   alternates: alternatesFor("home", "fi"),
   robots: FI_COPY_READY ? undefined : { index: false, follow: true },
   openGraph: {
     title: translate("fi", "site.home.metaTitle"),
-    description:
-      "One place that holds your strategy, your product truth and your margins. Build it free.",
+    description: translate("fi", "site.home.ogSub"),
     url: "/fi",
     type: "website",
   },

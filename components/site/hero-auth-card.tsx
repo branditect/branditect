@@ -62,7 +62,7 @@ export default function HeroAuthCard({ tab, onTab, locale }: { tab: Tab; onTab: 
       <span className={s.orb} aria-hidden="true" />
       <span className={s.orb2} aria-hidden="true" />
 
-      <div className={s.tabs} role="tablist" aria-label="Sign up or log in">
+      <div className={s.tabs} role="tablist" aria-label={t("site.signUpOrLogIn")}>
         <button type="button" role="tab" aria-selected={tab === "signup"}
           className={tab === "signup" ? s.on : undefined} onClick={() => onTab("signup")}>
           {t("site.startFree")}

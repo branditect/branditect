@@ -1,12 +1,13 @@
-import { ogImage, OG_SIZE, OG_ALT } from "@/components/site/og-image";
+import { ogImage, ogAlt, OG_SIZE } from "@/components/site/og-image";
+import { translate } from "@/lib/i18n/index.ts";
 
-/* The Finnish card. Its heading reads site.pricing.h1 in Finnish; the
-   subtitle has no key yet and is on branditect-ui/spec/i18n-gap-site.md. */
+/* The Finnish card: the heading reads site.pricing.h1 and the subtitle its
+   own key, both in Finnish. */
 export const runtime = "edge";
-export const alt = OG_ALT;
+export const alt = ogAlt("fi");
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
 export default function Image() {
-  return ogImage("What it is, what it will not do, and who it is for.", "fi");
+  return ogImage(translate("fi", "site.about.ogTag"), "fi");
 }

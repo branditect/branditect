@@ -12,14 +12,12 @@ import AboutBody from "../../about/about-body";
  */
 export const metadata: Metadata = {
   title: translate("fi", "site.about.metaTitle"),
-  description:
-    "Branditect is one place that knows your brand strategy, your products and your margins, and makes things from them. Built in Finland, on EU infrastructure.",
+  description: translate("fi", "site.about.metaDesc"),
   alternates: alternatesFor("about", "fi"),
   robots: FI_COPY_READY ? undefined : { index: false, follow: true },
   openGraph: {
     title: translate("fi", "site.about.metaTitle"),
-    description:
-      "One place that knows your strategy, your products and your margins, and makes things from them.",
+    description: translate("fi", "site.about.ogSub"),
     url: "/fi/about",
     type: "website",
   },

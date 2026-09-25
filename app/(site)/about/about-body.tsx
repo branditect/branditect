@@ -65,21 +65,14 @@ export default function AboutBody({ locale }: { locale: Locale }) {
               between them, and Finnish word order does not put the seam
               where English does, so there is no seam. */}
           <h1>{t("site.about.threeQuestions")}</h1>
-          <p className={s.lede}>
-            What do we stand for. What exactly do we sell. What can we afford to charge. The
-            answers exist already, buried in a slide deck nobody opens, an inbox nobody searches
-            and a spreadsheet one person maintains. Branditect is where they live instead.
-          </p>
+          <p className={s.lede}>{t("site.about.opening")}</p>
         </section>
 
         <div className={s.shot}>
           <Image src="/login/dashboard.webp" width={1010} height={552} priority
-            alt="The Branditect Home screen for a brand called Ruffle Studio: Brand Readiness with its four checks, counts of the files the brain has read, and the Studio tools underneath." />
+            alt={t("site.about.altHome")} />
         </div>
-        <p className={s.caption}>
-          One screen that knows how much of your brand has been written down, and what is still
-          missing. It says the diagnosis rather than the compliment.
-        </p>
+        <p className={s.caption}>{t("site.about.homeCaption")}</p>
 
         <section className={s.sec}>
           <div className={s.sechead}>
@@ -98,40 +91,27 @@ export default function AboutBody({ locale }: { locale: Locale }) {
 
           <div className={s.shot}>
             <Image src="/login/products.webp" width={1010} height={552}
-              alt="The Products screen for Ruffle Studio, listing each product with its cost, its price and its real margin, one margin figure marked with an asterisk." />
+              alt={t("site.about.altProducts")} />
           </div>
-          <p className={s.caption}>
-            Look at the asterisk in the margin column. That is the system telling you a figure is
-            estimated because a landed cost is missing. It would rather admit that than quietly
-            overstate your margin.
-          </p>
+          <p className={s.caption}>{t("site.about.asteriskCaption")}</p>
         </section>
 
         <section className={s.sec} id="how" style={{ scrollMarginTop: 80 }}>
           <div className={s.sechead}>
             <div className={s.eyebrow}>{t("site.about.howItWorks")}</div>
             <h2>{t("site.about.defineFeedMake")}</h2>
-            <p>
-              Three verbs in order. Every screen belongs to exactly one of them, and anything that
-              belongs to none of them is not built.
-            </p>
+            <p>{t("site.about.threeVerbs")}</p>
           </div>
           <div className={s.three}>
             <div className={s.card}>
               <span className={`${s.cardIc} bg-grad-more`}><Icon name="brand" size={18} /></span>
               <h3>{t("site.about.define")}</h3>
-              <p>
-                Twenty questions build your strategy, your tone of voice and your visual identity.
-                Five of them are enough to open the workspace. The rest can wait.
-              </p>
+              <p>{t("site.about.defineBody")}</p>
             </div>
             <div className={s.card}>
               <span className={`${s.cardIc} bg-grad-images`}><Icon name="know" size={18} /></span>
               <h3>{t("site.about.feed")}</h3>
-              <p>
-                Products, documents, images, links. Everything you upload is read and indexed, and
-                that part never costs a credit.
-              </p>
+              <p>{t("site.about.feedBody")}</p>
             </div>
             <div className={s.card}>
               <span className={`${s.cardIc} bg-grad-assets`}><Icon name="studio" size={18} /></span>
@@ -144,10 +124,7 @@ export default function AboutBody({ locale }: { locale: Locale }) {
             <Image src="/login/create-tools.webp" width={1010} height={552}
               alt={t("site.about.altStudio")} />
           </div>
-          <p className={s.caption}>
-            Everything in Studio reads the same brain. Nothing here has its own separate idea of
-            what your brand is.
-          </p>
+          <p className={s.caption}>{t("site.about.makeBody")}</p>
         </section>
 
         <section className={s.sec} style={{ paddingTop: 0 }}>
@@ -168,20 +145,13 @@ export default function AboutBody({ locale }: { locale: Locale }) {
             <Image src="/login/calculators.webp" width={1010} height={552}
               alt={t("site.about.altNumbers")} />
           </div>
-          <p className={s.caption}>
-            Margins are calculated net of tax and against landed cost, never factory cost against a
-            gross price. That difference is about five points, and it is the difference between a
-            product you think is profitable and one that is.
-          </p>
+          <p className={s.caption}>{t("site.about.marginMath")}</p>
         </section>
 
         <section className={s.sec} style={{ paddingTop: 0 }}>
           <div className={s.sechead}>
             <h2>{t("site.about.whoItIsFor")}</h2>
-            <p>
-              The second column is not modesty. It is what makes the first one believable, and it
-              saves us both a conversation.
-            </p>
+            <p>{t("site.about.secondColumn")}</p>
           </div>
           <div className={s.forlist}>
             <div className={`${s.forbox} ${s.yes}`}>
@@ -216,7 +186,7 @@ export default function AboutBody({ locale }: { locale: Locale }) {
             <div className={s.card}>
               <h3>{t("site.about.reachUs")}</h3>
               <p>
-                One inbox, read by the people who build it.{" "}
+                {t("site.about.oneInbox")}{" "}
                 <a href="mailto:hello@branditect.io" style={{ fontWeight: 700 }}>hello@branditect.io</a>
               </p>
             </div>
@@ -226,10 +196,7 @@ export default function AboutBody({ locale }: { locale: Locale }) {
         <section className={s.sec} style={{ paddingTop: 0 }}>
           <div className={s.band}>
             <h2>{t("site.about.answerThree")}</h2>
-            <p>
-              About four minutes for the five that matter. A hundred credits, no card, and nothing
-              expires.
-            </p>
+            <p>{t("site.about.fourMinutes")}</p>
             <div className={s.bandCta}>
               <Link href="/signup" className={s.btn}>{t("site.startFree")}</Link>
               <SiteLink page="pricing" className={`${s.btn} ${s.line}`}>{t("site.about.seePlans")}</SiteLink>

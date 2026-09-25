@@ -78,11 +78,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
               {t("site.home.h1a")}<br /><em>{t("site.home.h1b")}</em>
             </h1>
             <p className={s.heroLede}>
-              The commercial brain for product and ecommerce brands. It holds your strategy, your
-              product truth and your margins together, so everything you publish is on brand,
-              accurate and profitable. It writes your copy understanding each and every one of your
-              products, your tone of voice and style. And makes your images, too. It&rsquo;s like
-              having a superstar marketing team behind you.{" "}
+              {t("site.home.ledeFull")}{" "}
               <b>{t("site.home.cta")}</b>
             </p>
             <div className={s.trust}>
@@ -97,13 +93,12 @@ export default function LandingClient({ locale }: { locale: Locale }) {
         <div style={{ marginTop: 14 }}>
           <div className={s.frame}>
             <Image src="/login/dashboard.webp" width={1010} height={552} priority
-              alt="The Branditect home screen for a brand called Ruffle Studio: a Brand Readiness score with its four checks, counts of the documents and images the brain has read, and a row of Studio tools." />
+              alt={t("site.home.altHome")} />
           </div>
           <p className={s.cap}>
             <i className={s.capDot} />
             <span>
-              <b>{t("site.home.secHome")}</b> Brand Readiness tells you what is still missing, and the Studio row is
-              what you can make with what the brain already knows. Nothing on this screen is a guess.
+              <b>{t("site.home.secHome")}</b> {t("site.home.homeCaption")}
             </span>
           </p>
         </div>
@@ -112,10 +107,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
           <div className={`${s.sechead}`} style={{ textAlign: "center", margin: "0 auto 34px" }}>
             <div className={s.eyebrow}>{t("site.nav.howItWorks")}</div>
             <h2>{t("site.home.sub")}</h2>
-            <p>
-              Each one is usable by everything else, which is the whole difference between a brand
-              brain and a folder of documents.
-            </p>
+            <p>{t("site.home.eachUsable")}</p>
           </div>
           <div className={s.truths}>
             {STEPS.map((step) => (
@@ -136,14 +128,12 @@ export default function LandingClient({ locale }: { locale: Locale }) {
           <div style={{ marginTop: 26 }}>
             <div className={s.frame}>
               <Image src="/login/products.webp" width={1010} height={552}
-                alt="The Products screen for Ruffle Studio, listing each product with its cost, its price and its real margin, with one margin figure marked by an asterisk." />
+                alt={t("site.home.altProducts")} />
             </div>
             <p className={s.cap}>
               <i className={s.capDot} />
               <span>
-                <b>{t("site.home.secProducts")}</b> Look at the asterisk in the margin column. That is the system
-                telling you a figure is estimated because a landed cost is missing. It would rather
-                admit that than quietly overstate your margin.
+                <b>{t("site.home.secProducts")}</b> {t("site.about.asteriskCaption")}
               </span>
             </p>
           </div>
@@ -166,8 +156,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
             <p className={s.cap}>
               <i className={s.capDot} />
               <span>
-                <b>{t("site.home.secStudio")}</b> Everything here reads the same brain. Nothing has its own separate
-                idea of what your brand is.
+                <b>{t("site.home.secStudio")}</b> {t("site.home.sameBrain")}
               </span>
             </p>
           </div>
@@ -187,7 +176,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
                 <p className={s.who}>{plan.who}</p>
                 <div className={s.price}>
                   <span className={s.priceN}>{plan.monthly}</span>
-                  {plan.id !== "free" && <span className={s.per}>/month</span>}
+                  {plan.id !== "free" && <span className={s.per}>{t("site.perMonth")}</span>}
                 </div>
                 <div className={s.vatline}>{plan.vatLine}</div>
                 <div className={s.planCta}>
@@ -209,10 +198,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
           <div className={s.aboutStrip}>
             <div>
               <div className={s.aboutLead}>{t("site.nav.about")}</div>
-              <h2>
-                Built by a team that has spent two decades building brands around the world.
-                Made in Finland.
-              </h2>
+              <h2>{t("site.home.builtBy")}</h2>
               <p>
                 A brand rarely fails on strategy alone. It fails in the gaps between strategy,
                 product and price. The launch that was on brand and under margin. The claim nobody
@@ -231,14 +217,8 @@ export default function LandingClient({ locale }: { locale: Locale }) {
 
           <div className={s.aboutStrip} style={{ display: "block", marginTop: 14 }}>
             <div className={s.aboutClose} style={{ marginTop: 0, paddingTop: 0, borderTop: 0 }}>
-              <p>
-                What a big brand has is not better instincts than you. It is strategy and
-                infrastructure.
-              </p>
-              <p>
-                Branditect gives you both, at whatever stage you are at. First product or four
-                hundredth. You still make every decision. You stop making them from memory.
-              </p>
+              <p>{t("site.home.notInstincts")}</p>
+              <p>{t("site.home.givesYouBoth")}</p>
               <p className={s.aboutPunch}>{t("site.home.gapsPunch")}</p>
               <div className={s.bandCta} style={{ justifyContent: "flex-start", marginTop: 22 }}>
                 <SiteLink page="about" className={`${s.btn} ${s.line}`}>{t("site.home.readWhole")}</SiteLink>
@@ -250,10 +230,7 @@ export default function LandingClient({ locale }: { locale: Locale }) {
         <section className={s.final}>
           <span className={s.rings} aria-hidden="true"><i /><i /><i /></span>
           <h2>{t("site.about.answerThree")}</h2>
-          <p>
-            About four minutes for the five that matter. A hundred credits, no card, and nothing
-            expires.
-          </p>
+          <p>{t("site.home.fourMinutes")}</p>
           <SiteLink page="home" auth="signup" className={s.btn}>{t("site.startFree")}</SiteLink>
           <p className={s.finalFine}>{t("site.home.noCard")}</p>
         </section>

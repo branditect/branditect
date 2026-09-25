@@ -5,13 +5,11 @@ import LandingClient from "./landing-client";
 
 export const metadata: Metadata = {
   title: translate("en", "site.home.metaTitle"),
-  description:
-    "One place that holds your strategy, your product truth and your margins, so everything you publish is on brand, accurate and profitable. Build it free.",
+  description: translate("en", "site.home.metaDesc"),
   alternates: alternatesFor("home"),
   openGraph: {
     title: translate("en", "site.home.metaTitle"),
-    description:
-      "One place that holds your strategy, your product truth and your margins. Build it free.",
+    description: translate("en", "site.home.ogSub"),
     url: "/",
     type: "website",
   },

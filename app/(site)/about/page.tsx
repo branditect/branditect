@@ -5,13 +5,11 @@ import AboutBody from "./about-body";
 
 export const metadata: Metadata = {
   title: translate("en", "site.about.metaTitle"),
-  description:
-    "Branditect is one place that knows your brand strategy, your products and your margins, and makes things from them. Built in Finland, on EU infrastructure.",
+  description: translate("en", "site.about.metaDesc"),
   alternates: alternatesFor("about"),
   openGraph: {
     title: translate("en", "site.about.metaTitle"),
-    description:
-      "One place that knows your strategy, your products and your margins, and makes things from them.",
+    description: translate("en", "site.about.ogSub"),
     url: "/about",
     type: "website",
   },

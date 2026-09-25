@@ -13,7 +13,8 @@ import { PRICING_H1_BREAK_AFTER } from "@/lib/site-locale";
  * /about and /pricing were shipping without a card.
  */
 export const OG_SIZE = { width: 1200, height: 630 };
-export const OG_ALT = "Branditect, the commercial brain for your brand";
+/** The card's alt text, in the language of the page it previews. */
+export const ogAlt = (locale: Locale = "en") => translate(locale, "site.ogTitle");
 
 export function ogImage(subtitle: string, locale: Locale = "en") {
   /* The same sentence as the pricing heading, broken at the same word for the

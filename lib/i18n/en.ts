@@ -1001,9 +1001,12 @@ export const en = {
   "plan.pro.f6": "Your brand kit link for freelancers and printers",
   "plan.pro.f7": "1 brand, 1 seat, 5 GB",
 
+  // A plan name, like "sidebar.pro": the same in both languages.
+  "plan.proplus.name": "Pro Plus",
   "plan.proplus.who": "For agencies and anyone running more than one brand.",
   "plan.proplus.credits": "600 credits",
 
+  "plan.ent.name": "Enterprise",
   "plan.ent.who": "For brand portfolios and larger teams.",
   "plan.ent.vatLine": "Priced on what you need",
   "plan.ent.credits": "Agreed",

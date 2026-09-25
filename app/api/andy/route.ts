@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { parseStrategy, strategyPromptContext } from '@/lib/strategy'
 import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
-import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
+import { cachedSystem, logCacheUsage, withHistoryCache } from "@/lib/prompt-cache";
 import { andyStable } from "@/lib/prompts";
 import { outputLanguageFor, type BrandReader } from "@/lib/output-language";
 import { sanitiseOutput } from "@/lib/sanitise-output";
@@ -20,23 +20,27 @@ const MODEL = 'claude-sonnet-5'
 const MAX_TOKENS = 1000
 
 async function getBrandContext(brandId: string): Promise<string> {
+  // Every list is ordered. The whole context is the cached system prefix, and
+  // Postgres returns an unordered result in whatever order it likes — the same
+  // brand in a different row order is a different prefix, a cache miss, and a
+  // full-price 1h write of ~40k tokens.
   const [brandRes, strategyRes, toneRes, productsRes, brandStratRes, colorsRes, logosRes, fontsRes, visualRes, docsRes, answersRes, imagesRes, guidelineRes] = await Promise.all([
     supabase.from('brands').select('*').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_strategies').select('generated_strategy').eq('brand_id', brandId).maybeSingle(),
     supabase.from('brand_tone').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('catalog_products').select('name, description, sku, price_rrp, price_retail, price_monthly, price_wholesale, price_cogs, landed_cost, tax_rate_pct, floor_price, max_discount_pct, min_margin_pct, stock_status, stock_units, currency, type, category, tags').eq('brand_id', brandId),
+    supabase.from('catalog_products').select('name, description, sku, price_rrp, price_retail, price_monthly, price_wholesale, price_cogs, landed_cost, tax_rate_pct, floor_price, max_discount_pct, min_margin_pct, stock_status, stock_units, currency, type, category, tags').eq('brand_id', brandId).order('id'),
     supabase.from('brands').select('strategy_text, colors').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_book_colors').select('hex, name').eq('brand_id', brandId).limit(20),
-    supabase.from('brand_logos').select('slot, file_url, file_name').eq('brand_id', brandId),
-    supabase.from('brand_fonts').select('name, role, google_font_url').eq('brand_id', brandId),
+    supabase.from('brand_book_colors').select('hex, name').eq('brand_id', brandId).order('id').limit(20),
+    supabase.from('brand_logos').select('slot, file_url, file_name').eq('brand_id', brandId).order('id'),
+    supabase.from('brand_fonts').select('name, role, google_font_url').eq('brand_id', brandId).order('id'),
     supabase.from('brand_visual').select('*').eq('brand_id', brandId).maybeSingle(),
-    supabase.from('brand_documents').select('file_name, category, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }),
+    supabase.from('brand_documents').select('file_name, category, extracted_text').eq('brand_id', brandId).order('created_at', { ascending: false }).order('id'),
     // The questionnaire answers, not just the generated summary. Nothing is
     // stored here yet — the strategy page has never written a row — so this
     // resolves empty today and starts working the moment it does.
     supabase.from('brand_strategies').select('answers, generated_strategy, category').eq('brand_id', brandId).maybeSingle(),
     // What imagery exists, so the chat can answer "what shots do we have?"
-    supabase.from('brand_images').select('file_name, category, format, tags, campaign_name, title').eq('brand_id', brandId),
+    supabase.from('brand_images').select('file_name, category, format, tags, campaign_name, title').eq('brand_id', brandId).order('id'),
     supabase.from('brand_guideline').select('summary, colors, typography, logo, voice, source_name, status').eq('brand_id', brandId).maybeSingle(),
   ])
 
@@ -80,7 +84,8 @@ async function getBrandContext(brandId: string): Promise<string> {
 
   // The guideline is the brand's own rulebook — it outranks anything inferred
   // from other documents, so it goes in above them and says so.
-  if (guideline && guideline.status === 'ready' && guideline.summary) {
+  const guidelineInContext = Boolean(guideline && guideline.status === 'ready' && guideline.summary)
+  if (guideline && guidelineInContext) {
     ctx += `\nBRAND GUIDELINE (${guideline.source_name ?? 'uploaded guideline'}) — this is the authoritative source. Where it conflicts with anything below, follow it.\n`
     ctx += `${guideline.summary}\n`
     const g = guideline as { colors?: { hex?: string; name?: string; usage?: string }[] }
@@ -186,10 +191,18 @@ async function getBrandContext(brandId: string): Promise<string> {
     // exactly the specifics someone is asking about.
     let charBudget = 120000
     const empty: string[] = []
+    // brand-guideline/index writes its summary into the guideline's own vault
+    // row as well, so the same text would go in twice: once above as the
+    // authoritative guideline, once here as a document.
+    const guidelineSummary = guidelineInContext ? String(guideline!.summary).trim() : null
     for (const doc of docs) {
       const d = doc as Record<string, string>
       const text = d.extracted_text
       if (!text) { empty.push(d.file_name); continue }
+      if (guidelineSummary && text.trim() === guidelineSummary) {
+        ctx += `--- Document: ${d.file_name} [this is the brand guideline above] ---\n\n`
+        continue
+      }
       if (charBudget <= 0) {
         ctx += `--- Document: ${d.file_name} [omitted, context budget spent] ---\n\n`
         continue
@@ -283,10 +296,13 @@ export async function POST(req: NextRequest) {
     thinking: { type: 'disabled' },
     max_tokens: MAX_TOKENS,
     system: cachedSystem(andyStable(brandContext, language)),
-    messages: messages.map((m: { role: string; content: string }) => ({
+    // The history is cached too (lib/prompt-cache.ts withHistoryCache): every
+    // earlier turn is re-sent on every message, and without a cache point it
+    // was paid in full each time.
+    messages: withHistoryCache(messages.map((m: { role: string; content: string }) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
-    })),
+    }))) as Anthropic.MessageParam[],
   }
 
   try {

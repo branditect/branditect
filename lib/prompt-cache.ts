@@ -138,3 +138,38 @@ export function cacheLogLine(route: string, usage: CacheUsage | null | undefined
 export function logCacheUsage(route: string, usage: CacheUsage | null | undefined): void {
   console.log(cacheLogLine(route, usage));
 }
+
+/** A chat turn as the API takes it: plain text, or text blocks. */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string | { type: "text"; text: string; cache_control?: SystemBlock["cache_control"] }[];
+}
+
+/**
+ * Cache a conversation's history, not just its system prompt.
+ *
+ * A chat re-sends every earlier turn on every message. With a cache point on
+ * the newest turn, the next request finds everything up to it already cached
+ * and pays 0.1x for it; only the new question and the reply before it are
+ * written fresh. The system block keeps its own 1h point in front — the API
+ * allows a longer TTL before a shorter one, not after.
+ *
+ * 5m, not 1h: turns in a chat come minutes apart, a 5m write costs 1.25x
+ * against 2x for 1h, and each read refreshes the 5 minutes. A conversation
+ * left for longer rebuilds from the 1h system cache, which is the part that
+ * is expensive.
+ *
+ * Returns new objects; the caller's array is not touched.
+ */
+export function withHistoryCache(turns: ChatTurn[]): ChatTurn[] {
+  if (turns.length === 0) return [];
+  const out = turns.map((t) => ({ ...t }));
+  const last = out[out.length - 1];
+  const blocks = typeof last.content === "string"
+    ? [{ type: "text" as const, text: last.content }]
+    : last.content.map((b) => ({ ...b }));
+  if (blocks.length === 0 || blocks[blocks.length - 1].text.trim() === "") return out;
+  blocks[blocks.length - 1] = { ...blocks[blocks.length - 1], cache_control: { type: "ephemeral", ttl: "5m" } };
+  last.content = blocks;
+  return out;
+}

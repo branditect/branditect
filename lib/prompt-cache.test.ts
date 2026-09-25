@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { cachedSystem, perRequest, cacheStats, cacheLogLine, CACHE_TTL } from "./prompt-cache.ts";
+import { cachedSystem, perRequest, cacheStats, cacheLogLine, CACHE_TTL, withHistoryCache } from "./prompt-cache.ts";
 import {
   andyStable, copyStable, copyPerRequest, imagePromptStable, productBlock,
   STRATEGY_STABLE, TONE_STABLE, CATALOG_PARSE_STABLE, VAULT_EXTRACT_STABLE,
@@ -273,5 +273,48 @@ describe("brand-book/chat caches its page images", () => {
   it("sends the pages in an order that does not change between loads", () => {
     const client = readFileSync("app/(app)/studio/brand-book/BrandBookClient.tsx", "utf8");
     assert.match(client, /\.order\('page_number', \{ ascending: true \}\)\s*\.order\('id', \{ ascending: true \}\)/);
+  });
+});
+
+describe("withHistoryCache — the chat history is cached, not just the system prompt", () => {
+  const turns = [
+    { role: "user" as const, content: "What do we sell?" },
+    { role: "assistant" as const, content: "Absorbents." },
+    { role: "user" as const, content: "Which one for oil?" },
+  ];
+  it("puts one 5m cache point on the newest turn and nowhere else", () => {
+    const out = withHistoryCache(turns);
+    assert.deepEqual(out[2].content, [{ type: "text", text: "Which one for oil?", cache_control: { type: "ephemeral", ttl: "5m" } }]);
+    assert.equal(out[0].content, "What do we sell?");
+    assert.equal(out[1].content, "Absorbents.");
+  });
+  it("does not touch the caller's array", () => {
+    withHistoryCache(turns);
+    assert.equal(turns[2].content, "Which one for oil?");
+  });
+  it("the earlier turns stay byte-identical, so the next request's prefix matches this one", () => {
+    const now = withHistoryCache(turns);
+    const next = withHistoryCache([...turns, { role: "assistant", content: "Sorbify Oil." }, { role: "user", content: "Price?" }]);
+    assert.deepEqual(next.slice(0, 2), now.slice(0, 2));
+  });
+  it("an empty history or an empty last turn gets no cache point", () => {
+    assert.deepEqual(withHistoryCache([]), []);
+    assert.equal(withHistoryCache([{ role: "user", content: " " }])[0].content, " ");
+  });
+});
+
+describe("andy's cached prefix is stable", () => {
+  const src = readFileSync("app/api/andy/route.ts", "utf8");
+  it("every list query in the brand context is ordered", () => {
+    const block = src.slice(src.indexOf("await Promise.all(["), src.indexOf("])", src.indexOf("await Promise.all([")));
+    for (const line of block.split("\n").filter((l) => l.includes("supabase.from(") && !l.includes("maybeSingle"))) {
+      assert.match(line, /\.order\(/, line.trim());
+    }
+  });
+  it("sends the history through withHistoryCache", () => {
+    assert.match(src, /messages: withHistoryCache\(/);
+  });
+  it("does not include the guideline summary twice", () => {
+    assert.match(src, /text\.trim\(\) === guidelineSummary/);
   });
 });

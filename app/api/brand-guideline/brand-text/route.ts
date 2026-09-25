@@ -4,6 +4,7 @@ import { serviceClient as supabase } from "@/lib/supabase-admin";
 import { resolveBrand } from "@/lib/api-auth";
 import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
 import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
+import { guidelineCopyHash, isMissingTable } from "@/lib/guideline-copy";
 
 export const maxDuration = 30
 
@@ -34,6 +35,16 @@ export async function POST(req: NextRequest) {
 
     if (!strategy && !visualDna) {
       return NextResponse.json({ success: true, data: null })
+    }
+
+    // Saved copy for exactly these inputs: return it, spend nothing.
+    // lib/guideline-copy.ts; supabase/guideline-copy.sql.
+    const sourceHash = guidelineCopyHash(strategy, visualDna)
+    const saved = await supabase.from('guideline_copy')
+      .select('source_hash, data').eq('brand_id', brandId).maybeSingle()
+    if (saved.error && !isMissingTable(saved.error)) console.error('[brand-text] cache read', saved.error.message)
+    if (saved.data?.source_hash === sourceHash) {
+      return NextResponse.json({ success: true, data: saved.data.data })
     }
 
     const contextParts: string[] = []
@@ -100,17 +111,22 @@ ${contextParts.join('\n\n')}`,
     const text = response.content.filter(c => c.type === 'text').map(c => (c as Anthropic.TextBlock).text).join('')
     const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim()
 
+    let data: unknown = null
     try {
-      return NextResponse.json({ success: true, data: JSON.parse(clean) })
+      data = JSON.parse(clean)
     } catch {
       const match = clean.match(/\{[\s\S]*\}/)
       if (match) {
-        try {
-          return NextResponse.json({ success: true, data: JSON.parse(match[0]) })
-        } catch { /* fall through */ }
+        try { data = JSON.parse(match[0]) } catch { /* fall through */ }
       }
-      return NextResponse.json({ success: false, error: 'Could not parse response' }, { status: 422 })
     }
+    if (!data) return NextResponse.json({ success: false, error: 'Could not parse response' }, { status: 422 })
+
+    const write = await supabase.from('guideline_copy')
+      .upsert({ brand_id: brandId, source_hash: sourceHash, data, created_at: new Date().toISOString() })
+    if (write.error && !isMissingTable(write.error)) console.error('[brand-text] cache write', write.error.message)
+
+    return NextResponse.json({ success: true, data })
   } catch (err) {
     if (err instanceof BudgetRefused) return NextResponse.json({ success: false, ...refusalBody(err) }, { status: err.status })
     console.error('[brand-text]', err)

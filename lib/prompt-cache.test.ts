@@ -263,3 +263,15 @@ describe("no route sends a system prompt as a plain string", () => {
     });
   }
 });
+
+describe("brand-book/chat caches its page images", () => {
+  const src = readFileSync("app/api/brand-book/chat/route.ts", "utf8");
+  it("puts the cache point on the last page, before the question", () => {
+    assert.match(src, /i === pages\.length - 1\s*\?\s*\{ type: 'image', source: \{ type: 'url', url \}, cache_control: \{ type: 'ephemeral', ttl: '5m' \} \}/);
+    assert.ok(src.indexOf("cache_control") < src.indexOf("contentBlocks.push({\n    type: 'text'"));
+  });
+  it("sends the pages in an order that does not change between loads", () => {
+    const client = readFileSync("app/(app)/studio/brand-book/BrandBookClient.tsx", "utf8");
+    assert.match(client, /\.order\('page_number', \{ ascending: true \}\)\s*\.order\('id', \{ ascending: true \}\)/);
+  });
+});

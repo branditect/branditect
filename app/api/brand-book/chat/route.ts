@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { requireUser } from '@/lib/api-auth'
 import { meter, brandOfUser, BudgetRefused, refusalBody, requestLocale } from '@/lib/metering'
 import { estimateCents, anthropicCostCents, promptChars } from '@/lib/usage-cost'
+import { logCacheUsage } from '@/lib/prompt-cache'
 
 export const maxDuration = 30
 
@@ -59,9 +60,26 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  for (const url of pages) {
-    contentBlocks.push({ type: 'image', source: { type: 'url', url } })
-  }
+  /*
+    The pages are the same for every question in a session, and at ~1.6k
+    tokens each they are nearly the whole input. A cache point on the last
+    page makes every follow-up read them at 0.1x instead of paying full
+    price again. The question goes after it, so it never breaks the prefix.
+
+    5 minutes, not the 1 hour every other route uses. A 1h write costs 2x
+    input, so a session with a single question would pay double for pages it
+    never reuses. A 5m write costs 1.25x and pays for itself at the second
+    question; follow-ups in a chat come within minutes, and each read
+    refreshes the 5 minutes. Measured 2026-09-25 on three Sorbify pages:
+    first question wrote 4079 tokens, the second read 4079.
+  */
+  pages.forEach((url, i) => {
+    contentBlocks.push(
+      i === pages.length - 1
+        ? { type: 'image', source: { type: 'url', url }, cache_control: { type: 'ephemeral', ttl: '5m' } }
+        : { type: 'image', source: { type: 'url', url } },
+    )
+  })
 
   contentBlocks.push({
     type: 'text',
@@ -105,6 +123,8 @@ export async function POST(req: NextRequest) {
         }
       },
     )
+
+    logCacheUsage('brand-book-chat', response.usage)
 
     const reply = response.content
       .map(c => c.type === 'text' ? c.text : '')

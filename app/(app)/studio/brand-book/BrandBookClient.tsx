@@ -87,7 +87,11 @@ export default function BrandBookClient() {
           .from('brand_book_pages')
           .select('*')
           .eq('brand_id', brandId)
-          .order('page_number', { ascending: true }),
+          // Tie-break on id: pages uploaded without a number all sit at 999,
+          // and a list that reorders between loads changes the page images
+          // sent to /api/brand-book/chat, which breaks its prompt cache.
+          .order('page_number', { ascending: true })
+          .order('id', { ascending: true }),
         supabase
           .from('brand_book_assets')
           .select('*')

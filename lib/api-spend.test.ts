@@ -198,7 +198,7 @@ describe("no route hands a caller-supplied URL to the model", () => {
     assert.match(src, /NEXT_PUBLIC_SUPABASE_URL/,
       "the allowlist does not mention our storage host");
     assert.ok(
-      !/source:\s*\{\s*type:\s*'url',\s*url\s*\}/.test(src.replace(/\s+/g, " ").replace(/for \(const url of pages\)[\s\S]*/, "")),
+      !/source:\s*\{\s*type:\s*'url',\s*url\s*\}/.test(src.replace(/\s+/g, " ").replace(/(for \(const url of pages\)|pages\.forEach\(\(url)[\s\S]*/, "")),
       "an unfiltered URL still reaches the model",
     );
     assert.match(src, /pageUrls\.filter\(allowed\)|filter\(allowed\)/,

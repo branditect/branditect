@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { requireUser } from '@/lib/api-auth'
 import { reserveMeter, brandOfUser, BudgetRefused, ProviderError, refusalBody, requestLocale, type Lease } from "@/lib/metering";
 import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
+import { answerLanguageDirective, strategyLanguage } from "@/lib/answer-language";
 
 // Analysis plus a full strategy is a real amount of generation, and this is
 // the worst place in the product to time out: the founder has answered
@@ -92,6 +93,19 @@ export async function POST(req: NextRequest) {
       // this mode exists to prevent.
       ? "\nRestructure ONLY what is above into the JSON object. Leave every field the input does not support empty: \"\" for a string, [] for a list. Do not add an audience, a competitor, a pillar, a principle, a boundary or a tagline that is not in the input. Leave \"analysis\" empty as well: the working-out belongs to a strategy you wrote, not to one you are reading. Return ONLY the JSON object."
       : "\nCreate a complete brand strategy. Return ONLY the JSON object. Keep all text fields concise.";
+
+    /*
+      The language the strategy comes back in. This route had none, so a
+      founder working in Finnish could get an English strategy from the
+      Strategy page. Same rule as strategy-generate: the founder's own words
+      (answers, or the strategy she pasted) decide when they are clear, and the
+      interface language decides when they are not (lib/answer-language.ts).
+    */
+    const language = strategyLanguage(
+      [...answeredQuestions.map(([, a]) => a), existingText ?? ""],
+      requestLocale(req),
+    );
+    userText += answerLanguageDirective(language);
 
     contentBlocks.push({ type: "text", text: userText });
 

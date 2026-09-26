@@ -72,18 +72,46 @@ export function guessLanguage(texts: (string | null | undefined)[]): LanguageGue
 }
 
 /**
+ * The language a strategy is written in.
+ *
+ * Saara, 2026-09-26: "if the language is Finnish and the answers are in
+ * Finnish, generate the strategy in Finnish. The same for English." So the
+ * interface language and the answers both count:
+ *
+ *   - The answers decide when they clearly say something. A strategy is built
+ *     out of the founder's own sentences; English answers under a Finnish
+ *     interface still get an English strategy, and the reverse.
+ *   - When the answers are too thin to tell (a few words, names, numbers), the
+ *     interface language decides. Before this that case fell to English, so a
+ *     founder working in Finnish with short answers got an English strategy.
+ */
+export function strategyLanguage(texts: (string | null | undefined)[], interfaceLocale: Locale): Locale {
+  const guess = guessLanguage(texts);
+  return guess.uncertain ? interfaceLocale : guess.language;
+}
+
+/**
  * The instruction that makes the strategy come back in the founder's language.
  *
  * Goes in the per-request block, not the cached system prompt: it varies by
  * brand's answers rather than being stable brand state, and a value that
  * changes per request in a cached prefix costs a cache miss for everyone.
  *
- * Empty for English, for the reason output-language.ts gives: these prompts
- * were written and tuned in English, and telling them to write English is a
- * change with no upside.
+ * Explicit for English too. It used to be empty, on the reasoning that these
+ * prompts are English and write English anyway — true until the sources are
+ * Finnish: a pasted Finnish strategy, or Finnish product names throughout,
+ * pulls the output into Finnish for a founder who answered in English. It
+ * sits in the user message, not the cached system block, so it costs nothing
+ * in cache.
  */
 export function answerLanguageDirective(language: Locale): string {
-  if (language === "en") return "";
+  if (language === "en") {
+    return `
+
+LANGUAGE. Write the strategy in English. Every value a person reads is English,
+even where the founder's material quotes Finnish. JSON keys and field names stay
+exactly as specified.`;
+  }
   return `
 
 LANGUAGE. The founder answered in Finnish, so write the strategy in Finnish

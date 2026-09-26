@@ -20,7 +20,7 @@ import { cachedSystem, logCacheUsage } from "@/lib/prompt-cache";
 import { STRATEGY_STABLE } from "@/lib/prompts";
 import { archiveAndInsert, supabaseStrategyStore } from "@/lib/strategy-versions";
 import { forLocale } from "@/lib/onboarding-locale";
-import { answerLanguageDirective, guessLanguage } from "@/lib/answer-language";
+import { answerLanguageDirective, strategyLanguage } from "@/lib/answer-language";
 import type { Track } from "@/lib/onboarding-questions";
 import { meter, BudgetRefused, refusalBody, requestLocale } from "@/lib/metering";
 import { estimateCents, anthropicCostCents, promptChars } from "@/lib/usage-cost";
@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
     brands never chose it. A strategy is built out of the founder's own
     sentences, so those sentences decide.
   */
-  const { language } = guessLanguage(answered.map(([, a]) => a));
+  // Clear answers decide; thin ones follow the interface (lib/answer-language.ts).
+  const language = strategyLanguage(answered.map(([, a]) => a), requestLocale(req));
 
   // The model reads the question with its answer: "→ 12 words" is not an
   // answer to anything on its own. The question comes in the same language as

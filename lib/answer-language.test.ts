@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { guessLanguage, answerLanguageDirective } from "./answer-language.ts";
+import { guessLanguage, answerLanguageDirective, strategyLanguage } from "./answer-language.ts";
 
 /**
  * Reported 2026-09-23: "every Omistajatieto material and every answer was
@@ -51,12 +51,39 @@ describe("the strategy follows the language the founder answered in", () => {
     assert.equal(guessLanguage(["Sorbify ja 2026"]).uncertain, true);
   });
 
-  it("the directive is empty for English and explicit for Finnish", () => {
-    assert.equal(answerLanguageDirective("en"), "");
+  it("the directive is explicit for both languages", () => {
+    const en = answerLanguageDirective("en");
+    assert.match(en, /Write the strategy in English/);
+    assert.match(en, /JSON keys and field names stay[\s\S]*?exactly as specified/);
     const fi = answerLanguageDirective("fi");
     assert.match(fi, /Finnish/);
     // JSON keys must not be translated, or nothing downstream can read the row.
     // The directive is wrapped, so the assertion has to cross the line break.
     assert.match(fi, /JSON keys and field names stay[\s\S]*?exactly as specified/);
+  });
+});
+
+/**
+ * Saara, 2026-09-26: "if the language is Finnish and the answers are in
+ * Finnish, generate the strategy in Finnish. The same for English."
+ */
+describe("the strategy language: interface and answers together", () => {
+  const FI = ["Asiakkaamme ovat tavallisia perheitä, eivät ammattilaisia.", "Haluamme että tieto siirtyy seuraavalle omistajalle."];
+  const EN = ["Our customers are ordinary families, and this is what they pay for.", "We want the knowledge to pass to the next owner."];
+
+  it("Finnish interface, Finnish answers: Finnish", () => {
+    assert.equal(strategyLanguage(FI, "fi"), "fi");
+  });
+  it("English interface, English answers: English", () => {
+    assert.equal(strategyLanguage(EN, "en"), "en");
+  });
+  it("thin answers follow the interface instead of falling to English", () => {
+    assert.equal(strategyLanguage(["Sorbify", "2026", "B2B"], "fi"), "fi");
+    assert.equal(strategyLanguage(["Sorbify", "2026", "B2B"], "en"), "en");
+    assert.equal(strategyLanguage([], "fi"), "fi");
+  });
+  it("clear answers win over the interface", () => {
+    assert.equal(strategyLanguage(FI, "en"), "fi");
+    assert.equal(strategyLanguage(EN, "fi"), "en");
   });
 });
